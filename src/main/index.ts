@@ -1,17 +1,21 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import installExtension from 'electron-devtools-installer'
-import { app, BrowserWindow, shell } from 'electron'
+import { MqttConnection } from '../types/mqtt-connection'
 import icon from '../../resources/icon.png?asset'
 import { MqttClient } from './mqtt-client'
 import { join } from 'path'
 
 const mqttClients: Map<string, MqttClient> = new Map()
+const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    minWidth: 800,
+    height: 800,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -21,9 +25,26 @@ function createWindow(): void {
     }
   })
 
-  setTimeout(() => {
-    createConnection(mainWindow, 'test')
-  }, 3000)
+  ipcMain.on('fetch-mqtt-status', (event) => {
+    mqttClients.forEach((_, clientKey) => {
+      event.reply('mqtt-status', {
+        clientKey,
+        status: mqttClientsState.get(clientKey) || 'disconnected'
+      })
+    })
+  })
+
+  ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
+    createConnection(mainWindow, connection)
+  })
+
+  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
+    mqttClients.get(clientKey)?.disconnect()
+    mqttClients.delete(clientKey)
+
+    mqttClientsState.set(clientKey, 'disconnected')
+    event.reply('mqtt-status', { clientKey, status: 'disconnected' })
+  })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -81,8 +102,13 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-const createConnection = (mainWindow: BrowserWindow, clientKey: string) => {
-  const clientMqtt = new MqttClient()
+const createConnection = (mainWindow: BrowserWindow, connection: MqttConnection) => {
+  const clientKey = connection.clientKey
+
+  mqttClientsState.set(clientKey, 'connecting')
+  mainWindow.webContents.send('mqtt-status', { clientKey, status: 'connecting' })
+
+  const clientMqtt = new MqttClient(connection)
 
   mqttClients.set(clientKey, clientMqtt)
 
@@ -91,7 +117,8 @@ const createConnection = (mainWindow: BrowserWindow, clientKey: string) => {
   })
 
   clientMqtt.onConnect(() => {
-    mainWindow.webContents.send('mqtt-connected', { clientKey })
+    mqttClientsState.set(clientKey, 'connected')
+    mainWindow.webContents.send('mqtt-status', { clientKey, status: 'connected' })
   })
 
   clientMqtt.onMessage((topic, payload, packet) => {
@@ -105,12 +132,23 @@ const createConnection = (mainWindow: BrowserWindow, clientKey: string) => {
   })
 
   clientMqtt.onDisconnect(() => {
-    mainWindow.webContents.send('mqtt-disconnected', { clientKey })
+    // mqttClientsState.set(clientKey, 'disconnected')
+    // mainWindow.webContents.send('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
   clientMqtt.subscribe('nekotiki/#')
+  clientMqtt.subscribe('CLSensors/#')
+  clientMqtt.subscribe('siiguti/temperatura/output')
 
   setTimeout(() => {
     clientMqtt.publish('nekotiki/test', 'Hello World!')
+
+    clientMqtt.publish('nekotiki/test/test/test/test/test', 'Hello World!')
+
+    clientMqtt.publish('nekotiki/test/test', 'Hello World!')
+
+    clientMqtt.publish('nekotiki/test/test/test', 'Hello World!')
+
+    clientMqtt.publish('nekotiki/test/test/test/test', 'Hello World!')
   }, 3000)
 }

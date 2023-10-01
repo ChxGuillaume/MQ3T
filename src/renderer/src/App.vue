@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import { useMqttConnectionsStore } from './store/mqtt-connections'
+import { ElectronIpc } from '../../types/electron-ipc-callbacks'
+import { useMqttTopicsStore } from './store/mqtt-topics'
+import TabConnections from './tabs/TabConnections.vue'
 import TabSettings from './tabs/TabSettings.vue'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
-import TabConnections from './tabs/TabConnections.vue'
-import { ElectronIpc } from '../../preload/types/electron-ipc-callbacks'
+import TabTopics from './tabs/TabTopics.vue'
 
 const currentTab = ref('connections')
+
+const mqttConnectionsStore = useMqttConnectionsStore()
+const mqttTopicsStore = useMqttTopicsStore()
+
+mqttConnectionsStore.loadConnections()
 
 const $q = useQuasar()
 
@@ -24,47 +32,44 @@ onMounted(() => {
       break
   }
 
-  console.log(window.api)
-
   const electronApi = window.api as ElectronIpc
+
+  electronApi.fetchMqttStatus()
 
   electronApi.handleMqttError((event, value) => {
     console.log(event, value)
 
+    const connection = mqttConnectionsStore.getConnection(value.clientKey)
+
+    if (!connection) return
+
     $q.notify({
-      message: `[${value.clientKey}]`,
+      message: `[${connection.name}]`,
       caption: value.error.message,
       type: 'negative'
     })
   })
 
-  electronApi.handleMqttConnected((event, value) => {
+  electronApi.handleMqttStatus((event, value) => {
     console.log(event, value)
 
-    $q.notify({
-      message: `[${value.clientKey}]`,
-      caption: 'Connected',
-      type: 'positive'
-    })
-  })
+    mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
 
-  electronApi.handleMqttMessage((event, value) => {
-    console.log(event, value)
+    const connection = mqttConnectionsStore.getConnection(value.clientKey)
+
+    if (!connection) return
 
     $q.notify({
-      message: `[${value.clientKey}] ${value.topic}`,
-      caption: value.message,
+      message: `[${connection.name}]`,
+      caption: value.status,
       type: 'info'
     })
   })
 
-  electronApi.handleMqttDisconnected((event, value) => {
-    console.log(event, value)
-
-    $q.notify({
-      message: `[${value.clientKey}]`,
-      caption: 'Disconnected',
-      type: 'warning'
+  electronApi.handleMqttMessage((_, value) => {
+    mqttTopicsStore.addMessage(value.clientKey, value.topic, value.message, {
+      qos: value.packet.qos,
+      retained: value.packet.retain
     })
   })
 })
@@ -108,7 +113,9 @@ onMounted(() => {
         transition-prev="jump-up"
         transition-next="jump-down"
       >
-        <q-tab-panel name="topics">Topics</q-tab-panel>
+        <q-tab-panel class="tw-p-0" name="topics">
+          <TabTopics />
+        </q-tab-panel>
         <q-tab-panel name="actions">Actions</q-tab-panel>
         <q-tab-panel name="automations">Automations</q-tab-panel>
 

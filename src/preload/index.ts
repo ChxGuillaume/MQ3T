@@ -1,21 +1,17 @@
-import {
-  MqttConnectedCallback,
-  MqttDisconnectedCallback,
-  MqttErrorCallback,
-  MqttMessageCallback
-} from './types/electron-ipc-callbacks'
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 
+import { ElectronIpc } from '../types/electron-ipc-callbacks'
+
 // Custom APIs for renderer
-const api = {
-  handlePing: (callback) => ipcRenderer.on('ping', callback),
-  handleMqttError: (callback: MqttErrorCallback) => ipcRenderer.on('mqtt-error', callback),
-  handleMqttMessage: (callback: MqttMessageCallback) => ipcRenderer.on('mqtt-message', callback),
-  handleMqttConnected: (callback: MqttConnectedCallback) =>
-    ipcRenderer.on('mqtt-connected', callback),
-  handleMqttDisconnected: (callback: MqttDisconnectedCallback) =>
-    ipcRenderer.on('mqtt-disconnected', callback)
+const api: ElectronIpc = {
+  handleMqttError: (callback) => ipcRenderer.on('mqtt-error', callback as any),
+  handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
+  handleMqttStatus: (callback) => ipcRenderer.on('mqtt-status', callback as any),
+
+  connectMqtt: (connection) => ipcRenderer.send('connect-mqtt', connection),
+  disconnectMqtt: (clientKey) => ipcRenderer.send('disconnect-mqtt', clientKey),
+  fetchMqttStatus: () => ipcRenderer.send('fetch-mqtt-status')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

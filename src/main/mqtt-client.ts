@@ -1,11 +1,19 @@
+import { MqttConnection } from '../types/mqtt-connection'
 import { OnMessageCallback } from 'mqtt/src/lib/client'
 import mqtt from 'mqtt'
 
 export class MqttClient {
   private client: mqtt.MqttClient
 
-  constructor() {
-    this.client = mqtt.connect('mqtt://test.mosquitto.org:1883')
+  constructor(connection: MqttConnection) {
+    const connectionOptions = {
+      protocol: connection.protocol,
+      host: connection.hostname,
+      port: connection.port,
+      clientId: connection.clientId
+    }
+
+    this.client = mqtt.connect(connectionOptions)
   }
 
   public onError(callback: (error: Error) => void) {
