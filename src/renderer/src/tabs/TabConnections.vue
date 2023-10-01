@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import MqttConnectionDialog from '../components/tab-connections/MqttConnectionDialog.vue'
 import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
 import { onMounted, ref } from 'vue'
-import MqttConnectionDialog from '../components/tab-connections/MqttConnectionDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 

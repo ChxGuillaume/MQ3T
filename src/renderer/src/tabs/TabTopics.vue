@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useMqttTopicsStore } from '../store/mqtt-topics'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
+import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { computed, ref } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
