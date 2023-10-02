@@ -7,7 +7,14 @@ const sendTestMessage = () => {
   electronApi.sendMqttMessage(
     'connection-76e2b6fa-995a-4daf-babd-51e0eda162ad',
     'nekotiki/actions/message',
-    JSON.stringify({ message: 'test' })
+    JSON.stringify({
+      message: 'test',
+      date: new Date(),
+      test: true,
+      number: 1,
+      object: { test: true, nested: { test: true, nested: {} } },
+      array: [1, 2, 3]
+    })
   )
 }
 </script>

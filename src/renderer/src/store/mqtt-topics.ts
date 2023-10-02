@@ -1,6 +1,9 @@
+import { useSettingsStore } from './settings-store'
+import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 
 type MqttMessage = {
+  uid: string
   qos: 0 | 1 | 2
   message: string
   retained: boolean
@@ -22,6 +25,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       return (connectionTopics[this.selectedTopic] || []).reverse()
     },
+    sortedSelectedTopicMessages(): MqttMessage[] {
+      return this.getSelectedTopicMessages.slice().sort((a, b) => {
+        return b.createdAt.getTime() - a.createdAt.getTime()
+      })
+    },
     getSelectedTopicLastMessage(): MqttMessage | undefined {
       return this.topics[this.selectedConnection]?.[this.selectedTopic]?.[0]
     }
@@ -36,13 +44,27 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       if (!this.topics[clientKey]) this.topics[clientKey] = {}
       if (!this.topics[clientKey][topic]) this.topics[clientKey][topic] = []
 
+      const settingsStore = useSettingsStore()
+
       this.topics[clientKey][topic].push({
+        uid: uuidV4(),
         message,
         qos: extras.qos,
         retained: extras.retained || false,
         createdAt: new Date()
       })
 
+      ///////////
+      // Removing old messages when the limit is reached
+      const amountMessagesToRemove =
+        this.topics[clientKey][topic].length - settingsStore.maxMessages + 1
+
+      if (amountMessagesToRemove > 1) {
+        this.topics[clientKey][topic].splice(0, amountMessagesToRemove)
+      }
+
+      ///////////
+      // Creating Topic structure cache
       if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
 
       const topicParts = topic.split('/')
@@ -66,8 +88,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       this.selectedConnection = clientKey
       this.selectedTopic = topicParts.join('/')
-
-      console.log(this.selectedConnection, this.selectedTopic)
     }
   }
 })

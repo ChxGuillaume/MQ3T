@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import CodePreview from '../components/tap-topics/CodePreview.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
+import CopyButton from '../components/buttons/CopyButton.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
-import { onMounted, ref, watch } from 'vue'
-import * as monaco from 'monaco-editor'
-import { useQuasar } from 'quasar'
+import { computed, onMounted, ref, watch } from 'vue'
 
-const $q = useQuasar()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
@@ -17,90 +16,81 @@ const showTopics = ref(false)
 const tab = ref('values')
 const current = ref(1)
 
+const selectedTopicLastMessage = computed(() => {
+  return mqttTopicsStore.getSelectedTopicLastMessage
+})
+
+const slicedMessages = computed(() => {
+  const start = (current.value - 1) * 5
+  const end = start + 5
+
+  return mqttTopicsStore.sortedSelectedTopicMessages.slice(start, end)
+})
+
 const handleTopicClick = (key: string) => {
-  console.log('handleTopicClick', key)
-  mqttTopicsStore.setSelectedTopic(key)
-  codeEditor?.setValue('')
+  handleSelectTopic(key)
 }
 
 const copySelectedTopic = () => {
   navigator.clipboard.writeText(mqttTopicsStore.selectedTopic)
 }
 
-const updateEditor = (message) => {
-  if (!message) return
+const copySelectedTopicMessage = () => {
+  navigator.clipboard.writeText(selectedTopicLastMessage.value?.message || '')
+}
 
+const copyMessage = (message: string) => {
+  navigator.clipboard.writeText(message)
+}
+
+const codePreviewData = ref('{}')
+
+const formatMessage = (message: string) => {
   let data = message
 
   try {
     data = JSON.parse(message)
-    data = JSON.stringify(data, null, 2)
+    data = JSON.stringify(data, null, 4)
   } catch (e) {
     console.log(e)
   }
 
-  codeEditor?.setValue(data)
+  return data
+}
+
+const updateEditor = (message: string) => {
+  if (!message) return
+
+  codePreviewData.value = formatMessage(message)
 }
 
 watch(
   () => mqttTopicsStore.getSelectedTopicLastMessage,
   (mqttMessage) => {
-    updateEditor(mqttMessage?.message)
+    mqttMessage?.message && updateEditor(mqttMessage.message)
   }
 )
 
-const monacoEditor = ref(null)
-let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
 onMounted(() => {
   setTimeout(() => {
     showTopics.value = true
   }, 100)
-
-  if (!monacoEditor.value) return
-
-  monaco.editor.defineTheme('vs-lighter', {
-    base: 'vs',
-    inherit: true,
-    rules: [],
-    colors: {
-      'editor.background': '#f5f5f5'
-    }
-  })
-  monaco.editor.defineTheme('vs-dark-darker', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [],
-    colors: {
-      'editor.background': '#262626'
-    }
-  })
-
-  codeEditor = monaco.editor.create(monacoEditor.value, {
-    value: '{}',
-    language: 'json',
-    theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
-    overviewRulerLanes: 0,
-    fontSize: 11,
-    readOnly: true,
-    lineNumbers: 'off',
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    automaticLayout: true
-  })
 })
 
-watch(
-  () => $q.dark.isActive,
-  (isDark) => {
-    if (!codeEditor) return
+const breadcrumbs = computed(() => {
+  return mqttTopicsStore.selectedTopic.split('/').filter((t) => t !== '')
+})
 
-    if (isDark) {
-      monaco.editor.setTheme('vs-dark-darker')
-    } else {
-      monaco.editor.setTheme('vs-lighter')
-    }
-  }
-)
+const handleBreadcrumbClick = (index: number) => {
+  const topic = [mqttTopicsStore.selectedConnection, ...breadcrumbs.value.slice(0, index + 1)]
+
+  handleSelectTopic(topic.join('/'))
+}
+
+const handleSelectTopic = (topic: string) => {
+  mqttTopicsStore.setSelectedTopic(topic)
+  codePreviewData.value = ''
+}
 </script>
 
 <template>
@@ -118,6 +108,7 @@ watch(
         :key="key"
         :topic-key="key"
         :topic-path="key"
+        :topic-index="0"
         :topic-structure="value"
         @topic:click="handleTopicClick"
       />
@@ -128,18 +119,10 @@ watch(
         <div class="tw-p-4 tw-flex tw-flex-col tw-gap-4">
           <div class="tw-flex tw-gap-2">
             <h2 class="tw-text-xl tw-font-bold">Topic</h2>
-            <q-btn
-              size="sm"
-              color="secondary"
-              flat
-              round
-              icon="fa-solid fa-copy"
-              @click="copySelectedTopic"
-            />
+            <copy-button @click="copySelectedTopic" />
           </div>
-
           <q-breadcrumbs gutter="none">
-            <q-breadcrumbs-el v-for="topicPart in mqttTopicsStore.selectedTopic.split('/')">
+            <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
               <q-chip
                 size="sm"
                 color="primary"
@@ -148,6 +131,7 @@ watch(
                 ripple
                 clickable
                 :label="topicPart"
+                @click="handleBreadcrumbClick(index)"
               />
             </q-breadcrumbs-el>
           </q-breadcrumbs>
@@ -156,33 +140,75 @@ watch(
         <q-separator />
 
         <q-tab-panels v-model="tab" animated keep-alive>
-          <q-tab-panel name="values">
-            <div id="test">
-              <div ref="monacoEditor" class="monaco-editor" />
+          <q-tab-panel name="values" class="tw-p-0">
+            <div class="tw-p-4 tw-flex justify-between">
+              <div>
+                QoS: {{ selectedTopicLastMessage?.qos || 0 }}
+                <copy-button @click="copySelectedTopicMessage" />
+              </div>
+              <div v-if="selectedTopicLastMessage?.retained">
+                <q-chip
+                  size="sm"
+                  color="primary"
+                  text-color="white"
+                  icon-right="fa-solid fa-xmark"
+                  square
+                  clickable
+                  label="Retained"
+                />
+              </div>
+              <div class="tw-flex tw-flex-col items-end">
+                <div>
+                  {{
+                    selectedTopicLastMessage?.createdAt &&
+                    settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
+                  }}
+                </div>
+                <div>
+                  {{
+                    selectedTopicLastMessage?.createdAt &&
+                    settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
+                  }}
+                </div>
+              </div>
             </div>
-            <div class="tw-flex tw-justify-center">
+            <code-preview :value="codePreviewData" />
+            <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
+              <div class="tw-flex items-center tw-gap-2">
+                History
+                <q-chip size="sm" color="primary" text-color="white">
+                  {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages
+                </q-chip>
+              </div>
               <q-pagination
                 v-model="current"
-                class="tw-mx-auto"
-                size="sm"
+                size="xs"
                 :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
                 input
               />
             </div>
-            <!--            <div v-for="message in mqttTopicsStore.getSelectedTopicMessages.slice(0, 2)">-->
-            <!--              {{ settingsStore.formatDateTime(message.createdAt) }}-->
-            <!--              {{ message.message }}-->
-            <!--            </div>-->
+            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
+              <q-card
+                v-for="message in slicedMessages"
+                :key="message.uid"
+                flat
+                class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
+              >
+                <div class="tw-mb-2 tw-flex tw-justify-between">
+                  <div>{{ settingsStore.formatDateTime(message.createdAt) }}</div>
+                  <copy-button @click="copyMessage(message.message)" />
+                </div>
+                <div class="tw-whitespace-pre">{{ formatMessage(message.message) }}</div>
+              </q-card>
+            </div>
           </q-tab-panel>
 
           <q-tab-panel name="publish">
-            <div class="text-h6">Alarms</div>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
+            <div class="text-h6">In Work</div>
           </q-tab-panel>
 
           <q-tab-panel name="stats">
-            <div class="text-h6">Movies</div>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
+            <div class="text-h6">In Work</div>
           </q-tab-panel>
         </q-tab-panels>
 
@@ -214,21 +240,4 @@ watch(
   </q-splitter>
 </template>
 
-<style scoped lang="less">
-.monaco-editor {
-  @apply tw-w-full tw-border tw-rounded-xl tw-overflow-hidden;
-  min-height: 200px;
-}
-
-.body--light {
-  .monaco-editor {
-    @apply tw-border-black/20;
-  }
-}
-
-.body--dark {
-  .monaco-editor {
-    @apply tw-border-white/20;
-  }
-}
-</style>
+<style scoped lang="less"></style>

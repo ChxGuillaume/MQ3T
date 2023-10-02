@@ -4,10 +4,10 @@ import { ElectronIpc } from '../../types/electron-ipc-callbacks'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import TabConnections from './tabs/TabConnections.vue'
 import TabSettings from './tabs/TabSettings.vue'
+import TabActions from './tabs/TabActions.vue'
+import TabTopics from './tabs/TabTopics.vue'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
-import TabTopics from './tabs/TabTopics.vue'
-import TabActions from './tabs/TabActions.vue'
 
 const currentTab = ref('connections')
 
@@ -138,18 +138,19 @@ onMounted(() => {
 @import './assets/css/styles.less';
 
 .nav-bar-left {
+  @apply tw-border-r;
   width: 120px;
 }
 
 .body--light {
   .nav-bar-left {
-    @apply tw-bg-zinc-100;
+    @apply tw-bg-zinc-100 tw-border-black/10;
   }
 }
 
 .body--dark {
   .nav-bar-left {
-    @apply tw-bg-neutral-900;
+    @apply tw-bg-neutral-900 tw-border-white/10;
   }
 }
 </style>

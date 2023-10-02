@@ -20,9 +20,13 @@ export const useSettingsStore = defineStore('settings', {
       return `${this.dateFormat} ${this.timeFormat}`
     },
     formatDateTime(): (date: Date) => string {
-      return (date: Date) => {
-        return moment(date).format(this.dateTimeFormat)
-      }
+      return (date: Date) => moment(date).format(this.dateTimeFormat)
+    },
+    formatDate(): (date: Date) => string {
+      return (date: Date) => moment(date).format(this.dateFormat)
+    },
+    formatTime(): (date: Date) => string {
+      return (date: Date) => moment(date).format(this.timeFormat)
     }
   },
   actions: {

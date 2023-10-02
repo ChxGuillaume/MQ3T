@@ -85,7 +85,9 @@ const maxMessagesSetting = computed({
     <div class="tw-mb-3 tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
     </div>
-    <div class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-4">
+    <div
+      class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
+    >
       <q-card class="card-toggle" square flat>
         <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
       </q-card>
@@ -118,7 +120,12 @@ const maxMessagesSetting = computed({
           {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
         </template>
       </q-select>
-      <q-input v-model="maxMessagesSetting" filled label="Max Messages" type="number" />
+      <q-input
+        v-model="maxMessagesSetting"
+        filled
+        label="Messages History per Topic"
+        type="number"
+      />
     </div>
   </div>
 </template>

@@ -2,6 +2,7 @@ import { Notify, Quasar } from 'quasar'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
+import './assets/js/init-monaco-editor'
 import App from './App.vue'
 
 import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'

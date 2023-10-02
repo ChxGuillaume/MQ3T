@@ -2,7 +2,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
-import icon from '../../resources/icon.png?asset'
+import icon from '../../resources/mqtt.png?asset'
 import { MqttClient } from './mqtt-client'
 import { join } from 'path'
 
@@ -18,7 +18,7 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon } : { icon }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -140,19 +140,16 @@ const createConnection = (mainWindow: BrowserWindow, connection: MqttConnection)
     // mainWindow.webContents.send('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
+  // clientMqtt.subscribe('$SYS/#')
   clientMqtt.subscribe('nekotiki/#')
   clientMqtt.subscribe('CLSensors/#')
   clientMqtt.subscribe('siiguti/temperatura/#')
 
   setTimeout(() => {
     clientMqtt.publish('nekotiki/test', 'Hello World!')
-
     clientMqtt.publish('nekotiki/test/test/test/test/test', 'Hello World!')
-
     clientMqtt.publish('nekotiki/test/test', 'Hello World!')
-
     clientMqtt.publish('nekotiki/test/test/test', 'Hello World!')
-
     clientMqtt.publish('nekotiki/test/test/test/test', 'Hello World!')
   }, 3000)
 }
