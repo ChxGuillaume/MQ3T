@@ -1,3 +1,4 @@
+import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
 import { IPublishPacket } from 'mqtt'
 
@@ -20,5 +21,13 @@ export type ElectronIpc = {
 
   connectMqtt: (connection: MqttConnection) => void
   disconnectMqtt: (clientKey: string) => void
+
+  sendMqttMessage: (
+    clientKey: string,
+    topic: string,
+    message: string,
+    options?: IClientPublishOptions
+  ) => void
+
   fetchMqttStatus: () => void
 }

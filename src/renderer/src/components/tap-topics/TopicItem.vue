@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 const props = defineProps({
   topicKey: {
     type: String,
@@ -22,9 +20,9 @@ const handleTopicClick = () => {
   emits('topic:click', props.topicPath)
 }
 
-const isLastTopicPart = computed(() => {
-  return Object.keys(props.topicStructure).length === 0
-})
+// const isLastTopicPart = computed(() => {
+//   return Object.keys(props.topicStructure).length === 0
+// })
 </script>
 
 <template>
@@ -39,12 +37,11 @@ const isLastTopicPart = computed(() => {
     dense
     expand-icon="fa-solid fa-caret-down"
     :label="topicKey"
-    default-opened
     @click="handleTopicClick"
   >
     <template v-slot:header>
       <div class="tw-flex tw-items-center">
-        <span>{{ topicKey }}</span>
+        <span class="tw-overflow-ellipsis tw-line-clamp-1">{{ topicKey }}</span>
       </div>
     </template>
     <!--    <div @click="$emit('topic:click', topicKey)">{{ topicKey }} {{ topicStructure }}</div>-->

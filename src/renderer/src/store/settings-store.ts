@@ -1,20 +1,28 @@
 import { defineStore } from 'pinia'
+import moment from 'moment'
 
 type SettingsStore = {
   showActivity: boolean
   dateFormat: string
   timeFormat: string
+  maxMessages: number
 }
 
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsStore => ({
     showActivity: localStorage.getItem('showActivity') === 'true',
     dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
-    timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss'
+    timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
+    maxMessages: parseInt(localStorage.getItem('maxMessages') || '100')
   }),
   getters: {
-    dateTimeFormat() {
+    dateTimeFormat(): string {
       return `${this.dateFormat} ${this.timeFormat}`
+    },
+    formatDateTime(): (date: Date) => string {
+      return (date: Date) => {
+        return moment(date).format(this.dateTimeFormat)
+      }
     }
   },
   actions: {
@@ -29,6 +37,10 @@ export const useSettingsStore = defineStore('settings', {
     setTimeFormat(value: string) {
       this.timeFormat = value
       localStorage.setItem('timeFormat', value)
+    },
+    setMaxMessages(value: number) {
+      this.maxMessages = value
+      localStorage.setItem('maxMessages', value.toString())
     }
   }
 })

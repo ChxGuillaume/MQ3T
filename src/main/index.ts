@@ -46,6 +46,10 @@ function createWindow(): void {
     event.reply('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
+  ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
+    mqttClients.get(clientKey)?.publish(topic, message, options)
+  })
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -138,7 +142,7 @@ const createConnection = (mainWindow: BrowserWindow, connection: MqttConnection)
 
   clientMqtt.subscribe('nekotiki/#')
   clientMqtt.subscribe('CLSensors/#')
-  clientMqtt.subscribe('siiguti/temperatura/output')
+  clientMqtt.subscribe('siiguti/temperatura/#')
 
   setTimeout(() => {
     clientMqtt.publish('nekotiki/test', 'Hello World!')

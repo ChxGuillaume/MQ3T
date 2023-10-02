@@ -71,6 +71,13 @@ const timeFormatSetting = computed({
     settingsStore.setTimeFormat(val)
   }
 })
+
+const maxMessagesSetting = computed({
+  get: () => settingsStore.maxMessages,
+  set: (val) => {
+    settingsStore.setMaxMessages(val)
+  }
+})
 </script>
 
 <template>
@@ -111,6 +118,7 @@ const timeFormatSetting = computed({
           {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
         </template>
       </q-select>
+      <q-input v-model="maxMessagesSetting" filled label="Max Messages" type="number" />
     </div>
   </div>
 </template>

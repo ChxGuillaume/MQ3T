@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 
 type MqttMessage = {
-  message: string
   qos: 0 | 1 | 2
+  message: string
   retained: boolean
   createdAt: Date
 }
@@ -11,17 +11,19 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
     topics: {} as Record<string, Record<string, MqttMessage[]>>,
     topicsStructure: {} as Record<string, Record<string, any>>,
+    selectedConnection: '',
     selectedTopic: ''
   }),
   getters: {
     getSelectedTopicMessages(): MqttMessage[] {
-      const [clientKey, ...topicParts] = this.selectedTopic.split('/')
-
-      const connectionTopics = this.topics[clientKey]
+      const connectionTopics = this.topics[this.selectedConnection]
 
       if (!connectionTopics) return []
 
-      return connectionTopics[topicParts.join('/')] || []
+      return (connectionTopics[this.selectedTopic] || []).reverse()
+    },
+    getSelectedTopicLastMessage(): MqttMessage | undefined {
+      return this.topics[this.selectedConnection]?.[this.selectedTopic]?.[0]
     }
   },
   actions: {
@@ -60,7 +62,12 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       })
     },
     setSelectedTopic(topic: string) {
-      this.selectedTopic = topic
+      const [clientKey, ...topicParts] = topic.split('/')
+
+      this.selectedConnection = clientKey
+      this.selectedTopic = topicParts.join('/')
+
+      console.log(this.selectedConnection, this.selectedTopic)
     }
   }
 })

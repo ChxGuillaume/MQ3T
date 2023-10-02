@@ -11,6 +11,11 @@ const api: ElectronIpc = {
 
   connectMqtt: (connection) => ipcRenderer.send('connect-mqtt', connection),
   disconnectMqtt: (clientKey) => ipcRenderer.send('disconnect-mqtt', clientKey),
+
+  sendMqttMessage: (clientKey, topic, message, options) => {
+    ipcRenderer.send('send-mqtt-message', { clientKey, topic, message, options })
+  },
+
   fetchMqttStatus: () => ipcRenderer.send('fetch-mqtt-status')
 }
 

@@ -26,6 +26,7 @@
     "@quasar/extras": "^1.16.6",
     "electron-updater": "^6.1.1",
     "moment": "^2.29.4",
+    "monaco-editor": "^0.43.0",
     "mqtt": "^5.0.5",
     "pinia": "^2.1.6",
     "quasar": "^2.12.7",
@@ -57,6 +58,7 @@
     "tailwindcss": "^3.3.3",
     "typescript": "^5.1.6",
     "vite": "^4.4.9",
+    "vite-plugin-monaco-editor": "^1.1.0",
     "vue": "^3.3.4",
     "vue-tsc": "^1.8.8"
   }

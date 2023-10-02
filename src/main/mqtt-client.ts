@@ -1,5 +1,5 @@
 import { MqttConnection } from '../types/mqtt-connection'
-import { OnMessageCallback } from 'mqtt/src/lib/client'
+import { IClientPublishOptions, OnMessageCallback } from 'mqtt/src/lib/client'
 import mqtt from 'mqtt'
 
 export class MqttClient {
@@ -36,8 +36,8 @@ export class MqttClient {
     this.client.subscribe(topic)
   }
 
-  public publish(topic: string, message: string) {
-    this.client.publish(topic, message)
+  public publish(topic: string, message: string, options?: IClientPublishOptions) {
+    this.client.publish(topic, message, options)
   }
 
   public disconnect() {

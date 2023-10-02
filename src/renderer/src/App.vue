@@ -7,6 +7,7 @@ import TabSettings from './tabs/TabSettings.vue'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import TabTopics from './tabs/TabTopics.vue'
+import TabActions from './tabs/TabActions.vue'
 
 const currentTab = ref('connections')
 
@@ -110,13 +111,16 @@ onMounted(() => {
         class="tw-h-full tw-bg-transparent"
         animated
         vertical
+        keep-alive
         transition-prev="jump-up"
         transition-next="jump-down"
       >
         <q-tab-panel class="tw-p-0" name="topics">
           <TabTopics />
         </q-tab-panel>
-        <q-tab-panel name="actions">Actions</q-tab-panel>
+        <q-tab-panel name="actions">
+          <TabActions />
+        </q-tab-panel>
         <q-tab-panel name="automations">Automations</q-tab-panel>
 
         <q-tab-panel name="settings">
