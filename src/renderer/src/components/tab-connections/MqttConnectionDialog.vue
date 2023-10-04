@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { MqttConnection } from '../../../../types/mqtt-connection'
-import { reactive, ref, watch } from 'vue'
-import { QDialog, QForm } from 'quasar'
+import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
+import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
 import { v4 as uuidV4 } from 'uuid'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   dialogOpened: boolean
@@ -17,13 +17,22 @@ const emits = defineEmits([
   'update:dialogOpened'
 ])
 
-const addConnectionDialogRef = ref<QDialog | null>(null)
-const addConnectionFormRef = ref<QForm | null>(null)
+const addSubscriptionTopicPopupProxyRef = ref<QPopupProxy | null>(null)
+const addSubscriptionTopicFormRef = ref<QForm | null>(null)
+const connectionFormRef = ref<QForm | null>(null)
+const dialogRef = ref<QDialog | null>(null)
 
 const advancedSettingsExpanded = ref(false)
+const subscribedTopicsExpanded = ref(false)
 const showPassword = ref(false)
 
-const form = reactive<MqttConnection>({
+const columns = [
+  { name: 'topic', align: 'left', label: 'Topic', field: 'topic' },
+  { name: 'qos', align: 'right', label: 'QoS', field: 'qos' },
+  { name: 'actions', align: 'right', label: '', field: 'actions' }
+] as QTableProps['columns']
+
+const form = ref<MqttConnection>({
   clientKey: `connection-${uuidV4()}`,
   name: '',
   protocol: 'mqtt',
@@ -31,48 +40,86 @@ const form = reactive<MqttConnection>({
   port: 1883,
   clientId: `mqtt-workspace_${uuidV4()}`,
   username: '',
-  password: ''
+  password: '',
+  subscribedTopics: [
+    { topic: '#', qos: 2 },
+    { topic: '$SYS/#', qos: 2 }
+  ]
+})
+
+const addTopicForm = ref<MqttTopicSubscription>({
+  topic: '',
+  qos: 0
 })
 
 const clearForm = () => {
-  form.clientKey = `connection-${uuidV4()}`
-  form.name = ''
-  form.protocol = 'mqtt'
-  form.hostname = ''
-  form.port = 1883
-  form.clientId = `mqtt-workspace_${uuidV4()}`
-  form.username = ''
-  form.password = ''
+  form.value.clientKey = `connection-${uuidV4()}`
+  form.value.name = ''
+  form.value.protocol = 'mqtt'
+  form.value.hostname = ''
+  form.value.port = 1883
+  form.value.clientId = `mqtt-workspace_${uuidV4()}`
+  form.value.username = ''
+  form.value.password = ''
+  form.value.subscribedTopics = [
+    { topic: '#', qos: 2 },
+    { topic: '$SYS/#', qos: 2 }
+  ]
 }
 
-const handleAddConnection = () => {
-  addConnectionFormRef.value?.validate().then((success: boolean) => {
-    if (success) {
-      emits('create:connection', Object.assign({}, form))
-      addConnectionDialogRef.value?.hide()
-      clearForm()
-    }
+const handleAddTopic = async () => {
+  const validForm = await addSubscriptionTopicFormRef.value?.validate()
+
+  if (!validForm) return
+
+  form.value.subscribedTopics.push({
+    topic: addTopicForm.value.topic,
+    qos: addTopicForm.value.qos
   })
+
+  console.log(addSubscriptionTopicPopupProxyRef.value)
+  addSubscriptionTopicPopupProxyRef.value?.hide()
+  clearAddTopicForm()
 }
 
-const handleUpdateConnection = () => {
-  addConnectionFormRef.value?.validate().then((success: boolean) => {
-    if (success) {
-      emits('update:connection', Object.assign({}, form))
-      addConnectionDialogRef.value?.hide()
-      clearForm()
-    }
-  })
+const clearAddTopicForm = () => {
+  addTopicForm.value.topic = ''
+  addTopicForm.value.qos = 0
+}
+
+const handleDeleteSubscribedTopic = (index: number) => {
+  form.value.subscribedTopics.splice(index, 1)
+}
+
+const handleAddConnection = async () => {
+  const validForm = await connectionFormRef.value?.validate()
+
+  if (!validForm) return
+
+  emits('create:connection', Object.assign({}, form.value))
+  handleCloseForm()
+}
+
+const handleUpdateConnection = async () => {
+  const validForm = await connectionFormRef.value?.validate()
+
+  if (!validForm) return
+
+  emits('update:connection', Object.assign({}, form.value))
+  handleCloseForm()
 }
 
 const handleDeleteConnection = () => {
-  emits('delete:connection', Object.assign({}, form))
-  addConnectionDialogRef.value?.hide()
-  clearForm()
+  emits('delete:connection', Object.assign({}, form.value))
+  handleCloseForm()
 }
 
 const handleCloseForm = () => {
-  addConnectionDialogRef.value?.hide()
+  dialogRef.value?.hide()
+
+  advancedSettingsExpanded.value = false
+  subscribedTopicsExpanded.value = false
+
   clearForm()
   emits('update:dialogOpened', false)
 }
@@ -80,16 +127,16 @@ const handleCloseForm = () => {
 const handleProtocolChange = (protocol: string) => {
   switch (protocol) {
     case 'mqtt':
-      form.port = 1883
+      form.value.port = 1883
       break
     case 'mqtts':
-      form.port = 8883
+      form.value.port = 8883
       break
     case 'ws':
-      form.port = 8083
+      form.value.port = 8083
       break
     case 'wss':
-      form.port = 8084
+      form.value.port = 8084
       break
   }
 }
@@ -109,13 +156,18 @@ const rules = {
   clientId: [(v: string) => !!v || 'Client ID is required']
 }
 
+const addSubscriptionTopicRules = {
+  topic: [(v: string) => !!v || 'Topic is required'],
+  qos: [(v: number) => v >= 0 || v <= 2 || 'QoS must be between 0 and 2']
+}
+
 watch(
   () => props.dialogOpened,
   (value) => {
     if (value) {
-      addConnectionDialogRef.value?.show()
+      dialogRef.value?.show()
     } else {
-      addConnectionDialogRef.value?.hide()
+      dialogRef.value?.hide()
     }
   }
 )
@@ -124,24 +176,17 @@ watch(
   () => props.dialogOpened && props.connection,
   (value) => {
     if (value) {
-      form.clientKey = value.clientKey
-      form.name = value.name
-      form.protocol = value.protocol
-      form.hostname = value.hostname
-      form.port = value.port
-      form.clientId = value.clientId
-      form.username = value.username
-      form.password = value.password
+      Object.assign(form.value, JSON.parse(JSON.stringify(props.connection)))
     }
   }
 )
 </script>
 
 <template>
-  <q-dialog ref="addConnectionDialogRef" @hide="handleCloseForm">
+  <q-dialog ref="dialogRef" @hide="handleCloseForm">
     <q-card flat style="width: 100%; max-width: 700px">
       <q-card-section>
-        <q-form ref="addConnectionFormRef" class="tw-flex tw-flex-col tw-gap-4">
+        <q-form ref="connectionFormRef" class="tw-flex tw-flex-col tw-gap-4">
           <div>
             <q-input v-model="form.name" filled label="Name" :rules="rules.name" />
           </div>
@@ -156,7 +201,7 @@ watch(
               :rules="rules.protocol"
               @update:model-value="handleProtocolChange"
             >
-              <template v-slot:selected-item>
+              <template #selected-item>
                 {{ mqttProtocolOptions.find((o) => o.value === form.protocol)?.label }}
               </template>
             </q-select>
@@ -168,7 +213,7 @@ watch(
               :rules="rules.hostname"
               @update:model-value="
                 (val) => {
-                  form.hostname = `${val}`.replace(/[^a-zA-Z0-9.]*/g, '')
+                  form.hostname = `${val}`.replace(/[^a-zA-Z0-9.-]*/g, '')
                 }
               "
             />
@@ -192,7 +237,7 @@ watch(
               label="Password"
               :type="!showPassword ? 'password' : 'text'"
             >
-              <template v-slot:append>
+              <template #append>
                 <q-icon
                   :name="!showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"
                   class="cursor-pointer"
@@ -203,7 +248,123 @@ watch(
             </q-input>
           </div>
           <div>
-            <q-expansion-item dense v-model="advancedSettingsExpanded" label="Advanced Settings">
+            <q-expansion-item v-model="subscribedTopicsExpanded" dense label="Subscribed Topics">
+              <q-card>
+                <q-card-section class="tw-px-0">
+                  <q-card flat class="tw-rounded-xl card-secondary-background">
+                    <q-table
+                      class="tw-bg-transparent"
+                      :rows="form.subscribedTopics"
+                      :columns="columns"
+                      row-key="topic"
+                      :rows-per-page-options="[0]"
+                      hide-bottom
+                      dense
+                      flat
+                    >
+                      <template #bottom-row>
+                        <q-tr>
+                          <q-td colspan="3" style="padding: 0">
+                            <q-btn color="primary" dense class="tw-w-full">
+                              <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+
+                              <q-popup-proxy ref="addSubscriptionTopicPopupProxyRef">
+                                <q-card>
+                                  <q-form
+                                    ref="addSubscriptionTopicFormRef"
+                                    class="tw-p-2 tw-flex tw-gap-2"
+                                  >
+                                    <q-input
+                                      v-model="addTopicForm.topic"
+                                      autofocus
+                                      filled
+                                      dense
+                                      hide-bottom-space
+                                      label="Topic"
+                                      class="tw-w-[250px] hide-error-message-slot"
+                                      :rules="addSubscriptionTopicRules.topic"
+                                    />
+                                    <q-select
+                                      v-model="addTopicForm.qos"
+                                      :options="[0, 1, 2]"
+                                      filled
+                                      dense
+                                      hide-bottom-space
+                                      label="QoS"
+                                      class="tw-w-[100px] hide-error-message-slot"
+                                      :rules="addSubscriptionTopicRules.qos"
+                                    />
+                                    <q-btn
+                                      class="tw-h-[40px]"
+                                      color="primary"
+                                      dense
+                                      @click="handleAddTopic"
+                                    >
+                                      <q-icon class="tw-m-2" size="xs" name="fa-solid fa-plus" />
+                                    </q-btn>
+                                  </q-form>
+                                </q-card>
+                              </q-popup-proxy>
+                            </q-btn>
+                          </q-td>
+                        </q-tr>
+                      </template>
+                      <template #body-cell-topic="topicProps">
+                        <q-td key="topic" :props="topicProps">
+                          {{ topicProps.value }}
+                          <q-popup-edit
+                            v-slot="scope"
+                            v-model="form.subscribedTopics[topicProps.rowIndex].topic"
+                            auto-save
+                          >
+                            <q-input
+                              v-model="scope.value"
+                              autofocus
+                              filled
+                              dense
+                              @keyup.enter="scope.set"
+                            />
+                          </q-popup-edit>
+                        </q-td>
+                      </template>
+                      <template #body-cell-qos="qosProps">
+                        <q-td key="qos" :props="qosProps" class="tw-text-end">
+                          <q-badge color="primary" text-color="white" :label="qosProps.value" />
+                          <q-popup-edit
+                            v-slot="scope"
+                            v-model="form.subscribedTopics[qosProps.rowIndex].qos"
+                            auto-save
+                          >
+                            <q-select
+                              v-model="scope.value"
+                              :options="[0, 1, 2]"
+                              autofocus
+                              filled
+                              dense
+                            />
+                          </q-popup-edit>
+                        </q-td>
+                      </template>
+                      <template #body-cell-actions="itemProps">
+                        <q-td auto-width class="tw-text-end">
+                          <q-btn
+                            color="red"
+                            round
+                            flat
+                            size="xs"
+                            icon="fa-solid fa-trash"
+                            @click="handleDeleteSubscribedTopic(itemProps.rowIndex)"
+                          />
+                        </q-td>
+                      </template>
+                    </q-table>
+                  </q-card>
+                </q-card-section>
+              </q-card>
+            </q-expansion-item>
+          </div>
+          <div>
+            <q-expansion-item v-model="advancedSettingsExpanded" dense label="Advanced Settings">
               <q-card>
                 <q-card-section class="tw-px-0">
                   <!--                  <q-input filled label="CA Certificate" />-->

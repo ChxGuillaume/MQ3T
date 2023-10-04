@@ -15,7 +15,8 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     topics: {} as Record<string, Record<string, MqttMessage[]>>,
     topicsStructure: {} as Record<string, Record<string, any>>,
     selectedConnection: '',
-    selectedTopic: ''
+    selectedTopic: '',
+    topicSearch: ''
   }),
   getters: {
     getSelectedTopicMessages(): MqttMessage[] {
@@ -88,6 +89,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       this.selectedConnection = clientKey
       this.selectedTopic = topicParts.join('/')
+    },
+    setTopicSearch(topicSearch: string) {
+      this.topicSearch = topicSearch
     }
   }
 })

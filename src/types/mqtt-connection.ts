@@ -1,3 +1,8 @@
+export type MqttTopicSubscription = {
+  topic: string
+  qos: 0 | 1 | 2
+}
+
 export type MqttConnection = {
   clientKey: string
   name: string
@@ -7,4 +12,5 @@ export type MqttConnection = {
   clientId: string
   username?: string
   password?: string
+  subscribedTopics: MqttTopicSubscription[]
 }

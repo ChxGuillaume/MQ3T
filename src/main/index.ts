@@ -1,5 +1,5 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
 import icon from '../../resources/mqtt.png?asset'
@@ -35,7 +35,7 @@ function createWindow(): void {
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
-    createConnection(mainWindow, connection)
+    createConnection(mainWindow, connection).then()
   })
 
   ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
@@ -106,7 +106,7 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-const createConnection = (mainWindow: BrowserWindow, connection: MqttConnection) => {
+const createConnection = async (mainWindow: BrowserWindow, connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
   mqttClientsState.set(clientKey, 'connecting')
@@ -140,16 +140,7 @@ const createConnection = (mainWindow: BrowserWindow, connection: MqttConnection)
     // mainWindow.webContents.send('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
-  // clientMqtt.subscribe('$SYS/#')
-  clientMqtt.subscribe('nekotiki/#')
-  clientMqtt.subscribe('CLSensors/#')
-  clientMqtt.subscribe('siiguti/temperatura/#')
-
-  setTimeout(() => {
-    clientMqtt.publish('nekotiki/test', 'Hello World!')
-    clientMqtt.publish('nekotiki/test/test/test/test/test', 'Hello World!')
-    clientMqtt.publish('nekotiki/test/test', 'Hello World!')
-    clientMqtt.publish('nekotiki/test/test/test', 'Hello World!')
-    clientMqtt.publish('nekotiki/test/test/test/test', 'Hello World!')
-  }, 3000)
+  connection.subscribedTopics.forEach((topic) => {
+    clientMqtt.subscribe(topic.topic, { qos: topic.qos })
+  })
 }

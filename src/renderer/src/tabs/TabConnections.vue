@@ -10,27 +10,23 @@ const mqttConnectionsStore = useMqttConnectionsStore()
 
 const electronApi = window.api as ElectronIpc
 
-const addConnectionDialogOpened = ref(false)
 const editConnectionDialogOpened = ref(false)
+const addConnectionDialogOpened = ref(false)
 
-const editConnection = ref<MqttConnection | null>(null)
+const editConnection = ref<MqttConnection | undefined>(undefined)
 
 const handleEdit = (connection: MqttConnection) => {
-  console.log('handleEdit', connection)
-
   editConnection.value = connection
-
   editConnectionDialogOpened.value = true
 }
 
 const handleConnect = (connection: MqttConnection) => {
-  console.log('handleConnect', connection)
-  console.log('handleConnect', Object.assign({}, connection))
-  electronApi.connectMqtt(Object.assign({}, connection))
+  const clonedConnection = JSON.parse(JSON.stringify(connection))
+
+  electronApi.connectMqtt(Object.assign({}, clonedConnection))
 }
 
 const handleDisconnect = (connection: MqttConnection) => {
-  console.log('handleDisconnect', connection)
   electronApi.disconnectMqtt(connection.clientKey)
 }
 

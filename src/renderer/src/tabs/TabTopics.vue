@@ -91,6 +91,13 @@ const handleSelectTopic = (topic: string) => {
   mqttTopicsStore.setSelectedTopic(topic)
   codePreviewData.value = ''
 }
+
+const topicSearch = computed({
+  get: () => mqttTopicsStore.topicSearch,
+  set: (value) => {
+    mqttTopicsStore.setTopicSearch(value)
+  }
+})
 </script>
 
 <template>
@@ -101,20 +108,32 @@ const handleSelectTopic = (topic: string) => {
     unit="px"
     reverse
   >
-    <template v-slot:before>
-      <TopicItem
-        v-if="showTopics"
-        v-for="[key, value] in Object.entries(mqttTopicsStore.topicsStructure)"
-        :key="key"
-        :topic-key="key"
-        :topic-path="key"
-        :topic-index="0"
-        :topic-structure="value"
-        @topic:click="handleTopicClick"
-      />
+    <template #before>
+      <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
+        <div class="tw-p-2">
+          <q-input v-model="topicSearch" filled label="Search" dense />
+        </div>
+        <q-separator />
+        <div class="tw-overflow-auto">
+          <q-virtual-scroll
+            v-slot="{ item: [key, value] }"
+            class="tw-p-3 tw-h-full tw-max-h-full"
+            :items="Object.entries(mqttTopicsStore.topicsStructure)"
+          >
+            <TopicItem
+              :key="key"
+              :topic-key="key"
+              :topic-path="key"
+              :topic-index="0"
+              :topic-structure="value"
+              @topic:click="handleTopicClick"
+            />
+          </q-virtual-scroll>
+        </div>
+      </div>
     </template>
 
-    <template v-slot:after>
+    <template #after>
       <q-card class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr auto">
         <div class="tw-p-4 tw-flex tw-flex-col tw-gap-4">
           <div class="tw-flex tw-gap-2">
@@ -204,11 +223,11 @@ const handleSelectTopic = (topic: string) => {
           </q-tab-panel>
 
           <q-tab-panel name="publish">
-            <div class="text-h6">In Work</div>
+            <div class="text-h6">Publish In Work</div>
           </q-tab-panel>
 
           <q-tab-panel name="stats">
-            <div class="text-h6">In Work</div>
+            <div class="text-h6">Stats In Work</div>
           </q-tab-panel>
         </q-tab-panels>
 
@@ -217,10 +236,9 @@ const handleSelectTopic = (topic: string) => {
         <q-tabs
           v-model="tab"
           inline-label
-          align="justify"
+          active-color="white"
           active-bg-color="primary"
           indicator-color="transparent"
-          active-color="white"
         >
           <q-tab name="values">
             <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" />

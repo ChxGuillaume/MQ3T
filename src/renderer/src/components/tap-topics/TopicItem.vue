@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
 
@@ -23,9 +23,19 @@ const props = defineProps({
   }
 })
 
+const expandedTopicsSection = ref(props.topicIndex === 0)
+
 const emits = defineEmits(['topic:click'])
 
 const handleTopicClick = () => {
+  if (!isLastTopicPart.value) {
+    if (isSelectedTopic.value && expandedTopicsSection.value) {
+      expandedTopicsSection.value = !expandedTopicsSection.value
+    } else if (!expandedTopicsSection.value) {
+      expandedTopicsSection.value = !expandedTopicsSection.value
+    }
+  }
+
   emits('topic:click', props.topicPath)
 }
 
@@ -38,40 +48,46 @@ const isSelectedTopic = computed(() => {
 
   return mqttTopicsStore.selectedTopic === topic.join('/')
 })
+
+const sortedTopicStructure = computed(() => {
+  return Object.entries(props.topicStructure).sort((a, b) => a[0].localeCompare(b[0]))
+})
 </script>
 
 <template>
   <div v-if="!isLastTopicPart" @click="handleTopicClick">
     <div class="tw-flex">
       <q-card
-        @click.stop="handleTopicClick"
         flat
-        class="topic-item-card card-secondary-background tw-pr-3"
-        :class="{ active: isSelectedTopic }"
+        class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
+        :class="{ active: isSelectedTopic, opened: expandedTopicsSection }"
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
+        @click.stop="handleTopicClick"
       >
-        <q-icon name="fa-solid fa-caret-right" size="xs" class="tw-mr-1" />
+        <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
         {{ topicKey }}
       </q-card>
     </div>
-    <TopicItem
-      v-for="[key, value] in Object.entries(topicStructure)"
-      class="tw-mt-1"
-      :key="key"
-      :topic-key="key"
-      :topic-path="`${topicPath}/${key}`"
-      :topic-index="topicIndex + 1"
-      :topic-structure="value"
-      @topic:click="$emit('topic:click', $event)"
-    />
+    <template v-if="expandedTopicsSection">
+      <TopicItem
+        v-for="[key, value] in sortedTopicStructure"
+        :key="key"
+        class="tw-mt-1"
+        :topic-key="key"
+        :topic-path="`${topicPath}/${key}`"
+        :topic-index="topicIndex + 1"
+        :topic-structure="value"
+        @topic:click="$emit('topic:click', $event)"
+      />
+    </template>
   </div>
   <div v-else class="tw-flex">
     <q-card
-      @click.stop="handleTopicClick"
       flat
-      class="topic-item-card card-secondary-background tw-px-3"
+      class="topic-item-card card-secondary-background tw-px-3 tw-select-none"
       :class="{ active: isSelectedTopic }"
       :style="{ 'margin-left': `${topicIndex * 20}px` }"
+      @click.stop="handleTopicClick"
     >
       {{ topicKey }}
     </q-card>
@@ -79,9 +95,10 @@ const isSelectedTopic = computed(() => {
 </template>
 
 <style lang="less">
-.expand-icon-style {
-  width: 40px;
-  min-width: 40px;
+.opened {
+  .expand-icon {
+    transform: rotate(90deg);
+  }
 }
 
 .topic-item-card {
