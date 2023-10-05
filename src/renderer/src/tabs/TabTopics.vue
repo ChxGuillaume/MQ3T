@@ -52,7 +52,7 @@ const formatMessage = (message: string) => {
     data = JSON.parse(message)
     data = JSON.stringify(data, null, 4)
   } catch (e) {
-    console.log(e)
+    /* empty */
   }
 
   return data
@@ -122,6 +122,7 @@ const topicSearch = computed({
           >
             <TopicItem
               :key="key"
+              :client-key="key"
               :topic-key="key"
               :topic-path="key"
               :topic-index="0"
@@ -168,6 +169,7 @@ const topicSearch = computed({
               <div v-if="selectedTopicLastMessage?.retained">
                 <q-chip
                   size="sm"
+                  class="text-weight-bold"
                   color="primary"
                   text-color="white"
                   icon-right="fa-solid fa-xmark"

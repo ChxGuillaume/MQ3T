@@ -311,7 +311,7 @@ watch(
                       </template>
                       <template #body-cell-topic="topicProps">
                         <q-td key="topic" :props="topicProps">
-                          {{ topicProps.value }}
+                          <span class="tw-cursor-pointer">{{ topicProps.value }}</span>
                           <q-popup-edit
                             v-slot="scope"
                             v-model="form.subscribedTopics[topicProps.rowIndex].topic"
@@ -329,7 +329,12 @@ watch(
                       </template>
                       <template #body-cell-qos="qosProps">
                         <q-td key="qos" :props="qosProps" class="tw-text-end">
-                          <q-badge color="primary" text-color="white" :label="qosProps.value" />
+                          <q-badge
+                            class="tw-cursor-pointer"
+                            color="primary"
+                            text-color="white"
+                            :label="qosProps.value"
+                          />
                           <q-popup-edit
                             v-slot="scope"
                             v-model="form.subscribedTopics[qosProps.rowIndex].qos"

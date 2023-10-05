@@ -1,0 +1,118 @@
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Regular.ttf");
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Italic.ttf");
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Black.ttf");
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-BlackItalic.ttf");
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-ExtraBold.ttf");
+  font-weight: 800;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-ExtraBoldItalic.ttf");
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Bold.ttf");
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-BoldItalic.ttf");
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-SemiBold.ttf");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-SemiBoldItalic.ttf");
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Medium.ttf");
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-MediumItalic.ttf");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Light.ttf");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-LightItalic.ttf");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-ExtraLight.ttf");
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-ExtraLightItalic.ttf");
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-Thin.ttf");
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: 'Monsterrat';
+  src: url("../fonts/montserrat/Montserrat-ThinItalic.ttf");
+  font-weight: 100;
+  font-style: italic;
+}
+
+* {
+  font-family: 'Monsterrat', sans-serif;
+}

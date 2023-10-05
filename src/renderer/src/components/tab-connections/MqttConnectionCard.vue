@@ -15,7 +15,7 @@ const connectionStatus = computed(() => {
   return mqttConnectionsStore.getConnectionStatus(props.connection.clientKey)
 })
 
-const formatMqttUrl = (connection: any) => {
+const formatMqttUrl = (connection: MqttConnection) => {
   return `${connection.protocol}://${connection.hostname}:${connection.port}`
 }
 </script>
@@ -28,6 +28,7 @@ const formatMqttUrl = (connection: any) => {
       </p>
       <q-chip
         v-if="connectionStatus === 'connected'"
+        class="text-weight-bold"
         size="sm"
         color="green"
         text-color="white"
@@ -35,12 +36,20 @@ const formatMqttUrl = (connection: any) => {
       />
       <q-chip
         v-else-if="connectionStatus === 'connecting'"
+        class="text-weight-bold"
         size="sm"
         color="yellow"
         text-color="black"
         label="Connecting"
       />
-      <q-chip v-else size="sm" color="red" text-color="white" label="Disconnected" />
+      <q-chip
+        v-else
+        class="text-weight-bold"
+        size="sm"
+        color="red"
+        text-color="white"
+        label="Disconnected"
+      />
     </div>
     <p
       class="tw-text-sm tw-text-neutral-500 tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1"

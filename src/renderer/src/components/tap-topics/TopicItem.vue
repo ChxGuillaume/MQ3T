@@ -5,6 +5,10 @@ import { computed, ref } from 'vue'
 const mqttTopicsStore = useMqttTopicsStore()
 
 const props = defineProps({
+  clientKey: {
+    type: String,
+    required: true
+  },
   topicKey: {
     type: String,
     required: true
@@ -49,6 +53,12 @@ const isSelectedTopic = computed(() => {
   return mqttTopicsStore.selectedTopic === topic.join('/')
 })
 
+const parsedTopicPath = computed(() => {
+  const [_, ...topic] = props.topicPath.split('/')
+
+  return topic.join('/')
+})
+
 const sortedTopicStructure = computed(() => {
   return Object.entries(props.topicStructure).sort((a, b) => a[0].localeCompare(b[0]))
 })
@@ -66,6 +76,10 @@ const sortedTopicStructure = computed(() => {
       >
         <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
         {{ topicKey }}
+        <span v-if="!expandedTopicsSection" class="tw-text-xs topic-item-details">
+          ({{ mqttTopicsStore.getSubtopicsCount(clientKey, parsedTopicPath) }} topics
+          {{ mqttTopicsStore.getSubTopicsMessagesCount(clientKey, parsedTopicPath) }} messages)
+        </span>
       </q-card>
     </div>
     <template v-if="expandedTopicsSection">
@@ -73,6 +87,7 @@ const sortedTopicStructure = computed(() => {
         v-for="[key, value] in sortedTopicStructure"
         :key="key"
         class="tw-mt-1"
+        :client-key="clientKey"
         :topic-key="key"
         :topic-path="`${topicPath}/${key}`"
         :topic-index="topicIndex + 1"
@@ -90,6 +105,9 @@ const sortedTopicStructure = computed(() => {
       @click.stop="handleTopicClick"
     >
       {{ topicKey }}
+      <span class="tw-text-xs topic-item-details">
+        = {{ mqttTopicsStore.getTopicLastMessage(props.clientKey, parsedTopicPath)?.message }}
+      </span>
     </q-card>
   </div>
 </template>
@@ -113,6 +131,10 @@ const sortedTopicStructure = computed(() => {
   .topic-item-card.active {
     background: #65016455 !important;
   }
+
+  .topic-item-details {
+    @apply tw-text-neutral-500;
+  }
 }
 
 .body--dark {
@@ -122,6 +144,10 @@ const sortedTopicStructure = computed(() => {
 
   .topic-item-card.active {
     background: #650164ee !important;
+  }
+
+  .topic-item-details {
+    @apply tw-text-neutral-400;
   }
 }
 </style>

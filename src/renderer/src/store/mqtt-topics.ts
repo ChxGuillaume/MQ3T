@@ -10,17 +10,32 @@ type MqttMessage = {
   createdAt: Date
 }
 
+type MqttTopicStructure = {
+  [key: string]: MqttTopicStructure | null
+}
+
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
-    topics: {} as Record<string, Record<string, MqttMessage[]>>,
-    topicsStructure: {} as Record<string, Record<string, any>>,
+    topicsMessages: {} as Record<string, Record<string, MqttMessage[]>>,
+    subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
+    topicsStructure: {} as Record<string, MqttTopicStructure>,
     selectedConnection: '',
     selectedTopic: '',
     topicSearch: ''
   }),
   getters: {
+    getSubtopicsCount: (state) => (clientKey: string, subTopic: string) => {
+      const topicList = Object.keys(state.topicsMessages[clientKey] || {})
+
+      if (!topicList.length) return 0
+
+      return topicList.filter((topic) => topic.startsWith(subTopic)).length
+    },
+    getSubTopicsMessagesCount: (state) => (clientKey: string, topic: string) => {
+      return state.subTopicsMessagesCount[clientKey]?.[topic] || 0
+    },
     getSelectedTopicMessages(): MqttMessage[] {
-      const connectionTopics = this.topics[this.selectedConnection]
+      const connectionTopics = this.topicsMessages[this.selectedConnection]
 
       if (!connectionTopics) return []
 
@@ -31,8 +46,15 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         return b.createdAt.getTime() - a.createdAt.getTime()
       })
     },
+    getTopicLastMessage:
+      (state) =>
+      (clientKey: string, topic: string): MqttMessage | null => {
+        const topicMessages = state.topicsMessages[clientKey]?.[topic]
+
+        return topicMessages?.[topicMessages.length - 1] || null
+      },
     getSelectedTopicLastMessage(): MqttMessage | undefined {
-      return this.topics[this.selectedConnection]?.[this.selectedTopic]?.[0]
+      return this.topicsMessages[this.selectedConnection]?.[this.selectedTopic]?.[0]
     }
   },
   actions: {
@@ -42,12 +64,12 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       message: string,
       extras: { qos: MqttMessage['qos']; retained?: boolean }
     ) {
-      if (!this.topics[clientKey]) this.topics[clientKey] = {}
-      if (!this.topics[clientKey][topic]) this.topics[clientKey][topic] = []
+      if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
+      if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
 
       const settingsStore = useSettingsStore()
 
-      this.topics[clientKey][topic].push({
+      this.topicsMessages[clientKey][topic].push({
         uid: uuidV4(),
         message,
         qos: extras.qos,
@@ -58,31 +80,33 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       ///////////
       // Removing old messages when the limit is reached
       const amountMessagesToRemove =
-        this.topics[clientKey][topic].length - settingsStore.maxMessages + 1
+        this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages + 1
 
       if (amountMessagesToRemove > 1) {
-        this.topics[clientKey][topic].splice(0, amountMessagesToRemove)
+        this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
       }
 
       ///////////
       // Creating Topic structure cache
       if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
+      if (!this.subTopicsMessagesCount[clientKey]) this.subTopicsMessagesCount[clientKey] = {}
 
       const topicParts = topic.split('/')
 
+      let currentTopicPath = ''
       let currentTopicStructure = this.topicsStructure[clientKey]
 
-      topicParts.forEach((topicPart, index) => {
-        const lastPart = index === topicParts.length - 1
-
+      for (const topicPart of topicParts) {
         if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
+        currentTopicPath += `${topicPart}`
 
-        if (lastPart) {
-          if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
-        }
+        if (!this.subTopicsMessagesCount[clientKey][currentTopicPath]) {
+          this.subTopicsMessagesCount[clientKey][currentTopicPath] = 1
+        } else this.subTopicsMessagesCount[clientKey][currentTopicPath] += 1
 
-        currentTopicStructure = currentTopicStructure[topicPart]
-      })
+        currentTopicStructure = currentTopicStructure[topicPart] || {}
+        currentTopicPath += `/`
+      }
     },
     setSelectedTopic(topic: string) {
       const [clientKey, ...topicParts] = topic.split('/')
