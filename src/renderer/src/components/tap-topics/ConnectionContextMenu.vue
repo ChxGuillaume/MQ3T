@@ -33,7 +33,9 @@ const handleReconnect = (connection: MqttConnection) => {
 }
 
 const handleHideConnection = (connection: MqttConnection) => {
-  mqttConnectionsStore.hideConnection(connection.clientKey)
+  setTimeout(() => {
+    mqttConnectionsStore.hideConnection(connection.clientKey)
+  }, 50)
 }
 
 const connectionStatus = computed(() => {
