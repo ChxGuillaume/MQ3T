@@ -152,7 +152,7 @@ const formatDuration = (duration: number) => {
               <template v-if="expandConnection[value.clientKey]">
                 <TopicItem
                   v-for="[pathKey, structure] in Object.entries(
-                    mqttTopicsStore.getConnectionTopicsStructure(value.clientKey)
+                    mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
                   ).sort((a, b) => a[0].localeCompare(b[0]))"
                   :client-key="value.clientKey"
                   :topic-key="pathKey"

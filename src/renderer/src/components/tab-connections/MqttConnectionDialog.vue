@@ -77,7 +77,6 @@ const handleAddTopic = async () => {
     qos: addTopicForm.value.qos
   })
 
-  console.log(addSubscriptionTopicPopupProxyRef.value)
   addSubscriptionTopicPopupProxyRef.value?.hide()
   clearAddTopicForm()
 }
@@ -283,6 +282,7 @@ watch(
                                       label="Topic"
                                       class="tw-w-[250px] hide-error-message-slot"
                                       :rules="addSubscriptionTopicRules.topic"
+                                      @keydown.enter="handleAddTopic"
                                     />
                                     <q-select
                                       v-model="addTopicForm.qos"

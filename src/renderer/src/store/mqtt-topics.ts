@@ -26,6 +26,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
     topicsMessages: {} as Record<string, Record<string, MqttMessage[]>>,
     topicsLastMessage: {} as Record<string, Record<string, MqttMessage>>,
+    subTopicsTopicsCount: {} as Record<string, Record<string, number>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
     topicsStructure: {} as Record<string, MqttTopicStructure>,
     selectedConnection: '',
@@ -41,12 +42,8 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       (clientKey: string): MqttTopicStructure => {
         return state.topicsStructure[clientKey] || {}
       },
-    getSubtopicsCount: (state) => (clientKey: string, subTopic: string) => {
-      const topicList = Object.keys(state.topicsMessages[clientKey] || {})
-
-      if (!topicList.length) return 0
-
-      return topicList.filter((topic) => topic.startsWith(subTopic)).length
+    getSubTopicsTopicsCount: (state) => (clientKey: string, topic: string) => {
+      return state.subTopicsTopicsCount[clientKey]?.[topic] || 0
     },
     getSubTopicsMessagesCount: (state) => (clientKey: string, topic: string) => {
       return state.subTopicsMessagesCount[clientKey]?.[topic] || 0
@@ -70,7 +67,39 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       },
     getSelectedTopicLastMessage(): MqttMessage | undefined {
       return this.topicsLastMessage[this.selectedConnection]?.[this.selectedTopic]
-    }
+    },
+    getFilteredTopicsList: (state) => (clientKey: string) => {
+      return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
+        return topic.includes(state.topicSearch)
+      })
+    },
+    getFilteredTopicsStructure:
+      (state) =>
+      (clientKey: string): MqttTopicStructure => {
+        const topicStructure = state.topicsStructure[clientKey] || {}
+
+        if (!state.topicSearch) return topicStructure
+
+        const filterTopicStructure = (topicStructure: MqttTopicStructure): MqttTopicStructure => {
+          const filteredTopicStructure: MqttTopicStructure = {}
+
+          for (const topicKey in topicStructure) {
+            if (topicKey.toLowerCase().includes(state.topicSearch.toLowerCase())) {
+              filteredTopicStructure[topicKey] = topicStructure[topicKey]
+            } else {
+              const subTopicStructure = filterTopicStructure(topicStructure[topicKey] || {})
+
+              if (Object.keys(subTopicStructure).length) {
+                filteredTopicStructure[topicKey] = subTopicStructure
+              }
+            }
+          }
+
+          return filteredTopicStructure
+        }
+
+        return filterTopicStructure(topicStructure)
+      }
   },
   actions: {
     addMessage(
@@ -80,6 +109,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       extras: { qos: MqttMessage['qos']; retained?: boolean }
     ) {
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
+
+      let topicExists = this.topicsMessages[clientKey][topic]
+
       if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
       if (!this.topicsLastMessage[clientKey]) this.topicsLastMessage[clientKey] = {}
 
@@ -109,25 +141,45 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
       }
 
-      ///////////
-      // Creating Topic structure cache
-      if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
-      if (!this.subTopicsMessagesCount[clientKey]) this.subTopicsMessagesCount[clientKey] = {}
-
       const topicParts = topic.split('/')
 
+      ///////////
+      // Increasing subtopics messages count
       let currentTopicPath = ''
-      let currentTopicStructure = this.topicsStructure[clientKey]
+
+      if (!this.subTopicsMessagesCount[clientKey]) this.subTopicsMessagesCount[clientKey] = {}
 
       for (const topicPart of topicParts) {
-        if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
         currentTopicPath += `${topicPart}`
 
         if (!this.subTopicsMessagesCount[clientKey][currentTopicPath]) {
           this.subTopicsMessagesCount[clientKey][currentTopicPath] = 1
         } else this.subTopicsMessagesCount[clientKey][currentTopicPath] += 1
 
+        currentTopicPath += `/`
+      }
+
+      if (topicExists) return
+
+      ///////////
+      // Creating Topic structure cache
+      if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
+      if (!this.subTopicsTopicsCount[clientKey]) this.subTopicsTopicsCount[clientKey] = {}
+
+      let currentTopicStructure = this.topicsStructure[clientKey]
+      currentTopicPath = ''
+
+      for (const topicPart of topicParts) {
+        currentTopicPath += `${topicPart}`
+
+        if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
+
         currentTopicStructure = currentTopicStructure[topicPart] || {}
+
+        if (!this.subTopicsTopicsCount[clientKey][currentTopicPath]) {
+          this.subTopicsTopicsCount[clientKey][currentTopicPath] = 1
+        } else this.subTopicsTopicsCount[clientKey][currentTopicPath] += 1
+
         currentTopicPath += `/`
       }
     },

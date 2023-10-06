@@ -65,7 +65,7 @@ const sortedTopicStructure = computed(() => {
           <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
           {{ topicKey }}
           <span v-if="!expandedTopicsSection" class="tw-text-xs topic-item-details">
-            ({{ mqttTopicsStore.getSubtopicsCount(clientKey, topicPath) }} topics
+            ({{ mqttTopicsStore.getSubTopicsTopicsCount(clientKey, topicPath) }} topics
             {{ mqttTopicsStore.getSubTopicsMessagesCount(clientKey, topicPath) }} messages)
           </span>
         </q-card>
