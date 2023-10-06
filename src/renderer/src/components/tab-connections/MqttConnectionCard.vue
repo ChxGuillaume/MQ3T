@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMqttConnectionsStore } from '../../store/mqtt-connections'
 import { MqttConnection } from '../../../../types/mqtt-connection'
+import ConnectionStatusChip from '../ConnectionStatusChip.vue'
 import { computed } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -26,30 +27,7 @@ const formatMqttUrl = (connection: MqttConnection) => {
       <p class="tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1" :title="connection.name">
         {{ connection.name }}
       </p>
-      <q-chip
-        v-if="connectionStatus === 'connected'"
-        class="text-weight-bold"
-        size="sm"
-        color="green"
-        text-color="white"
-        label="Connected"
-      />
-      <q-chip
-        v-else-if="connectionStatus === 'connecting'"
-        class="text-weight-bold"
-        size="sm"
-        color="yellow"
-        text-color="black"
-        label="Connecting"
-      />
-      <q-chip
-        v-else
-        class="text-weight-bold"
-        size="sm"
-        color="red"
-        text-color="white"
-        label="Disconnected"
-      />
+      <connection-status-chip :connection-status="connectionStatus" size="sm" />
     </div>
     <p
       class="tw-text-sm tw-text-neutral-500 tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1"

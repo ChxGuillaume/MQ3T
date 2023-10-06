@@ -183,6 +183,13 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         currentTopicPath += `/`
       }
     },
+    clearConnectionMessages(clientKey: string) {
+      this.topicsMessages[clientKey] = {}
+      this.topicsLastMessage[clientKey] = {}
+      this.subTopicsTopicsCount[clientKey] = {}
+      this.subTopicsMessagesCount[clientKey] = {}
+      this.topicsStructure[clientKey] = {}
+    },
     setSelectedTopic(clientKey: string, topic: string) {
       this.selectedConnection = clientKey
       this.selectedTopic = topic

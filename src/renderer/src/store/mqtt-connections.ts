@@ -1,16 +1,25 @@
 import { MqttConnection } from '../../../types/mqtt-connection'
 import { defineStore } from 'pinia'
 
+type MqttConnectionStatus = 'connected' | 'connecting' | 'disconnected'
+
 export const useMqttConnectionsStore = defineStore('mqtt-connections', {
   state: () => ({
     connections: [] as MqttConnection[],
-    connectionsStatus: {} as Record<string, 'connected' | 'connecting' | 'disconnected'>
+    connectionsStatus: {} as Record<string, MqttConnectionStatus>
   }),
   getters: {
-    getConnection: (state) => (clientKey: string) => {
-      return state.connections.find(
-        (connection: MqttConnection) => connection.clientKey === clientKey
-      )
+    getConnection:
+      (state) =>
+      (clientKey: string): MqttConnection | undefined => {
+        return state.connections.find(
+          (connection: MqttConnection) => connection.clientKey === clientKey
+        )
+      },
+    getConnectionsWithStatus(): MqttConnection[] {
+      return this.connections.filter((connection) => {
+        return this.connectionsStatus[connection.clientKey]
+      })
     },
     getConnectionsFromClientKeyList: (state) => (clientKeyList: string[]) => {
       return state.connections.filter((connection) => {
@@ -22,9 +31,11 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         return state.connectionsStatus[connection.clientKey] === 'connected'
       })
     },
-    getConnectionStatus: (state) => (clientKey: string) => {
-      return state.connectionsStatus[clientKey] || 'disconnected'
-    }
+    getConnectionStatus:
+      (state) =>
+      (clientKey: string): MqttConnectionStatus => {
+        return state.connectionsStatus[clientKey] || 'disconnected'
+      }
   },
   actions: {
     loadConnections() {
@@ -55,6 +66,9 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     },
     setConnectionStatus(clientKey: string, status: 'connected' | 'connecting' | 'disconnected') {
       this.connectionsStatus[clientKey] = status
+    },
+    hideConnection(clientKey: string) {
+      delete this.connectionsStatus[clientKey]
     }
   }
 })

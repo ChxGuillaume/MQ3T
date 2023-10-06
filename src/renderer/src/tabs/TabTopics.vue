@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
+import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import CodePreview from '../components/tap-topics/CodePreview.vue'
 import CodeEditor from '../components/tap-topics/CodeEditor.vue'
@@ -17,6 +19,7 @@ const splitterModel = ref(400)
 const showTopics = ref(false)
 const expandConnection = ref<{ [key: string]: boolean }>({})
 const publishDataType = ref('raw')
+const selectedConnection = ref('')
 
 const tab = ref('values')
 const current = ref(1)
@@ -96,6 +99,7 @@ const handleBreadcrumbClick = (index: number) => {
 const handleSelectTopic = (clientKey: string, topic: string) => {
   mqttTopicsStore.setSelectedTopic(clientKey, topic)
   codePreviewData.value = ''
+  selectedConnection.value = ''
 }
 
 const topicSearch = computed({
@@ -106,9 +110,15 @@ const topicSearch = computed({
 })
 
 const formatDuration = (duration: number) => {
-  if (duration < 1000) return `${duration} ms`
+  if (duration > -1000) return `${duration} ms`
 
   return `${(duration / 1000).toFixed(2)} s`
+}
+
+const handleExpandConnection = (clientKey: string) => {
+  expandConnection.value[clientKey] = !expandConnection.value[clientKey]
+  mqttTopicsStore.setSelectedTopic(clientKey, '')
+  selectedConnection.value = clientKey
 }
 </script>
 
@@ -130,26 +140,30 @@ const formatDuration = (duration: number) => {
           <q-virtual-scroll
             v-slot="{ item: [key, value] }"
             class="tw-h-full tw-max-h-full"
-            :items="
-              Object.entries(
-                mqttConnectionsStore.getConnectionsFromClientKeyList(
-                  mqttTopicsStore.getClientKeyList
-                )
-              )
-            "
+            :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
           >
             <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1">
               <q-card
                 :key="key"
                 flat
-                :class="{ active: true, opened: expandConnection[value.clientKey] }"
+                :class="{
+                  active: selectedConnection === value.clientKey,
+                  opened: !expandConnection[value.clientKey]
+                }"
                 class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
-                @click.stop="expandConnection[value.clientKey] = !expandConnection[value.clientKey]"
+                @click.stop="handleExpandConnection(value.clientKey)"
               >
                 <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
                 {{ value.name }}
+                <span>
+                  <connection-status-chip
+                    :connection-status="mqttConnectionsStore.getConnectionStatus(value.clientKey)"
+                    size="xs"
+                  />
+                </span>
+                <connection-context-menu :connection="value" />
               </q-card>
-              <template v-if="expandConnection[value.clientKey]">
+              <template v-if="!expandConnection[value.clientKey]">
                 <TopicItem
                   v-for="[pathKey, structure] in Object.entries(
                     mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)

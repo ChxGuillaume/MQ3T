@@ -18,6 +18,8 @@ mqttConnectionsStore.loadConnections()
 
 const $q = useQuasar()
 
+const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
+
 onMounted(() => {
   const storedTheme = localStorage.getItem('darkMode')
 
@@ -60,11 +62,38 @@ onMounted(() => {
 
     if (!connection) return
 
-    $q.notify({
-      message: `[${connection.name}]`,
-      caption: value.status,
-      type: 'info'
-    })
+    if (value.status === 'connected') {
+      const notify = connectingNotify[value.clientKey]
+
+      notify({
+        message: `[${connection.name}]`,
+        caption: 'Connected',
+        type: 'positive',
+        icon: 'fa-solid fa-plug-circle-plus'
+      })
+
+      delete connectingNotify[value.clientKey]
+    } else if (value.status === 'connecting') {
+      connectingNotify[value.clientKey] = $q.notify({
+        message: `[${connection.name}]`,
+        caption: 'Connecting...',
+        type: 'ongoing'
+      })
+    } else if (value.status === 'disconnected') {
+      const notify = connectingNotify[value.clientKey]
+
+      const notificationData = {
+        message: `[${connection.name}]`,
+        caption: 'Disconnected',
+        type: 'warning',
+        icon: 'fa-solid fa-plug-circle-minus'
+      }
+
+      if (notify) notify(notificationData)
+      else $q.notify(notificationData)
+
+      delete connectingNotify[value.clientKey]
+    }
   })
 
   electronApi.handleMqttMessage((_, value) => {
