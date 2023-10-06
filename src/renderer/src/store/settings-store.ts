@@ -6,6 +6,7 @@ type SettingsStore = {
   dateFormat: string
   timeFormat: string
   maxMessages: number
+  smartTopicGroupClose: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -13,7 +14,8 @@ export const useSettingsStore = defineStore('settings', {
     showActivity: localStorage.getItem('showActivity') === 'true',
     dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
     timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
-    maxMessages: parseInt(localStorage.getItem('maxMessages') || '100')
+    maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
+    smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true'
   }),
   getters: {
     dateTimeFormat(): string {
@@ -45,6 +47,10 @@ export const useSettingsStore = defineStore('settings', {
     setMaxMessages(value: number) {
       this.maxMessages = value
       localStorage.setItem('maxMessages', value.toString())
+    },
+    setSmartTopicGroupClose(value: boolean) {
+      this.smartTopicGroupClose = value
+      localStorage.setItem('smartTopicGroupClose', value.toString())
     }
   }
 })

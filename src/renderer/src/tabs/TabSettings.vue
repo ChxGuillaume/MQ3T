@@ -78,6 +78,13 @@ const maxMessagesSetting = computed({
     settingsStore.setMaxMessages(val)
   }
 })
+
+const smartTopicGroupCloseSetting = computed({
+  get: () => settingsStore.smartTopicGroupClose,
+  set: (val) => {
+    settingsStore.setSmartTopicGroupClose(val)
+  }
+})
 </script>
 
 <template>
@@ -90,6 +97,15 @@ const maxMessagesSetting = computed({
     >
       <q-card class="card-toggle" square flat>
         <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
+      </q-card>
+      <q-card class="card-toggle" square flat>
+        <q-toggle v-model="smartTopicGroupCloseSetting" class="tw-w-full" label="Smart Topic Group">
+        </q-toggle>
+        <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+          <q-tooltip>
+            When enabled topic groups closes if they are selected and clicked again
+          </q-tooltip>
+        </q-icon>
       </q-card>
       <q-select v-model="darkMode" filled :options="darkModeOptions" label="Dark Mode" emit-value>
         <template v-slot:selected-item>

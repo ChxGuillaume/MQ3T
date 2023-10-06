@@ -7,16 +7,25 @@ type MqttMessage = {
   qos: 0 | 1 | 2
   message: string
   retained: boolean
+  createdDiff?: number
   createdAt: Date
 }
 
-type MqttTopicStructure = {
+export type MqttTopicStructure = {
   [key: string]: MqttTopicStructure | null
 }
+
+// type MqttTopicsStructureTest = {
+//   opened: boolean
+//   structure: {
+//     [key: string]: MqttTopicsStructureTest
+//   }
+// }
 
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
     topicsMessages: {} as Record<string, Record<string, MqttMessage[]>>,
+    topicsLastMessage: {} as Record<string, Record<string, MqttMessage>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
     topicsStructure: {} as Record<string, MqttTopicStructure>,
     selectedConnection: '',
@@ -24,6 +33,14 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     topicSearch: ''
   }),
   getters: {
+    getClientKeyList: (state) => {
+      return Object.keys(state.topicsMessages)
+    },
+    getConnectionTopicsStructure:
+      (state) =>
+      (clientKey: string): MqttTopicStructure => {
+        return state.topicsStructure[clientKey] || {}
+      },
     getSubtopicsCount: (state) => (clientKey: string, subTopic: string) => {
       const topicList = Object.keys(state.topicsMessages[clientKey] || {})
 
@@ -49,12 +66,10 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     getTopicLastMessage:
       (state) =>
       (clientKey: string, topic: string): MqttMessage | null => {
-        const topicMessages = state.topicsMessages[clientKey]?.[topic]
-
-        return topicMessages?.[topicMessages.length - 1] || null
+        return state.topicsLastMessage[clientKey]?.[topic] || null
       },
     getSelectedTopicLastMessage(): MqttMessage | undefined {
-      return this.topicsMessages[this.selectedConnection]?.[this.selectedTopic]?.[0]
+      return this.topicsLastMessage[this.selectedConnection]?.[this.selectedTopic]
     }
   },
   actions: {
@@ -66,16 +81,24 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     ) {
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
       if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
+      if (!this.topicsLastMessage[clientKey]) this.topicsLastMessage[clientKey] = {}
 
       const settingsStore = useSettingsStore()
+      const lastMessage = this.topicsLastMessage[clientKey][topic]
 
-      this.topicsMessages[clientKey][topic].push({
+      if (lastMessage)
+        lastMessage.createdDiff = lastMessage?.createdAt.getTime() - new Date().getTime()
+
+      const mqttMessage = {
         uid: uuidV4(),
         message,
         qos: extras.qos,
         retained: extras.retained || false,
         createdAt: new Date()
-      })
+      }
+
+      this.topicsMessages[clientKey][topic].push(mqttMessage)
+      this.topicsLastMessage[clientKey][topic] = mqttMessage
 
       ///////////
       // Removing old messages when the limit is reached
@@ -108,11 +131,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         currentTopicPath += `/`
       }
     },
-    setSelectedTopic(topic: string) {
-      const [clientKey, ...topicParts] = topic.split('/')
-
+    setSelectedTopic(clientKey: string, topic: string) {
       this.selectedConnection = clientKey
-      this.selectedTopic = topicParts.join('/')
+      this.selectedTopic = topic
     },
     setTopicSearch(topicSearch: string) {
       this.topicSearch = topicSearch

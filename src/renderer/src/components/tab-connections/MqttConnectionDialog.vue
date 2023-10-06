@@ -42,8 +42,8 @@ const form = ref<MqttConnection>({
   username: '',
   password: '',
   subscribedTopics: [
-    { topic: '#', qos: 2 },
-    { topic: '$SYS/#', qos: 2 }
+    { topic: '$SYS/#', qos: 0 },
+    { topic: '#', qos: 0 }
   ]
 })
 
@@ -62,8 +62,8 @@ const clearForm = () => {
   form.value.username = ''
   form.value.password = ''
   form.value.subscribedTopics = [
-    { topic: '#', qos: 2 },
-    { topic: '$SYS/#', qos: 2 }
+    { topic: '$SYS/#', qos: 0 },
+    { topic: '#', qos: 0 }
   ]
 }
 

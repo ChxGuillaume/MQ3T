@@ -12,6 +12,16 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         (connection: MqttConnection) => connection.clientKey === clientKey
       )
     },
+    getConnectionsFromClientKeyList: (state) => (clientKeyList: string[]) => {
+      return state.connections.filter((connection) => {
+        return clientKeyList.includes(connection.clientKey)
+      })
+    },
+    getConnectedConnections: (state): MqttConnection[] => {
+      return state.connections.filter((connection) => {
+        return state.connectionsStatus[connection.clientKey] === 'connected'
+      })
+    },
     getConnectionStatus: (state) => (clientKey: string) => {
       return state.connectionsStatus[clientKey] || 'disconnected'
     }
