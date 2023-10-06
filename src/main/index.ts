@@ -1,8 +1,9 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import iconIcns from '../../resources/custom-mqtt-logo.icns?asset'
+import iconIco from '../../resources/custom-mqtt-logo.ico?asset'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
-import icon from '../../resources/mqtt.png?asset'
 import { MqttClient } from './mqtt-client'
 import { join } from 'path'
 
@@ -10,15 +11,19 @@ const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
 
 function createWindow(): void {
+  let icon = iconIco
+
+  if (process.platform === 'darwin') icon = iconIcns
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
     minWidth: 800,
     height: 800,
     minHeight: 600,
+    icon,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : { icon }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

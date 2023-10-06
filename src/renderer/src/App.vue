@@ -65,12 +65,15 @@ onMounted(() => {
     if (value.status === 'connected') {
       const notify = connectingNotify[value.clientKey]
 
-      notify({
+      const notificationData = {
         message: `[${connection.name}]`,
         caption: 'Connected',
         type: 'positive',
         icon: 'fa-solid fa-plug-circle-plus'
-      })
+      }
+
+      if (notify) notify(notificationData)
+      else $q.notify(notificationData)
 
       delete connectingNotify[value.clientKey]
     } else if (value.status === 'connecting') {

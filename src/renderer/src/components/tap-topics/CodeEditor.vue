@@ -6,21 +6,14 @@ import { useQuasar } from 'quasar'
 const $q = useQuasar()
 
 const props = defineProps<{
-  value: string
+  modelValue: string
   language?: string
 }>()
 
+const emits = defineEmits(['update:modelValue'])
+
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
-
-watch(
-  () => props.value,
-  (newValue) => {
-    if (!codeEditor) return
-
-    codeEditor.setValue(newValue)
-  }
-)
 
 watch(
   () => $q.dark.isActive,
@@ -39,7 +32,7 @@ onMounted(() => {
   if (!monacoEditorRef.value) return
 
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
-    value: props.value,
+    value: props.modelValue,
     language: 'json',
     theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
@@ -52,6 +45,10 @@ onMounted(() => {
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6
     }
+  })
+
+  codeEditor.onDidChangeModelContent(() => {
+    emits('update:modelValue', codeEditor!.getValue())
   })
 })
 

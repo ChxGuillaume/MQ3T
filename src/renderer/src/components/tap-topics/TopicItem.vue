@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useSettingsStore } from '../../store/settings-store'
+import TopicCard from './TopicCard.vue'
 import { computed, ref } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
@@ -55,24 +56,23 @@ const sortedTopicStructure = computed(() => {
   <div v-if="!isLastTopicPart" @click="handleTopicClick">
     <div class="tw-flex">
       <q-intersection class="tw-h-[29px]">
-        <q-card
-          flat
-          class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
-          :class="{ active: isSelectedTopic, opened: expandedTopicsSection }"
+        <topic-card
+          expandable
+          :active="isSelectedTopic"
+          :opened="expandedTopicsSection"
           :style="{ 'margin-left': `${topicIndex * 20}px` }"
-          @click.stop="handleTopicClick"
+          @open:toggle="handleTopicClick"
         >
-          <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
           {{ topicKey }}
           <span v-if="!expandedTopicsSection" class="tw-text-xs topic-item-details">
             ({{ mqttTopicsStore.getSubTopicsTopicsCount(clientKey, topicPath) }} topics
             {{ mqttTopicsStore.getSubTopicsMessagesCount(clientKey, topicPath) }} messages)
           </span>
-        </q-card>
+        </topic-card>
       </q-intersection>
     </div>
     <template v-if="expandedTopicsSection">
-      <TopicItem
+      <topic-item
         v-for="[key, value] in sortedTopicStructure"
         :key="key"
         class="tw-mt-1"
@@ -87,56 +87,28 @@ const sortedTopicStructure = computed(() => {
   </div>
   <div v-else class="tw-flex">
     <q-intersection class="tw-h-[29px]">
-      <q-card
-        flat
-        class="topic-item-card card-secondary-background tw-px-3 tw-select-none"
-        :class="{ active: isSelectedTopic }"
+      <topic-card
+        :active="isSelectedTopic"
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
-        @click.stop="handleTopicClick"
+        @open:toggle="handleTopicClick"
       >
         {{ topicKey }}
         <span class="tw-text-xs topic-item-details">
           = {{ mqttTopicsStore.getTopicLastMessage(props.clientKey, topicPath)?.message }}
         </span>
-      </q-card>
+      </topic-card>
     </q-intersection>
   </div>
 </template>
 
 <style scoped lang="less">
-.opened {
-  .expand-icon {
-    transform: rotate(90deg);
-  }
-}
-
-.topic-item-card {
-  @apply tw-py-1 tw-line-clamp-1 tw-cursor-pointer tw-transition-colors;
-}
-
 .body--light {
-  .topic-item-card:hover {
-    background: #65016433 !important;
-  }
-
-  .topic-item-card.active {
-    background: #65016455 !important;
-  }
-
   .topic-item-details {
     @apply tw-text-neutral-500;
   }
 }
 
 .body--dark {
-  .topic-item-card:hover {
-    background: #65016488 !important;
-  }
-
-  .topic-item-card.active {
-    background: #650164ee !important;
-  }
-
   .topic-item-details {
     @apply tw-text-neutral-400;
   }

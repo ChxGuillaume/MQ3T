@@ -5,6 +5,7 @@ import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import CodePreview from '../components/tap-topics/CodePreview.vue'
 import CodeEditor from '../components/tap-topics/CodeEditor.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
+import TopicCard from '../components/tap-topics/TopicCard.vue'
 import CopyButton from '../components/buttons/CopyButton.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
@@ -52,6 +53,7 @@ const copyMessage = (message: string) => {
 }
 
 const codePreviewData = ref('{}')
+const codeEditorData = ref('{}')
 
 const formatMessage = (message: string) => {
   let data = message
@@ -116,7 +118,16 @@ const formatDuration = (duration: number) => {
 }
 
 const handleExpandConnection = (clientKey: string) => {
-  expandConnection.value[clientKey] = !expandConnection.value[clientKey]
+  if (settingsStore.smartTopicGroupClose) {
+    if (!expandConnection.value[clientKey] && selectedConnection.value === clientKey) {
+      expandConnection.value[clientKey] = !expandConnection.value[clientKey]
+    } else if (expandConnection.value[clientKey]) {
+      expandConnection.value[clientKey] = !expandConnection.value[clientKey]
+    }
+  } else {
+    expandConnection.value[clientKey] = !expandConnection.value[clientKey]
+  }
+
   mqttTopicsStore.setSelectedTopic(clientKey, '')
   selectedConnection.value = clientKey
 }
@@ -138,22 +149,17 @@ const handleExpandConnection = (clientKey: string) => {
         <q-separator />
         <div class="tw-overflow-auto">
           <q-virtual-scroll
-            v-slot="{ item: [key, value] }"
+            v-slot="{ item: [_, value] }"
             class="tw-h-full tw-max-h-full"
             :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
           >
             <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1">
-              <q-card
-                :key="key"
-                flat
-                :class="{
-                  active: selectedConnection === value.clientKey,
-                  opened: !expandConnection[value.clientKey]
-                }"
-                class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
-                @click.stop="handleExpandConnection(value.clientKey)"
+              <topic-card
+                expandable
+                :active="selectedConnection === value.clientKey"
+                :opened="!expandConnection[value.clientKey]"
+                @open:toggle="handleExpandConnection(value.clientKey)"
               >
-                <q-icon name="fa-solid fa-caret-right" size="xs" class="expand-icon" />
                 {{ value.name }}
                 <span>
                   <connection-status-chip
@@ -162,7 +168,7 @@ const handleExpandConnection = (clientKey: string) => {
                   />
                 </span>
                 <connection-context-menu :connection="value" />
-              </q-card>
+              </topic-card>
               <template v-if="!expandConnection[value.clientKey]">
                 <TopicItem
                   v-for="[pathKey, structure] in Object.entries(
@@ -289,19 +295,26 @@ const handleExpandConnection = (clientKey: string) => {
           </q-tab-panel>
 
           <q-tab-panel name="publish" class="tw-p-0">
-            <div class="text-h6">Publish In Work</div>
-            <q-card flat bordered class="tw-inline-block tw-m-2">
-              <q-btn-toggle
-                v-model="publishDataType"
-                toggle-color="primary"
-                :options="[
-                  { label: 'Raw', value: 'raw' },
-                  { label: 'JSON', value: 'json' },
-                  { label: 'XML', value: 'xml' }
-                ]"
-              />
-            </q-card>
-            <code-editor :value="codePreviewData" :language="publishDataType" />
+            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
+              <q-input model-value="test" filled label="Topic" dense />
+              <div class="tw-flex tw-justify-center">
+                <q-card flat bordered class="tw-inline-block">
+                  <q-btn-toggle
+                    v-model="publishDataType"
+                    toggle-color="primary"
+                    :options="[
+                      { label: 'Raw', value: 'raw' },
+                      { label: 'JSON', value: 'json' },
+                      { label: 'XML', value: 'xml' }
+                    ]"
+                  />
+                </q-card>
+              </div>
+            </div>
+            <code-editor v-model="codeEditorData" :language="publishDataType" />
+            <div class="tw-p-3 tw-flex tw-justify-end">
+              <q-btn color="primary" label="Publish" />
+            </div>
           </q-tab-panel>
 
           <q-tab-panel name="stats">
@@ -336,42 +349,4 @@ const handleExpandConnection = (clientKey: string) => {
   </q-splitter>
 </template>
 
-<style scoped lang="less">
-.opened {
-  .expand-icon {
-    transform: rotate(90deg);
-  }
-}
-
-.topic-item-card {
-  @apply tw-py-1 tw-line-clamp-1 tw-cursor-pointer tw-transition-colors;
-}
-
-.body--light {
-  .topic-item-card:hover {
-    background: #65016433 !important;
-  }
-
-  .topic-item-card.active {
-    background: #65016455 !important;
-  }
-
-  .topic-item-details {
-    @apply tw-text-neutral-500;
-  }
-}
-
-.body--dark {
-  .topic-item-card:hover {
-    background: #65016488 !important;
-  }
-
-  .topic-item-card.active {
-    background: #650164ee !important;
-  }
-
-  .topic-item-details {
-    @apply tw-text-neutral-400;
-  }
-}
-</style>
+<style scoped lang="less"></style>
