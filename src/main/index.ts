@@ -10,13 +10,14 @@ import { join } from 'path'
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
 
+let mainWindow: BrowserWindow | null = null
 function createWindow(): void {
   let icon = iconIco
 
   if (process.platform === 'darwin') icon = iconIcns
 
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     minWidth: 800,
     height: 800,
@@ -40,7 +41,7 @@ function createWindow(): void {
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
-    createConnection(mainWindow, connection).then()
+    createConnection(connection).then()
   })
 
   ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
@@ -55,8 +56,14 @@ function createWindow(): void {
     mqttClients.get(clientKey)?.publish(topic, message, options)
   })
 
+  mainWindow.on('close', () => {
+    for (const client of mqttClients.values()) {
+      client.disconnect()
+    }
+  })
+
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -111,27 +118,34 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-const createConnection = async (mainWindow: BrowserWindow, connection: MqttConnection) => {
+const sendMessageToRenderer = (channel: string, ...args: any[]) => {
+  if (!mainWindow) return
+  if (mainWindow.isDestroyed()) return
+
+  mainWindow.webContents.send(channel, ...args)
+}
+
+const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
   mqttClientsState.set(clientKey, 'connecting')
-  mainWindow.webContents.send('mqtt-status', { clientKey, status: 'connecting' })
+  sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
   const clientMqtt = new MqttClient(connection)
 
   mqttClients.set(clientKey, clientMqtt)
 
   clientMqtt.onError((error) => {
-    mainWindow.webContents.send('mqtt-error', { clientKey, error })
+    sendMessageToRenderer('mqtt-error', { clientKey, error })
   })
 
   clientMqtt.onConnect(() => {
     mqttClientsState.set(clientKey, 'connected')
-    mainWindow.webContents.send('mqtt-status', { clientKey, status: 'connected' })
+    sendMessageToRenderer('mqtt-status', { clientKey, status: 'connected' })
   })
 
   clientMqtt.onMessage((topic, payload, packet) => {
-    mainWindow.webContents.send('mqtt-message', {
+    sendMessageToRenderer('mqtt-message', {
       clientKey,
       topic,
       payload,
@@ -142,7 +156,7 @@ const createConnection = async (mainWindow: BrowserWindow, connection: MqttConne
 
   clientMqtt.onDisconnect(() => {
     // mqttClientsState.set(clientKey, 'disconnected')
-    // mainWindow.webContents.send('mqtt-status', { clientKey, status: 'disconnected' })
+    // sendMessageToRenderer('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
   connection.subscribedTopics.forEach((topic) => {
