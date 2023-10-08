@@ -1,7 +1,7 @@
 {
-  "name": "mqtt-explorer-rework",
+  "name": "mq3t",
   "version": "1.0.0",
-  "description": "An Electron application with Vue and TypeScript",
+  "description": "MQTT Tools - A simple MQTT client for your development needs",
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://www.electronjs.org",

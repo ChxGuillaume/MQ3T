@@ -8,6 +8,11 @@ const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
   options: IMonacoEditorOpts
 ) => any
 
+const monacoEditorPublicPath =
+  process.env.NODE_ENV === 'production'
+    ? './../../../app.asar.unpacked/resources/monaco-editor'
+    : undefined
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()]
@@ -26,7 +31,12 @@ export default defineConfig({
       quasar({
         sassVariables: resolve('src/renderer/src/assets/css/quasar-variables.sass')
       }),
-      monacoEditorPluginDefault({})
+      monacoEditorPluginDefault({
+        publicPath: monacoEditorPublicPath,
+        customDistPath: (_: string, __: string, base: string) => {
+          return `${base}/resources/monaco-editor`
+        }
+      })
     ]
   }
 })

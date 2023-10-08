@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   active?: boolean
   opened?: boolean
   expandable?: boolean

@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: mqtt-explorer-rework
+productName: MQ3T
 directories:
   buildResources: build
 files:
@@ -12,12 +12,21 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: mqtt-explorer-rework
+  executableName: MQ3T
+  icon: resources/custom-mqtt-logo.png
+  artifactName: ${name}-${version}-portable.${ext}
+  target:
+      - nsis
+      - portable
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
+  installerIcon: resources/custom-mqtt-logo.ico
+  uninstallerIcon: resources/custom-mqtt-logo.ico
   createDesktopShortcut: always
+  oneClick: false
+  perMachine: false
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
@@ -25,7 +34,7 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+  notarize: true
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
