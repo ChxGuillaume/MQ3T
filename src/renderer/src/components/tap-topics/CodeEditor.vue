@@ -15,6 +15,15 @@ const emits = defineEmits(['update:modelValue'])
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
+const updateCodeEditorValue = (value: string) => {
+  if (!codeEditor) return
+
+  codeEditor.setValue(value)
+  emits('update:modelValue', value)
+}
+
+defineExpose({ updateCodeEditorValue })
+
 watch(
   () => $q.dark.isActive,
   (isDark) => {

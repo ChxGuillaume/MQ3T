@@ -2,8 +2,9 @@
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
+import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import CodePreview from '../components/tap-topics/CodePreview.vue'
-import CodeEditor from '../components/tap-topics/CodeEditor.vue'
+import TabPublish from '../components/tap-topics/TabPublish.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import CopyButton from '../components/buttons/CopyButton.vue'
@@ -15,11 +16,12 @@ const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
+const electronApi = window.api as ElectronIpc
+
 const splitterModel = ref(400)
 
 const showTopics = ref(false)
 const expandConnection = ref<{ [key: string]: boolean }>({})
-const publishDataType = ref('raw')
 const selectedConnection = ref('')
 
 const tab = ref('values')
@@ -53,7 +55,6 @@ const copyMessage = (message: string) => {
 }
 
 const codePreviewData = ref('{}')
-const codeEditorData = ref('{}')
 
 const formatMessage = (message: string) => {
   let data = message
@@ -131,6 +132,22 @@ const handleExpandConnection = (clientKey: string) => {
   mqttTopicsStore.setSelectedTopic(clientKey, '')
   selectedConnection.value = clientKey
 }
+
+const handleClearRetained = () => {
+  electronApi.sendMqttMessage(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic,
+    '',
+    { retain: true, qos: 0 }
+  )
+
+  mqttTopicsStore.addPublishMessage(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic,
+    '',
+    { retained: true, qos: 0 }
+  )
+}
 </script>
 
 <template>
@@ -143,8 +160,8 @@ const handleExpandConnection = (clientKey: string) => {
   >
     <template #before>
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
-        <div class="tw-p-2">
-          <q-input v-model="topicSearch" filled label="Search" dense />
+        <div class="">
+          <q-input v-model="topicSearch" filled label="Search Topic..." dense square />
         </div>
         <q-separator />
         <div class="tw-overflow-auto">
@@ -190,131 +207,120 @@ const handleExpandConnection = (clientKey: string) => {
     </template>
 
     <template #after>
-      <q-card class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr auto">
-        <div class="tw-p-4 tw-flex tw-flex-col tw-gap-4">
-          <div class="tw-flex tw-gap-2">
-            <h2 class="tw-text-xl tw-font-bold">Topic</h2>
-            <copy-button @click="copySelectedTopic" />
-          </div>
-          <q-breadcrumbs gutter="none">
-            <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
-              <q-chip
-                size="sm"
-                color="primary"
-                text-color="white"
-                square
-                ripple
-                clickable
-                :label="topicPart"
-                @click="handleBreadcrumbClick(index)"
-              />
-            </q-breadcrumbs-el>
-          </q-breadcrumbs>
-        </div>
-
-        <q-separator />
-
+      <q-card class="tw-h-full tw-grid" style="grid-template-rows: 1fr auto auto">
         <q-tab-panels v-model="tab" animated keep-alive>
-          <q-tab-panel name="values" class="tw-p-0">
-            <div v-if="selectedTopicLastMessage">
-              <div class="tw-p-4 tw-flex justify-between">
-                <div>
-                  QoS: {{ selectedTopicLastMessage?.qos || 0 }}
-                  <copy-button @click="copySelectedTopicMessage" />
-                </div>
-                <div v-if="selectedTopicLastMessage?.retained">
-                  <q-chip
-                    size="sm"
-                    class="text-weight-bold"
-                    color="primary"
-                    text-color="white"
-                    icon-right="fa-solid fa-xmark"
-                    square
-                    clickable
-                    label="Retained"
-                  />
-                </div>
-                <div class="tw-flex tw-flex-col items-end">
-                  <div>
-                    {{
-                      selectedTopicLastMessage?.createdAt &&
-                      settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
-                    }}
-                  </div>
-                  <div>
-                    {{
-                      selectedTopicLastMessage?.createdAt &&
-                      settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
-                    }}
-                  </div>
-                </div>
+          <q-tab-panel
+            name="values"
+            class="tw-p-0 tw-grid"
+            style="grid-template-rows: auto auto 1fr"
+          >
+            <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1 tw-h-[94px]">
+              <div class="tw-flex tw-gap-2">
+                <h2 class="tw-text-xl tw-font-bold">Topic</h2>
+                <copy-button @click="copySelectedTopic" />
               </div>
-              <code-preview :value="codePreviewData" />
-              <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
-                <div class="tw-flex items-center tw-gap-2">
-                  History
-                  <q-chip size="sm" color="primary" text-color="white">
-                    {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages
-                  </q-chip>
-                </div>
-                <q-pagination
-                  v-model="current"
-                  size="xs"
-                  :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
-                  input
-                />
-              </div>
-              <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
-                <q-card
-                  v-for="message in slicedMessages"
-                  :key="message.uid"
-                  flat
-                  class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
-                >
-                  <div class="tw-mb-2 tw-flex tw-justify-between">
-                    <div>
-                      {{ settingsStore.formatDateTime(message.createdAt) }}
-                      <span v-if="message.createdDiff" class="tw-text-xs topic-item-details">
-                        ({{ formatDuration(message.createdDiff) }})
-                      </span>
-                    </div>
-                    <copy-button @click="copyMessage(message.message)" />
-                  </div>
-                  <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
-                    {{ formatMessage(message.message) }}
-                  </div>
-                </q-card>
+              <div class="tw-flex tw-items-center tw-min-h-[28px]">
+                <span v-if="!breadcrumbs.length">No Topic Selected</span>
+                <q-breadcrumbs v-else gutter="none">
+                  <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
+                    <q-chip
+                      size="sm"
+                      color="primary"
+                      text-color="white"
+                      square
+                      ripple
+                      clickable
+                      :label="topicPart"
+                      @click="handleBreadcrumbClick(index)"
+                    />
+                  </q-breadcrumbs-el>
+                </q-breadcrumbs>
               </div>
             </div>
-            <div
-              v-else
-              class="tw-h-full tw-flex tw-justify-center tw-items-center tw-text-2xl tw-font-bold"
-            >
-              No Messages
+            <q-separator />
+            <div class="tw-overflow-auto">
+              <div v-if="selectedTopicLastMessage">
+                <div class="tw-p-4 tw-flex justify-between">
+                  <div>
+                    QoS: {{ selectedTopicLastMessage?.qos || 0 }}
+                    <copy-button @click="copySelectedTopicMessage" />
+                  </div>
+                  <div v-if="selectedTopicLastMessage?.retained">
+                    <q-chip
+                      size="sm"
+                      class="text-weight-bold"
+                      color="primary"
+                      text-color="white"
+                      icon-right="fa-solid fa-xmark"
+                      square
+                      clickable
+                      label="Retained"
+                      @click="handleClearRetained"
+                    />
+                  </div>
+                  <div class="tw-flex tw-flex-col items-end">
+                    <div>
+                      {{
+                        selectedTopicLastMessage?.createdAt &&
+                        settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
+                      }}
+                    </div>
+                    <div>
+                      {{
+                        selectedTopicLastMessage?.createdAt &&
+                        settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
+                      }}
+                    </div>
+                  </div>
+                </div>
+                <code-preview :value="codePreviewData" />
+                <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
+                  <div class="tw-flex items-center tw-gap-2">
+                    History
+                    <q-chip size="sm" color="primary" text-color="white">
+                      {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages
+                    </q-chip>
+                  </div>
+                  <q-pagination
+                    v-model="current"
+                    size="xs"
+                    :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
+                    input
+                  />
+                </div>
+                <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
+                  <q-card
+                    v-for="message in slicedMessages"
+                    :key="message.uid"
+                    flat
+                    class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
+                  >
+                    <div class="tw-mb-2 tw-flex tw-justify-between">
+                      <div>
+                        {{ settingsStore.formatDateTime(message.createdAt) }}
+                        <span v-if="message.createdDiff" class="tw-text-xs topic-item-details">
+                          ({{ formatDuration(message.createdDiff) }})
+                        </span>
+                      </div>
+                      <copy-button @click="copyMessage(message.message)" />
+                    </div>
+                    <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
+                      {{ formatMessage(message.message) }}
+                    </div>
+                  </q-card>
+                </div>
+              </div>
+              <div
+                v-else
+                class="tw-h-full tw-flex tw-justify-center tw-items-center tw-text-2xl tw-font-bold"
+              >
+                No Messages
+              </div>
             </div>
           </q-tab-panel>
 
           <q-tab-panel name="publish" class="tw-p-0">
-            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
-              <q-input model-value="test" filled label="Topic" dense />
-              <div class="tw-flex tw-justify-center">
-                <q-card flat bordered class="tw-inline-block">
-                  <q-btn-toggle
-                    v-model="publishDataType"
-                    toggle-color="primary"
-                    :options="[
-                      { label: 'Raw', value: 'raw' },
-                      { label: 'JSON', value: 'json' },
-                      { label: 'XML', value: 'xml' }
-                    ]"
-                  />
-                </q-card>
-              </div>
-            </div>
-            <code-editor v-model="codeEditorData" :language="publishDataType" />
-            <div class="tw-p-3 tw-flex tw-justify-end">
-              <q-btn color="primary" label="Publish" />
-            </div>
+            <tab-publish />
           </q-tab-panel>
 
           <q-tab-panel name="stats">

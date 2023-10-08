@@ -2,7 +2,7 @@ import { useSettingsStore } from './settings-store'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 
-type MqttMessage = {
+export type MqttMessage = {
   uid: string
   qos: 0 | 1 | 2
   message: string
@@ -31,6 +31,8 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     topicsStructure: {} as Record<string, MqttTopicStructure>,
     selectedConnection: '',
     selectedTopic: '',
+    topicsPublishMessages: {} as Record<string, Record<string, MqttMessage[]>>,
+    selectedPublishTopic: '',
     topicSearch: ''
   }),
   getters: {
@@ -55,8 +57,20 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       return (connectionTopics[this.selectedTopic] || []).reverse()
     },
+    getSelectedPublishTopicMessages(): MqttMessage[] {
+      const connectionTopics = this.topicsPublishMessages[this.selectedConnection]
+
+      if (!connectionTopics) return []
+
+      return (connectionTopics[this.selectedPublishTopic] || []).reverse()
+    },
     sortedSelectedTopicMessages(): MqttMessage[] {
       return this.getSelectedTopicMessages.slice().sort((a, b) => {
+        return b.createdAt.getTime() - a.createdAt.getTime()
+      })
+    },
+    sortedSelectedPublishTopicMessages(): MqttMessage[] {
+      return this.getSelectedPublishTopicMessages.slice().sort((a, b) => {
         return b.createdAt.getTime() - a.createdAt.getTime()
       })
     },
@@ -183,6 +197,26 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         currentTopicPath += `/`
       }
     },
+    addPublishMessage(
+      clientKey: string,
+      topic: string,
+      message: string,
+      extras: { qos: MqttMessage['qos']; retained?: boolean }
+    ) {
+      if (!this.topicsPublishMessages[clientKey]) this.topicsPublishMessages[clientKey] = {}
+      if (!this.topicsPublishMessages[clientKey][topic])
+        this.topicsPublishMessages[clientKey][topic] = []
+
+      const mqttMessage = {
+        uid: uuidV4(),
+        message,
+        qos: extras.qos,
+        retained: extras.retained || false,
+        createdAt: new Date()
+      }
+
+      this.topicsPublishMessages[clientKey][topic].push(mqttMessage)
+    },
     clearConnectionMessages(clientKey: string) {
       this.topicsMessages[clientKey] = {}
       this.topicsLastMessage[clientKey] = {}
@@ -193,6 +227,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     setSelectedTopic(clientKey: string, topic: string) {
       this.selectedConnection = clientKey
       this.selectedTopic = topic
+
+      this.setSelectedPublishTopic(topic)
+    },
+    setSelectedPublishTopic(topic: string) {
+      this.selectedPublishTopic = topic
     },
     setTopicSearch(topicSearch: string) {
       this.topicSearch = topicSearch
