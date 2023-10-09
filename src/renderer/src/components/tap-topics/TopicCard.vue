@@ -85,15 +85,6 @@ defineExpose({ animate })
 
   width: 250px;
   left: -250px;
-
-  background: rgb(255, 255, 255);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.05) 20%,
-    rgba(101, 1, 100, 0.4) 80%,
-    rgba(101, 1, 100, 0) 100%
-  );
 }
 
 .topic-item-card.animate:before {
@@ -102,6 +93,17 @@ defineExpose({ animate })
 }
 
 .body--light {
+  .topic-item-card:before {
+    background: rgb(255, 255, 255);
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(101, 1, 100, 0.4) 80%,
+      rgba(101, 1, 100, 0) 100%
+    );
+  }
+
   .topic-item-card {
     @apply tw-text-neutral-500;
   }
@@ -116,6 +118,17 @@ defineExpose({ animate })
 }
 
 .body--dark {
+  .topic-item-card:before {
+    background: rgb(0, 0, 0);
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.05) 20%,
+      rgba(101, 1, 100, 0.5) 80%,
+      rgba(101, 1, 100, 0) 100%
+    );
+  }
+
   .topic-item-card {
     @apply tw-text-neutral-400;
   }

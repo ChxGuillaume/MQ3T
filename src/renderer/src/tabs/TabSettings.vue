@@ -23,7 +23,7 @@ const darkModeOptions = [
 ]
 
 const showActivityAnimationSpeedOptions = [
-  { label: 'Slow', value: 1500 },
+  { label: 'Slow', value: 2000 },
   { label: 'Normal', value: 1000 },
   { label: 'Fast', value: 500 }
 ]
