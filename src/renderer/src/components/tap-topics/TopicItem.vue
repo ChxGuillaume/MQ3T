@@ -71,6 +71,7 @@ watch(
   () => {
     if (!settingsStore.showActivity) return
     topicCardRef.value?.animate()
+    topicGroupTopicCardRef.value?.animate()
   }
 )
 
@@ -97,9 +98,16 @@ watch(
           @open:toggle="handleTopicClick"
         >
           <span class="topic-item-key">{{ topicKey }}</span>
-          <span v-if="!expandedTopicsSection" class="tw-text-xs">
-            ({{ subTopicsTopicsCount }} topics {{ subTopicsMessagesCount }} messages)
-          </span>
+          <span
+            v-if="!expandedTopicsSection"
+            class="tw-ml-1 tw-text-xs"
+            v-text="`(${subTopicsTopicsCount} topics ${subTopicsMessagesCount} messages)`"
+          />
+          <span
+            v-if="topicLastMessage?.message"
+            class="tw-ml-1 tw-text-xs"
+            v-text="`= ${topicLastMessage?.message}`"
+          />
         </topic-card>
       </q-intersection>
     </div>
@@ -126,7 +134,7 @@ watch(
         @open:toggle="handleTopicClick"
       >
         <span class="topic-item-key">{{ topicKey }}</span>
-        <span class="tw-text-xs">= {{ topicLastMessage?.message }} </span>
+        <span class="tw-ml-1 tw-text-xs" v-text="`= ${topicLastMessage?.message}`" />
       </topic-card>
     </q-intersection>
   </div>

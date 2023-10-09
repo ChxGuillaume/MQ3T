@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
 import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
+import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
 import { v4 as uuidV4 } from 'uuid'
 import { ref, watch } from 'vue'
 
@@ -10,12 +10,7 @@ const props = defineProps<{
   connection?: MqttConnection
 }>()
 
-const emits = defineEmits([
-  'create:connection',
-  'update:connection',
-  'delete:connection',
-  'update:dialogOpened'
-])
+const emits = defineEmits(['create:connection', 'update:connection', 'update:dialogOpened'])
 
 const addSubscriptionTopicPopupProxyRef = ref<QPopupProxy | null>(null)
 const addSubscriptionTopicFormRef = ref<QForm | null>(null)
@@ -105,11 +100,6 @@ const handleUpdateConnection = async () => {
   if (!validForm) return
 
   emits('update:connection', Object.assign({}, form.value))
-  handleCloseForm()
-}
-
-const handleDeleteConnection = () => {
-  emits('delete:connection', Object.assign({}, form.value))
   handleCloseForm()
 }
 
@@ -380,11 +370,7 @@ watch(
         </q-form>
       </q-card-section>
 
-      <q-card-actions :align="dialogType === 'edit' ? 'between' : 'right'">
-        <q-btn v-if="dialogType === 'edit'" color="red" @click="handleDeleteConnection">
-          <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-trash" />
-          Delete
-        </q-btn>
+      <q-card-actions align="right">
         <div class="tw-flex tw-gap-2">
           <q-btn flat label="Cancel" @click="handleCloseForm" />
           <q-btn v-if="dialogType === 'add'" color="primary" @click="handleAddConnection">

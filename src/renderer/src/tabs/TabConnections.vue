@@ -33,7 +33,7 @@ const handleDisconnect = (connection: MqttConnection) => {
 onMounted(() => {
   setTimeout(() => {
     if (mqttConnectionsStore.connections.length === 0) addConnectionDialogOpened.value = true
-  }, 100)
+  }, 200)
 })
 </script>
 
@@ -57,6 +57,7 @@ onMounted(() => {
         @edit="handleEdit"
         @connect="handleConnect"
         @disconnect="handleDisconnect"
+        @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
       />
     </div>
   </div>
@@ -71,7 +72,6 @@ onMounted(() => {
     dialog-type="edit"
     :connection="editConnection"
     @update:connection="mqttConnectionsStore.updateConnection($event)"
-    @delete:connection="mqttConnectionsStore.removeConnection($event.clientKey)"
   />
 </template>
 

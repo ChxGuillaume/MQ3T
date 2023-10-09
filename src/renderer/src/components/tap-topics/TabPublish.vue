@@ -35,8 +35,6 @@ const slicedMessages = computed(() => {
 const electronApi = window.api as ElectronIpc
 
 const handlePublishMessage = () => {
-  console.log(publishTopic.value, publishDataType.value, codeEditorData.value)
-
   electronApi.sendMqttMessage(
     mqttTopicsStore.selectedConnection,
     publishTopic.value,

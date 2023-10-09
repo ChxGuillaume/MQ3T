@@ -23,9 +23,11 @@ const darkModeOptions = [
 ]
 
 const showActivityAnimationSpeedOptions = [
+  { label: 'Slower', value: 3000 },
   { label: 'Slow', value: 2000 },
   { label: 'Normal', value: 1000 },
-  { label: 'Fast', value: 500 }
+  { label: 'Fast', value: 500 },
+  { label: 'Faster', value: 250 }
 ]
 
 const dateFormatOptions = computed(() => {

@@ -150,7 +150,7 @@ onMounted(() => {
         <q-tab-panel class="tw-p-0" name="topics">
           <TabTopics />
         </q-tab-panel>
-        <q-tab-panel name="actions">
+        <q-tab-panel class="tw-p-0" name="actions">
           <TabActions />
         </q-tab-panel>
         <q-tab-panel name="automations">Automations</q-tab-panel>
