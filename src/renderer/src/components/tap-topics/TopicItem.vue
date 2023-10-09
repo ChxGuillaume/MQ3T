@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useSettingsStore } from '../../store/settings-store'
-import TopicCard from './TopicCard.vue'
-import { computed, ref } from 'vue'
+import TopicCard, { ITopicCard } from './TopicCard.vue'
+import { computed, ref, watch } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
+
+const topicGroupTopicCardRef = ref<ITopicCard | null>(null)
+const topicCardRef = ref<ITopicCard | null>(null)
 
 const props = defineProps<{
   clientKey: string
@@ -50,6 +53,35 @@ const isSelectedTopic = computed(() => {
 const sortedTopicStructure = computed(() => {
   return Object.entries(props.topicStructure || {}).sort((a, b) => a[0].localeCompare(b[0]))
 })
+
+const topicLastMessage = computed(() => {
+  return mqttTopicsStore.getTopicLastMessage(props.clientKey, props.topicPath)
+})
+
+const subTopicsTopicsCount = computed(() => {
+  return mqttTopicsStore.getSubTopicsTopicsCount(props.clientKey, props.topicPath)
+})
+
+const subTopicsMessagesCount = computed(() => {
+  return mqttTopicsStore.getSubTopicsMessagesCount(props.clientKey, props.topicPath)
+})
+
+watch(
+  () => topicLastMessage.value,
+  () => {
+    if (!settingsStore.showActivity) return
+    topicCardRef.value?.animate()
+  }
+)
+
+watch(
+  () => subTopicsMessagesCount.value,
+  () => {
+    if (!settingsStore.showActivity) return
+    if (expandedTopicsSection.value) return
+    topicGroupTopicCardRef.value?.animate()
+  }
+)
 </script>
 
 <template>
@@ -57,6 +89,7 @@ const sortedTopicStructure = computed(() => {
     <div class="tw-flex">
       <q-intersection class="tw-h-[29px]">
         <topic-card
+          ref="topicGroupTopicCardRef"
           expandable
           :active="isSelectedTopic"
           :opened="expandedTopicsSection"
@@ -65,8 +98,7 @@ const sortedTopicStructure = computed(() => {
         >
           <span class="topic-item-key">{{ topicKey }}</span>
           <span v-if="!expandedTopicsSection" class="tw-text-xs">
-            ({{ mqttTopicsStore.getSubTopicsTopicsCount(clientKey, topicPath) }} topics
-            {{ mqttTopicsStore.getSubTopicsMessagesCount(clientKey, topicPath) }} messages)
+            ({{ subTopicsTopicsCount }} topics {{ subTopicsMessagesCount }} messages)
           </span>
         </topic-card>
       </q-intersection>
@@ -88,14 +120,13 @@ const sortedTopicStructure = computed(() => {
   <div v-else class="tw-flex">
     <q-intersection class="tw-h-[29px]">
       <topic-card
+        ref="topicCardRef"
         :active="isSelectedTopic"
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
         @open:toggle="handleTopicClick"
       >
         <span class="topic-item-key">{{ topicKey }}</span>
-        <span class="tw-text-xs">
-          = {{ mqttTopicsStore.getTopicLastMessage(props.clientKey, topicPath)?.message }}
-        </span>
+        <span class="tw-text-xs">= {{ topicLastMessage?.message }} </span>
       </topic-card>
     </q-intersection>
   </div>

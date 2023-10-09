@@ -3,6 +3,7 @@ import moment from 'moment'
 
 type SettingsStore = {
   showActivity: boolean
+  showActivityAnimationSpeed: number
   dateFormat: string
   timeFormat: string
   maxMessages: number
@@ -11,7 +12,10 @@ type SettingsStore = {
 
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsStore => ({
-    showActivity: localStorage.getItem('showActivity') === 'true',
+    showActivity: (localStorage.getItem('showActivity') || 'true') === 'true',
+    showActivityAnimationSpeed: parseInt(
+      localStorage.getItem('showActivityAnimationSpeed') || '1000'
+    ),
     dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
     timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
     maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
@@ -35,6 +39,10 @@ export const useSettingsStore = defineStore('settings', {
     setShowActivity(value: boolean) {
       this.showActivity = value
       localStorage.setItem('showActivity', value.toString())
+    },
+    setShowActivityAnimationSpeed(value: number) {
+      this.showActivityAnimationSpeed = value
+      localStorage.setItem('showActivityAnimationSpeed', value.toString())
     },
     setDateFormat(value: string) {
       this.dateFormat = value

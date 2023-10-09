@@ -170,7 +170,7 @@ const handleClearRetained = () => {
             class="tw-h-full tw-max-h-full"
             :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
           >
-            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1">
+            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1" :key="value.clientKey">
               <topic-card
                 expandable
                 :active="selectedConnection === value.clientKey"
@@ -191,6 +191,7 @@ const handleClearRetained = () => {
                   v-for="[pathKey, structure] in Object.entries(
                     mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
                   ).sort((a, b) => a[0].localeCompare(b[0]))"
+                  :key="pathKey"
                   :client-key="value.clientKey"
                   :topic-key="pathKey"
                   :topic-path="pathKey"
@@ -298,7 +299,7 @@ const handleClearRetained = () => {
                     <div class="tw-mb-2 tw-flex tw-justify-between">
                       <div>
                         {{ settingsStore.formatDateTime(message.createdAt) }}
-                        <span v-if="message.createdDiff" class="tw-text-xs topic-item-details">
+                        <span v-if="message.createdDiff" class="tw-text-xs message-details">
                           ({{ formatDuration(message.createdDiff) }})
                         </span>
                       </div>
@@ -360,11 +361,19 @@ const handleClearRetained = () => {
   .connection-card-title {
     @apply tw-text-black;
   }
+
+  .message-details {
+    @apply tw-text-neutral-500;
+  }
 }
 
 .body--dark {
   .connection-card-title {
     @apply tw-text-white;
+  }
+
+  .message-details {
+    @apply tw-text-neutral-400;
   }
 }
 </style>

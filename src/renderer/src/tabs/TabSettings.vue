@@ -22,6 +22,12 @@ const darkModeOptions = [
   { label: 'Off', value: false }
 ]
 
+const showActivityAnimationSpeedOptions = [
+  { label: 'Slow', value: 1500 },
+  { label: 'Normal', value: 1000 },
+  { label: 'Fast', value: 500 }
+]
+
 const dateFormatOptions = computed(() => {
   const formats = [
     { label: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
@@ -55,6 +61,13 @@ const showActivitySetting = computed({
   get: () => settingsStore.showActivity,
   set: (val) => {
     settingsStore.setShowActivity(val)
+  }
+})
+
+const showActivityAnimationSpeedSetting = computed({
+  get: () => settingsStore.showActivityAnimationSpeed,
+  set: (val) => {
+    settingsStore.setShowActivityAnimationSpeed(val)
   }
 })
 
@@ -98,6 +111,21 @@ const smartTopicGroupCloseSetting = computed({
       <q-card class="card-toggle" square flat>
         <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
       </q-card>
+      <q-select
+        v-model="showActivityAnimationSpeedSetting"
+        filled
+        :options="showActivityAnimationSpeedOptions"
+        label="Activity Animation Speed"
+        emit-value
+      >
+        <template v-slot:selected-item>
+          {{
+            showActivityAnimationSpeedOptions.find(
+              (o) => o.value === showActivityAnimationSpeedSetting
+            )?.label
+          }}
+        </template>
+      </q-select>
       <q-card class="card-toggle" square flat>
         <q-toggle v-model="smartTopicGroupCloseSetting" class="tw-w-full" label="Smart Topic Group">
         </q-toggle>
