@@ -86,7 +86,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="!isLastTopicPart" @click="handleTopicClick">
+  <div v-if="!isLastTopicPart">
     <div class="tw-flex">
       <q-intersection class="tw-h-[29px]">
         <topic-card
