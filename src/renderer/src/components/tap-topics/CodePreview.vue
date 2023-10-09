@@ -42,7 +42,7 @@ onMounted(() => {
     language: 'json',
     theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
-    fontSize: 11,
+    fontSize: 12,
     readOnly: true,
     lineNumbers: 'off',
     minimap: { enabled: false },

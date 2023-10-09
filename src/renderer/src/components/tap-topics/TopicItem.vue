@@ -63,8 +63,8 @@ const sortedTopicStructure = computed(() => {
           :style="{ 'margin-left': `${topicIndex * 20}px` }"
           @open:toggle="handleTopicClick"
         >
-          {{ topicKey }}
-          <span v-if="!expandedTopicsSection" class="tw-text-xs topic-item-details">
+          <span class="topic-item-key">{{ topicKey }}</span>
+          <span v-if="!expandedTopicsSection" class="tw-text-xs">
             ({{ mqttTopicsStore.getSubTopicsTopicsCount(clientKey, topicPath) }} topics
             {{ mqttTopicsStore.getSubTopicsMessagesCount(clientKey, topicPath) }} messages)
           </span>
@@ -92,8 +92,8 @@ const sortedTopicStructure = computed(() => {
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
         @open:toggle="handleTopicClick"
       >
-        {{ topicKey }}
-        <span class="tw-text-xs topic-item-details">
+        <span class="topic-item-key">{{ topicKey }}</span>
+        <span class="tw-text-xs">
           = {{ mqttTopicsStore.getTopicLastMessage(props.clientKey, topicPath)?.message }}
         </span>
       </topic-card>
@@ -103,14 +103,14 @@ const sortedTopicStructure = computed(() => {
 
 <style scoped lang="less">
 .body--light {
-  .topic-item-details {
-    @apply tw-text-neutral-500;
+  .topic-item-key {
+    @apply tw-text-black;
   }
 }
 
 .body--dark {
-  .topic-item-details {
-    @apply tw-text-neutral-400;
+  .topic-item-key {
+    @apply tw-text-white;
   }
 }
 </style>

@@ -16,7 +16,10 @@ const api: ElectronIpc = {
     ipcRenderer.send('send-mqtt-message', { clientKey, topic, message, options })
   },
 
-  fetchMqttStatus: () => ipcRenderer.send('fetch-mqtt-status')
+  initRenderer: () => ipcRenderer.send('init-renderer'),
+
+  saveMqttConnections: (connections) => ipcRenderer.send('save-mqtt-connections', connections),
+  handleLoadMqttConnections: (callback) => ipcRenderer.on('load-mqtt-connections', callback as any)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

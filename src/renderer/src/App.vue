@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMqttConnectionsStore } from './store/mqtt-connections'
-import { ElectronIpc } from '../../types/electron-ipc-callbacks'
 import { useMqttTopicsStore } from './store/mqtt-topics'
+import { ElectronApi } from './assets/js/electron-api'
 import TabConnections from './tabs/TabConnections.vue'
 import TabSettings from './tabs/TabSettings.vue'
 import TabActions from './tabs/TabActions.vue'
@@ -13,8 +13,6 @@ const currentTab = ref('connections')
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
-
-mqttConnectionsStore.loadConnections()
 
 const $q = useQuasar()
 
@@ -35,11 +33,9 @@ onMounted(() => {
       break
   }
 
-  const electronApi = window.api as ElectronIpc
+  ElectronApi.initRenderer()
 
-  electronApi.fetchMqttStatus()
-
-  electronApi.handleMqttError((event, value) => {
+  ElectronApi.handleMqttError((event, value) => {
     console.log(event, value)
 
     const connection = mqttConnectionsStore.getConnection(value.clientKey)
@@ -53,7 +49,7 @@ onMounted(() => {
     })
   })
 
-  electronApi.handleMqttStatus((event, value) => {
+  ElectronApi.handleMqttStatus((event, value) => {
     console.log(event, value)
 
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
@@ -99,11 +95,15 @@ onMounted(() => {
     }
   })
 
-  electronApi.handleMqttMessage((_, value) => {
+  ElectronApi.handleMqttMessage((_, value) => {
     mqttTopicsStore.addMessage(value.clientKey, value.topic, value.message, {
       qos: value.packet.qos,
       retained: value.packet.retain
     })
+  })
+
+  ElectronApi.handleLoadMqttConnections((_, connections) => {
+    mqttConnectionsStore.setConnections(connections)
   })
 })
 </script>

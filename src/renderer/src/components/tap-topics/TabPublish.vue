@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
+import { formatCode } from '../../assets/js/format-code'
 import { computed, ref } from 'vue'
-import CodeEditor from './CodeEditor.vue'
 
-const codeEditorRef = ref<CodeEditor | null>(null)
+const codeEditorRef = ref<ICodeEditor | null>(null)
 
 const mqttTopicsStore = useMqttTopicsStore()
 
@@ -19,6 +20,10 @@ const publishTopic = computed({
   set: (value) => {
     mqttTopicsStore.setSelectedPublishTopic(value)
   }
+})
+
+const canPublish = computed(() => {
+  return publishTopic.value !== '' && mqttTopicsStore.selectedConnection !== ''
 })
 
 const slicedMessages = computed(() => {
@@ -52,6 +57,12 @@ const handleMessageClick = (message: MqttMessage) => {
   retain.value = message.retained
   qos.value = message.qos
 }
+
+const handleFormatCode = () => {
+  codeEditorRef.value?.updateCodeEditorValue(
+    formatCode(codeEditorData.value, publishDataType.value)
+  )
+}
 </script>
 
 <template>
@@ -70,7 +81,7 @@ const handleMessageClick = (message: MqttMessage) => {
           ]"
         />
       </q-card>
-      <q-btn color="primary">
+      <q-btn color="primary" :disable="publishDataType === 'raw'" @click="handleFormatCode">
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
         Format
       </q-btn>
@@ -82,7 +93,7 @@ const handleMessageClick = (message: MqttMessage) => {
       <q-select v-model="qos" :options="[0, 1, 2]" filled dense label="QoS" class="tw-w-[96px]" />
       <q-toggle v-model="retain" label="Retain" />
     </div>
-    <q-btn color="primary" label="Publish" @click="handlePublishMessage" />
+    <q-btn color="primary" label="Publish" :disable="!canPublish" @click="handlePublishMessage" />
   </div>
   <q-separator />
   <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
@@ -122,8 +133,15 @@ const handleMessageClick = (message: MqttMessage) => {
             class="tw-m-0"
           />
         </div>
-        <q-btn size="sm" color="secondary" flat round icon="fa-solid fa-paper-plane">
-          <q-tooltip>Make it into an action button</q-tooltip>
+        <q-btn
+          size="sm"
+          color="secondary"
+          flat
+          round
+          icon="fa-solid fa-right-left"
+          @click.stop="() => {}"
+        >
+          <q-tooltip>Convert into action button</q-tooltip>
         </q-btn>
       </div>
       <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">

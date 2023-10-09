@@ -177,8 +177,8 @@ const handleClearRetained = () => {
                 :opened="!expandConnection[value.clientKey]"
                 @open:toggle="handleExpandConnection(value.clientKey)"
               >
-                {{ value.name }}
-                <span>
+                <span class="connection-card-title">{{ value.name }}</span>
+                <span class="tw-ml-1">
                   <connection-status-chip
                     :connection-status="mqttConnectionsStore.getConnectionStatus(value.clientKey)"
                     size="xs"
@@ -355,4 +355,16 @@ const handleClearRetained = () => {
   </q-splitter>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.body--light {
+  .connection-card-title {
+    @apply tw-text-black;
+  }
+}
+
+.body--dark {
+  .connection-card-title {
+    @apply tw-text-white;
+  }
+}
+</style>

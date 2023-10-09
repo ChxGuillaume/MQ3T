@@ -3,6 +3,10 @@ import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
 
+export interface ICodeEditor {
+  updateCodeEditorValue: (value: string) => void
+}
+
 const $q = useQuasar()
 
 const props = defineProps<{

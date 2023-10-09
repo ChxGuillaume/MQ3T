@@ -1,4 +1,5 @@
 import { MqttConnection } from '../../../types/mqtt-connection'
+import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 
 type MqttConnectionStatus = 'connected' | 'connecting' | 'disconnected'
@@ -38,15 +39,13 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       }
   },
   actions: {
-    loadConnections() {
-      this.connections = localStorage.getItem('mqtt-connections')
-        ? JSON.parse(localStorage.getItem('mqtt-connections')!)
-        : []
+    setConnections(connections: MqttConnection[]) {
+      this.connections = connections
     },
     addConnection(connection: MqttConnection) {
       this.connections.push(connection)
 
-      localStorage.setItem('mqtt-connections', JSON.stringify(this.connections))
+      this.saveConnections()
     },
     updateConnection(connection: MqttConnection) {
       this.connections = this.connections.map((con) => {
@@ -57,12 +56,15 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         return con
       })
 
-      localStorage.setItem('mqtt-connections', JSON.stringify(this.connections))
+      this.saveConnections()
     },
     removeConnection(clientKey: string) {
       this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
 
-      localStorage.setItem('mqtt-connections', JSON.stringify(this.connections))
+      this.saveConnections()
+    },
+    saveConnections() {
+      ElectronApi.saveMqttConnections(JSON.parse(JSON.stringify(this.connections)))
     },
     setConnectionStatus(clientKey: string, status: 'connected' | 'connecting' | 'disconnected') {
       this.connectionsStatus[clientKey] = status

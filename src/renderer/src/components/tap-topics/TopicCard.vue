@@ -33,10 +33,14 @@ defineEmits(['open:toggle'])
 }
 
 .topic-item-card {
-  @apply tw-py-1 tw-line-clamp-1 tw-cursor-pointer tw-transition-colors;
+  @apply tw-py-1 tw-line-clamp-1 tw-break-all tw-cursor-pointer tw-transition-colors tw-text-neutral-500;
 }
 
 .body--light {
+  .topic-item-card {
+    @apply tw-text-neutral-500;
+  }
+
   .topic-item-card:hover {
     background: #65016433 !important;
   }
@@ -47,6 +51,9 @@ defineEmits(['open:toggle'])
 }
 
 .body--dark {
+  .topic-item-card {
+    @apply tw-text-neutral-400;
+  }
   .topic-item-card:hover {
     background: #65016488 !important;
   }

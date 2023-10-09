@@ -14,6 +14,8 @@ export type MqttStatusCallback = (
   value: { clientKey: string; status: 'connected' | 'connecting' | 'disconnected' }
 ) => void
 
+export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void
+
 export type ElectronIpc = {
   handleMqttError: (callback: MqttErrorCallback) => void
   handleMqttMessage: (callback: MqttMessageCallback) => void
@@ -29,5 +31,8 @@ export type ElectronIpc = {
     options?: IClientPublishOptions
   ) => void
 
-  fetchMqttStatus: () => void
+  initRenderer: () => void
+
+  saveMqttConnections: (connections: MqttConnection[]) => void
+  handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
 }

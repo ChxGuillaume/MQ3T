@@ -31,7 +31,8 @@
     "mqtt": "^5.0.5",
     "pinia": "^2.1.6",
     "quasar": "^2.12.7",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xml-formatter": "^3.5.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.1",
@@ -43,6 +44,7 @@
     "@types/lodash": "^4.14.199",
     "@types/node": "^18.17.5",
     "@types/uuid": "^9.0.4",
+    "@types/xml-formatter": "^2.1.1",
     "@vitejs/plugin-vue": "^4.3.1",
     "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^11.0.3",

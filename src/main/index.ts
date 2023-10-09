@@ -5,10 +5,17 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
 import { MqttClient } from './mqtt-client'
-import { join } from 'path'
+import * as path from 'path'
+import * as fs from 'fs'
 
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
+const configFolder = path.join(app.getPath('userData'), 'config')
+const configFilePath = {
+  mqttConnections: path.join(configFolder, 'mqtt-connections.json')
+}
+
+fs.mkdirSync(configFolder, { recursive: true })
 
 let mainWindow: BrowserWindow | null = null
 function createWindow(): void {
@@ -26,35 +33,12 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
 
-  ipcMain.on('fetch-mqtt-status', (event) => {
-    mqttClients.forEach((_, clientKey) => {
-      event.reply('mqtt-status', {
-        clientKey,
-        status: mqttClientsState.get(clientKey) || 'disconnected'
-      })
-    })
-  })
-
-  ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
-    createConnection(connection).then()
-  })
-
-  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
-    mqttClients.get(clientKey)?.disconnect()
-    mqttClients.delete(clientKey)
-
-    mqttClientsState.set(clientKey, 'disconnected')
-    event.reply('mqtt-status', { clientKey, status: 'disconnected' })
-  })
-
-  ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
-    mqttClients.get(clientKey)?.publish(topic, message, options)
-  })
+  initIpcMain()
 
   mainWindow.on('close', () => {
     for (const client of mqttClients.values()) {
@@ -76,7 +60,7 @@ function createWindow(): void {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
 
@@ -161,5 +145,44 @@ const createConnection = async (connection: MqttConnection) => {
 
   connection.subscribedTopics.forEach((topic) => {
     clientMqtt.subscribe(topic.topic, { qos: topic.qos })
+  })
+}
+
+const initIpcMain = () => {
+  ipcMain.on('init-renderer', (event) => {
+    mqttClients.forEach((_, clientKey) => {
+      event.reply('mqtt-status', {
+        clientKey,
+        status: mqttClientsState.get(clientKey) || 'disconnected'
+      })
+    })
+
+    if (fs.existsSync(configFilePath.mqttConnections)) {
+      try {
+        const connections = JSON.parse(fs.readFileSync(configFilePath.mqttConnections).toString())
+
+        event.reply('load-mqtt-connections', connections)
+      } catch (e) {}
+    }
+  })
+
+  ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
+    createConnection(connection).then()
+  })
+
+  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
+    mqttClients.get(clientKey)?.disconnect()
+    mqttClients.delete(clientKey)
+
+    mqttClientsState.set(clientKey, 'disconnected')
+    event.reply('mqtt-status', { clientKey, status: 'disconnected' })
+  })
+
+  ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
+    mqttClients.get(clientKey)?.publish(topic, message, options)
+  })
+
+  ipcMain.on('save-mqtt-connections', (_, connections: MqttConnection[]) => {
+    fs.writeFileSync(configFilePath.mqttConnections, JSON.stringify(connections))
   })
 }

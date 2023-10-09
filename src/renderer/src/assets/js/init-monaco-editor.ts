@@ -17,3 +17,5 @@ monaco.editor.defineTheme('vs-dark-darker', {
     'editor.background': '#262626'
   }
 })
+
+monaco.languages.html.registerHTMLLanguageService('xml', {}, { documentFormattingEdits: true })

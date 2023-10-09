@@ -16,7 +16,9 @@ const handleClick = () => {
 </script>
 
 <template>
-  <q-btn size="sm" color="secondary" flat round icon="fa-solid fa-copy" @click="handleClick" />
+  <q-btn size="sm" color="secondary" flat round icon="fa-solid fa-copy" @click="handleClick">
+    <q-tooltip>Copy to clipboard</q-tooltip>
+  </q-btn>
 </template>
 
 <style scoped lang="less"></style>

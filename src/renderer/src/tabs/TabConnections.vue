@@ -31,7 +31,9 @@ const handleDisconnect = (connection: MqttConnection) => {
 }
 
 onMounted(() => {
-  if (mqttConnectionsStore.connections.length === 0) addConnectionDialogOpened.value = true
+  setTimeout(() => {
+    if (mqttConnectionsStore.connections.length === 0) addConnectionDialogOpened.value = true
+  }, 100)
 })
 </script>
 
