@@ -324,7 +324,7 @@ const handleClearRetained = () => {
             <tab-publish />
           </q-tab-panel>
 
-          <q-tab-panel name="stats">
+          <q-tab-panel name="stats" class="tw-flex tw-justify-center tw-items-center">
             <div class="text-h6">Stats In Work</div>
           </q-tab-panel>
         </q-tab-panels>

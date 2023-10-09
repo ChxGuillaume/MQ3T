@@ -3,7 +3,7 @@ import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 
@@ -12,11 +12,13 @@ const splitterModel = ref<number>(400)
 const selectedConnection = ref<string | undefined>(undefined)
 const selectedActionGroup = ref<string | undefined>('default')
 
-const connectionSelectOptions = mqttConnectionsStore.connections.map((connection) => {
-  return {
-    label: connection.name,
-    value: connection.clientKey
-  }
+const connectionSelectOptions = computed(() => {
+  return mqttConnectionsStore.connections.map((connection) => {
+    return {
+      label: connection.name,
+      value: connection.clientKey
+    }
+  })
 })
 </script>
 

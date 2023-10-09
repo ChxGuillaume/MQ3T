@@ -10,7 +10,7 @@ const codeEditorRef = ref<ICodeEditor | null>(null)
 const mqttTopicsStore = useMqttTopicsStore()
 
 const publishDataType = ref('raw')
-const codeEditorData = ref('{}')
+const codeEditorData = ref('')
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
 const current = ref(1)
