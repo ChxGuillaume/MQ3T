@@ -1,8 +1,10 @@
-appId: com.electron.app
+appId: com.mq3t.chx-guillaume.app
 productName: MQ3T
+
 directories:
   buildResources: build
 files:
+  - '!**/.idea/*'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
@@ -11,6 +13,8 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+
+# Windows build configuration
 win:
   executableName: MQ3T
   icon: resources/custom-mqtt-logo.png
@@ -26,21 +30,23 @@ nsis:
   artifactName: ${name}-${version}-setup-${arch}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  installerIcon: resources/custom-mqtt-logo.ico
-  uninstallerIcon: resources/custom-mqtt-logo.ico
+  installerIcon: resources/custom-mqtt-logo.png
+  uninstallerIcon: resources/custom-mqtt-logo.png
   createDesktopShortcut: always
   oneClick: false
   perMachine: false
+
+# macOS build configuration
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: true
 dmg:
   artifactName: ${name}-${version}.${ext}
+
+# Linux build configuration
 linux:
   artifactName: ${name}-${version}-${arch}.${ext}
   target:
@@ -59,6 +65,8 @@ linux:
 appImage:
   artifactName: ${name}-${version}-${arch}.${ext}
 npmRebuild: false
+
+# Publish to GitHub Releases
 publish:
   provider: generic
   url: https://example.com/auto-updates
