@@ -151,17 +151,6 @@ const addSubscriptionTopicRules = {
 }
 
 watch(
-  () => props.dialogOpened,
-  (value) => {
-    if (value) {
-      dialogRef.value?.show()
-    } else {
-      dialogRef.value?.hide()
-    }
-  }
-)
-
-watch(
   () => props.dialogOpened && props.connection,
   (value) => {
     if (value) {
@@ -172,7 +161,7 @@ watch(
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="handleCloseForm">
+  <q-dialog ref="dialogRef" :model-value="dialogOpened" @hide="handleCloseForm">
     <q-card flat style="width: 100%; max-width: 700px">
       <q-card-section>
         <q-form ref="connectionFormRef" class="tw-flex tw-flex-col tw-gap-4">
@@ -202,7 +191,7 @@ watch(
               :rules="rules.hostname"
               @update:model-value="
                 (val) => {
-                  form.hostname = `${val}`.replace(/[^a-zA-Z0-9.-]*/g, '')
+                  form.hostname = `${val}`.replace(/[^a-zA-Z0-9.-:\[\]]*/g, '')
                 }
               "
             />

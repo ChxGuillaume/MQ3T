@@ -4,20 +4,38 @@ import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
 import { computed, ref } from 'vue'
+import { ActionGroup, useActionsStore } from '../store/actions'
+import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const actionsStore = useActionsStore()
 
 const splitterModel = ref<number>(400)
+const actionGroupDialogOpened = ref<boolean>(false)
 
-const selectedConnection = ref<string | undefined>(undefined)
-const selectedActionGroup = ref<string | undefined>('default')
+const selectedConnection = computed({
+  get: () => actionsStore.selectedConnection,
+  set: (value) => {
+    actionsStore.setSelectedConnection(value)
+  }
+})
+
+const selectedConnectionObject = computed(() => {
+  return mqttConnectionsStore.getConnection(selectedConnection.value)
+})
+
+const selectedActionGroup = computed({
+  get: () => actionsStore.selectedActionGroup,
+  set: (value) => {
+    actionsStore.setSelectedActionGroup(value)
+  }
+})
+
+const editActionGroup = ref<ActionGroup | undefined>()
 
 const connectionSelectOptions = computed(() => {
   return mqttConnectionsStore.connections.map((connection) => {
-    return {
-      label: connection.name,
-      value: connection.clientKey
-    }
+    return { label: connection.name, value: connection.clientKey }
   })
 })
 </script>
@@ -56,14 +74,18 @@ const connectionSelectOptions = computed(() => {
           v-model="selectedConnection"
           filled
           square
+          emit-value
           label="Connection"
           :options="connectionSelectOptions"
         >
-          <template #selected-item="{ opt }">
+          <template #selected-item>
             <div class="tw-w-full tw-flex tw-justify-between tw-items-center tw-gap-2">
-              <span class="tw-line-clamp-1">{{ opt.label }}</span>
+              <span class="tw-line-clamp-1">{{ selectedConnectionObject?.name }}</span>
               <connection-status-chip
-                :connection-status="mqttConnectionsStore.getConnectionStatus(opt.value)"
+                v-if="selectedConnectionObject?.clientKey"
+                :connection-status="
+                  mqttConnectionsStore.getConnectionStatus(selectedConnectionObject.clientKey)
+                "
                 size="xs"
               />
             </div>
@@ -86,7 +108,11 @@ const connectionSelectOptions = computed(() => {
         <q-separator />
         <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
           <h2 class="tw-text-xl">Groups</h2>
-          <q-btn color="primary" :disable="!selectedConnection">
+          <q-btn
+            color="primary"
+            :disable="!selectedConnection"
+            @click="actionGroupDialogOpened = true"
+          >
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
             Add Group
           </q-btn>
@@ -94,12 +120,18 @@ const connectionSelectOptions = computed(() => {
         <q-separator />
         <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2 tw-overflow-auto">
           <action-group-card
-            v-for="x in selectedConnection && 5"
-            :title="`My Group ${x}`"
-            description="This is a description of the group. It can be multiple lines long. And it can be very long. Very very long. But it will be truncated."
-            :key="x"
-            :active="selectedActionGroup === `${x}`"
-            @click.stop="selectedActionGroup = `${x}`"
+            v-for="group in actionsStore.selectedConnectionGroups"
+            :title="group.name"
+            :description="group.description"
+            :key="group.id"
+            :active="selectedActionGroup === group.id"
+            @edit="
+              () => {
+                editActionGroup = group
+                actionGroupDialogOpened = true
+              }
+            "
+            @click.stop="selectedActionGroup = group.id"
           />
           <action-group-card
             v-if="selectedConnection"
@@ -125,6 +157,13 @@ const connectionSelectOptions = computed(() => {
       </div>
     </template>
   </q-splitter>
+  <action-group-dialog
+    v-model:opened="actionGroupDialogOpened"
+    :edit-mode="!!editActionGroup"
+    :action-group="editActionGroup"
+    @create:action-group="actionsStore.addActionGroup($event)"
+    @update:action-group="actionsStore.updateActionGroup($event)"
+  />
 </template>
 
 <style scoped lang="less">

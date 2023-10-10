@@ -5,6 +5,10 @@ defineProps<{
   description?: string
   cantModify?: boolean
 }>()
+
+defineEmits<{
+  edit: []
+}>()
 </script>
 
 <template>
@@ -36,7 +40,13 @@ defineProps<{
 
             <q-separator v-if="!cantModify" />
 
-            <q-item v-if="!cantModify" class="tw-text-blue-500" clickable v-close-popup>
+            <q-item
+              v-if="!cantModify"
+              class="tw-text-blue-500"
+              clickable
+              v-close-popup
+              @click="$emit('edit')"
+            >
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-edit" class="tw-mr-2" />

@@ -7,13 +7,13 @@ export class MqttClient {
 
   constructor(connection: MqttConnection) {
     const connectionOptions = {
-      protocol: connection.protocol,
-      host: connection.hostname,
-      port: connection.port,
       clientId: connection.clientId
     }
 
-    this.client = mqtt.connect(connectionOptions)
+    this.client = mqtt.connect(
+      `${connection.protocol}://${connection.hostname}:${connection.port}`,
+      connectionOptions
+    )
   }
 
   public onError(callback: (error: Error) => void) {

@@ -113,6 +113,19 @@ const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
   mqttClientsState.set(clientKey, 'connecting')
+
+  // await new Promise((resolve) => {
+  //   dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
+  //     if (err) {
+  //       sendMessageToRenderer('mqtt-error', { clientKey, error: err })
+  //       return
+  //     }
+  //
+  //     connection.hostname = address
+  //     resolve(undefined)
+  //   })
+  // })
+
   sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
   const clientMqtt = new MqttClient(connection)
