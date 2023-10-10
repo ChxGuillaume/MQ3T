@@ -2,10 +2,11 @@
   "name": "mq3t",
   "version": "1.0.0",
   "description": "MQTT Tools - A simple MQTT client for your development needs",
+  "license": "GPL-2.0",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://www.electronjs.org",
-  "repository": "",
+  "author": "Guillaume Chx",
+  "homepage": "https://mq3t.guillaumechx.dev/",
+  "repository": "https://github.com/ChxGuillaume/MQ3T",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix",
@@ -18,7 +19,8 @@
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win --config",
     "build:mac": "npm run build && electron-builder --mac --config",
-    "build:linux": "npm run build && electron-builder --linux --config"
+    "build:linux": "npm run build && electron-builder --linux --config",
+    "build:all": "npm run build && electron-builder -wlm --config"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
