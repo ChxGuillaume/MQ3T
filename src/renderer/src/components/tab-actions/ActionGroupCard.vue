@@ -7,6 +7,9 @@ defineProps<{
 }>()
 
 defineEmits<{
+  addAction: []
+  delete: []
+  export: []
   edit: []
 }>()
 </script>
@@ -29,7 +32,7 @@ defineEmits<{
       <q-btn icon="fa-solid fa-ellipsis-vertical" flat round size="sm" @click.stop="() => {}">
         <q-menu anchor="bottom right" self="top right">
           <q-list style="min-width: 100px">
-            <q-item class="tw-text-secondary" clickable v-close-popup>
+            <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('addAction')">
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-plus" class="tw-mr-2" />
@@ -54,7 +57,13 @@ defineEmits<{
                 </div>
               </q-item-section>
             </q-item>
-            <q-item v-if="!cantModify" class="tw-text-red-500" clickable v-close-popup>
+            <q-item
+              v-if="!cantModify"
+              class="tw-text-red-500"
+              clickable
+              v-close-popup
+              @click="$emit('delete')"
+            >
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
@@ -65,7 +74,13 @@ defineEmits<{
 
             <q-separator />
 
-            <q-item class="tw-text-teal-500" clickable v-close-popup>
+            <q-item
+              class="tw-text-teal-500"
+              clickable
+              v-close-popup
+              @click="$emit('export')"
+              disable
+            >
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
@@ -87,7 +102,7 @@ defineEmits<{
 
 .body--light {
   .group-card {
-    @apply tw-border-black/20 tw-bg-neutral-100;
+    @apply tw-bg-neutral-100;
   }
 
   .group-card.active {
@@ -95,12 +110,6 @@ defineEmits<{
   }
   .group-card.active .color-details {
     @apply tw-text-neutral-200;
-  }
-}
-
-.body--dark {
-  .group-card {
-    @apply tw-border-white/20;
   }
 }
 </style>

@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
-import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
-import ActionCard from '../components/tab-actions/ActionCard.vue'
-import { computed, ref } from 'vue'
-import { ActionGroup, useActionsStore } from '../store/actions'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
+import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
+import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
+import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
+import { useMqttConnectionsStore } from '../store/mqtt-connections'
+import ActionCard from '../components/tab-actions/ActionCard.vue'
+import { Action, ActionGroup } from '../../../types/actions'
+import { useActionsStore } from '../store/actions'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsStore = useActionsStore()
 
-const splitterModel = ref<number>(400)
 const actionGroupDialogOpened = ref<boolean>(false)
+const actionDialogOpened = ref<boolean>(false)
+const splitterModel = ref<number>(400)
+
+const editActionGroup = ref<ActionGroup | undefined>()
+const editAction = ref<Action | undefined>()
 
 const selectedConnection = computed({
   get: () => actionsStore.selectedConnection,
@@ -24,14 +30,16 @@ const selectedConnectionObject = computed(() => {
   return mqttConnectionsStore.getConnection(selectedConnection.value)
 })
 
+const selectedConnectionStatus = computed(() => {
+  return mqttConnectionsStore.getConnectionStatus(selectedConnection.value)
+})
+
 const selectedActionGroup = computed({
   get: () => actionsStore.selectedActionGroup,
   set: (value) => {
     actionsStore.setSelectedActionGroup(value)
   }
 })
-
-const editActionGroup = ref<ActionGroup | undefined>()
 
 const connectionSelectOptions = computed(() => {
   return mqttConnectionsStore.connections.map((connection) => {
@@ -52,17 +60,44 @@ const connectionSelectOptions = computed(() => {
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
         <div class="tw-p-4 tw-flex tw-justify-between tw-items-center">
           <h1 class="tw-text-xl tw-font-bold">Actions</h1>
-          <q-btn color="primary" :disable="!selectedActionGroup || !selectedConnection">
+          <q-btn
+            color="primary"
+            :disable="!selectedActionGroup || !selectedConnection"
+            @click="actionDialogOpened = true"
+          >
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
             Add Action
           </q-btn>
         </div>
         <q-separator />
-        <div class="actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto">
+        <div class="tw-relative actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto">
+          <div
+            v-if="!actionsStore.selectedConnectionGroupActions.length"
+            class="tw-absolute tw-right-12 tw-top-4 tw-flex tw-gap-4"
+          >
+            <div class="tw-mt-3 tw-text-center tw-rotate-[-2deg]">
+              <h2 class="tw-text-xl">You don't have any Action yet?</h2>
+              <h3 class="tw-text-sm color-details">Feel free to create one here!</h3>
+            </div>
+            <q-icon
+              name="fa-solid fa-reply"
+              size="xl"
+              class="create-action-arrow tw-text-primary tw-rotate-[55deg]"
+            />
+          </div>
           <action-card
-            v-for="x in selectedConnection && 50"
-            :key="x"
-            :title="`My Action - Group ${selectedActionGroup}`"
+            v-for="action in actionsStore.selectedConnectionGroupActions"
+            :key="action.id"
+            :action="action"
+            :send-disabled="selectedConnectionStatus !== 'connected'"
+            @edit="
+              () => {
+                editAction = action
+                actionDialogOpened = true
+              }
+            "
+            @delete="actionsStore.deleteAction(action.id)"
+            @send="actionsStore.sendAction(action)"
           />
         </div>
       </div>
@@ -83,9 +118,7 @@ const connectionSelectOptions = computed(() => {
               <span class="tw-line-clamp-1">{{ selectedConnectionObject?.name }}</span>
               <connection-status-chip
                 v-if="selectedConnectionObject?.clientKey"
-                :connection-status="
-                  mqttConnectionsStore.getConnectionStatus(selectedConnectionObject.clientKey)
-                "
+                :connection-status="selectedConnectionStatus"
                 size="xs"
               />
             </div>
@@ -125,12 +158,19 @@ const connectionSelectOptions = computed(() => {
             :description="group.description"
             :key="group.id"
             :active="selectedActionGroup === group.id"
+            @add-action="
+              () => {
+                actionsStore.setSelectedActionGroup(group.id)
+                actionDialogOpened = true
+              }
+            "
             @edit="
               () => {
                 editActionGroup = group
                 actionGroupDialogOpened = true
               }
             "
+            @delete="actionsStore.deleteActionGroup(group.id)"
             @click.stop="selectedActionGroup = group.id"
           />
           <action-group-card
@@ -139,17 +179,28 @@ const connectionSelectOptions = computed(() => {
             title="Default"
             description="This action group cannot be deleted."
             :active="selectedActionGroup === 'default'"
+            @add-action="
+              () => {
+                actionsStore.setSelectedActionGroup('default')
+                actionDialogOpened = true
+              }
+            "
             @click.stop="selectedActionGroup = 'default'"
           />
         </div>
         <q-separator />
         <div class="tw-flex">
-          <q-btn flat square class="tw-w-full tw-text-teal-500">
+          <q-btn flat square class="tw-w-full tw-text-teal-500" :disable="true">
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-download" />
             Import
           </q-btn>
           <q-separator vertical />
-          <q-btn flat square class="tw-w-full tw-text-teal-500" :disable="!selectedConnection">
+          <q-btn
+            flat
+            square
+            class="tw-w-full tw-text-teal-500"
+            :disable="true || !selectedConnection"
+          >
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-upload" />
             Export
           </q-btn>
@@ -157,16 +208,42 @@ const connectionSelectOptions = computed(() => {
       </div>
     </template>
   </q-splitter>
+  <action-dialog
+    v-model:opened="actionDialogOpened"
+    :edit-mode="!!editAction"
+    :action="editAction"
+    @create:action="actionsStore.addAction($event)"
+    @update:action="actionsStore.updateAction($event)"
+    @close="editAction = undefined"
+  />
   <action-group-dialog
     v-model:opened="actionGroupDialogOpened"
     :edit-mode="!!editActionGroup"
     :action-group="editActionGroup"
     @create:action-group="actionsStore.addActionGroup($event)"
     @update:action-group="actionsStore.updateActionGroup($event)"
+    @close="editActionGroup = undefined"
   />
 </template>
 
 <style scoped lang="less">
+@keyframes bounceUpAndDown {
+  0% {
+    transform: rotate(65deg) translateY(40px);
+  }
+  50% {
+    transform: rotate(75deg) translateY(40px) translateX(-10px);
+  }
+  100% {
+    transform: rotate(65deg) translateY(40px);
+  }
+}
+
+.create-action-arrow {
+  animation: bounceUpAndDown 1s infinite;
+  transform-origin: bottom right;
+}
+
 .actions-cards-grid {
   @apply tw-grid tw-grid-cols-1 md:tw-grid-cols-1 lg:tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3;
 }

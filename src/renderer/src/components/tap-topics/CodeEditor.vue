@@ -11,7 +11,8 @@ const $q = useQuasar()
 
 const props = defineProps<{
   modelValue: string
-  language?: string
+  fontSize?: number | string
+  language?: 'raw' | 'json' | 'xml' | 'yaml' | string
 }>()
 
 const emits = defineEmits(['update:modelValue'])
@@ -46,10 +47,10 @@ onMounted(() => {
 
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
     value: props.modelValue,
-    language: 'json',
+    language: props.language || 'raw',
     theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
-    fontSize: 12,
+    fontSize: parseInt(props.fontSize as string) || 12,
     lineNumbers: 'off',
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
@@ -82,7 +83,7 @@ watch(
 <style scoped lang="less">
 .monaco-editor {
   @apply tw-w-full tw-border-y;
-  height: 200px;
+  min-height: 200px;
 }
 
 .body--light {

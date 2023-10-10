@@ -1,42 +1,42 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
-
-export type Action = {
-  id: string
-  groupId: string | 'default'
-  name: string
-  description: string
-  topic: string
-  payload: string
-}
-
-export type ActionGroup = {
-  id: string
-  name: string
-  description: string
-}
+import {
+  ConnectionsActionsGroups,
+  ConnectionsActions,
+  ActionGroup,
+  Action
+} from '../../../types/actions'
 
 export const useActionsStore = defineStore('actions', {
   state: () => ({
-    actions: {} as Record<string, Action[]>,
-    actionsGroups: {} as Record<string, ActionGroup[]>,
+    actions: {} as ConnectionsActions,
+    actionsGroups: {} as ConnectionsActionsGroups,
     selectedConnection: '',
     selectedActionGroup: 'default'
   }),
   getters: {
-    selectedConnectionGroupActions: (state) => {
-      return state.actions[state.selectedConnection]?.filter(
-        (action) => action.groupId === state.selectedActionGroup
+    selectedConnectionGroupActions: (state): Action[] => {
+      return (
+        state.actions[state.selectedConnection]?.filter(
+          (action) => action.groupId === state.selectedActionGroup
+        ) || []
       )
     },
-    selectedConnectionGroups: (state) => {
+    selectedConnectionGroups: (state): ActionGroup[] => {
       return state.actionsGroups[state.selectedConnection]
     }
   },
   actions: {
-    setActions(connectionId: string, actions: Action[]) {
+    setActions(actions: ConnectionsActions) {
+      this.actions = actions
+    },
+    setActionsGroups(actionsGroups: ConnectionsActionsGroups) {
+      this.actionsGroups = actionsGroups
+    },
+    setConnectionActions(connectionId: string, actions: Action[]) {
       this.actions[connectionId] = actions
     },
-    setActionsGroups(connectionId: string, actionsGroups: ActionGroup[]) {
+    setConnectionActionsGroups(connectionId: string, actionsGroups: ActionGroup[]) {
       this.actionsGroups[connectionId] = actionsGroups
     },
     setSelectedConnection(connectionId: string) {
@@ -50,7 +50,7 @@ export const useActionsStore = defineStore('actions', {
 
       this.actions[this.selectedConnection].push(action)
 
-      this.save()
+      this.saveActions()
     },
     addActionGroup(group: ActionGroup) {
       if (!this.actionsGroups[this.selectedConnection])
@@ -58,28 +58,28 @@ export const useActionsStore = defineStore('actions', {
 
       this.actionsGroups[this.selectedConnection].push(group)
 
-      this.save()
+      this.saveActionsGroups()
     },
     updateAction(action: Action) {
       const index = this.actions[this.selectedConnection].findIndex((a) => a.id === action.id)
 
       this.actions[this.selectedConnection].splice(index, 1, action)
 
-      this.save()
+      this.saveActions()
     },
     updateActionGroup(group: ActionGroup) {
       const index = this.actionsGroups[this.selectedConnection].findIndex((g) => g.id === group.id)
 
       this.actionsGroups[this.selectedConnection].splice(index, 1, group)
 
-      this.save()
+      this.saveActionsGroups()
     },
     deleteAction(actionId: string) {
       const index = this.actions[this.selectedConnection].findIndex((a) => a.id === actionId)
 
       this.actions[this.selectedConnection].splice(index, 1)
 
-      this.save()
+      this.saveActions()
     },
     deleteActionGroup(groupId: string) {
       const index = this.actionsGroups[this.selectedConnection].findIndex((g) => g.id === groupId)
@@ -90,11 +90,21 @@ export const useActionsStore = defineStore('actions', {
         if (action.groupId === groupId) action.groupId = 'default'
       }
 
-      this.save()
+      if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
+
+      this.saveActionsGroups()
     },
-    save() {
-      localStorage.setItem('actions', JSON.stringify(this.actions))
-      localStorage.setItem('actionsGroups', JSON.stringify(this.actionsGroups))
+    sendAction(action: Action) {
+      ElectronApi.sendMqttMessage(this.selectedConnection, action.topic, action.payload, {
+        qos: action.qos,
+        retain: action.retained
+      })
+    },
+    saveActions() {
+      ElectronApi.saveActions(JSON.parse(JSON.stringify(this.actions)))
+    },
+    saveActionsGroups() {
+      ElectronApi.saveActionsGroups(JSON.parse(JSON.stringify(this.actionsGroups)))
     }
   }
 })

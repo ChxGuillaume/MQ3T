@@ -1,3 +1,4 @@
+import { ConnectionsActions, ConnectionsActionsGroups } from './actions'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
 import { IPublishPacket } from 'mqtt'
@@ -34,5 +35,12 @@ export type ElectronIpc = {
   initRenderer: () => void
 
   saveMqttConnections: (connections: MqttConnection[]) => void
+  saveActions: (actions: ConnectionsActions) => void
+  saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
+
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
+  handleLoadActions: (callback: (event: never, value: ConnectionsActions) => void) => void
+  handleLoadActionsGroups: (
+    callback: (event: never, value: ConnectionsActionsGroups) => void
+  ) => void
 }

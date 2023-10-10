@@ -1,34 +1,63 @@
-# mqtt-explorer-rework
+# [MQ3T](https://mq3t.guillaumechx.dev)
 
-An Electron application with Vue and TypeScript
+![https://img.shields.io/badge/Release-working%20on%20it%20!!-red](https://img.shields.io/badge/Release-working%20on%20it%20!!-red)
+![https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)
 
-## Recommended IDE Setup
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
+|                                                         |                                                       |
+|---------------------------------------------------------|-------------------------------------------------------|
+| ![connections-mix.png](screenshots/connections-mix.png) | ![settings-light.png](screenshots/settings-light.png) |
+| ![topics-light.png](screenshots/topics-light.png)       | ![actions-light.png](screenshots/actions-light.png)   |
+
+MQ3T is a MQTT client for Windows, macOS and Linux.
+It allows you to visualize your MQTT topics, subscribe to them and publish messages.
+You can simplify your development processes by using the built-in actions.
 
 ## Project Setup
 
-### Install
+### Install dependencies
 
 ```bash
-$ npm install
+npm ci
 ```
 
 ### Development
 
 ```bash
-$ npm run dev
+npm run dev
 ```
 
-### Build
+# Project Structure
+
+- `build/` - Build resources
+- `resources/` - Static application resources
+- `src/` - Main application source code
+  - `main/` - Main process source code
+  - `preload/` - Preload process source code (used to communicate between main and renderer process)
+  - `renderer/` - Renderer process source code
+    - `src/` - Vue.js source code
+      - `assets/` - Static assets
+      - `components/` - Vue.js components
+      - `store/` - Pinia store
+      - `tabs/` - Application tabs
+      - `App.vue` - Vue.js root component
+      - `main.ts` - Vue.js entrypoint
+    - `types/` - TypeScript types
+
+## Build
 
 ```bash
 # For windows
-$ npm run build:win
+npm run build:win
 
 # For macOS
-$ npm run build:mac
+npm run build:mac
 
 # For Linux
-$ npm run build:linux
+npm run build:linux
 ```
+
+# License
+![https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green](https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green)
+
+[GPL-2.0 License](LICENSE)

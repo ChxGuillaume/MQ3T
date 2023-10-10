@@ -12,7 +12,9 @@ const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
 const configFolder = path.join(app.getPath('userData'), 'config')
 const configFilePath = {
-  mqttConnections: path.join(configFolder, 'mqtt-connections.json')
+  mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
+  actions: path.join(configFolder, 'actions.json'),
+  actionsGroups: path.join(configFolder, 'actions-groups.json')
 }
 
 fs.mkdirSync(configFolder, { recursive: true })
@@ -25,7 +27,7 @@ function createWindow(): void {
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1300,
     minWidth: 800,
     height: 800,
     minHeight: 600,
@@ -63,6 +65,8 @@ function createWindow(): void {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
+
+app.commandLine.appendSwitch('disable-features', 'WidgetLayering')
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -161,6 +165,16 @@ const createConnection = async (connection: MqttConnection) => {
   })
 }
 
+const readJsonFile = (filePath: string) => {
+  if (fs.existsSync(filePath)) {
+    try {
+      return JSON.parse(fs.readFileSync(filePath).toString())
+    } catch (e) {
+      return undefined
+    }
+  }
+}
+
 const initIpcMain = () => {
   ipcMain.on('init-renderer', (event) => {
     mqttClients.forEach((_, clientKey) => {
@@ -170,13 +184,13 @@ const initIpcMain = () => {
       })
     })
 
-    if (fs.existsSync(configFilePath.mqttConnections)) {
-      try {
-        const connections = JSON.parse(fs.readFileSync(configFilePath.mqttConnections).toString())
+    const connections = readJsonFile(configFilePath.mqttConnections)
+    const actions = readJsonFile(configFilePath.actions)
+    const actionsGroups = readJsonFile(configFilePath.actionsGroups)
 
-        event.reply('load-mqtt-connections', connections)
-      } catch (e) {}
-    }
+    if (connections) event.reply('load-mqtt-connections', connections)
+    if (actions) event.reply('load-actions', actions)
+    if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
@@ -197,5 +211,13 @@ const initIpcMain = () => {
 
   ipcMain.on('save-mqtt-connections', (_, connections: MqttConnection[]) => {
     fs.writeFileSync(configFilePath.mqttConnections, JSON.stringify(connections))
+  })
+
+  ipcMain.on('save-actions', (_, actions) => {
+    fs.writeFileSync(configFilePath.actions, JSON.stringify(actions))
+  })
+
+  ipcMain.on('save-actions-groups', (_, actionsGroups) => {
+    fs.writeFileSync(configFilePath.actionsGroups, JSON.stringify(actionsGroups))
   })
 }

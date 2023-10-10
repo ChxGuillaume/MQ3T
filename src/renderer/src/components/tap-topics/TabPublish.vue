@@ -91,7 +91,10 @@ const handleFormatCode = () => {
       <q-select v-model="qos" :options="[0, 1, 2]" filled dense label="QoS" class="tw-w-[96px]" />
       <q-toggle v-model="retain" label="Retain" />
     </div>
-    <q-btn color="primary" label="Publish" :disable="!canPublish" @click="handlePublishMessage" />
+    <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
+      <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+      Publish
+    </q-btn>
   </div>
   <q-separator />
   <div class="tw-px-4 tw-pt-2 tw-flex justify-between">

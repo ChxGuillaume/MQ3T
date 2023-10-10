@@ -3,6 +3,7 @@ import { useMqttConnectionsStore } from './store/mqtt-connections'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import { ElectronApi } from './assets/js/electron-api'
 import TabConnections from './tabs/TabConnections.vue'
+import { useActionsStore } from './store/actions'
 import TabSettings from './tabs/TabSettings.vue'
 import TabActions from './tabs/TabActions.vue'
 import TabTopics from './tabs/TabTopics.vue'
@@ -13,6 +14,7 @@ const currentTab = ref('connections')
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
+const actionsStore = useActionsStore()
 
 const $q = useQuasar()
 
@@ -104,6 +106,14 @@ onMounted(() => {
 
   ElectronApi.handleLoadMqttConnections((_, connections) => {
     mqttConnectionsStore.setConnections(connections)
+  })
+
+  ElectronApi.handleLoadActions((_, actions) => {
+    actionsStore.setActions(actions)
+  })
+
+  ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
+    actionsStore.setActionsGroups(actionGroups)
   })
 })
 </script>

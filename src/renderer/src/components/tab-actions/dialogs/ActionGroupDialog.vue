@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ActionGroup } from '../../../store/actions'
+import { ActionGroup } from '../../../../../types/actions'
 import { reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
@@ -16,6 +16,7 @@ const emits = defineEmits<{
   'update:opened': [value: boolean]
   'create:actionGroup': [value: ActionGroup]
   'update:actionGroup': [value: ActionGroup]
+  close: []
 }>()
 
 const form = reactive({
@@ -33,8 +34,9 @@ const clearForm = () => {
 }
 
 const handleCloseForm = () => {
-  emits('update:opened', false)
   clearForm()
+  emits('close')
+  emits('update:opened', false)
 }
 
 const validateForm = async (): Promise<boolean> => {
@@ -54,8 +56,8 @@ const handleCreate = async () => {
 }
 
 const handleUpdate = async () => {
-  if (!(await validateForm())) return
   if (!props.actionGroup) return
+  if (!(await validateForm())) return
 
   emits('update:actionGroup', {
     id: props.actionGroup.id,
@@ -68,11 +70,11 @@ const handleUpdate = async () => {
 
 watch(
   () => props.opened && props.actionGroup,
-  (value) => {
-    if (!value) return
+  (actionGroup) => {
+    if (!actionGroup) return
 
-    form.name = props.actionGroup!.name
-    form.description = props.actionGroup!.description
+    form.name = actionGroup!.name
+    form.description = actionGroup!.description
   }
 )
 </script>
