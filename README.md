@@ -1,6 +1,7 @@
 # [MQ3T](https://mq3t.guillaumechx.dev)
 
-![https://img.shields.io/badge/Release-working%20on%20it%20!!-red](https://img.shields.io/badge/Release-working%20on%20it%20!!-red)
+[//]: # (![https://img.shields.io/badge/Release-working%20on%20it%20!!-red]&#40;https://img.shields.io/badge/Release-working%20on%20it%20!!-red&#41;)
+![https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release](https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release)
 ![https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)
 
 
@@ -9,8 +10,10 @@
 | ![connections-mix.png](screenshots/connections-mix.png) | ![settings-light.png](screenshots/settings-light.png) |
 | ![topics-light.png](screenshots/topics-light.png)       | ![actions-light.png](screenshots/actions-light.png)   |
 
-MQ3T is a MQTT client for Windows, macOS and Linux.
+### MQ3T is a MQTT client for Windows, macOS and Linux.
+
 It allows you to visualize your MQTT topics, subscribe to them and publish messages.
+
 You can simplify your development processes by using the built-in actions.
 
 ## Project Setup
