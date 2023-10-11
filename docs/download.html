@@ -44,14 +44,13 @@
   const downloadFile = async () => {
     const data = await (await fetch("https://api.github.com/repos/ChxGuillaume/MQ3T/releases/latest")).json();
 
-    console.log(data);
-    let asset;
-    // get current url query params
     const urlParams = new URLSearchParams(window.location.search);
 
     const os = urlParams.get("os");
     const arch = urlParams.get("arch");
     const type = urlParams.get("type");
+
+    let asset;
 
     switch (os) {
       case "windows":
@@ -65,20 +64,14 @@
         break;
     }
 
-    console.log(urlParams.get("os"));
-    console.log(urlParams.get("arch"));
-    console.log(urlParams.get("type"));
-
-    console.log(asset?.browser_download_url);
-
     if (asset) {
-      window.location.href = asset.browser_download_url;
+      window.location.replace(asset.browser_download_url);
 
       setTimeout(() => {
-        window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
-      }, 1000);
+        window.location.replace('https://github.com/ChxGuillaume/MQ3T/releases/latest');
+      }, 10000);
     } else {
-      window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
+      window.location.replace('https://github.com/ChxGuillaume/MQ3T/releases/latest');
     }
   };
 
