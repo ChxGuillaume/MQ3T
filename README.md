@@ -1,8 +1,8 @@
 # [MQ3T](https://mq3t.guillaumechx.dev)
 
 [//]: # (![https://img.shields.io/badge/Release-working%20on%20it%20!!-red]&#40;https://img.shields.io/badge/Release-working%20on%20it%20!!-red&#41;)
-![https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release](https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release)
-![https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)
+![https://github.com/ChxGuillaume/MQ3T/releases](https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release)
+![https://github.com/ChxGuillaume/MQ3T/releases](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)
 
 
 |                                                         |                                                       |
