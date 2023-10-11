@@ -234,6 +234,11 @@ const initIpcMain = () => {
 }
 
 const initAutoUpdater = () => {
+  if (is.dev && process.env['FORCE_DEV_UPDATE']) {
+    autoUpdater.forceDevUpdateConfig = true
+    autoUpdater.updateConfigPath = path.join(__dirname, '../..', 'dev-app-update.yml')
+  }
+
   autoUpdater.on('checking-for-update', () => {
     console.log('checking-for-update')
     sendMessageToRenderer('checking-for-update')

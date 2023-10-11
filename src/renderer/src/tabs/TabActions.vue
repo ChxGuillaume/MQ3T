@@ -71,20 +71,57 @@ const connectionSelectOptions = computed(() => {
         </div>
         <q-separator />
         <div class="tw-relative actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto">
-          <div
-            v-if="!actionsStore.selectedConnectionGroupActions.length"
-            class="tw-absolute tw-right-12 tw-top-4 tw-flex tw-gap-4"
+          <transition
+            appear
+            enter-active-class="animated fadeIn"
+            leave-active-class="animated fadeOut"
           >
-            <div class="tw-mt-3 tw-text-center tw-rotate-[-2deg]">
-              <h2 class="tw-text-xl">You don't have any Action yet?</h2>
-              <h3 class="tw-text-sm color-details">Feel free to create one here!</h3>
+            <div
+              v-if="!actionsStore.selectedConnection"
+              class="tw-absolute tw-right-28 tw-top-4 tw-flex tw-gap-4"
+            >
+              <div class="tw-mt-3 tw-text-center tw-rotate-[-2deg]">
+                <h2 class="tw-text-xl">No Connection selected yet!</h2>
+                <h3 class="tw-text-sm color-details">Select one to start using Actions.</h3>
+              </div>
             </div>
+          </transition>
+          <transition
+            appear
+            enter-active-class="animated fadeIn"
+            leave-active-class="animated fadeOut"
+          >
+            <div
+              v-if="
+                actionsStore.selectedConnection &&
+                !actionsStore.selectedConnectionGroupActions.length
+              "
+              class="tw-absolute tw-right-28 tw-top-4 tw-flex tw-gap-4"
+            >
+              <div class="tw-mt-3 tw-text-center tw-rotate-[-2deg]">
+                <h2 class="tw-text-xl">You don't have any Action yet?</h2>
+                <h3 class="tw-text-sm color-details">Feel free to create one here!</h3>
+              </div>
+            </div>
+          </transition>
+          <div
+            v-if="
+              !actionsStore.selectedConnection ||
+              !actionsStore.selectedConnectionGroupActions.length
+            "
+            class="tw-absolute tw-right-12 tw-top-4 tw-flex tw-gap-4"
+            :class="[
+              { 'no-connection-selected': !actionsStore.selectedConnection },
+              { 'no-actions': actionsStore.selectedConnection }
+            ]"
+          >
             <q-icon
               name="fa-solid fa-reply"
               size="xl"
               class="create-action-arrow tw-text-primary tw-rotate-[55deg]"
             />
           </div>
+
           <action-card
             v-for="action in actionsStore.selectedConnectionGroupActions"
             :key="action.id"
@@ -227,21 +264,38 @@ const connectionSelectOptions = computed(() => {
 </template>
 
 <style scoped lang="less">
-@keyframes bounceUpAndDown {
+@keyframes noConnectionIconAnimation {
   0% {
-    transform: rotate(65deg) translateY(40px);
+    transform: rotate(125deg) translateY(0px);
   }
   50% {
-    transform: rotate(75deg) translateY(40px) translateX(-10px);
+    transform: rotate(135deg) translateY(0px) translateX(-10px);
   }
   100% {
-    transform: rotate(65deg) translateY(40px);
+    transform: rotate(125deg) translateY(0px);
   }
 }
 
-.create-action-arrow {
-  animation: bounceUpAndDown 1s infinite;
-  transform-origin: bottom right;
+@keyframes noActionsIconAnimation {
+  0% {
+    transform: rotate(65deg) translateY(0px);
+  }
+  50% {
+    transform: rotate(75deg) translateY(0px) translateX(-10px);
+  }
+  100% {
+    transform: rotate(65deg) translateY(0px);
+  }
+}
+
+.no-connection-selected .create-action-arrow {
+  animation: noConnectionIconAnimation 1s infinite;
+  transform-origin: center center;
+}
+
+.no-actions .create-action-arrow {
+  animation: noActionsIconAnimation 1s infinite;
+  transform-origin: center center;
 }
 
 .actions-cards-grid {

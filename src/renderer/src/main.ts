@@ -8,6 +8,10 @@ import App from './App.vue'
 import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
 import iconSet from 'quasar/icon-set/fontawesome-v6'
 
+// A few examples for animations from Animate.css:
+import '@quasar/extras/animate/fadeIn.css'
+import '@quasar/extras/animate/fadeOut.css'
+
 import 'quasar/src/css/index.sass'
 import './assets/css/fonts.css'
 import './tailwind.css'

@@ -151,7 +151,7 @@ const messagesPaginationSetting = computed({
         v-model="showActivityAnimationTypeSetting"
         filled
         :options="showActivityAnimationTypeOptions"
-        label="Activity Animation Speed"
+        label="Activity Animation Style"
         emit-value
       >
         <template v-slot:selected-item>
