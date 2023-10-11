@@ -73,9 +73,13 @@
 
     if (asset) {
       window.location.href = asset.browser_download_url;
-    }
 
-    window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
+      setTimeout(() => {
+        window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
+      }, 1000);
+    } else {
+      window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
+    }
   };
 
   downloadFile();
