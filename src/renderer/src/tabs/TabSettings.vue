@@ -112,6 +112,13 @@ const smartTopicGroupCloseSetting = computed({
     settingsStore.setSmartTopicGroupClose(val)
   }
 })
+
+const messagesPaginationSetting = computed({
+  get: () => settingsStore.messagesPagination,
+  set: (val) => {
+    settingsStore.setMessagesPagination(val)
+  }
+})
 </script>
 
 <template>
@@ -199,6 +206,13 @@ const smartTopicGroupCloseSetting = computed({
         label="Messages History per Topic"
         type="number"
       />
+      <q-card class="card-toggle" square flat>
+        <q-toggle
+          v-model="messagesPaginationSetting"
+          label="Messages Pagination"
+          class="tw-w-full"
+        />
+      </q-card>
     </div>
   </div>
 </template>

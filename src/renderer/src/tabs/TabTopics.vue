@@ -32,6 +32,8 @@ const selectedTopicLastMessage = computed(() => {
 })
 
 const slicedMessages = computed(() => {
+  if (!settingsStore.messagesPagination) return mqttTopicsStore.getSelectedTopicMessages
+
   const start = (current.value - 1) * 5
   const end = start + 5
 
@@ -283,6 +285,7 @@ const handleClearRetained = () => {
                     </q-chip>
                   </div>
                   <q-pagination
+                    v-if="settingsStore.messagesPagination"
                     v-model="current"
                     size="xs"
                     :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"

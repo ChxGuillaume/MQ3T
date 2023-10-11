@@ -17,6 +17,8 @@ const api: ElectronIpc = {
   },
 
   initRenderer: () => ipcRenderer.send('init-renderer'),
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  appVersion: (callback) => ipcRenderer.on('app-version', callback as any),
 
   saveMqttConnections: (connections) => ipcRenderer.send('save-mqtt-connections', connections),
   handleLoadMqttConnections: (callback) => ipcRenderer.on('load-mqtt-connections', callback as any),
@@ -24,7 +26,9 @@ const api: ElectronIpc = {
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),
-  handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any)
+  handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any),
+
+  debug: (callback) => ipcRenderer.on('debug', callback as any)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

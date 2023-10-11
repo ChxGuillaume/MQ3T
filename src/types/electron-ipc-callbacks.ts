@@ -3,6 +3,8 @@ import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
 import { IPublishPacket } from 'mqtt'
 
+export type AppVersionCallback = (event: never, value: string) => void
+
 export type MqttErrorCallback = (event: never, value: { clientKey: string; error: Error }) => void
 
 export type MqttMessageCallback = (
@@ -33,6 +35,8 @@ export type ElectronIpc = {
   ) => void
 
   initRenderer: () => void
+  checkForUpdates: () => void
+  appVersion: (callback: AppVersionCallback) => void
 
   saveMqttConnections: (connections: MqttConnection[]) => void
   saveActions: (actions: ConnectionsActions) => void
@@ -43,4 +47,6 @@ export type ElectronIpc = {
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
   ) => void
+
+  debug: (callback: (event: never, ...args: never[]) => void) => void
 }

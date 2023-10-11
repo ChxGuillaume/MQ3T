@@ -11,6 +11,8 @@ type SettingsStore = {
   timeFormat: string
   maxMessages: number
   smartTopicGroupClose: boolean
+  messagesPagination: boolean
+  appVersion: string
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -24,7 +26,9 @@ export const useSettingsStore = defineStore('settings', {
     dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
     timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
     maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
-    smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true'
+    smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true',
+    messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true',
+    appVersion: ''
   }),
   getters: {
     dateTimeFormat(): string {
@@ -68,6 +72,13 @@ export const useSettingsStore = defineStore('settings', {
     setSmartTopicGroupClose(value: boolean) {
       this.smartTopicGroupClose = value
       localStorage.setItem('smartTopicGroupClose', value.toString())
+    },
+    setMessagesPagination(value: boolean) {
+      this.messagesPagination = value
+      localStorage.setItem('messagesPagination', value.toString())
+    },
+    setAppVersion(value: string) {
+      this.appVersion = value
     }
   }
 })

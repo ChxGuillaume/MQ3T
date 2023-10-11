@@ -4,10 +4,11 @@ import iconIco from '../../resources/custom-mqtt-logo.ico?asset'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
+import { autoUpdater } from 'electron-updater'
 import { MqttClient } from './mqtt-client'
 import * as path from 'path'
-import * as fs from 'fs'
 import * as dns from 'dns'
+import * as fs from 'fs'
 
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
@@ -54,16 +55,17 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    shell.openExternal(details.url).then()
+
     return { action: 'deny' }
   })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).then()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then()
   }
 }
 
@@ -194,6 +196,12 @@ const initIpcMain = () => {
     if (connections) event.reply('load-mqtt-connections', connections)
     if (actions) event.reply('load-actions', actions)
     if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
+
+    event.reply('app-version', app.getVersion())
+  })
+
+  ipcMain.on('check-for-updates', async () => {
+    await autoUpdater.checkForUpdates()
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
@@ -224,3 +232,41 @@ const initIpcMain = () => {
     fs.writeFileSync(configFilePath.actionsGroups, JSON.stringify(actionsGroups))
   })
 }
+
+const initAutoUpdater = () => {
+  autoUpdater.on('checking-for-update', () => {
+    console.log('checking-for-update')
+    sendMessageToRenderer('checking-for-update')
+    sendMessageToRenderer('debug', 'checking-for-update')
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('update-available', info)
+    sendMessageToRenderer('debug', 'update-available', info)
+  })
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('update-not-available', info)
+    sendMessageToRenderer('debug', 'update-not-available', info)
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.log('error', err)
+    sendMessageToRenderer('updating-error', err)
+    sendMessageToRenderer('debug', 'error', err)
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log('download-progress', progressObj)
+    sendMessageToRenderer('debug', 'download-progress', progressObj)
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('update-downloaded', info)
+    sendMessageToRenderer('debug', 'update-downloaded', info)
+  })
+
+  autoUpdater.checkForUpdates()
+}
+
+initAutoUpdater()

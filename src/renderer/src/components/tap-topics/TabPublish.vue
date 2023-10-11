@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
 import { formatCode } from '../../assets/js/format-code'
 import { computed, ref } from 'vue'
@@ -8,6 +9,7 @@ import { computed, ref } from 'vue'
 const codeEditorRef = ref<ICodeEditor | null>(null)
 
 const mqttTopicsStore = useMqttTopicsStore()
+const settingsStore = useSettingsStore()
 
 const publishDataType = ref('raw')
 const codeEditorData = ref('')
@@ -27,8 +29,11 @@ const canPublish = computed(() => {
 })
 
 const slicedMessages = computed(() => {
+  if (!settingsStore.messagesPagination) return mqttTopicsStore.getSelectedPublishTopicMessages
+
   const start = (current.value - 1) * 5
   const end = start + 5
+
   return mqttTopicsStore.sortedSelectedPublishTopicMessages.slice(start, end)
 })
 
@@ -105,6 +110,7 @@ const handleFormatCode = () => {
       </q-chip>
     </div>
     <q-pagination
+      v-if="settingsStore.messagesPagination"
       v-model="current"
       size="xs"
       :max="Math.ceil(mqttTopicsStore.getSelectedPublishTopicMessages.length / 5)"

@@ -4,9 +4,12 @@ import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
+import { useSettingsStore } from '../store/settings-store'
+import { ElectronApi } from '../assets/js/electron-api'
 import { onMounted, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const settingsStore = useSettingsStore()
 
 const electronApi = window.api as ElectronIpc
 
@@ -60,6 +63,13 @@ onMounted(() => {
         @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
       />
     </div>
+  </div>
+
+  <div
+    class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer"
+    @click="ElectronApi.checkForUpdates"
+  >
+    Version {{ settingsStore.appVersion }}
   </div>
 
   <mqtt-connection-dialog
