@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MQ3T Download...</title>
+
+  <style>
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0d1117;
+        color: #c9d1d9;
+      }
+    }
+  </style>
+</head>
+<body>
+<div>
+  Redirecting to Download...
+</div>
+
+<script>
+  ///////
+  // available os: windows, linux, mac
+  // available archs: amd64, arm64, armv7l, x64
+  // available types: deb, rpm, exe, dmg
+  ///////
+
+  // /download.html?os=linux&arch=amd64&type=deb
+  // /download.html?os=linux&arch=arm64&type=deb
+  // /download.html?os=linux&arch=armv7l&type=deb
+
+  // /download.html?os=linux&arch=amd64&type=AppImage
+  // /download.html?os=linux&arch=arm64&type=AppImage
+  // /download.html?os=linux&arch=armv7l&type=AppImage
+
+  // /download.html?os=windows&arch=x64&type=portable
+  // /download.html?os=windows&arch=x64&type=setup
+
+  // /download.html?os=mac&arch=x64&type=dmg
+  // /download.html?os=mac&arch=x64&type=zip
+  // /download.html?os=mac&arch=arm64&type=dmg
+  // /download.html?os=mac&arch=arm64&type=zip
+
+  const downloadFile = async () => {
+    const data = await (await fetch("https://api.github.com/repos/ChxGuillaume/MQ3T/releases/latest")).json();
+
+    console.log(data);
+    let asset;
+    // get current url query params
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const os = urlParams.get("os");
+    const arch = urlParams.get("arch");
+    const type = urlParams.get("type");
+
+    switch (os) {
+      case "windows":
+        asset = data.assets.find(asset => asset.name.includes(".exe") && asset.name.includes(type));
+        break;
+      case "linux":
+        asset = data.assets.find(asset => asset.name.includes(`.${type}`) && asset.name.includes(arch));
+        break;
+      case "mac":
+        asset = data.assets.find(asset => asset.name.includes(`.${type}`) && asset.name.includes(arch));
+        break;
+    }
+
+    console.log(urlParams.get("os"));
+    console.log(urlParams.get("arch"));
+    console.log(urlParams.get("type"));
+
+    console.log(asset?.browser_download_url);
+
+    if (asset) {
+      window.location.href = asset.browser_download_url;
+    }
+
+    window.location.href =  'https://github.com/ChxGuillaume/MQ3T/releases/latest';
+  };
+
+  downloadFile();
+</script>
+</body>
+</html>

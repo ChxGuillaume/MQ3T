@@ -16,6 +16,19 @@ It allows you to visualize your MQTT topics, subscribe to them and publish messa
 
 You can simplify your development processes by using the built-in actions.
 
+# Download
+|                                                                                                   |                                                                                             |                                                                                                    |                                                                                          |
+|:-------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
+|                   <img src='docs/platforms-logo/windows-logo.png' width='100'>                    |                 <img src='docs/platforms-logo/apple-logo.png' width='100'>                  |                     <img src='docs/platforms-logo/linux-logo.png' width='100'>                     |                <img src='docs/platforms-logo/linux-logo.png' width='100'>                |
+| [Windows Portable](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=portable) | [Mac Apple Silicon](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=arm64&type=dmg) |  [AppImage (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=AppImage)   |  [Deb (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=deb)   |
+|    [Windows Setup](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=setup)    |      [Mac Intel](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=x64&type=dmg)      | [AppImage (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=AppImage)  | [Deb (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=deb)  |
+|                                                                                                   |                                                                                             | [AppImage (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=AppImage) | [Deb (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=deb) |
+|                                                                                                   |                                                                                             |                                                                                                    |                                                                                          |
+
+
+
+
+
 ## Project Setup
 
 ### Install dependencies
