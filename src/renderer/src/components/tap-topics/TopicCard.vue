@@ -21,7 +21,32 @@ const animationDuration = computed(() => settingsStore.showActivityAnimationSpee
 const animationDurationMs = computed(() => `${animationDuration.value}ms`)
 const animationLastTime = ref(0)
 
-const animate = () => {
+const topicHeatInterval = ref<NodeJS.Timeout | undefined>()
+const topicHeatPercentage = ref(-10)
+
+const topicHeatFadeGradiant = computed(() => {
+  return `linear-gradient(
+    90deg,
+    rgba(20, 179, 66, 0.3) 0%,
+    rgba(20, 179, 66, 0.1) ${topicHeatPercentage.value}%,
+    rgba(20, 179, 66, 0) ${topicHeatPercentage.value + 10}%
+  )`
+})
+
+const handleTopicHeat = () => {
+  topicHeatPercentage.value = 110
+  if (!topicHeatInterval.value) {
+    topicHeatInterval.value = setInterval(() => {
+      topicHeatPercentage.value -= 1
+      if (topicHeatPercentage.value < -10) {
+        clearInterval(topicHeatInterval.value)
+        topicHeatInterval.value = undefined
+      }
+    }, animationDuration.value / 120)
+  }
+}
+
+const handleLaser = () => {
   if (doAnimate.value) {
     if (Date.now() - animationLastTime.value < animationDuration.value) return
     else doAnimate.value = false
@@ -35,6 +60,14 @@ const animate = () => {
   }, animationDuration.value)
 }
 
+const animate = () => {
+  if (settingsStore.showActivityAnimationType === 'topic-heat') {
+    handleTopicHeat()
+  } else if (settingsStore.showActivityAnimationType === 'laser') {
+    handleLaser()
+  }
+}
+
 defineExpose({ animate })
 </script>
 
@@ -42,7 +75,14 @@ defineExpose({ animate })
   <q-card
     flat
     class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
-    :class="{ active, opened, 'tw-pl-1': expandable, 'tw-pl-3': !expandable, animate: doAnimate }"
+    :class="[
+      { active },
+      { opened },
+      { 'tw-pl-1': expandable },
+      { 'tw-pl-3': !expandable },
+      { animate: doAnimate },
+      `animation-${settingsStore.showActivityAnimationType}`
+    ]"
     @click.stop="$emit('open:toggle')"
   >
     <q-icon
@@ -82,18 +122,28 @@ defineExpose({ animate })
 
   @apply tw-absolute tw-top-0 tw-h-full;
   z-index: 1;
+}
 
+.topic-item-card.animation-laser:before {
   width: 250px;
   left: -250px;
 }
 
-.topic-item-card.animate:before {
+.topic-item-card.animation-topic-heat:before {
+  width: 100%;
+  left: 0;
+
+  background: rgb(255, 255, 255);
+  background: v-bind(topicHeatFadeGradiant);
+}
+
+.topic-item-card.animation-laser.animate:before {
   animation: cubic-bezier(0.16, 0.78, 0.62, 0.92) 1s slideIn;
   animation-duration: v-bind(animationDurationMs);
 }
 
 .body--light {
-  .topic-item-card:before {
+  .topic-item-card.animation-laser:before {
     background: rgb(255, 255, 255);
     background: linear-gradient(
       90deg,
@@ -102,6 +152,7 @@ defineExpose({ animate })
       rgba(20, 179, 66, 0.4) 80%,
       rgba(20, 179, 66, 0) 100%
     );
+
     //background: linear-gradient(
     //  90deg,
     //  rgba(255, 255, 255, 0) 0%,
@@ -125,7 +176,7 @@ defineExpose({ animate })
 }
 
 .body--dark {
-  .topic-item-card:before {
+  .topic-item-card.animation-laser:before {
     background: rgb(0, 0, 0);
     background: linear-gradient(
       90deg,
@@ -134,6 +185,7 @@ defineExpose({ animate })
       rgba(20, 179, 66, 0.5) 80%,
       rgba(20, 179, 66, 0) 100%
     );
+
     //background: linear-gradient(
     //  90deg,
     //  rgba(255, 255, 255, 0) 0%,
@@ -146,6 +198,7 @@ defineExpose({ animate })
   .topic-item-card {
     @apply tw-text-neutral-400;
   }
+
   .topic-item-card:hover {
     background: #65016488 !important;
   }

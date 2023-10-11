@@ -33,7 +33,7 @@ const form = ref<MqttConnection>({
   protocol: 'mqtt',
   hostname: '',
   port: 1883,
-  clientId: `mqtt-workspace_${uuidV4()}`,
+  clientId: `mq3t_${uuidV4()}`,
   username: '',
   password: '',
   subscribedTopics: [
@@ -53,7 +53,7 @@ const clearForm = () => {
   form.value.protocol = 'mqtt'
   form.value.hostname = ''
   form.value.port = 1883
-  form.value.clientId = `mqtt-workspace_${uuidV4()}`
+  form.value.clientId = `mq3t_${uuidV4()}`
   form.value.username = ''
   form.value.password = ''
   form.value.subscribedTopics = [

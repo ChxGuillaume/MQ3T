@@ -1,3 +1,4 @@
-provider: generic
-url: https://example.com/auto-updates
-updaterCacheDirName: mqtt-explorer-rework-updater
+provider: github
+owner: ChxGuillaume
+repo: MQ3T
+updaterCacheDirName: mq3t-updater

@@ -38,6 +38,7 @@ nsis:
 
 # macOS build configuration
 mac:
+  icon: resources/custom-mqtt-logo.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
@@ -50,6 +51,7 @@ mac:
         - arm64
 dmg:
   artifactName: ${name}-${version}-${arch}.${ext}
+  icon: resources/custom-mqtt-logo.icns
 
 # Linux build configuration
 linux:
@@ -73,5 +75,6 @@ npmRebuild: false
 
 # Publish to GitHub Releases
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: ChxGuillaume
+  repo: MQ3T

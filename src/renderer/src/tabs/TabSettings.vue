@@ -30,6 +30,11 @@ const showActivityAnimationSpeedOptions = [
   { label: 'Faster', value: 250 }
 ]
 
+const showActivityAnimationTypeOptions = [
+  { label: 'Laser', value: 'laser' },
+  { label: 'Topic Heat', value: 'topic-heat' }
+]
+
 const dateFormatOptions = computed(() => {
   const formats = [
     { label: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
@@ -70,6 +75,13 @@ const showActivityAnimationSpeedSetting = computed({
   get: () => settingsStore.showActivityAnimationSpeed,
   set: (val) => {
     settingsStore.setShowActivityAnimationSpeed(val)
+  }
+})
+
+const showActivityAnimationTypeSetting = computed({
+  get: () => settingsStore.showActivityAnimationType,
+  set: (val) => {
+    settingsStore.setShowActivityAnimationType(val)
   }
 })
 
@@ -124,6 +136,21 @@ const smartTopicGroupCloseSetting = computed({
           {{
             showActivityAnimationSpeedOptions.find(
               (o) => o.value === showActivityAnimationSpeedSetting
+            )?.label
+          }}
+        </template>
+      </q-select>
+      <q-select
+        v-model="showActivityAnimationTypeSetting"
+        filled
+        :options="showActivityAnimationTypeOptions"
+        label="Activity Animation Speed"
+        emit-value
+      >
+        <template v-slot:selected-item>
+          {{
+            showActivityAnimationTypeOptions.find(
+              (o) => o.value === showActivityAnimationTypeSetting
             )?.label
           }}
         </template>

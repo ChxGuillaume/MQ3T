@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia'
 import moment from 'moment'
 
+type ActivityAnimationType = 'laser' | 'topic-heat'
+
 type SettingsStore = {
   showActivity: boolean
   showActivityAnimationSpeed: number
+  showActivityAnimationType: ActivityAnimationType
   dateFormat: string
   timeFormat: string
   maxMessages: number
@@ -16,6 +19,8 @@ export const useSettingsStore = defineStore('settings', {
     showActivityAnimationSpeed: parseInt(
       localStorage.getItem('showActivityAnimationSpeed') || '1000'
     ),
+    showActivityAnimationType:
+      (localStorage.getItem('showActivityAnimationType') as ActivityAnimationType) || 'laser',
     dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
     timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
     maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
@@ -43,6 +48,10 @@ export const useSettingsStore = defineStore('settings', {
     setShowActivityAnimationSpeed(value: number) {
       this.showActivityAnimationSpeed = value
       localStorage.setItem('showActivityAnimationSpeed', value.toString())
+    },
+    setShowActivityAnimationType(value: ActivityAnimationType) {
+      this.showActivityAnimationType = value
+      localStorage.setItem('showActivityAnimationType', value)
     },
     setDateFormat(value: string) {
       this.dateFormat = value

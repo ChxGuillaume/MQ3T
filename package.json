@@ -1,6 +1,6 @@
 {
   "name": "mq3t",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MQTT Tools - A simple MQTT client for your development needs",
   "license": "GPL-2.0",
   "main": "./out/main/index.js",
@@ -20,7 +20,11 @@
     "build:win": "npm run build && electron-builder --win --config",
     "build:mac": "npm run build && electron-builder --mac --config",
     "build:linux": "npm run build && electron-builder --linux --config",
-    "build:all": "npm run build && electron-builder -wlm --config"
+    "build:all": "npm run build && electron-builder -wlm --config",
+    "build:win:publish": "npm run build && electron-builder --win --publish always --config",
+    "build:mac:publish": "npm run build && electron-builder --mac --publish always --config",
+    "build:linux:publish": "npm run build && electron-builder --linux --publish always --config",
+    "build:all:publish": "npm run build && electron-builder -wlm --publish always --config"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
