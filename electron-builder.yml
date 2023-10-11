@@ -30,8 +30,8 @@ nsis:
   artifactName: ${name}-${version}-setup-${arch}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  installerIcon: resources/custom-mqtt-logo.png
-  uninstallerIcon: resources/custom-mqtt-logo.png
+  installerIcon: resources/custom-mqtt-logo.ico
+  uninstallerIcon: resources/custom-mqtt-logo.ico
   createDesktopShortcut: always
   oneClick: false
   perMachine: false
@@ -43,8 +43,13 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: true
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-${arch}.${ext}
 
 # Linux build configuration
 linux:

@@ -7,6 +7,7 @@ import { MqttConnection } from '../types/mqtt-connection'
 import { MqttClient } from './mqtt-client'
 import * as path from 'path'
 import * as fs from 'fs'
+import * as dns from 'dns'
 
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
@@ -118,17 +119,19 @@ const createConnection = async (connection: MqttConnection) => {
 
   mqttClientsState.set(clientKey, 'connecting')
 
-  // await new Promise((resolve) => {
-  //   dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
-  //     if (err) {
-  //       sendMessageToRenderer('mqtt-error', { clientKey, error: err })
-  //       return
-  //     }
-  //
-  //     connection.hostname = address
-  //     resolve(undefined)
-  //   })
-  // })
+  try {
+    const resolvedIp = await new Promise((resolve, reject) => {
+      dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
+        if (err) reject(err)
+        else resolve(address)
+      })
+    })
+
+    connection.hostname = resolvedIp as string
+  } catch (e) {
+    sendMessageToRenderer('mqtt-error', { clientKey, error: e })
+    return
+  }
 
   sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
