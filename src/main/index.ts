@@ -76,7 +76,7 @@ app.commandLine.appendSwitch('disable-features', 'WidgetLayering')
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.mq3t.chx-guillaume.app')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -240,38 +240,31 @@ const initAutoUpdater = () => {
   }
 
   autoUpdater.on('checking-for-update', () => {
-    console.log('checking-for-update')
     sendMessageToRenderer('checking-for-update')
-    sendMessageToRenderer('debug', 'checking-for-update')
   })
 
   autoUpdater.on('update-available', (info) => {
-    console.log('update-available', info)
-    sendMessageToRenderer('debug', 'update-available', info)
+    sendMessageToRenderer('update-available', info)
   })
 
   autoUpdater.on('update-not-available', (info) => {
-    console.log('update-not-available', info)
-    sendMessageToRenderer('debug', 'update-not-available', info)
+    sendMessageToRenderer('update-not-available', info)
   })
 
   autoUpdater.on('error', (err) => {
-    console.log('error', err)
     sendMessageToRenderer('updating-error', err)
-    sendMessageToRenderer('debug', 'error', err)
   })
 
   autoUpdater.on('download-progress', (progressObj) => {
-    console.log('download-progress', progressObj)
-    sendMessageToRenderer('debug', 'download-progress', progressObj)
+    sendMessageToRenderer('update-download-progress', progressObj)
   })
 
   autoUpdater.on('update-downloaded', (info) => {
-    console.log('update-downloaded', info)
-    sendMessageToRenderer('debug', 'update-downloaded', info)
+    sendMessageToRenderer('update-downloaded', info)
   })
 
-  autoUpdater.checkForUpdates()
+  // Auo update on start, work on it later
+  // autoUpdater.checkForUpdates()
 }
 
 initAutoUpdater()

@@ -28,7 +28,15 @@ const api: ElectronIpc = {
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),
   handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any),
 
-  debug: (callback) => ipcRenderer.on('debug', callback as any)
+  debug: (callback) => ipcRenderer.on('debug', callback as any),
+
+  handleCheckForUpdates: (callback) => ipcRenderer.on('checking-for-update', callback as any),
+  handleUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback as any),
+  handleUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', callback as any),
+  handleUpdateError: (callback) => ipcRenderer.on('updating-error', callback as any),
+  handleUpdateDownloadProgress: (callback) =>
+    ipcRenderer.on('update-download-progress', callback as any),
+  handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

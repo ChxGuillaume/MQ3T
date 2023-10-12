@@ -1,3 +1,4 @@
+import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { ConnectionsActions, ConnectionsActionsGroups } from './actions'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
@@ -49,4 +50,11 @@ export type ElectronIpc = {
   ) => void
 
   debug: (callback: (event: never, ...args: never[]) => void) => void
+
+  handleCheckForUpdates: (callback: (event: never, value: string) => void) => void
+  handleUpdateAvailable: (callback: (event: never, value: UpdateInfo) => void) => void
+  handleUpdateNotAvailable: (callback: (event: never, value: UpdateInfo) => void) => void
+  handleUpdateError: (callback: (event: never, value: Error) => void) => void
+  handleUpdateDownloadProgress: (callback: (event: never, value: ProgressInfo) => void) => void
+  handleUpdateDownloaded: (callback: (event: never, value: UpdateDownloadedEvent) => void) => void
 }

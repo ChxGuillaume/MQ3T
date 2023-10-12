@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMqttConnectionsStore } from './store/mqtt-connections'
 import { useMqttTopicsStore } from './store/mqtt-topics'
+import UpdateAlerts from './components/UpdateAlerts.vue'
 import { ElectronApi } from './assets/js/electron-api'
 import TabConnections from './tabs/TabConnections.vue'
 import { useActionsStore } from './store/actions'
@@ -189,6 +190,7 @@ onMounted(() => {
       </q-tab-panels>
     </div>
   </div>
+  <update-alerts />
 </template>
 
 <style lang="less">
