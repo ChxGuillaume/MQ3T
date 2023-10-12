@@ -1,22 +1,27 @@
 <script setup lang="ts">
 import { useMqttConnectionsStore } from './store/mqtt-connections'
-import { useSettingsStore } from './store/settings-store'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import { ElectronApi } from './assets/js/electron-api'
 import TabConnections from './tabs/TabConnections.vue'
 import { useActionsStore } from './store/actions'
 import TabSettings from './tabs/TabSettings.vue'
+import { useAppStore } from './store/app-store'
+import { computed, onMounted, ref } from 'vue'
 import TabActions from './tabs/TabActions.vue'
 import TabTopics from './tabs/TabTopics.vue'
-import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
-
-const currentTab = ref('connections')
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
-const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
+const appStore = useAppStore()
+
+const currentTab = computed({
+  get: () => appStore.currentTab,
+  set: (val) => {
+    appStore.setCurrentTab(val)
+  }
+})
 
 const $q = useQuasar()
 
@@ -40,7 +45,7 @@ onMounted(() => {
   ElectronApi.initRenderer()
 
   ElectronApi.appVersion((_, value) => {
-    settingsStore.setAppVersion(value)
+    appStore.setAppVersion(value)
   })
 
   ElectronApi.debug((_, value, ...args) => {

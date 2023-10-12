@@ -2,7 +2,11 @@
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
+import TopicItemMenu from './TopicItemMenu.vue'
 import { computed, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
@@ -36,6 +40,34 @@ const handleTopicClick = () => {
   }
 
   emits('topic:click', props.topicPath)
+}
+
+const handleCopyTopic = () => {
+  navigator.clipboard.writeText(props.topicPath)
+
+  $q.notify({
+    message: 'Topic copied to clipboard',
+    icon: 'fa-solid fa-clipboard',
+    color: 'positive',
+    timeout: 1000
+  })
+}
+
+const handleCopyLastMessage = () => {
+  if (topicLastMessage.value?.message) {
+    navigator.clipboard.writeText(topicLastMessage.value.message)
+
+    $q.notify({
+      message: 'Last message copied to clipboard',
+      icon: 'fa-solid fa-clipboard',
+      color: 'positive',
+      timeout: 1000
+    })
+  }
+}
+
+const handleEraseTopic = () => {
+  mqttTopicsStore.clearTopicsAndSubTopicsMessages(props.clientKey, props.topicPath)
 }
 
 const isLastTopicPart = computed(() => {
@@ -108,6 +140,12 @@ watch(
             class="tw-ml-1 tw-text-xs"
             v-text="`= ${topicLastMessage?.message}`"
           />
+          <topic-item-menu
+            :hide-copy-last-message="!topicLastMessage?.message"
+            @copy-last-message="handleCopyLastMessage"
+            @copy-topic="handleCopyTopic"
+            @delete="handleEraseTopic"
+          />
         </topic-card>
       </q-intersection>
     </div>
@@ -135,6 +173,12 @@ watch(
       >
         <span class="topic-item-key">{{ topicKey }}</span>
         <span class="tw-ml-1 tw-text-xs" v-text="`= ${topicLastMessage?.message}`" />
+        <topic-item-menu
+          :hide-copy-last-message="!topicLastMessage?.message"
+          @copy-last-message="handleCopyLastMessage"
+          @copy-topic="handleCopyTopic"
+          @delete="handleEraseTopic"
+        />
       </topic-card>
     </q-intersection>
   </div>

@@ -5,6 +5,7 @@ import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import CodePreview from '../components/tap-topics/CodePreview.vue'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
+import EraseButton from '../components/buttons/EraseButton.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import CopyButton from '../components/buttons/CopyButton.vue'
@@ -105,6 +106,13 @@ const handleSelectTopic = (clientKey: string, topic: string) => {
   mqttTopicsStore.setSelectedTopic(clientKey, topic)
   codePreviewData.value = ''
   selectedConnection.value = ''
+}
+
+const handleEraseTopic = () => {
+  mqttTopicsStore.clearTopicsAndSubTopicsMessages(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic
+  )
 }
 
 const topicSearch = computed({
@@ -220,7 +228,11 @@ const handleClearRetained = () => {
             <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1 tw-h-[94px]">
               <div class="tw-flex tw-gap-2">
                 <h2 class="tw-text-xl tw-font-bold">Topic</h2>
-                <copy-button @click="copySelectedTopic" />
+                <copy-button
+                  notification-message="Topic copied to clipboard"
+                  @click="copySelectedTopic"
+                />
+                <erase-button @click="handleEraseTopic" />
               </div>
               <div class="tw-flex tw-items-center tw-min-h-[28px]">
                 <span v-if="!breadcrumbs.length">No Topic Selected</span>
@@ -246,7 +258,10 @@ const handleClearRetained = () => {
                 <div class="tw-p-4 tw-flex justify-between">
                   <div>
                     QoS: {{ selectedTopicLastMessage?.qos || 0 }}
-                    <copy-button @click="copySelectedTopicMessage" />
+                    <copy-button
+                      notification-message="Last topic message copied to clipboard"
+                      @click="copySelectedTopicMessage"
+                    />
                   </div>
                   <div v-if="selectedTopicLastMessage?.retained">
                     <q-chip
@@ -306,7 +321,10 @@ const handleClearRetained = () => {
                           ({{ formatDuration(message.createdDiff) }})
                         </span>
                       </div>
-                      <copy-button @click="copyMessage(message.message)" />
+                      <copy-button
+                        notification-message="Message copied to clipboard"
+                        @click="copyMessage(message.message)"
+                      />
                     </div>
                     <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
                       {{ formatMessage(message.message) }}
