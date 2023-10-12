@@ -144,7 +144,7 @@ watch(
             :hide-copy-last-message="!topicLastMessage?.message"
             @copy-last-message="handleCopyLastMessage"
             @copy-topic="handleCopyTopic"
-            @delete="handleEraseTopic"
+            @erase="handleEraseTopic"
           />
         </topic-card>
       </q-intersection>
@@ -177,7 +177,7 @@ watch(
           :hide-copy-last-message="!topicLastMessage?.message"
           @copy-last-message="handleCopyLastMessage"
           @copy-topic="handleCopyTopic"
-          @delete="handleEraseTopic"
+          @erase="handleEraseTopic"
         />
       </topic-card>
     </q-intersection>

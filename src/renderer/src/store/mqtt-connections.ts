@@ -39,8 +39,10 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       }
   },
   actions: {
-    setConnections(connections: MqttConnection[]) {
+    setConnections(connections: MqttConnection[], save = false) {
       this.connections = connections
+
+      if (save) this.saveConnections()
     },
     addConnection(connection: MqttConnection) {
       this.connections.push(connection)

@@ -25,7 +25,7 @@ const formatMqttUrl = (connection: MqttConnection) => {
   <q-card flat class="tw-p-4 mqtt-connection-card">
     <div class="tw-flex tw-justify-between">
       <p
-        class="tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1"
+        class="tw-w-full tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-break-all tw-cursor-grab drag-handle"
         :title="connection.name"
       >
         {{ connection.name }}
@@ -59,7 +59,7 @@ const formatMqttUrl = (connection: MqttConnection) => {
       </q-btn>
     </div>
     <p
-      class="tw-text-sm tw-text-neutral-500 tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1"
+      class="tw-text-sm tw-text-neutral-500 tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-break-all"
       :title="formatMqttUrl(connection)"
     >
       {{ formatMqttUrl(connection) }}

@@ -189,11 +189,6 @@ watch(
               filled
               label="Hostname"
               :rules="rules.hostname"
-              @update:model-value="
-                (val) => {
-                  form.hostname = `${val}`.replace(/[^a-zA-Z0-9.-:\[\]]*/g, '')
-                }
-              "
             />
             <q-input
               v-model.number="form.port"

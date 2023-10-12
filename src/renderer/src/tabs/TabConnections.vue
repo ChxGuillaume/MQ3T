@@ -6,7 +6,8 @@ import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import draggable from 'vuedraggable'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const appStore = useAppStore()
@@ -38,6 +39,19 @@ onMounted(() => {
     if (mqttConnectionsStore.connections.length === 0) addConnectionDialogOpened.value = true
   }, 200)
 })
+
+const connections = computed({
+  get: () => mqttConnectionsStore.connections,
+  set: (value) => mqttConnectionsStore.setConnections(value, true)
+})
+
+const dragOptions = computed(() => {
+  return {
+    animation: 200,
+    group: 'mqtt-connections',
+    ghostClass: 'ghost'
+  }
+})
 </script>
 
 <template>
@@ -50,19 +64,23 @@ onMounted(() => {
       </q-btn>
     </div>
 
-    <div
+    <draggable
+      v-model="connections"
+      v-bind="dragOptions"
+      handle=".drag-handle"
       class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
+      item-key="clientKey"
     >
-      <mqtt-connection-card
-        v-for="connection in mqttConnectionsStore.connections"
-        :key="connection.name"
-        :connection="connection"
-        @edit="handleEdit"
-        @connect="handleConnect"
-        @disconnect="handleDisconnect"
-        @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
-      />
-    </div>
+      <template #item="{ element }">
+        <mqtt-connection-card
+          :connection="element"
+          @edit="handleEdit"
+          @connect="handleConnect"
+          @disconnect="handleDisconnect"
+          @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
+        />
+      </template>
+    </draggable>
   </div>
 
   <div

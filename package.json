@@ -38,6 +38,7 @@
     "pinia": "^2.1.6",
     "quasar": "^2.12.7",
     "uuid": "^9.0.1",
+    "vuedraggable": "^4.1.0",
     "xml-formatter": "^3.5.0"
   },
   "devDependencies": {
