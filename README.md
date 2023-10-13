@@ -5,9 +5,8 @@
 [![Download Total](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)](https://github.com/ChxGuillaume/MQ3T/releases)
 
 
-|                                                                 |                                                |
-|-----------------------------------------------------------------|------------------------------------------------|
 | ![Connections Theme Mix](docs/screenshots/connections-dark.png) | ![Settings](docs/screenshots/settings-mix.png) |
+|-----------------------------------------------------------------|------------------------------------------------|
 | ![Topics List](docs/screenshots/topics-mix.png)                 | ![Actions](docs/screenshots/actions-light.png) |
 
 ### MQ3T is a MQTT client for Windows, macOS and Linux.
