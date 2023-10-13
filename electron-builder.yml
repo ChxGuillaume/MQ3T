@@ -1,6 +1,7 @@
 appId: com.mq3t.chx-guillaume.app
 productName: MQ3T
 forceCodeSigning: true
+artifactName: ${name}-${version}-${arch}.${ext}
 
 directories:
   buildResources: build
@@ -57,12 +58,10 @@ mac:
           - x64
           - arm64
 dmg:
-  artifactName: ${name}-${version}-${arch}.${ext}
   icon: resources/custom-mqtt-logo.icns
 
 # Linux build configuration
 linux:
-  artifactName: ${name}-${version}-${arch}.${ext}
   target:
     - target: AppImage
       arch:
@@ -76,8 +75,6 @@ linux:
         - arm64
   maintainer: electronjs.org
   category: Utility
-appImage:
-  artifactName: ${name}-${version}-${arch}.${ext}
 npmRebuild: false
 
 # Publish to GitHub Releases
