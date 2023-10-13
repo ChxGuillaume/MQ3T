@@ -1,5 +1,6 @@
 appId: com.mq3t.chx-guillaume.app
 productName: MQ3T
+forceCodeSigning: true
 
 directories:
   buildResources: build
@@ -7,6 +8,7 @@ files:
   - '!**/.idea/*'
   - '!**/.vscode/*'
   - '!src/*'
+  - '!docs/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
@@ -16,8 +18,9 @@ asarUnpack:
 
 # Windows build configuration
 win:
-  executableName: MQ3T
   icon: resources/custom-mqtt-logo.png
+  executableName: MQ3T
+  publisherName: ChxGuillaume
   artifactName: ${name}-${version}-portable-${arch}.${ext}
   target:
     - target: nsis
