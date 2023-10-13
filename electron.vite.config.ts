@@ -32,6 +32,7 @@ export default defineConfig({
         sassVariables: resolve('src/renderer/src/assets/css/quasar-variables.sass')
       }),
       monacoEditorPluginDefault({
+        globalAPI: true,
         publicPath: monacoEditorPublicPath,
         customDistPath: (_: string, __: string, base: string) => {
           return `${base}/resources/monaco-editor`

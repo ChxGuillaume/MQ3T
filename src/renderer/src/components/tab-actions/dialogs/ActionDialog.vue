@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
-import { formatCode } from '../../../assets/js/format-code'
+import { formatCode, validCode } from '../../../assets/js/format-code'
+import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import DataValidBadge from '../DataValidBadge.vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
+const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 
 const codeEditorRef = ref<ICodeEditor | null>(null)
@@ -25,7 +28,7 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const editorLanguage = ref<'raw' | 'json' | 'xml'>('raw')
+const editorLanguage = ref<'raw' | 'json' | 'xml'>(settingsStore.defaultDataFormat)
 const showEditor = ref(false)
 const form = reactive({
   name: '',
@@ -107,6 +110,10 @@ const handleFormatCode = () => {
   codeEditorRef.value?.updateCodeEditorValue(formatCode(form.payload, editorLanguage.value))
 }
 
+const validDate = computed(() => {
+  return validCode(form.payload, editorLanguage.value)
+})
+
 watch(
   () => props.opened,
   (opened) => {
@@ -152,7 +159,7 @@ watch(
           </div>
           <div class="tw-grid tw-grid-cols-2 tw-gap-4">
             <div class="tw-grid tw-gap-4">
-              <div class="tw-flex tw-justify-center">
+              <div class="tw-flex tw-justify-center tw-items-center tw-gap-4">
                 <q-card flat bordered class="tw-inline-block">
                   <q-btn-toggle
                     v-model="editorLanguage"
@@ -164,9 +171,24 @@ watch(
                     ]"
                   />
                 </q-card>
+                <div class="tw-min-w-[32px]">
+                  <data-valid-badge
+                    v-if="editorLanguage !== 'raw'"
+                    :is-valid="validDate"
+                    :language="editorLanguage"
+                  />
+                </div>
+                <q-btn
+                  color="primary"
+                  :disable="editorLanguage === 'raw'"
+                  @click="handleFormatCode"
+                >
+                  <q-icon size="xs" name="fa-solid fa-align-left" />
+                  <q-tooltip class="tw-bg-primary tw-text-sm">Format</q-tooltip>
+                </q-btn>
               </div>
 
-              <div class="tw-flex tw-justify-between">
+              <div class="tw-flex tw-justify-center">
                 <q-select
                   v-model="form.qos"
                   :options="[0, 1, 2]"
@@ -176,14 +198,6 @@ watch(
                   class="tw-w-[96px]"
                 />
                 <q-toggle v-model="form.retained" label="Retain" />
-                <q-btn
-                  color="primary"
-                  :disable="editorLanguage === 'raw'"
-                  @click="handleFormatCode"
-                >
-                  <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
-                  Format
-                </q-btn>
               </div>
             </div>
             <q-input

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import { formatCode, validCode } from '../../assets/js/format-code'
+import DataValidBadge from '../tab-actions/DataValidBadge.vue'
 import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
-import { formatCode } from '../../assets/js/format-code'
 import { computed, ref } from 'vue'
 
 const codeEditorRef = ref<ICodeEditor | null>(null)
@@ -11,7 +12,7 @@ const codeEditorRef = ref<ICodeEditor | null>(null)
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
-const publishDataType = ref('raw')
+const publishDataType = ref(settingsStore.defaultDataFormat)
 const codeEditorData = ref('')
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
@@ -24,12 +25,16 @@ const publishTopic = computed({
   }
 })
 
+const validDate = computed(() => {
+  return validCode(codeEditorData.value, publishDataType.value)
+})
+
 const canPublish = computed(() => {
   return publishTopic.value !== '' && mqttTopicsStore.selectedConnection !== ''
 })
 
 const slicedMessages = computed(() => {
-  if (!settingsStore.messagesPagination) return mqttTopicsStore.getSelectedPublishTopicMessages
+  if (!settingsStore.messagesPagination) return mqttTopicsStore.sortedSelectedPublishTopicMessages
 
   const start = (current.value - 1) * 5
   const end = start + 5
@@ -72,7 +77,7 @@ const handleFormatCode = () => {
   <div class="tw-flex tw-flex-col">
     <q-input v-model="publishTopic" filled label="Topic" dense square />
     <q-separator />
-    <div class="tw-my-3 tw-px-3 tw-flex tw-justify-between">
+    <div class="tw-my-3 tw-px-3 tw-flex tw-justify-between tw-items-center">
       <q-card flat bordered class="tw-inline-block">
         <q-btn-toggle
           v-model="publishDataType"
@@ -84,6 +89,12 @@ const handleFormatCode = () => {
           ]"
         />
       </q-card>
+      <data-valid-badge
+        v-if="publishDataType !== 'raw'"
+        :is-valid="validDate"
+        :language="publishDataType"
+        size="xs"
+      />
       <q-btn color="primary" :disable="publishDataType === 'raw'" @click="handleFormatCode">
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
         Format
@@ -91,7 +102,7 @@ const handleFormatCode = () => {
     </div>
   </div>
   <code-editor v-model="codeEditorData" ref="codeEditorRef" :language="publishDataType" />
-  <div class="tw-p-3 tw-flex tw-justify-between">
+  <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
     <div class="tw-flex">
       <q-select v-model="qos" :options="[0, 1, 2]" filled dense label="QoS" class="tw-w-[96px]" />
       <q-toggle v-model="retain" label="Retain" />

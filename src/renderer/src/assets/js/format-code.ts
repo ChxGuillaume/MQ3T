@@ -29,3 +29,36 @@ export const formatCode = (message: string, contentType: 'json' | 'xml' | string
 
   return message
 }
+
+export const validJson = (message: string): boolean => {
+  try {
+    JSON.parse(message)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+export const validXml = (message: string): boolean => {
+  try {
+    xmlFormat(message, {
+      indentation: '    ',
+      strictMode: true
+    })
+    console.log('test')
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+export const validCode = (message: string, contentType: 'json' | 'xml' | string) => {
+  switch (contentType) {
+    case 'json':
+      return validJson(message)
+    case 'xml':
+      return validXml(message)
+  }
+
+  return true
+}

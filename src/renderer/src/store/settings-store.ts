@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import moment from 'moment'
 
 type ActivityAnimationType = 'laser' | 'topic-heat'
+type DefaultDataFormat = 'raw' | 'json' | 'xml'
 
 type SettingsStore = {
   showActivity: boolean
@@ -12,6 +13,7 @@ type SettingsStore = {
   maxMessages: number
   smartTopicGroupClose: boolean
   messagesPagination: boolean
+  defaultDataFormat: DefaultDataFormat
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -26,7 +28,8 @@ export const useSettingsStore = defineStore('settings', {
     timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
     maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
     smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true',
-    messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true'
+    messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true',
+    defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw'
   }),
   getters: {
     dateTimeFormat(): string {
@@ -74,6 +77,10 @@ export const useSettingsStore = defineStore('settings', {
     setMessagesPagination(value: boolean) {
       this.messagesPagination = value
       localStorage.setItem('messagesPagination', value.toString())
+    },
+    setDefaultDataFormat(value: DefaultDataFormat) {
+      this.defaultDataFormat = value
+      localStorage.setItem('defaultDataFormat', value)
     }
   }
 })

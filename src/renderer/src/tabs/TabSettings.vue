@@ -35,6 +35,12 @@ const showActivityAnimationTypeOptions = [
   { label: 'Topic Heat', value: 'topic-heat' }
 ]
 
+const defaultDataFormatOptions = [
+  { label: 'Raw', value: 'raw' },
+  { label: 'JSON', value: 'json' },
+  { label: 'XML', value: 'xml' }
+]
+
 const dateFormatOptions = computed(() => {
   const formats = [
     { label: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
@@ -117,6 +123,13 @@ const messagesPaginationSetting = computed({
   get: () => settingsStore.messagesPagination,
   set: (val) => {
     settingsStore.setMessagesPagination(val)
+  }
+})
+
+const defaultDataFormatSetting = computed({
+  get: () => settingsStore.defaultDataFormat,
+  set: (val) => {
+    settingsStore.setDefaultDataFormat(val)
   }
 })
 </script>
@@ -213,6 +226,18 @@ const messagesPaginationSetting = computed({
           class="tw-w-full"
         />
       </q-card>
+      <q-select
+        v-model="defaultDataFormatSetting"
+        filled
+        class="tw-text-white"
+        :options="defaultDataFormatOptions"
+        label="Time Format"
+        emit-value
+      >
+        <template v-slot:selected-item>
+          {{ defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label }}
+        </template>
+      </q-select>
     </div>
   </div>
 </template>

@@ -33,7 +33,7 @@ const selectedTopicLastMessage = computed(() => {
 })
 
 const slicedMessages = computed(() => {
-  if (!settingsStore.messagesPagination) return mqttTopicsStore.getSelectedTopicMessages
+  if (!settingsStore.messagesPagination) return mqttTopicsStore.sortedSelectedTopicMessages
 
   const start = (current.value - 1) * 5
   const end = start + 5

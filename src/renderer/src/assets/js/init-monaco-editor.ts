@@ -1,3 +1,7 @@
+import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js'
+import 'monaco-editor/esm/vs/basic-languages/xml/xml'
+import 'monaco-editor/esm/vs/editor/editor.all.js'
+
 import * as monaco from 'monaco-editor'
 
 monaco.editor.defineTheme('vs-lighter', {
@@ -18,4 +22,4 @@ monaco.editor.defineTheme('vs-dark-darker', {
   }
 })
 
-monaco.languages.html.registerHTMLLanguageService('xml', {}, { documentFormattingEdits: true })
+// monaco.languages.html.registerHTMLLanguageService('xml', {}, { documentFormattingEdits: true })
