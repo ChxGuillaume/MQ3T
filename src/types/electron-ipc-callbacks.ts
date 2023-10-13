@@ -36,7 +36,9 @@ export type ElectronIpc = {
   ) => void
 
   initRenderer: () => void
+  downloadUpdate: () => void
   checkForUpdates: () => void
+  quitAndInstallUpdate: () => void
   appVersion: (callback: AppVersionCallback) => void
 
   saveMqttConnections: (connections: MqttConnection[]) => void

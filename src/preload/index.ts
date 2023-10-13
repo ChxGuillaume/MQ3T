@@ -17,7 +17,9 @@ const api: ElectronIpc = {
   },
 
   initRenderer: () => ipcRenderer.send('init-renderer'),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  quitAndInstallUpdate: () => ipcRenderer.send('quit-and-install-update'),
   appVersion: (callback) => ipcRenderer.on('app-version', callback as any),
 
   saveMqttConnections: (connections) => ipcRenderer.send('save-mqtt-connections', connections),

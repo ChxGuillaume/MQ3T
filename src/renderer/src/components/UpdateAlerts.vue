@@ -1,16 +1,23 @@
 <script setup lang="ts">
+import UpdateDownloadModal from './UpdateDownloadModal.vue'
+import UpdateInstallModal from './UpdateInstallModal.vue'
 import { ElectronApi } from '../assets/js/electron-api'
+import { useAppStore } from '../store/app-store'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 
+const appStore = useAppStore()
+
 const $q = useQuasar()
 
+const downloadUpdateModalOpened = ref(false)
+const installUpdateModalOpened = ref(false)
+const downloadUpdateVersion = ref('vx.x.x')
 const updateProgressNotify = ref<ReturnType<typeof $q.notify> | null>(null)
 const updateCheckNotify = ref<ReturnType<typeof $q.notify> | null>(null)
 
 onMounted(() => {
-  ElectronApi.handleCheckForUpdates((_, value) => {
-    console.log(value)
+  ElectronApi.handleCheckForUpdates(() => {
     updateProgressNotify.value = null
 
     updateCheckNotify.value = $q.notify({
@@ -22,14 +29,12 @@ onMounted(() => {
   })
 
   ElectronApi.handleUpdateError((_, value) => {
-    console.log(value.name, value.message)
-
     $q.notify({
       message: 'Error checking for updates',
       caption: value.message,
       icon: 'fa-solid fa-download',
       color: 'negative',
-      timeout: 1000
+      timeout: 3000
     })
   })
 
@@ -40,10 +45,12 @@ onMounted(() => {
       message: 'No update available',
       caption: 'You are running the latest version',
       icon: 'fa-solid fa-download',
-      color: 'secondary',
+      color: 'primary',
       type: 'positive',
-      timeout: 1000
+      timeout: 2000
     })
+
+    appStore.setWorkingOnUpdate(false)
   })
 
   ElectronApi.handleUpdateAvailable((_, value) => {
@@ -55,8 +62,11 @@ onMounted(() => {
       icon: 'fa-solid fa-download',
       color: 'primary',
       type: 'positive',
-      timeout: 1000
+      timeout: 2000
     })
+
+    downloadUpdateVersion.value = value.version
+    downloadUpdateModalOpened.value = true
   })
 
   ElectronApi.handleUpdateDownloaded((_, value) => {
@@ -68,8 +78,11 @@ onMounted(() => {
       icon: 'fa-solid fa-download',
       color: 'primary',
       type: 'positive',
-      timeout: 1000
+      timeout: 3000
     })
+
+    appStore.setWorkingOnUpdate(false)
+    installUpdateModalOpened.value = true
 
     if (notifyProgress) notifyProgress()
   })
@@ -97,8 +110,24 @@ onMounted(() => {
     if (!updateProgressNotify.value) updateProgressNotify.value = notifyRes!
   })
 })
+
+const handleUpdateInstall = () => {
+  ElectronApi.quitAndInstallUpdate()
+}
+
+const handleUpdateDownload = () => {
+  appStore.setWorkingOnUpdate(true)
+  ElectronApi.downloadUpdate()
+}
 </script>
 
-<template></template>
+<template>
+  <update-install-modal v-model:opened="installUpdateModalOpened" @install="handleUpdateInstall" />
+  <update-download-modal
+    v-model:opened="downloadUpdateModalOpened"
+    :version="downloadUpdateVersion"
+    @download="handleUpdateDownload"
+  />
+</template>
 
 <style scoped lang="less"></style>

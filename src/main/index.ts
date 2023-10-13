@@ -63,9 +63,13 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).then()
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).then(() => {
+      initAutoUpdater()
+    })
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then()
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then(() => {
+      initAutoUpdater()
+    })
   }
 }
 
@@ -200,8 +204,16 @@ const initIpcMain = () => {
     event.reply('app-version', app.getVersion())
   })
 
-  ipcMain.on('check-for-updates', async () => {
-    await autoUpdater.checkForUpdates()
+  ipcMain.on('download-update', () => {
+    autoUpdater.downloadUpdate()
+  })
+
+  ipcMain.on('check-for-updates', () => {
+    autoUpdater.checkForUpdates()
+  })
+
+  ipcMain.on('quit-and-install-update', () => {
+    autoUpdater.quitAndInstall()
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
@@ -239,6 +251,8 @@ const initAutoUpdater = () => {
     autoUpdater.updateConfigPath = path.join(__dirname, '../..', 'dev-app-update.yml')
   }
 
+  autoUpdater.autoDownload = false
+
   autoUpdater.on('checking-for-update', () => {
     sendMessageToRenderer('checking-for-update')
   })
@@ -263,8 +277,5 @@ const initAutoUpdater = () => {
     sendMessageToRenderer('update-downloaded', info)
   })
 
-  // Auo update on start, work on it later
-  // autoUpdater.checkForUpdates()
+  autoUpdater.checkForUpdates()
 }
-
-initAutoUpdater()

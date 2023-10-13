@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useSettingsStore } from '../store/settings-store'
-import { useQuasar } from 'quasar'
+import { ElectronApi } from '../assets/js/electron-api'
+import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
+import { useQuasar } from 'quasar'
 import moment from 'moment'
 
 const $q = useQuasar()
 const settingsStore = useSettingsStore()
 const dateReference = ref(moment())
+const appStore = useAppStore()
 
 const darkMode = computed({
   get: () => $q.dark.mode,
@@ -138,6 +141,14 @@ const defaultDataFormatSetting = computed({
   <div class="settings">
     <div class="tw-mb-3 tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
+      <q-btn
+        color="primary"
+        :disable="appStore.workingOnUpdate"
+        @click="ElectronApi.checkForUpdates"
+      >
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-sync" />
+        Check for Update
+      </q-btn>
     </div>
     <div
       class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
@@ -238,6 +249,10 @@ const defaultDataFormatSetting = computed({
           {{ defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label }}
         </template>
       </q-select>
+    </div>
+
+    <div class="tw-fixed tw-bottom-2 tw-right-2 color-details">
+      Version {{ appStore.appVersion }}
     </div>
   </div>
 </template>

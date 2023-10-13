@@ -4,13 +4,10 @@ import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
-import { ElectronApi } from '../assets/js/electron-api'
-import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
-const appStore = useAppStore()
 
 const electronApi = window.api as ElectronIpc
 
@@ -81,13 +78,6 @@ const dragOptions = computed(() => {
         />
       </template>
     </draggable>
-  </div>
-
-  <div
-    class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer"
-    @click="ElectronApi.checkForUpdates"
-  >
-    Version {{ appStore.appVersion }}
   </div>
 
   <mqtt-connection-dialog
