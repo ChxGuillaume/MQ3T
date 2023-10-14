@@ -1,4 +1,4 @@
-appId: com.mq3t.chx-guillaume.app
+appId: com.chx-guillaume.mq3t
 productName: MQ3T
 forceCodeSigning: true
 artifactName: ${name}-${version}-${arch}.${ext}
@@ -47,7 +47,10 @@ mac:
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: true
+  # Temporarily disabled
+  notarize: false
+    # ascProvider: YU3G6A39G4
+    # teamId: YU3G6A39G4
   target:
     - target: dmg
       arch:
@@ -55,10 +58,11 @@ mac:
         - arm64
     - target: zip
       arch:
-          - x64
-          - arm64
+        - x64
+        - arm64
 dmg:
   icon: resources/custom-mqtt-logo.icns
+  sign: false
 
 # Linux build configuration
 linux:
