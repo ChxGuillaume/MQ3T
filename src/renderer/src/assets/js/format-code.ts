@@ -45,7 +45,6 @@ export const validXml = (message: string): boolean => {
       indentation: '    ',
       strictMode: true
     })
-    console.log('test')
     return true
   } catch (e) {
     return false

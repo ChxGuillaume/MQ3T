@@ -1,11 +1,12 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import iconIcns from '../../build/logo/mac512pts.icns?asset'
 import iconIco from '../../build/logo/win512pts.ico?asset'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
 import { autoUpdater } from 'electron-updater'
 import { MqttClient } from './mqtt-client'
+import FileFilter = Electron.FileFilter
 import * as path from 'path'
 import * as dns from 'dns'
 import * as fs from 'fs'
@@ -185,7 +186,6 @@ const readJsonFile = (filePath: string) => {
 }
 
 const readActionsFile = () => {
-  console.log(configFilePath.actions)
   const data = readJsonFile(configFilePath.actions)
 
   if (!data) return undefined
@@ -213,6 +213,31 @@ const initIpcMain = () => {
     if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
 
     event.reply('app-version', app.getVersion())
+  })
+
+  ipcMain.on('import-data', (_, fileFilter?: FileFilter[]) => {
+    const filePath = dialog.showOpenDialogSync({
+      defaultPath: app.getPath('downloads'),
+      properties: ['openFile'],
+      filters: fileFilter
+    })
+
+    if (!filePath) return
+
+    const data = fs.readFileSync(filePath[0]).toString()
+
+    sendMessageToRenderer('import-data', data)
+  })
+
+  ipcMain.on('export-data', (_, fileName, data, fileFilter) => {
+    const filePath = dialog.showSaveDialogSync({
+      defaultPath: path.join(app.getPath('documents'), fileName),
+      filters: fileFilter
+    })
+
+    if (!filePath) return
+
+    fs.writeFileSync(filePath, JSON.stringify(data))
   })
 
   ipcMain.on('download-update', () => {

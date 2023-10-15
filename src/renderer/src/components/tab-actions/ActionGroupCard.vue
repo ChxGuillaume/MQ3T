@@ -74,13 +74,7 @@ defineEmits<{
 
             <q-separator />
 
-            <q-item
-              class="tw-text-teal-500"
-              clickable
-              v-close-popup
-              @click="$emit('export')"
-              disable
-            >
+            <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export')">
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-upload" class="tw-mr-2" />

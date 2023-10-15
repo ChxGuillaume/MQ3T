@@ -36,7 +36,7 @@ const handleCopyPayload = () => {
   <q-card flat class="action-card tw-p-4 tw-h-fit">
     <div class="tw-flex tw-justify-between">
       <h2
-        class="tw-text-lg truncate-hover-one-line tw-cursor-grab drag-handle"
+        class="tw-w-full tw-text-lg truncate-hover-one-line tw-cursor-grab drag-handle"
         :title="action.name"
       >
         {{ action.name }}
@@ -52,13 +52,7 @@ const handleCopyPayload = () => {
                 </div>
               </q-item-section>
             </q-item>
-            <q-item
-              class="tw-text-amber-500"
-              clickable
-              v-close-popup
-              @click="$emit('copy')"
-              disable
-            >
+            <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('copy')">
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
@@ -66,13 +60,7 @@ const handleCopyPayload = () => {
                 </div>
               </q-item-section>
             </q-item>
-            <q-item
-              class="tw-text-amber-500"
-              clickable
-              v-close-popup
-              @click="$emit('move')"
-              disable
-            >
+            <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('move')">
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-right-left" class="tw-mr-2" />

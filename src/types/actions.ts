@@ -26,3 +26,20 @@ export type ConnectionsActionsFileV2 = {
 }
 
 export type ConnectionsActionsFile = ConnectionsActionsFileV1 | ConnectionsActionsFileV2
+
+export type ExportActionsFileV1 = {
+  version: 1
+  type: 'actions'
+  actions: Action[]
+}
+
+export type ExportActionsFile = ExportActionsFileV1
+
+export type ExportGroupsFileV1 = {
+  version: 1
+  type: 'groups'
+  groups: ActionGroup[]
+  actions: Record<string, Action[]>
+}
+
+export type ExportGroupsFile = ExportGroupsFileV1

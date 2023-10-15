@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ExportActionsFile, ExportGroupsFile } from '../../types/actions'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import UpdateAlerts from './components/UpdateAlerts.vue'
@@ -68,8 +69,6 @@ onMounted(() => {
   })
 
   ElectronApi.handleMqttStatus((event, value) => {
-    console.log(event, value)
-
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
 
     const connection = mqttConnectionsStore.getConnection(value.clientKey)
@@ -130,6 +129,13 @@ onMounted(() => {
 
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
+  })
+
+  ElectronApi.handleImportData((_, rawData) => {
+    const data = JSON.parse(rawData) as ExportActionsFile | ExportGroupsFile
+
+    // TODO: import forms
+    console.log(data)
   })
 })
 </script>

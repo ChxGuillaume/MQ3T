@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import SelectGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
 import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
-import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
+import ConnectionSelect from '../components/ConnectionSelect.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
 import { Action, ActionGroup } from '../../../types/actions'
+import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
@@ -20,15 +22,40 @@ const splitterModel = ref<number>(400)
 const editActionGroup = ref<ActionGroup | undefined>()
 const editAction = ref<Action | undefined>()
 
+const moveActionCurrentGroupId = ref<string | undefined>('default')
+const moveActionDialogOpened = ref<boolean>(false)
+const moveActionConnectionId = ref<string | undefined>()
+const moveActionActionId = ref<string | undefined>()
+const moveActionGroupId = ref<string | undefined>('default')
+const moveActionType = ref<'copy' | 'move'>('copy')
+
+const handleMoveAction = () => {
+  if (!moveActionConnectionId.value || !moveActionActionId.value || !moveActionGroupId.value) return
+
+  const action = actionsStore.getAction(moveActionActionId.value)
+
+  if (!action) return
+
+  actionsStore.addActionToConnectionGroup(
+    action,
+    moveActionConnectionId.value,
+    moveActionGroupId.value
+  )
+
+  if (moveActionType.value === 'move') {
+    actionsStore.deleteActionFromConnectionGroup(
+      moveActionActionId.value,
+      moveActionConnectionId.value,
+      moveActionCurrentGroupId.value
+    )
+  }
+}
+
 const selectedConnection = computed({
   get: () => actionsStore.selectedConnection,
   set: (value) => {
     actionsStore.setSelectedConnection(value)
   }
-})
-
-const selectedConnectionObject = computed(() => {
-  return mqttConnectionsStore.getConnection(selectedConnection.value)
 })
 
 const selectedConnectionStatus = computed(() => {
@@ -42,24 +69,47 @@ const selectedActionGroup = computed({
   }
 })
 
-const connectionSelectOptions = computed(() => {
-  return mqttConnectionsStore.connections.map((connection) => {
-    return { label: connection.name, value: connection.clientKey }
-  })
-})
-
 const actions = computed({
   get: () => actionsStore.selectedConnectionGroupActions,
   set: (value) => actionsStore.setSelectedConnectionGroupActions(value)
 })
 
 const dragOptions = computed(() => {
-  return {
-    animation: 200,
-    group: 'mqtt-connections',
-    ghostClass: 'ghost'
-  }
+  return { animation: 200, group: 'mqtt-connections', ghostClass: 'ghost' }
 })
+
+const handleImport = () => {
+  ElectronApi.importData([{ name: 'JSON', extensions: ['json'] }])
+}
+
+const handleGroupExport = (groupId: string) => {
+  ElectronApi.exportData(
+    'mq3t-actions.json',
+    JSON.parse(
+      JSON.stringify({
+        version: 1,
+        type: 'actions',
+        actions: actionsStore.getSelectedConnectionGroupActions(groupId)
+      })
+    ),
+    [{ name: 'JSON', extensions: ['json'] }]
+  )
+}
+
+const handleConnectionExport = () => {
+  ElectronApi.exportData(
+    'mq3t-groups-actions.json',
+    JSON.parse(
+      JSON.stringify({
+        version: 1,
+        type: 'groups',
+        groups: actionsStore.selectedConnectionGroups,
+        actions: actionsStore.selectedConnectionGroupActionsRecord
+      })
+    ),
+    [{ name: 'JSON', extensions: ['json'] }]
+  )
+}
 </script>
 
 <template>
@@ -156,6 +206,22 @@ const dragOptions = computed(() => {
                 "
                 @delete="actionsStore.deleteAction(element.id)"
                 @send="actionsStore.sendAction(element)"
+                @copy="
+                  () => {
+                    moveActionCurrentGroupId = selectedActionGroup
+                    moveActionDialogOpened = true
+                    moveActionActionId = element.id
+                    moveActionType = 'copy'
+                  }
+                "
+                @move="
+                  () => {
+                    moveActionCurrentGroupId = selectedActionGroup
+                    moveActionDialogOpened = true
+                    moveActionActionId = element.id
+                    moveActionType = 'move'
+                  }
+                "
               />
             </template>
           </draggable>
@@ -165,39 +231,10 @@ const dragOptions = computed(() => {
 
     <template #after>
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto auto auto 1fr auto auto">
-        <q-select
+        <connection-select
           v-model="selectedConnection"
-          filled
-          square
-          emit-value
-          label="Connection"
-          :options="connectionSelectOptions"
-        >
-          <template #selected-item>
-            <div class="tw-w-full tw-flex tw-justify-between tw-items-center tw-gap-2">
-              <span class="tw-line-clamp-1">{{ selectedConnectionObject?.name }}</span>
-              <connection-status-chip
-                v-if="selectedConnectionObject?.clientKey"
-                :connection-status="selectedConnectionStatus"
-                size="xs"
-              />
-            </div>
-          </template>
-
-          <template #option="{ itemProps, opt }">
-            <q-item v-bind="itemProps">
-              <q-item-section>
-                <div class="tw-flex tw-justify-between tw-items-center tw-gap-2">
-                  <span class="tw-line-clamp-1">{{ opt.label }}</span>
-                  <connection-status-chip
-                    :connection-status="mqttConnectionsStore.getConnectionStatus(opt.value)"
-                    size="xs"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
+          @update:model-value="moveActionConnectionId = $event"
+        />
         <q-separator />
         <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
           <h2 class="tw-text-xl">Groups</h2>
@@ -231,6 +268,7 @@ const dragOptions = computed(() => {
               }
             "
             @delete="actionsStore.deleteActionGroup(group.id)"
+            @export="handleGroupExport(group.id)"
             @click.stop="selectedActionGroup = group.id"
           />
           <action-group-card
@@ -245,12 +283,13 @@ const dragOptions = computed(() => {
                 actionDialogOpened = true
               }
             "
+            @export="handleGroupExport('default')"
             @click.stop="selectedActionGroup = 'default'"
           />
         </div>
         <q-separator />
         <div class="tw-flex">
-          <q-btn flat square class="tw-w-full tw-text-teal-500" :disable="true">
+          <q-btn flat square class="tw-w-full tw-text-teal-500" @click="handleImport">
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-download" />
             Import
           </q-btn>
@@ -259,7 +298,8 @@ const dragOptions = computed(() => {
             flat
             square
             class="tw-w-full tw-text-teal-500"
-            :disable="true || !selectedConnection"
+            :disable="!selectedConnection"
+            @click="handleConnectionExport"
           >
             <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-upload" />
             Export
@@ -283,6 +323,15 @@ const dragOptions = computed(() => {
     @create:action-group="actionsStore.addActionGroup($event)"
     @update:action-group="actionsStore.updateActionGroup($event)"
     @close="editActionGroup = undefined"
+  />
+  <select-group-dialog
+    v-model:connection-id="moveActionConnectionId"
+    v-model:opened="moveActionDialogOpened"
+    v-model:group-id="moveActionGroupId"
+    :title="moveActionType === 'copy' ? 'Copy Action' : 'Move Action'"
+    :action-title="moveActionType === 'copy' ? 'Copy' : 'Move'"
+    :action-icon="moveActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
+    @input="handleMoveAction"
   />
 </template>
 

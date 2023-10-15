@@ -25,6 +25,10 @@ const api: ElectronIpc = {
   saveMqttConnections: (connections) => ipcRenderer.send('save-mqtt-connections', connections),
   handleLoadMqttConnections: (callback) => ipcRenderer.on('load-mqtt-connections', callback as any),
 
+  importData: (fileType) => ipcRenderer.send('import-data', fileType),
+  handleImportData: (callback) => ipcRenderer.on('import-data', callback as any),
+  exportData: (...args) => ipcRenderer.send('export-data', ...args),
+
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),

@@ -1,8 +1,14 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
-import { ConnectionsActionsFile, ConnectionsActionsGroups } from './actions'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
+import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
+import {
+  ConnectionsActionsFile,
+  ConnectionsActionsGroups,
+  ExportActionsFile,
+  ExportGroupsFile
+} from './actions'
 
 export type AppVersionCallback = (event: never, value: string) => void
 
@@ -44,6 +50,14 @@ export type ElectronIpc = {
   saveMqttConnections: (connections: MqttConnection[]) => void
   saveActions: (actions: ConnectionsActionsFile) => void
   saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
+
+  importData: (fileFilter?: FileFilter[]) => void
+  handleImportData: (callback: (event: never, value: string) => void) => void
+  exportData: (
+    fileName: string,
+    data: ExportActionsFile | ExportGroupsFile,
+    fileFilter?: FileFilter[]
+  ) => void
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
   handleLoadActions: (callback: (event: never, value: ConnectionsActionsFile) => void) => void
