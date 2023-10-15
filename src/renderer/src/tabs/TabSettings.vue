@@ -242,7 +242,7 @@ const defaultDataFormatSetting = computed({
         filled
         class="tw-text-white"
         :options="defaultDataFormatOptions"
-        label="Time Format"
+        label="Default Data Format"
         emit-value
       >
         <template v-slot:selected-item>

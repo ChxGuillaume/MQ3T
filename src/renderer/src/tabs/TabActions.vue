@@ -7,6 +7,7 @@ import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
 import { Action, ActionGroup } from '../../../types/actions'
 import { useActionsStore } from '../store/actions'
+import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -46,6 +47,19 @@ const connectionSelectOptions = computed(() => {
     return { label: connection.name, value: connection.clientKey }
   })
 })
+
+const actions = computed({
+  get: () => actionsStore.selectedConnectionGroupActions,
+  set: (value) => actionsStore.setSelectedConnectionGroupActions(value)
+})
+
+const dragOptions = computed(() => {
+  return {
+    animation: 200,
+    group: 'mqtt-connections',
+    ghostClass: 'ghost'
+  }
+})
 </script>
 
 <template>
@@ -70,7 +84,7 @@ const connectionSelectOptions = computed(() => {
           </q-btn>
         </div>
         <q-separator />
-        <div class="tw-relative actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto">
+        <div class="tw-relative">
           <transition
             appear
             enter-active-class="animated fadeIn"
@@ -122,20 +136,29 @@ const connectionSelectOptions = computed(() => {
             />
           </div>
 
-          <action-card
-            v-for="action in actionsStore.selectedConnectionGroupActions"
-            :key="action.id"
-            :action="action"
-            :send-disabled="selectedConnectionStatus !== 'connected'"
-            @edit="
-              () => {
-                editAction = action
-                actionDialogOpened = true
-              }
-            "
-            @delete="actionsStore.deleteAction(action.id)"
-            @send="actionsStore.sendAction(action)"
-          />
+          <draggable
+            v-model="actions"
+            v-bind="dragOptions"
+            handle=".drag-handle"
+            class="tw-relative actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto"
+            item-key="clientKey"
+          >
+            <template #item="{ element }">
+              <action-card
+                :key="element.id"
+                :action="element"
+                :send-disabled="selectedConnectionStatus !== 'connected'"
+                @edit="
+                  () => {
+                    editAction = element
+                    actionDialogOpened = true
+                  }
+                "
+                @delete="actionsStore.deleteAction(element.id)"
+                @send="actionsStore.sendAction(element)"
+              />
+            </template>
+          </draggable>
         </div>
       </div>
     </template>

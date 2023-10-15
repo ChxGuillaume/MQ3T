@@ -16,5 +16,13 @@ export type ActionGroup = {
   description: string
 }
 
-export type ConnectionsActions = Record<string, Action[]>
+export type ConnectionsActions = Record<string, Record<string, Action[]>>
 export type ConnectionsActionsGroups = Record<string, ActionGroup[]>
+
+export type ConnectionsActionsFileV1 = { type: 'v1'; actions: Record<string, Action[]> }
+export type ConnectionsActionsFileV2 = {
+  type: 'v2'
+  actions: Record<string, Record<string, Action[]>>
+}
+
+export type ConnectionsActionsFile = ConnectionsActionsFileV1 | ConnectionsActionsFileV2

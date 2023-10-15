@@ -1,7 +1,9 @@
+import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 import {
   ConnectionsActionsGroups,
+  ConnectionsActionsFile,
   ConnectionsActions,
   ActionGroup,
   Action
@@ -16,28 +18,37 @@ export const useActionsStore = defineStore('actions', {
   }),
   getters: {
     selectedConnectionGroupActions: (state): Action[] => {
-      return (
-        state.actions[state.selectedConnection]?.filter(
-          (action) => action.groupId === state.selectedActionGroup
-        ) || []
-      )
+      return state.actions[state.selectedConnection]?.[state.selectedActionGroup] || []
     },
     selectedConnectionGroups: (state): ActionGroup[] => {
       return state.actionsGroups[state.selectedConnection]
     }
   },
   actions: {
-    setActions(actions: ConnectionsActions) {
-      this.actions = actions
+    setActions(actions: ConnectionsActionsFile) {
+      if (actions.type === 'v1') {
+        actions = convertActionsFileV1toV2(actions)
+      }
+
+      if (actions.type === 'v2') {
+        this.actions = actions.actions
+      }
     },
     setActionsGroups(actionsGroups: ConnectionsActionsGroups) {
       this.actionsGroups = actionsGroups
     },
-    setConnectionActions(connectionId: string, actions: Action[]) {
-      this.actions[connectionId] = actions
+    setConnectionActions(connectionId: string, groupId: string, actions: Action[]) {
+      this.actions[connectionId][groupId] = actions
     },
     setConnectionActionsGroups(connectionId: string, actionsGroups: ActionGroup[]) {
       this.actionsGroups[connectionId] = actionsGroups
+    },
+    setSelectedConnectionGroupActions(actions: Action[]) {
+      if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
+
+      this.actions[this.selectedConnection][this.selectedActionGroup] = actions
+
+      this.saveActions()
     },
     setSelectedConnection(connectionId: string) {
       this.selectedConnection = connectionId
@@ -46,9 +57,11 @@ export const useActionsStore = defineStore('actions', {
       this.selectedActionGroup = groupId
     },
     addAction(action: Action) {
-      if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = []
+      if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
+      if (!this.actions[this.selectedConnection])
+        this.actions[this.selectedConnection][this.selectedActionGroup] = []
 
-      this.actions[this.selectedConnection].push(action)
+      this.actions[this.selectedConnection][this.selectedActionGroup].push(action)
 
       this.saveActions()
     },
@@ -61,9 +74,11 @@ export const useActionsStore = defineStore('actions', {
       this.saveActionsGroups()
     },
     updateAction(action: Action) {
-      const index = this.actions[this.selectedConnection].findIndex((a) => a.id === action.id)
+      const index = this.actions[this.selectedConnection][this.selectedActionGroup].findIndex(
+        (a) => a.id === action.id
+      )
 
-      this.actions[this.selectedConnection].splice(index, 1, action)
+      this.actions[this.selectedConnection][this.selectedActionGroup].splice(index, 1, action)
 
       this.saveActions()
     },
@@ -75,9 +90,11 @@ export const useActionsStore = defineStore('actions', {
       this.saveActionsGroups()
     },
     deleteAction(actionId: string) {
-      const index = this.actions[this.selectedConnection].findIndex((a) => a.id === actionId)
+      const index = this.actions[this.selectedConnection][this.selectedActionGroup].findIndex(
+        (a) => a.id === actionId
+      )
 
-      this.actions[this.selectedConnection].splice(index, 1)
+      this.actions[this.selectedConnection][this.selectedActionGroup].splice(index, 1)
 
       this.saveActions()
     },
@@ -86,7 +103,7 @@ export const useActionsStore = defineStore('actions', {
 
       this.actionsGroups[this.selectedConnection].splice(index, 1)
 
-      for (const action of this.actions[this.selectedConnection]) {
+      for (const action of this.actions[this.selectedConnection][groupId]) {
         if (action.groupId === groupId) action.groupId = 'default'
       }
 
@@ -101,7 +118,10 @@ export const useActionsStore = defineStore('actions', {
       })
     },
     saveActions() {
-      ElectronApi.saveActions(JSON.parse(JSON.stringify(this.actions)))
+      ElectronApi.saveActions({
+        type: 'v2',
+        actions: JSON.parse(JSON.stringify(this.actions))
+      })
     },
     saveActionsGroups() {
       ElectronApi.saveActionsGroups(JSON.parse(JSON.stringify(this.actionsGroups)))

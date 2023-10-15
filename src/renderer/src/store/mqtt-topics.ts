@@ -1,4 +1,5 @@
 import { useSettingsStore } from './settings-store'
+import { codeType } from '../assets/js/format-code'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 
@@ -6,6 +7,7 @@ export type MqttMessage = {
   uid: string
   qos: 0 | 1 | 2
   message: string
+  dataType?: 'json' | 'xml' | 'raw'
   retained: boolean
   createdDiff?: number
   createdAt: Date
@@ -139,9 +141,10 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         uid: uuidV4(),
         message,
         qos: extras.qos,
+        dataType: codeType(message),
         retained: extras.retained || false,
         createdAt: new Date()
-      }
+      } as MqttMessage
 
       this.topicsMessages[clientKey][topic].push(mqttMessage)
       this.topicsLastMessage[clientKey][topic] = mqttMessage

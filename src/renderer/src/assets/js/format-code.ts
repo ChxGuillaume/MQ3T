@@ -62,3 +62,10 @@ export const validCode = (message: string, contentType: 'json' | 'xml' | string)
 
   return true
 }
+
+export const codeType = (message: string): 'json' | 'xml' | 'raw' => {
+  if (validJson(message)) return 'json'
+  if (validXml(message)) return 'xml'
+
+  return 'raw'
+}

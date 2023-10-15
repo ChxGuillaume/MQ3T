@@ -30,7 +30,7 @@ onMounted(() => {
 
   ElectronApi.handleUpdateError((_, value) => {
     $q.notify({
-      message: 'Error checking for updates',
+      message: 'Error during update process',
       caption: value.message,
       icon: 'fa-solid fa-download',
       color: 'negative',

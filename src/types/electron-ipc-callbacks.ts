@@ -1,5 +1,5 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
-import { ConnectionsActions, ConnectionsActionsGroups } from './actions'
+import { ConnectionsActionsFile, ConnectionsActionsGroups } from './actions'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
 import { MqttConnection } from './mqtt-connection'
 import { IPublishPacket } from 'mqtt'
@@ -42,11 +42,11 @@ export type ElectronIpc = {
   appVersion: (callback: AppVersionCallback) => void
 
   saveMqttConnections: (connections: MqttConnection[]) => void
-  saveActions: (actions: ConnectionsActions) => void
+  saveActions: (actions: ConnectionsActionsFile) => void
   saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
-  handleLoadActions: (callback: (event: never, value: ConnectionsActions) => void) => void
+  handleLoadActions: (callback: (event: never, value: ConnectionsActionsFile) => void) => void
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
   ) => void

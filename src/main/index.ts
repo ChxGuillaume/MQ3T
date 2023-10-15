@@ -1,7 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import iconIcns from '../../resources/custom-mqtt-logo.icns?asset'
-import iconIco from '../../resources/custom-mqtt-logo.ico?asset'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import iconIcns from '../../build/logo/mac512pts.icns?asset'
+import iconIco from '../../build/logo/win512pts.ico?asset'
 import installExtension from 'electron-devtools-installer'
 import { MqttConnection } from '../types/mqtt-connection'
 import { autoUpdater } from 'electron-updater'
@@ -184,6 +184,17 @@ const readJsonFile = (filePath: string) => {
   }
 }
 
+const readActionsFile = () => {
+  console.log(configFilePath.actions)
+  const data = readJsonFile(configFilePath.actions)
+
+  if (!data) return undefined
+
+  if (!data.type) {
+    return { type: 'v1', actions: data }
+  } else return data
+}
+
 const initIpcMain = () => {
   ipcMain.on('init-renderer', (event) => {
     mqttClients.forEach((_, clientKey) => {
@@ -194,7 +205,7 @@ const initIpcMain = () => {
     })
 
     const connections = readJsonFile(configFilePath.mqttConnections)
-    const actions = readJsonFile(configFilePath.actions)
+    const actions = readActionsFile()
     const actionsGroups = readJsonFile(configFilePath.actionsGroups)
 
     if (connections) event.reply('load-mqtt-connections', connections)

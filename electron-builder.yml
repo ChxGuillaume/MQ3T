@@ -19,7 +19,7 @@ asarUnpack:
 
 # Windows build configuration
 win:
-  icon: resources/custom-mqtt-logo.png
+  icon: build/logo/win512pts.png
   executableName: MQ3T
   publisherName: ChxGuillaume
   artifactName: ${name}-${version}-portable-${arch}.${ext}
@@ -34,15 +34,15 @@ nsis:
   artifactName: ${name}-${version}-setup-${arch}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  installerIcon: resources/custom-mqtt-logo.ico
-  uninstallerIcon: resources/custom-mqtt-logo.ico
+  installerIcon: build/logo/win512pts.ico
+  uninstallerIcon: build/logo/win512pts.ico
   createDesktopShortcut: always
   oneClick: false
   perMachine: false
 
 # macOS build configuration
 mac:
-  icon: resources/custom-mqtt-logo.icns
+  icon: build/logo/win512pts.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
@@ -58,7 +58,7 @@ mac:
           - x64
           - arm64
 dmg:
-  icon: resources/custom-mqtt-logo.icns
+  icon: build/logo/mac512pts.icns
 
 # Linux build configuration
 linux:

@@ -7,6 +7,7 @@ const $q = useQuasar()
 
 const props = defineProps<{
   value: string
+  language?: 'raw' | 'json' | 'xml' | 'yaml' | string
 }>()
 
 const monacoEditorRef = ref(null)
@@ -31,6 +32,15 @@ watch(
     } else {
       monaco.editor.setTheme('vs-lighter')
     }
+  }
+)
+
+watch(
+  () => props.language,
+  (newLanguage) => {
+    if (!codeEditor) return
+
+    monaco.editor.setModelLanguage(codeEditor.getModel()!, newLanguage || 'json')
   }
 )
 

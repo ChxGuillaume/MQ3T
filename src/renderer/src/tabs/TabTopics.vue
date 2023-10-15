@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
+import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
@@ -218,7 +219,10 @@ const handleClearRetained = () => {
     </template>
 
     <template #after>
-      <q-card class="tw-h-full tw-grid" style="grid-template-rows: 1fr auto auto">
+      <q-card
+        class="tw-relative tw-h-full tw-grid tw-overflow-hidden"
+        style="grid-template-rows: 1fr auto auto"
+      >
         <q-tab-panels v-model="tab" animated keep-alive>
           <q-tab-panel
             name="values"
@@ -291,7 +295,10 @@ const handleClearRetained = () => {
                     </div>
                   </div>
                 </div>
-                <code-preview :value="codePreviewData" />
+                <code-preview
+                  :value="codePreviewData"
+                  :language="mqttTopicsStore.getSelectedTopicLastMessage?.dataType"
+                />
                 <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
                   <div class="tw-flex items-center tw-gap-2">
                     History
@@ -372,12 +379,31 @@ const handleClearRetained = () => {
             Stats
           </q-tab>
         </q-tabs>
+
+        <transition
+          appear
+          enter-active-class="animated fadeInRight"
+          leave-active-class="animated fadeOutRight"
+        >
+          <broker-details-panel
+            v-if="selectedConnection !== '' && mqttTopicsStore.selectedTopic === ''"
+            class="broker-details-panel"
+          />
+        </transition>
       </q-card>
     </template>
   </q-splitter>
 </template>
 
 <style scoped lang="less">
+.broker-details-panel {
+  @apply tw-absolute tw-w-full tw-h-full tw-transition-transform;
+}
+
+.broker-details-panel.show {
+  transform: translateX(0);
+}
+
 .body--light {
   .connection-card-title {
     @apply tw-text-black;

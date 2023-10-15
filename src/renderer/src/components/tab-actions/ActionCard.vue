@@ -35,9 +35,12 @@ const handleCopyPayload = () => {
 <template>
   <q-card flat class="action-card tw-p-4 tw-h-fit">
     <div class="tw-flex tw-justify-between">
-      <p class="tw-text-lg truncate-hover-one-line" :title="action.name">
+      <h2
+        class="tw-text-lg truncate-hover-one-line tw-cursor-grab drag-handle"
+        :title="action.name"
+      >
         {{ action.name }}
-      </p>
+      </h2>
       <q-btn class="tw-ml-2" icon="fa-solid fa-ellipsis-vertical" flat round size="sm">
         <q-menu anchor="bottom right" self="top right">
           <q-list class="tw-min-w-[150px]">
