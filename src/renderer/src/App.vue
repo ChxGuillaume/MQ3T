@@ -204,7 +204,8 @@ onMounted(() => {
 
 .nav-bar-left {
   @apply tw-border-r;
-  width: 120px;
+  min-width: 135px;
+  width: 135px;
 }
 
 .body--light {
