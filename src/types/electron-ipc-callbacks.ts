@@ -58,6 +58,7 @@ export type ElectronIpc = {
     data: ExportActionsFile | ExportGroupsFile,
     fileFilter?: FileFilter[]
   ) => void
+  openUrl: (url: string) => void
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
   handleLoadActions: (callback: (event: never, value: ConnectionsActionsFile) => void) => void

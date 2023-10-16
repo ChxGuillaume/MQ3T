@@ -2,7 +2,7 @@
 import { ActionGroup } from '../../../../../types/actions'
 import ConnectionSelect from '../../ConnectionSelect.vue'
 import { useActionsStore } from '../../../store/actions'
-import { computed, reactive, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { QForm } from 'quasar'
 
 const actionsStore = useActionsStore()
@@ -26,7 +26,7 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const groups = computed(() => actionsStore.getConnectionGroups(props.connectionId))
+const groups = computed(() => actionsStore.getConnectionGroups(props.connectionId!))
 
 const groupList = computed(() => {
   return [{ id: 'default', name: 'Default' } as ActionGroup, ...groups.value]

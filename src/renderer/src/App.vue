@@ -68,7 +68,7 @@ onMounted(() => {
     })
   })
 
-  ElectronApi.handleMqttStatus((event, value) => {
+  ElectronApi.handleMqttStatus((_, value) => {
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
 
     const connection = mqttConnectionsStore.getConnection(value.clientKey)

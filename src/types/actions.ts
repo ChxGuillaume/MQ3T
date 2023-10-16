@@ -13,7 +13,7 @@ export type Action = {
 export type ActionGroup = {
   id: string
   name: string
-  description: string
+  description?: string
 }
 
 export type ConnectionsActions = Record<string, Record<string, Action[]>>

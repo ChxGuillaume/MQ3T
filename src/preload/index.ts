@@ -28,6 +28,7 @@ const api: ElectronIpc = {
   importData: (fileType) => ipcRenderer.send('import-data', fileType),
   handleImportData: (callback) => ipcRenderer.on('import-data', callback as any),
   exportData: (...args) => ipcRenderer.send('export-data', ...args),
+  openUrl: (url) => ipcRenderer.send('open-url', url),
 
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),

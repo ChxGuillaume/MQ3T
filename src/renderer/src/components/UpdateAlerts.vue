@@ -116,8 +116,10 @@ const handleUpdateInstall = () => {
 }
 
 const handleUpdateDownload = () => {
-  appStore.setWorkingOnUpdate(true)
-  ElectronApi.downloadUpdate()
+  // TODO: open github latest release page
+  // TODO: Needs certificate
+  // appStore.setWorkingOnUpdate(true)
+  // ElectronApi.downloadUpdate()
 }
 </script>
 

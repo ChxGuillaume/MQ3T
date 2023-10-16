@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import SelectGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
+import { Action, ActionGroup, ExportActionsFile, ExportGroupsFile } from '../../../types/actions'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
 import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import ConnectionSelect from '../components/ConnectionSelect.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
-import { Action, ActionGroup } from '../../../types/actions'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
@@ -22,11 +22,11 @@ const splitterModel = ref<number>(400)
 const editActionGroup = ref<ActionGroup | undefined>()
 const editAction = ref<Action | undefined>()
 
-const moveActionCurrentGroupId = ref<string | undefined>('default')
+const moveActionCurrentGroupId = ref<string>('default')
 const moveActionDialogOpened = ref<boolean>(false)
 const moveActionConnectionId = ref<string | undefined>()
 const moveActionActionId = ref<string | undefined>()
-const moveActionGroupId = ref<string | undefined>('default')
+const moveActionGroupId = ref<string>('default')
 const moveActionType = ref<'copy' | 'move'>('copy')
 
 const handleMoveAction = () => {
@@ -82,33 +82,57 @@ const handleImport = () => {
   ElectronApi.importData([{ name: 'JSON', extensions: ['json'] }])
 }
 
+const handleActionsExport = (groupId: string) => {
+  const data = {
+    version: 1,
+    type: 'actions',
+    actions: actionsStore.getSelectedConnectionGroupActions(groupId)
+  } as ExportActionsFile
+
+  ElectronApi.exportData('mq3t-actions.json', JSON.parse(JSON.stringify(data)), [
+    { name: 'JSON', extensions: ['json'] }
+  ])
+}
+
 const handleGroupExport = (groupId: string) => {
-  ElectronApi.exportData(
-    'mq3t-actions.json',
-    JSON.parse(
-      JSON.stringify({
-        version: 1,
-        type: 'actions',
-        actions: actionsStore.getSelectedConnectionGroupActions(groupId)
-      })
-    ),
-    [{ name: 'JSON', extensions: ['json'] }]
+  let group: ActionGroup | undefined
+
+  if (groupId === 'default') {
+    group = { id: 'default', name: 'Exported Default' }
+  } else {
+    group = actionsStore.getConnectionGroup(actionsStore.selectedConnection, groupId)
+  }
+
+  const actionsRecord = actionsStore.getConnectionGroupActionsRecord(
+    actionsStore.selectedConnection,
+    groupId
   )
+
+  if (!group) return
+
+  const data = {
+    version: 1,
+    type: 'groups',
+    groups: [group],
+    actions: actionsRecord
+  } as ExportGroupsFile
+
+  ElectronApi.exportData('mq3t-group.json', JSON.parse(JSON.stringify(data)), [
+    { name: 'JSON', extensions: ['json'] }
+  ])
 }
 
 const handleConnectionExport = () => {
-  ElectronApi.exportData(
-    'mq3t-groups-actions.json',
-    JSON.parse(
-      JSON.stringify({
-        version: 1,
-        type: 'groups',
-        groups: actionsStore.selectedConnectionGroups,
-        actions: actionsStore.selectedConnectionGroupActionsRecord
-      })
-    ),
-    [{ name: 'JSON', extensions: ['json'] }]
-  )
+  const data = {
+    version: 1,
+    type: 'groups',
+    groups: actionsStore.selectedConnectionGroups,
+    actions: actionsStore.selectedConnectionGroupActionsRecord
+  } as ExportGroupsFile
+
+  ElectronApi.exportData('mq3t-groups-actions.json', JSON.parse(JSON.stringify(data)), [
+    { name: 'JSON', extensions: ['json'] }
+  ])
 }
 </script>
 
@@ -268,7 +292,8 @@ const handleConnectionExport = () => {
               }
             "
             @delete="actionsStore.deleteActionGroup(group.id)"
-            @export="handleGroupExport(group.id)"
+            @export:actions="handleActionsExport(group.id)"
+            @export:group="handleGroupExport(group.id)"
             @click.stop="selectedActionGroup = group.id"
           />
           <action-group-card
@@ -283,7 +308,8 @@ const handleConnectionExport = () => {
                 actionDialogOpened = true
               }
             "
-            @export="handleGroupExport('default')"
+            @export:actions="handleActionsExport('default')"
+            @export:group="handleGroupExport('default')"
             @click.stop="selectedActionGroup = 'default'"
           />
         </div>

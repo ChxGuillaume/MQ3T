@@ -7,9 +7,10 @@ defineProps<{
 }>()
 
 defineEmits<{
+  'export:actions': []
+  'export:group': []
   addAction: []
   delete: []
-  export: []
   edit: []
 }>()
 </script>
@@ -74,11 +75,25 @@ defineEmits<{
 
             <q-separator />
 
-            <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export')">
+            <q-item
+              class="tw-text-teal-500"
+              clickable
+              v-close-popup
+              @click="$emit('export:actions')"
+            >
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
-                  Export
+                  Export Actions
+                </div>
+              </q-item-section>
+            </q-item>
+
+            <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:group')">
+              <q-item-section>
+                <div>
+                  <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
+                  Export Group
                 </div>
               </q-item-section>
             </q-item>

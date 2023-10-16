@@ -44,6 +44,7 @@ nsis:
 mac:
   icon: build/logo/win512pts.icns
   entitlementsInherit: build/entitlements.mac.plist
+  darkModeSupport: true
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
@@ -60,9 +61,10 @@ mac:
       arch:
         - x64
         - arm64
+
 dmg:
   icon: build/logo/mac512pts.icns
-  sign: false
+  sign: true
 
 # Linux build configuration
 linux:

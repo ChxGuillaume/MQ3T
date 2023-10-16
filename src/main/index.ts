@@ -240,6 +240,10 @@ const initIpcMain = () => {
     fs.writeFileSync(filePath, JSON.stringify(data))
   })
 
+  ipcMain.on('open-url', (_, url) => {
+    shell.openExternal(url).then()
+  })
+
   ipcMain.on('download-update', () => {
     autoUpdater.downloadUpdate()
   })
