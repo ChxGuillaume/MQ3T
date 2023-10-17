@@ -2,7 +2,7 @@ export type Action = {
   id: string
   groupId: string | 'default'
   name: string
-  description: string
+  description?: string
   topic: string
   qos: 0 | 1 | 2
   payload: string

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ExportActionsFile, ExportGroupsFile } from '../../types/actions'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
+import ImportActions from './components/ImportActions.vue'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import UpdateAlerts from './components/UpdateAlerts.vue'
 import { ElectronApi } from './assets/js/electron-api'
@@ -130,13 +130,6 @@ onMounted(() => {
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
   })
-
-  ElectronApi.handleImportData((_, rawData) => {
-    const data = JSON.parse(rawData) as ExportActionsFile | ExportGroupsFile
-
-    // TODO: import forms
-    console.log(data)
-  })
 })
 </script>
 
@@ -197,6 +190,7 @@ onMounted(() => {
     </div>
   </div>
   <update-alerts />
+  <import-actions />
 </template>
 
 <style lang="less">

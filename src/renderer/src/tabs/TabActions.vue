@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SelectGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
+import SelectConnectionAndGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
 import { Action, ActionGroup, ExportActionsFile, ExportGroupsFile } from '../../../types/actions'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
@@ -386,7 +386,7 @@ const handleActionDropped = (actionId: string, groupId: string) => {
     @update:action-group="actionsStore.updateActionGroup($event)"
     @close="editActionGroup = undefined"
   />
-  <select-group-dialog
+  <select-connection-and-group-dialog
     v-model:connection-id="moveActionConnectionId"
     v-model:opened="moveActionDialogOpened"
     v-model:group-id="moveActionGroupId"
