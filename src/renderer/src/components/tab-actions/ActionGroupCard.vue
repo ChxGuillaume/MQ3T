@@ -6,6 +6,8 @@ const props = defineProps<{
   active?: boolean
   description?: string
   cantModify?: boolean
+  notMovable?: boolean
+  disableDropZone?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -17,7 +19,9 @@ const emit = defineEmits<{
   edit: []
 }>()
 
-const dropZoneActiveAndNotActive = computed(() => dropZoneActive.value && !props.active)
+const dropZoneActiveAndNotActive = computed(
+  () => !props.disableDropZone && dropZoneActive.value && !props.active
+)
 const dropZoneActive = ref(false)
 
 const setDropZoneActive = (value: boolean) => {
@@ -47,10 +51,12 @@ const handleDragEnd = (event: DragEvent) => {
     @dragover.prevent
     @drop.prevent="handleDragEnd"
   >
-    <div class="tw-my-1 tw-flex tw-justify-between tw-items-start tw-pointer-events-none">
+    <div
+      class="tw-my-1 tw-flex tw-justify-between tw-items-start tw-pointer-events-none tw-select-none"
+    >
       <div>
         <h2
-          class="tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-select-none tw-cursor-pointer"
+          class="tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-cursor-pointer"
         >
           {{ title }}
         </h2>
@@ -58,7 +64,15 @@ const handleDragEnd = (event: DragEvent) => {
           {{ description }}
         </p>
       </div>
-      <q-btn icon="fa-solid fa-ellipsis-vertical" flat round size="sm" @click.stop="() => {}">
+      <q-btn
+        class="drag-handle tw-pointer-events-auto"
+        :class="{ 'tw-cursor-grab': !notMovable }"
+        icon="fa-solid fa-ellipsis-vertical"
+        flat
+        round
+        size="sm"
+        @click.stop
+      >
         <q-menu anchor="bottom right" self="top right">
           <q-list style="min-width: 100px">
             <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('addAction')">

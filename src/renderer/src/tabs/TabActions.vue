@@ -29,6 +29,8 @@ const moveActionActionId = ref<string | undefined>()
 const moveActionGroupId = ref<string>('default')
 const moveActionType = ref<'copy' | 'move'>('copy')
 
+const isDraggingAction = ref<boolean>(false)
+
 const handleMoveAction = () => {
   if (!moveActionConnectionId.value || !moveActionActionId.value || !moveActionGroupId.value) return
 
@@ -64,14 +66,17 @@ const selectedConnectionStatus = computed(() => {
 
 const selectedActionGroup = computed({
   get: () => actionsStore.selectedActionGroup,
-  set: (value) => {
-    actionsStore.setSelectedActionGroup(value)
-  }
+  set: (value) => actionsStore.setSelectedActionGroup(value)
 })
 
 const actions = computed({
   get: () => actionsStore.selectedConnectionGroupActions,
   set: (value) => actionsStore.setSelectedConnectionGroupActions(value)
+})
+
+const groups = computed({
+  get: () => actionsStore.selectedConnectionGroups,
+  set: (value) => actionsStore.setSelectedConnectionGroups(value)
 })
 
 const dragOptions = computed(() => {
@@ -287,36 +292,51 @@ const handleActionDropped = (actionId: string, groupId: string) => {
         </div>
         <q-separator />
         <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2 tw-overflow-auto">
-          <action-group-card
-            v-for="group in actionsStore.selectedConnectionGroups"
-            :title="group.name"
-            :description="group.description"
-            :key="group.id"
-            :active="selectedActionGroup === group.id"
-            @add-action="
-              () => {
-                actionsStore.setSelectedActionGroup(group.id)
-                actionDialogOpened = true
-              }
-            "
-            @edit="
-              () => {
-                editActionGroup = group
-                actionGroupDialogOpened = true
-              }
-            "
-            @delete="actionsStore.deleteActionGroup(group.id)"
-            @action:dropped="handleActionDropped($event, group.id)"
-            @export:actions="handleActionsExport(group.id)"
-            @export:group="handleGroupExport(group.id)"
-            @click.stop="selectedActionGroup = group.id"
-          />
+          <draggable
+            v-model="groups"
+            v-bind="dragOptions"
+            group="groups"
+            handle=".drag-handle"
+            class="tw-relative tw-flex tw-flex-col tw-gap-2 tw-overflow-auto"
+            item-key="id"
+            @start="isDraggingAction = true"
+            @end="isDraggingAction = false"
+          >
+            <template #item="{ element }">
+              <action-group-card
+                :title="element.name"
+                :description="element.description"
+                :key="element.id"
+                :active="selectedActionGroup === element.id"
+                :disable-drop-zone="isDraggingAction"
+                @add-action="
+                  () => {
+                    actionsStore.setSelectedActionGroup(element.id)
+                    actionDialogOpened = true
+                  }
+                "
+                @edit="
+                  () => {
+                    editActionGroup = element
+                    actionGroupDialogOpened = true
+                  }
+                "
+                @delete="actionsStore.deleteActionGroup(element.id)"
+                @action:dropped="handleActionDropped($event, element.id)"
+                @export:actions="handleActionsExport(element.id)"
+                @export:group="handleGroupExport(element.id)"
+                @click.stop="selectedActionGroup = element.id"
+              />
+            </template>
+          </draggable>
           <action-group-card
             v-if="selectedConnection"
             cant-modify
+            not-movable
             title="Default"
             description="This action group cannot be deleted."
             :active="selectedActionGroup === 'default'"
+            :disable-drop-zone="isDraggingAction"
             @add-action="
               () => {
                 actionsStore.setSelectedActionGroup('default')

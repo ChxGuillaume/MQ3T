@@ -81,6 +81,11 @@ export const useActionsStore = defineStore('actions', {
     setConnectionActionsGroups(connectionId: string, actionsGroups: ActionGroup[]) {
       this.actionsGroups[connectionId] = actionsGroups
     },
+    setSelectedConnectionGroups(actionsGroups: ActionGroup[]) {
+      this.actionsGroups[this.selectedConnection] = actionsGroups
+
+      this.saveActionsGroups()
+    },
     setSelectedConnectionGroupActions(actions: Action[]) {
       if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
 
