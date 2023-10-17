@@ -1,34 +1,62 @@
 <script setup lang="ts">
-defineProps<{
+import { computed, ref } from 'vue'
+
+const props = defineProps<{
   title: string
   active?: boolean
   description?: string
   cantModify?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
+  'action:dropped': [actionId: string]
   'export:actions': []
   'export:group': []
   addAction: []
   delete: []
   edit: []
 }>()
+
+const dropZoneActiveAndNotActive = computed(() => dropZoneActive.value && !props.active)
+const dropZoneActive = ref(false)
+
+const setDropZoneActive = (value: boolean) => {
+  if (props.active) return
+
+  dropZoneActive.value = value
+}
+
+const handleDragEnd = (event: DragEvent) => {
+  const actionId = event?.dataTransfer?.getData('actionId')
+
+  setDropZoneActive(false)
+
+  if (!actionId) return
+
+  emit('action:dropped', actionId)
+}
 </script>
 
 <template>
   <q-card
     class="group-card tw-p-2 tw-h-fit tw-grid hover:tw-bg-primary/50 tw-transition-colors tw-cursor-pointer"
-    :class="{ active }"
+    :class="{ active, 'drop-zone': dropZoneActiveAndNotActive }"
     flat
+    @dragleave.prevent="setDropZoneActive(false)"
+    @dragenter.prevent="setDropZoneActive(true)"
+    @dragover.prevent
+    @drop.prevent="handleDragEnd"
   >
-    <div class="tw-my-1 tw-flex tw-justify-between tw-items-start">
+    <div class="tw-my-1 tw-flex tw-justify-between tw-items-start tw-pointer-events-none">
       <div>
         <h2
           class="tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-select-none tw-cursor-pointer"
         >
           {{ title }}
         </h2>
-        <p class="tw-line-clamp-3 color-details">{{ description }}</p>
+        <p class="description tw-line-clamp-3 tw-transition-colors color-details">
+          {{ description }}
+        </p>
       </div>
       <q-btn icon="fa-solid fa-ellipsis-vertical" flat round size="sm" @click.stop="() => {}">
         <q-menu anchor="bottom right" self="top right">
@@ -107,6 +135,14 @@ defineEmits<{
 <style scoped lang="less">
 .group-card.active {
   @apply tw-bg-primary/70 tw-text-white;
+}
+
+.group-card.drop-zone {
+  @apply tw-bg-secondary;
+}
+
+.group-card.drop-zone .description {
+  @apply tw-text-neutral-100;
 }
 
 .body--light {

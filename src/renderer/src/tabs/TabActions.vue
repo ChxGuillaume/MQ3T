@@ -134,6 +134,19 @@ const handleConnectionExport = () => {
     { name: 'JSON', extensions: ['json'] }
   ])
 }
+
+const handleActionDropped = (actionId: string, groupId: string) => {
+  const action = actionsStore.getAction(actionId)
+
+  if (!action) return
+
+  actionsStore.addActionToConnectionGroup(action, actionsStore.selectedConnection, groupId)
+  actionsStore.deleteActionFromConnectionGroup(
+    actionId,
+    actionsStore.selectedConnection,
+    action.groupId
+  )
+}
 </script>
 
 <template>
@@ -246,6 +259,7 @@ const handleConnectionExport = () => {
                     moveActionType = 'move'
                   }
                 "
+                @dragstart="$event.dataTransfer.setData('actionId', element.id)"
               />
             </template>
           </draggable>
@@ -292,6 +306,7 @@ const handleConnectionExport = () => {
               }
             "
             @delete="actionsStore.deleteActionGroup(group.id)"
+            @action:dropped="handleActionDropped($event, group.id)"
             @export:actions="handleActionsExport(group.id)"
             @export:group="handleGroupExport(group.id)"
             @click.stop="selectedActionGroup = group.id"
@@ -308,6 +323,7 @@ const handleConnectionExport = () => {
                 actionDialogOpened = true
               }
             "
+            @action:dropped="handleActionDropped($event, 'default')"
             @export:actions="handleActionsExport('default')"
             @export:group="handleGroupExport('default')"
             @click.stop="selectedActionGroup = 'default'"
