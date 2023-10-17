@@ -4,8 +4,6 @@ export const validateAction = (action: Action): boolean => {
   if (!action) return false
   if (typeof action !== 'object') return false
 
-  console.log(action)
-
   const { id, groupId, name, description, topic, qos, payload, retained } = action
 
   if (!id || typeof id !== 'string') return false

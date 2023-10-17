@@ -36,7 +36,7 @@ ElectronApi.handleImportData((_, rawData) => {
     const validAction = validateAction(action)
 
     if (!validAction) {
-      console.log('Invalid action', action)
+      console.warn('Invalid action', action)
       notifyWrongFile()
       return
     }

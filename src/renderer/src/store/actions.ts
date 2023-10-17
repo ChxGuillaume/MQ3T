@@ -40,7 +40,6 @@ export const useActionsStore = defineStore('actions', {
     getConnectionGroup:
       (state) =>
       (connectionId: string, groupId: string): ActionGroup | undefined => {
-        console.log(state.actionsGroups[connectionId])
         return state.actionsGroups[connectionId]?.find((g) => g.id === groupId)
       },
     getConnectionGroupActionsRecord:

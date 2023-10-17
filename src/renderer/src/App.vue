@@ -51,11 +51,11 @@ onMounted(() => {
   })
 
   ElectronApi.debug((_, value, ...args) => {
-    console.log(value, args)
+    console.warn(value, args)
   })
 
   ElectronApi.handleMqttError((event, value) => {
-    console.log(event, value)
+    console.error(event, value)
 
     const connection = mqttConnectionsStore.getConnection(value.clientKey)
 
