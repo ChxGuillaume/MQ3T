@@ -49,9 +49,9 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   # Temporarily disabled
-  notarize: false
+  notarize:
     # ascProvider: YU3G6A39G4
-    # teamId: YU3G6A39G4
+     teamId: YU3G6A39G4
   target:
     - target: dmg
       arch:
