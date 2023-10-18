@@ -73,8 +73,8 @@ watch(
   (actionGroup) => {
     if (!actionGroup) return
 
-    form.name = actionGroup!.name
-    form.description = actionGroup!.description
+    form.name = actionGroup.name
+    form.description = actionGroup.description!
   }
 )
 </script>

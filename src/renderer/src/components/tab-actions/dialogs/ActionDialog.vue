@@ -135,7 +135,7 @@ watch(
     form.qos = action.qos
     form.payload = action.payload
     form.retained = action.retained
-    form.description = action.description
+    form.description = action.description!
 
     editorLanguage.value = action.payloadFormat || 'raw'
   }
