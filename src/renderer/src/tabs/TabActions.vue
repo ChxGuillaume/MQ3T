@@ -128,11 +128,18 @@ const handleGroupExport = (groupId: string) => {
 }
 
 const handleConnectionExport = () => {
+  const allActions = actionsStore.selectedConnectionGroupActionsRecord
+  const allGroups = actionsStore.selectedConnectionGroups
+
+  if (allActions['default']?.length) {
+    allGroups.push({ id: 'default', name: 'Exported Default' })
+  }
+
   const data = {
     version: 1,
     type: 'groups',
-    groups: actionsStore.selectedConnectionGroups,
-    actions: actionsStore.selectedConnectionGroupActionsRecord
+    groups: allGroups,
+    actions: allActions
   } as ExportGroupsFile
 
   ElectronApi.exportData('mq3t-groups-actions.json', JSON.parse(JSON.stringify(data)), [

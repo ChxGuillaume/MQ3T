@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import UpdateDownloadModal from './UpdateDownloadModal.vue'
 import UpdateInstallModal from './UpdateInstallModal.vue'
-import { ElectronApi } from '../assets/js/electron-api'
+import { AppPlatform, ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
@@ -116,10 +116,13 @@ const handleUpdateInstall = () => {
 }
 
 const handleUpdateDownload = () => {
-  // TODO: open github latest release page
-  // TODO: Needs certificate
-  // appStore.setWorkingOnUpdate(true)
-  // ElectronApi.downloadUpdate()
+  // TODO: Can be removed when signed with OV certificate
+  if (AppPlatform === 'win32') {
+    ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ3T/releases/latest')
+  } else {
+    appStore.setWorkingOnUpdate(true)
+    ElectronApi.downloadUpdate()
+  }
 }
 </script>
 
