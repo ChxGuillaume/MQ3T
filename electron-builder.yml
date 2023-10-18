@@ -42,7 +42,7 @@ nsis:
 
 # macOS build configuration
 mac:
-  icon: build/logo/win512pts.icns
+  icon: build/logo/mac512pts.icns
   entitlementsInherit: build/entitlements.mac.plist
   darkModeSupport: true
   extendInfo:
