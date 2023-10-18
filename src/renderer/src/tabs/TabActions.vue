@@ -276,6 +276,7 @@ const handleActionDropped = (actionId: string, groupId: string) => {
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto auto auto 1fr auto auto">
         <connection-select
           v-model="selectedConnection"
+          no-rules
           @update:model-value="moveActionConnectionId = $event"
         />
         <q-separator />

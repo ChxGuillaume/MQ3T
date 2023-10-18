@@ -7,11 +7,17 @@ const mqttConnectionsStore = useMqttConnectionsStore()
 
 const props = defineProps<{
   modelValue: string
+  noRules?: boolean
 }>()
 
 const emits = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const rules = computed(() => {
+  if (props.noRules) return []
+  return [(v: string) => !!v || 'Connection is required']
+})
 
 const connectionValue = computed<string>({
   get: () => props.modelValue,
@@ -37,6 +43,7 @@ const selectedConnectionStatus = computed(() => {
     filled
     square
     label="Connection"
+    :rules="rules"
   >
     <template #selected-item>
       <div class="tw-w-full tw-flex tw-justify-between tw-items-center tw-gap-2">

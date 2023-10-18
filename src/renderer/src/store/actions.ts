@@ -128,6 +128,19 @@ export const useActionsStore = defineStore('actions', {
 
       this.saveActionsGroups()
     },
+    addActionGroupToConnection(group: ActionGroup, connectionId: string): ActionGroup {
+      if (!this.actionsGroups[connectionId]) this.actionsGroups[connectionId] = []
+
+      const copy = JSON.parse(JSON.stringify(group))
+
+      copy.id = `group-${uuidV4()}`
+
+      this.actionsGroups[connectionId].push(copy)
+
+      this.saveActionsGroups()
+
+      return copy
+    },
     updateAction(action: Action) {
       const index = this.actions[this.selectedConnection][this.selectedActionGroup].findIndex(
         (a) => a.id === action.id
@@ -161,13 +174,15 @@ export const useActionsStore = defineStore('actions', {
       this.saveActions()
     },
     deleteActionGroup(groupId: string) {
-      const index = this.actionsGroups[this.selectedConnection].findIndex((g) => g.id === groupId)
-
-      this.actionsGroups[this.selectedConnection].splice(index, 1)
-
-      for (const action of this.actions[this.selectedConnection][groupId]) {
-        if (action.groupId === groupId) action.groupId = 'default'
+      for (const action of this.actions[this.selectedConnection][groupId] || []) {
+        this.addActionToConnectionGroup(action, this.selectedConnection, 'default')
       }
+
+      const groupIndex = this.actionsGroups[this.selectedConnection].findIndex(
+        (g) => g.id === groupId
+      )
+
+      this.actionsGroups[this.selectedConnection].splice(groupIndex, 1)
 
       if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
 

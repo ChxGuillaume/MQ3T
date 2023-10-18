@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ImportActionsGroups from './components/ImportActionsGroups.vue'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
 import ImportActions from './components/ImportActions.vue'
 import { useMqttTopicsStore } from './store/mqtt-topics'
@@ -191,6 +192,7 @@ onMounted(() => {
   </div>
   <update-alerts />
   <import-actions />
+  <import-actions-groups />
 </template>
 
 <style lang="less">

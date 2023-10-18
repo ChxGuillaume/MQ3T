@@ -1,48 +1,28 @@
 <script setup lang="ts">
-import { ActionGroup } from '../../../../../types/actions'
 import ConnectionSelect from '../../ConnectionSelect.vue'
-import { useActionsStore } from '../../../store/actions'
 import { computed, ref } from 'vue'
 import { QForm } from 'quasar'
-
-const actionsStore = useActionsStore()
 
 const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
-  title: string
-  actionIcon: string
-  actionTitle: string
-  opened: boolean
-  groupId?: string
   connectionId?: string
+  actionTitle: string
+  actionIcon: string
+  opened: boolean
+  title: string
 }>()
 
 const emits = defineEmits<{
-  'update:opened': [value: boolean]
-  'update:groupId': [value: string]
   'update:connectionId': [value: string]
+  'update:opened': [value: boolean]
   input: []
   close: []
 }>()
 
-const rules = {
-  groupId: [(val) => !!val || 'Group is required']
-}
-
 const validateForm = async () => {
   return await formRef.value?.validate()
 }
-
-const groups = computed(() => actionsStore.getConnectionGroups(props.connectionId!))
-
-const groupList = computed(() => {
-  return [{ id: 'default', name: 'Default' } as ActionGroup, ...groups.value]
-})
-
-const formGroup = computed(() => {
-  return groupList.value?.find((g) => g.id === props.groupId)
-})
 
 const handleCloseForm = () => {
   emits('close')
@@ -61,14 +41,8 @@ const handleSelect = async () => {
 const connectionIdModel = computed<string>({
   get: () => props.connectionId || '',
   set: (value) => {
-    emits('update:groupId', 'default')
     emits('update:connectionId', value)
   }
-})
-
-const groupIdModel = computed<string>({
-  get: () => props.groupId || 'default',
-  set: (value) => emits('update:groupId', value)
 })
 </script>
 
@@ -79,17 +53,6 @@ const groupIdModel = computed<string>({
         <q-form ref="formRef" class="tw-grid tw-gap-2">
           <h2 class="tw-mb-2 tw-text-xl">{{ title }}</h2>
           <connection-select v-model="connectionIdModel" class="tw-w-[370px]" />
-          <q-select
-            v-model="groupIdModel"
-            :options="groupList"
-            label="Group"
-            emit-value
-            filled
-            option-value="id"
-            option-label="name"
-            :display-value="formGroup?.name"
-            :rules="rules.groupId"
-          />
         </q-form>
       </q-card-section>
       <q-card-actions align="right">

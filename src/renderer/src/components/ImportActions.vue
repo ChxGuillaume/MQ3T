@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SelectConnectionAndGroupDialog from './tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
-import { ExportActionsFile, ExportGroupsFile } from '../../../types/actions'
 import { validateAction } from '../assets/js/validate-action'
+import { ExportActionsFile } from '../../../types/actions'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import { useQuasar } from 'quasar'
@@ -20,8 +20,15 @@ const notifyWrongFile = () => {
   $q.notify({
     message: 'Wrong file format',
     type: 'negative',
-    position: 'top',
-    timeout: 1000
+    timeout: 2000
+  })
+}
+
+const notifyImportSuccess = () => {
+  $q.notify({
+    message: 'Imported successfully',
+    type: 'positive',
+    timeout: 2000
   })
 }
 
@@ -52,6 +59,8 @@ const handleImportActions = () => {
   for (const action of actions.value) {
     actionsStore.addActionToConnectionGroup(action, connectionId.value, groupId.value)
   }
+
+  notifyImportSuccess()
 }
 </script>
 
