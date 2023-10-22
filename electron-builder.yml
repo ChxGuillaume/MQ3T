@@ -22,6 +22,8 @@ win:
   icon: build/logo/win512pts.png
   executableName: MQ3T
   publisherName: ChxGuillaume
+  # TODO: experiment with update without code signing, if it doesn't work, disable code signing verification until certificate acquired
+  verifyUpdateCodeSignature: true
   artifactName: ${name}-${version}-portable-${arch}.${ext}
   target:
     - target: nsis
