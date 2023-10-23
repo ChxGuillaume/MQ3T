@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { formatCode, validCode } from '../../assets/js/format-code'
 import DataValidBadge from '../tab-actions/DataValidBadge.vue'
 import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
-import { computed, ref } from 'vue'
+import { useActionsStore } from '../../store/actions'
+import { computed, reactive, ref } from 'vue'
 
 const codeEditorRef = ref<ICodeEditor | null>(null)
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
+const actionsStore = useActionsStore()
 
 const publishDataType = ref(settingsStore.defaultDataFormat)
 const codeEditorData = ref('')
@@ -18,11 +21,18 @@ const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
 const current = ref(1)
 
+const convertToActionDialogOpened = ref(false)
+const convertToActionForm = reactive({
+  connectionId: '',
+  description: '',
+  groupId: '',
+  title: '',
+  message: {} as MqttMessage
+})
+
 const publishTopic = computed({
   get: () => mqttTopicsStore.selectedPublishTopic,
-  set: (value) => {
-    mqttTopicsStore.setSelectedPublishTopic(value)
-  }
+  set: (value) => mqttTopicsStore.setSelectedPublishTopic(value)
 })
 
 const validDate = computed(() => {
@@ -56,7 +66,7 @@ const handlePublishMessage = () => {
     mqttTopicsStore.selectedConnection,
     publishTopic.value,
     codeEditorData.value,
-    { retained: retain.value, qos: qos.value }
+    { retained: retain.value, qos: qos.value, dataType: publishDataType.value }
   )
 }
 
@@ -69,6 +79,34 @@ const handleMessageClick = (message: MqttMessage) => {
 const handleFormatCode = () => {
   codeEditorRef.value?.updateCodeEditorValue(
     formatCode(codeEditorData.value, publishDataType.value)
+  )
+}
+
+const handleConvertToAction = (message: MqttMessage) => {
+  convertToActionForm.connectionId = mqttTopicsStore.selectedConnection
+  convertToActionForm.groupId = 'default'
+  convertToActionForm.title = ''
+  convertToActionForm.description = ''
+  convertToActionForm.message = message
+
+  convertToActionDialogOpened.value = true
+}
+
+const handleConvertToActionDialogInput = () => {
+  actionsStore.addActionToConnectionGroup(
+    {
+      id: 'none',
+      topic: publishTopic.value,
+      name: convertToActionForm.title,
+      description: convertToActionForm.description,
+      groupId: convertToActionForm.groupId,
+      payload: convertToActionForm.message.message,
+      payloadFormat: convertToActionForm.message.dataType,
+      qos: convertToActionForm.message.qos,
+      retained: convertToActionForm.message.retained
+    },
+    convertToActionForm.connectionId,
+    convertToActionForm.groupId
   )
 }
 </script>
@@ -157,9 +195,9 @@ const handleFormatCode = () => {
           flat
           round
           icon="fa-solid fa-right-left"
-          @click.stop="() => {}"
+          @click.stop="handleConvertToAction(message)"
         >
-          <q-tooltip>Convert into action button</q-tooltip>
+          <q-tooltip class="tw-bg-secondary tw-text-white">Convert into action button</q-tooltip>
         </q-btn>
       </div>
       <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
@@ -167,6 +205,17 @@ const handleFormatCode = () => {
       </div>
     </q-card>
   </div>
+  <convert-to-action-dialog
+    v-model:opened="convertToActionDialogOpened"
+    v-model:connection-id="convertToActionForm.connectionId"
+    v-model:group-id="convertToActionForm.groupId"
+    v-model:form-title="convertToActionForm.title"
+    v-model:form-description="convertToActionForm.description"
+    title="Convert to Action"
+    action-icon="fa-solid fa-plus"
+    action-title="Convert"
+    @input="handleConvertToActionDialogInput"
+  />
 </template>
 
 <style scoped lang="less"></style>

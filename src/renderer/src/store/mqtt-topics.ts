@@ -204,7 +204,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       clientKey: string,
       topic: string,
       message: string,
-      extras: { qos: MqttMessage['qos']; retained?: boolean }
+      extras: { qos?: MqttMessage['qos']; dataType?: MqttMessage['dataType']; retained?: boolean }
     ) {
       if (!this.topicsPublishMessages[clientKey]) this.topicsPublishMessages[clientKey] = {}
       if (!this.topicsPublishMessages[clientKey][topic])
@@ -213,10 +213,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       const mqttMessage = {
         uid: uuidV4(),
         message,
-        qos: extras.qos,
+        qos: extras.qos || 0,
+        dataType: extras.dataType || 'raw',
         retained: extras.retained || false,
         createdAt: new Date()
-      }
+      } as MqttMessage
 
       this.topicsPublishMessages[clientKey][topic].push(mqttMessage)
     },
