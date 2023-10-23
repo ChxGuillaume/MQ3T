@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
+import _ from 'lodash'
 
 const $q = useQuasar()
 
@@ -13,12 +14,20 @@ const props = defineProps<{
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
+const updatePreviewValue = _.debounce(
+  (value) => {
+    codeEditor?.setValue(value)
+  },
+  250,
+  { leading: true, trailing: false, maxWait: 1000 }
+)
+
 watch(
   () => props.value,
   (newValue) => {
     if (!codeEditor) return
 
-    codeEditor.setValue(newValue)
+    updatePreviewValue(newValue)
   }
 )
 

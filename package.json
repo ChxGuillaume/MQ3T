@@ -42,6 +42,7 @@
     "xml-formatter": "^3.5.0"
   },
   "devDependencies": {
+    "@babel/traverse": ">=7.23.2",
     "@electron-toolkit/eslint-config": "^1.0.1",
     "@electron-toolkit/eslint-config-ts": "^1.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
