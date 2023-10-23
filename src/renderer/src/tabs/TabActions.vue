@@ -11,6 +11,7 @@ import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
+import SelectConnectionDialog from '../components/tab-actions/dialogs/SelectConnectionDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsStore = useActionsStore()
@@ -28,6 +29,13 @@ const moveActionConnectionId = ref<string | undefined>()
 const moveActionActionId = ref<string | undefined>()
 const moveActionGroupId = ref<string>('default')
 const moveActionType = ref<'copy' | 'move'>('copy')
+
+const moveOrCopyActionGroup = ref({
+  dialogOpened: false,
+  type: 'copy' as 'copy' | 'move',
+  connectionId: '',
+  actionGroup: undefined as ActionGroup | undefined
+})
 
 const isDraggingAction = ref<boolean>(false)
 
@@ -159,6 +167,34 @@ const handleActionDropped = (actionId: string, groupId: string) => {
     action.groupId
   )
 }
+
+const handleMoveOrCopyActionGroup = (actionGroup: ActionGroup, action: 'copy' | 'move') => {
+  moveOrCopyActionGroup.value.connectionId = actionsStore.selectedConnection
+
+  moveOrCopyActionGroup.value.type = action
+  moveOrCopyActionGroup.value.actionGroup = actionGroup
+
+  moveOrCopyActionGroup.value.dialogOpened = true
+}
+
+const handleMoveOrCopyActionGroupDialog = () => {
+  if (!moveOrCopyActionGroup.value.connectionId || !moveOrCopyActionGroup.value.actionGroup) return
+
+  const actionGroupCopy = JSON.parse(JSON.stringify(moveOrCopyActionGroup.value.actionGroup))
+  const connectionId = moveOrCopyActionGroup.value.connectionId
+
+  const actions = actionsStore.getSelectedConnectionGroupActions(actionGroupCopy.id)
+
+  const newActionGroup = actionsStore.addActionGroupToConnection(actionGroupCopy, connectionId)
+
+  for (const action of actions) {
+    actionsStore.addActionToConnectionGroup(action, connectionId, newActionGroup.id)
+  }
+
+  if (moveOrCopyActionGroup.value.type === 'move') {
+    actionsStore.deleteActionGroupFromConnection(actionGroupCopy.id, connectionId)
+  }
+}
 </script>
 
 <template>
@@ -243,36 +279,38 @@ const handleActionDropped = (actionId: string, groupId: string) => {
             item-key="clientKey"
           >
             <template #item="{ element }">
-              <action-card
-                :key="element.id"
-                :action="element"
-                :send-disabled="selectedConnectionStatus !== 'connected'"
-                @edit="
-                  () => {
-                    editAction = element
-                    actionDialogOpened = true
-                  }
-                "
-                @delete="actionsStore.deleteAction(element.id)"
-                @send="actionsStore.sendAction(element)"
-                @copy="
-                  () => {
-                    moveActionCurrentGroupId = selectedActionGroup
-                    moveActionDialogOpened = true
-                    moveActionActionId = element.id
-                    moveActionType = 'copy'
-                  }
-                "
-                @move="
-                  () => {
-                    moveActionCurrentGroupId = selectedActionGroup
-                    moveActionDialogOpened = true
-                    moveActionActionId = element.id
-                    moveActionType = 'move'
-                  }
-                "
-                @dragstart="$event.dataTransfer.setData('actionId', element.id)"
-              />
+              <q-intersection class="tw-h-[135px]">
+                <action-card
+                  :key="element.id"
+                  :action="element"
+                  :send-disabled="selectedConnectionStatus !== 'connected'"
+                  @edit="
+                    () => {
+                      editAction = element
+                      actionDialogOpened = true
+                    }
+                  "
+                  @delete="actionsStore.deleteAction(element.id)"
+                  @send="actionsStore.sendAction(element)"
+                  @copy="
+                    () => {
+                      moveActionCurrentGroupId = selectedActionGroup
+                      moveActionDialogOpened = true
+                      moveActionActionId = element.id
+                      moveActionType = 'copy'
+                    }
+                  "
+                  @move="
+                    () => {
+                      moveActionCurrentGroupId = selectedActionGroup
+                      moveActionDialogOpened = true
+                      moveActionActionId = element.id
+                      moveActionType = 'move'
+                    }
+                  "
+                  @dragstart="$event.dataTransfer.setData('actionId', element.id)"
+                />
+              </q-intersection>
             </template>
           </draggable>
         </div>
@@ -334,6 +372,8 @@ const handleActionDropped = (actionId: string, groupId: string) => {
                 @export:actions="handleActionsExport(element.id)"
                 @export:group="handleGroupExport(element.id)"
                 @click.stop="selectedActionGroup = element.id"
+                @copy="handleMoveOrCopyActionGroup(element, 'copy')"
+                @move="handleMoveOrCopyActionGroup(element, 'move')"
               />
             </template>
           </draggable>
@@ -341,6 +381,7 @@ const handleActionDropped = (actionId: string, groupId: string) => {
             v-if="selectedConnection"
             cant-modify
             not-movable
+            not-draggable
             title="Default"
             description="This action group cannot be deleted."
             :active="selectedActionGroup === 'default'"
@@ -355,6 +396,7 @@ const handleActionDropped = (actionId: string, groupId: string) => {
             @export:actions="handleActionsExport('default')"
             @export:group="handleGroupExport('default')"
             @click.stop="selectedActionGroup = 'default'"
+            @copy="handleMoveOrCopyActionGroup({ id: 'default', name: 'Default Copy' }, 'copy')"
           />
         </div>
         <q-separator />
@@ -393,6 +435,16 @@ const handleActionDropped = (actionId: string, groupId: string) => {
     @create:action-group="actionsStore.addActionGroup($event)"
     @update:action-group="actionsStore.updateActionGroup($event)"
     @close="editActionGroup = undefined"
+  />
+  <select-connection-dialog
+    v-model:opened="moveOrCopyActionGroup.dialogOpened"
+    v-model:connection-id="moveOrCopyActionGroup.connectionId"
+    :title="moveOrCopyActionGroup.type === 'copy' ? 'Copy Group' : 'Move Group'"
+    :action-title="moveOrCopyActionGroup.type === 'copy' ? 'Copy' : 'Move'"
+    :action-icon="
+      moveOrCopyActionGroup.type === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'
+    "
+    @input="handleMoveOrCopyActionGroupDialog"
   />
   <select-connection-and-group-dialog
     v-model:connection-id="moveActionConnectionId"

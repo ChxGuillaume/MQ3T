@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import ActionGroupContextMenu from './ActionGroupContextMenu.vue'
 
 const props = defineProps<{
   title: string
@@ -7,6 +8,7 @@ const props = defineProps<{
   description?: string
   cantModify?: boolean
   notMovable?: boolean
+  notDraggable?: boolean
   disableDropZone?: boolean
 }>()
 
@@ -17,6 +19,8 @@ const emit = defineEmits<{
   addAction: []
   delete: []
   edit: []
+  copy: []
+  move: []
 }>()
 
 const dropZoneActiveAndNotActive = computed(
@@ -66,83 +70,41 @@ const handleDragEnd = (event: DragEvent) => {
       </div>
       <q-btn
         class="drag-handle tw-pointer-events-auto"
-        :class="{ 'tw-cursor-grab': !notMovable }"
+        :class="{ 'tw-cursor-grab': !notDraggable }"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round
         size="sm"
         @click.stop
       >
-        <q-menu anchor="bottom right" self="top right">
-          <q-list style="min-width: 100px">
-            <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('addAction')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-plus" class="tw-mr-2" />
-                  Add Action
-                </div>
-              </q-item-section>
-            </q-item>
-
-            <q-separator v-if="!cantModify" />
-
-            <q-item
-              v-if="!cantModify"
-              class="tw-text-blue-500"
-              clickable
-              v-close-popup
-              @click="$emit('edit')"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-edit" class="tw-mr-2" />
-                  Edit
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-if="!cantModify"
-              class="tw-text-red-500"
-              clickable
-              v-close-popup
-              @click="$emit('delete')"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
-                  Delete
-                </div>
-              </q-item-section>
-            </q-item>
-
-            <q-separator />
-
-            <q-item
-              class="tw-text-teal-500"
-              clickable
-              v-close-popup
-              @click="$emit('export:actions')"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
-                  Export Actions
-                </div>
-              </q-item-section>
-            </q-item>
-
-            <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:group')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
-                  Export Group
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
+        <action-group-context-menu
+          :cantModify="cantModify"
+          :notMovable="notMovable"
+          @addAction="$emit('addAction')"
+          @edit="$emit('edit')"
+          @delete="$emit('delete')"
+          @copy="$emit('copy')"
+          @move="$emit('move')"
+          @export:actions="$emit('export:actions')"
+          @export:group="$emit('export:group')"
+        />
       </q-btn>
     </div>
+
+    <action-group-context-menu
+      context-menu
+      anchor="bottom left"
+      self="top left"
+      :cantModify="cantModify"
+      :notMovable="notMovable"
+      @addAction="$emit('addAction')"
+      @edit="$emit('edit')"
+      @delete="$emit('delete')"
+      @copy="$emit('copy')"
+      @move="$emit('move')"
+      @export:actions="$emit('export:actions')"
+      @export:group="$emit('export:group')"
+    />
   </q-card>
 </template>
 

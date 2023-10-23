@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Action } from '../../../../types/actions'
 import { useQuasar } from 'quasar'
+import ActionCardContextMenu from './ActionCardContextMenu.vue'
 
 const props = defineProps<{
   action: Action
@@ -42,42 +43,12 @@ const handleCopyPayload = () => {
         {{ action.name }}
       </h2>
       <q-btn class="tw-ml-2" icon="fa-solid fa-ellipsis-vertical" flat round size="sm">
-        <q-menu anchor="bottom right" self="top right">
-          <q-list class="tw-min-w-[150px]">
-            <q-item class="tw-text-blue-500" clickable v-close-popup @click="$emit('edit')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-edit" class="tw-mr-2" />
-                  Edit
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('copy')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
-                  Copy
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('move')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-right-left" class="tw-mr-2" />
-                  Move
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item class="tw-text-red-500" clickable v-close-popup @click="$emit('delete')">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
-                  Delete
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
+        <action-card-context-menu
+          @edit="$emit('edit')"
+          @copy="$emit('copy')"
+          @move="$emit('move')"
+          @delete="$emit('delete')"
+        />
       </q-btn>
     </div>
     <p
@@ -125,6 +96,16 @@ const handleCopyPayload = () => {
         Send
       </q-btn>
     </div>
+
+    <action-card-context-menu
+      context-menu
+      anchor="bottom left"
+      self="top left"
+      @edit="$emit('edit')"
+      @copy="$emit('copy')"
+      @move="$emit('move')"
+      @delete="$emit('delete')"
+    />
   </q-card>
 </template>
 

@@ -42,6 +42,11 @@ export const useActionsStore = defineStore('actions', {
       (connectionId: string, groupId: string): ActionGroup | undefined => {
         return state.actionsGroups[connectionId]?.find((g) => g.id === groupId)
       },
+    getConnectionGroupActions:
+      (state) =>
+      (connectionId: string, groupId: string): Action[] => {
+        return state.actions[connectionId]?.[groupId] || []
+      },
     getConnectionGroupActionsRecord:
       (state) =>
       (connectionId: string, groupId: string): Record<string, Action[]> => {
@@ -185,6 +190,13 @@ export const useActionsStore = defineStore('actions', {
       this.actionsGroups[this.selectedConnection].splice(groupIndex, 1)
 
       if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
+
+      this.saveActionsGroups()
+    },
+    deleteActionGroupFromConnection(groupId: string, connectionId: string) {
+      const groupIndex = this.actionsGroups[connectionId].findIndex((g) => g.id === groupId)
+
+      this.actionsGroups[connectionId].splice(groupIndex, 1)
 
       this.saveActionsGroups()
     },
