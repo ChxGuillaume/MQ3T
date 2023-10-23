@@ -178,9 +178,11 @@ export const useActionsStore = defineStore('actions', {
 
       this.saveActions()
     },
-    deleteActionGroup(groupId: string) {
-      for (const action of this.actions[this.selectedConnection][groupId] || []) {
-        this.addActionToConnectionGroup(action, this.selectedConnection, 'default')
+    deleteActionGroup(groupId: string, moveActionsToDefault = true) {
+      if (moveActionsToDefault) {
+        for (const action of this.actions[this.selectedConnection][groupId] || []) {
+          this.addActionToConnectionGroup(action, this.selectedConnection, 'default')
+        }
       }
 
       const groupIndex = this.actionsGroups[this.selectedConnection].findIndex(
@@ -196,8 +198,10 @@ export const useActionsStore = defineStore('actions', {
     deleteActionGroupFromConnection(groupId: string, connectionId: string) {
       const groupIndex = this.actionsGroups[connectionId].findIndex((g) => g.id === groupId)
 
+      delete this.actions[connectionId][groupId]
       this.actionsGroups[connectionId].splice(groupIndex, 1)
 
+      this.saveActions()
       this.saveActionsGroups()
     },
     sendAction(action: Action) {

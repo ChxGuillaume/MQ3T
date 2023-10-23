@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import SelectConnectionAndGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
+import ActionsToDefaultGroupDialog from '../components/tab-actions/dialogs/ActionsToDefaultGroupDialog.vue'
+import SelectConnectionDialog from '../components/tab-actions/dialogs/SelectConnectionDialog.vue'
 import { Action, ActionGroup, ExportActionsFile, ExportGroupsFile } from '../../../types/actions'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
@@ -11,7 +13,6 @@ import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
-import SelectConnectionDialog from '../components/tab-actions/dialogs/SelectConnectionDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsStore = useActionsStore()
@@ -35,6 +36,12 @@ const moveOrCopyActionGroup = ref({
   type: 'copy' as 'copy' | 'move',
   connectionId: '',
   actionGroup: undefined as ActionGroup | undefined
+})
+
+const deleteGroupActionDialog = ref({
+  dialogOpened: false,
+  actionCount: 0,
+  groupId: ''
 })
 
 const isDraggingAction = ref<boolean>(false)
@@ -153,6 +160,24 @@ const handleConnectionExport = () => {
   ElectronApi.exportData('mq3t-groups-actions.json', JSON.parse(JSON.stringify(data)), [
     { name: 'JSON', extensions: ['json'] }
   ])
+}
+
+const handleDeleteGroup = (groupId: string) => {
+  const actionsCount = actionsStore.getSelectedConnectionGroupActions(groupId).length
+
+  if (actionsCount === 0) {
+    actionsStore.deleteActionGroup(groupId)
+    return
+  }
+
+  deleteGroupActionDialog.value.dialogOpened = true
+  deleteGroupActionDialog.value.groupId = groupId
+
+  deleteGroupActionDialog.value.actionCount = actionsCount
+}
+
+const handleDeleteGroupDialog = (moveToDefault: boolean) => {
+  actionsStore.deleteActionGroup(deleteGroupActionDialog.value.groupId, moveToDefault)
 }
 
 const handleActionDropped = (actionId: string, groupId: string) => {
@@ -367,7 +392,7 @@ const handleMoveOrCopyActionGroupDialog = () => {
                     actionGroupDialogOpened = true
                   }
                 "
-                @delete="actionsStore.deleteActionGroup(element.id)"
+                @delete="handleDeleteGroup(element.id)"
                 @action:dropped="handleActionDropped($event, element.id)"
                 @export:actions="handleActionsExport(element.id)"
                 @export:group="handleGroupExport(element.id)"
@@ -454,6 +479,12 @@ const handleMoveOrCopyActionGroupDialog = () => {
     :action-title="moveActionType === 'copy' ? 'Copy' : 'Move'"
     :action-icon="moveActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
     @input="handleMoveAction"
+  />
+  <actions-to-default-group-dialog
+    v-model:opened="deleteGroupActionDialog.dialogOpened"
+    :action-count="deleteGroupActionDialog.actionCount"
+    @actions:move="handleDeleteGroupDialog(true)"
+    @actions:delete="handleDeleteGroupDialog(false)"
   />
 </template>
 
