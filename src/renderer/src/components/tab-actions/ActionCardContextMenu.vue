@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { QMenu } from 'quasar'
+
 withDefaults(
   defineProps<{
     contextMenu?: boolean
-    anchor?: string
-    self?: string
+    anchor?: QMenu['anchor']
+    self?: QMenu['self']
   }>(),
   {
     contextMenu: false,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { QForm } from 'quasar'
 
-const props = defineProps<{
+defineProps<{
   opened: boolean
   actionCount: number
 }>()

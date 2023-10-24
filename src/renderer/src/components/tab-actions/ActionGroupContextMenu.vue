@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { QMenu } from 'quasar'
+
 withDefaults(
   defineProps<{
     contextMenu?: boolean
     cantModify?: boolean
     notMovable?: boolean
-    anchor?: string
-    self?: string
+    anchor?: QMenu['anchor']
+    self?: QMenu['self']
   }>(),
   {
     anchor: 'bottom right',

@@ -1,6 +1,6 @@
 appId: com.chx-guillaume.mq3t
 productName: MQ3T
-forceCodeSigning: true
+forceCodeSigning: false
 artifactName: ${name}-${version}-${arch}.${ext}
 
 directories:
@@ -22,8 +22,9 @@ win:
   icon: build/logo/win512pts.png
   executableName: MQ3T
   publisherName: ChxGuillaume
-  # TODO: experiment with update without code signing, if it doesn't work, disable code signing verification until certificate acquired
-  verifyUpdateCodeSignature: true
+  # TODO: Enable after code signing is set up
+  sign: false
+  verifyUpdateCodeSignature: false
   artifactName: ${name}-${version}-portable-${arch}.${ext}
   target:
     - target: nsis
@@ -47,6 +48,7 @@ mac:
   icon: build/logo/mac512pts.icns
   entitlementsInherit: build/entitlements.mac.plist
   darkModeSupport: true
+  forceCodeSigning: false
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.

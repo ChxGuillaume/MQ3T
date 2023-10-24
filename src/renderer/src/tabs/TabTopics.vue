@@ -118,9 +118,7 @@ const handleEraseTopic = () => {
 
 const topicSearch = computed({
   get: () => mqttTopicsStore.topicSearch,
-  set: (value) => {
-    mqttTopicsStore.setTopicSearch(value)
-  }
+  set: (value) => mqttTopicsStore.setTopicSearch(value)
 })
 
 const formatDuration = (duration: number) => {
