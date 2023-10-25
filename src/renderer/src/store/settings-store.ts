@@ -14,6 +14,7 @@ type SettingsStore = {
   smartTopicGroupClose: boolean
   messagesPagination: boolean
   defaultDataFormat: DefaultDataFormat
+  autoOpenPublishActions: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -29,7 +30,8 @@ export const useSettingsStore = defineStore('settings', {
     maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
     smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true',
     messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true',
-    defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw'
+    defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw',
+    autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true'
   }),
   getters: {
     dateTimeFormat(): string {
@@ -81,6 +83,10 @@ export const useSettingsStore = defineStore('settings', {
     setDefaultDataFormat(value: DefaultDataFormat) {
       this.defaultDataFormat = value
       localStorage.setItem('defaultDataFormat', value)
+    },
+    setAutoOpenPublishActions(value: boolean) {
+      this.autoOpenPublishActions = value
+      localStorage.setItem('autoOpenPublishActions', value.toString())
     }
   }
 })

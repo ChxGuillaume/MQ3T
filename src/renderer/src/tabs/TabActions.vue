@@ -220,6 +220,10 @@ const handleMoveOrCopyActionGroupDialog = () => {
     actionsStore.deleteActionGroupFromConnection(actionGroupCopy.id, connectionId)
   }
 }
+
+const handleStartDrag = (ev: DragEvent, actionId: string) => {
+  ev.dataTransfer?.setData('actionId', actionId)
+}
 </script>
 
 <template>
@@ -304,7 +308,7 @@ const handleMoveOrCopyActionGroupDialog = () => {
             item-key="clientKey"
           >
             <template #item="{ element }">
-              <q-intersection class="tw-h-[135px]">
+              <q-intersection class="tw-h-[135px]" @dragstart="handleStartDrag($event, element.id)">
                 <action-card
                   :key="element.id"
                   :action="element"
@@ -333,7 +337,6 @@ const handleMoveOrCopyActionGroupDialog = () => {
                       moveActionType = 'move'
                     }
                   "
-                  @dragstart="$event.dataTransfer.setData('actionId', element.id)"
                 />
               </q-intersection>
             </template>

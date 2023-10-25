@@ -32,6 +32,15 @@ export const useActionsStore = defineStore('actions', {
       (groupId: string): Action[] => {
         return state.actions[state.selectedConnection]?.[groupId] || []
       },
+    getConnectionActions:
+      (state) =>
+      (connectionId: string): Action[] => {
+        const records = state.actions[connectionId]
+
+        if (!records) return []
+
+        return Object.values(records).flat()
+      },
     getConnectionGroups:
       (state) =>
       (connectionId: string): ActionGroup[] => {

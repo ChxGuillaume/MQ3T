@@ -135,6 +135,11 @@ const defaultDataFormatSetting = computed({
     settingsStore.setDefaultDataFormat(val)
   }
 })
+
+const autoOpenPublishActionsSetting = computed({
+  get: () => settingsStore.autoOpenPublishActions,
+  set: (val) => settingsStore.setAutoOpenPublishActions(val)
+})
 </script>
 
 <template>
@@ -249,6 +254,19 @@ const defaultDataFormatSetting = computed({
           {{ defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label }}
         </template>
       </q-select>
+      <q-card class="card-toggle" square flat>
+        <q-toggle
+          v-model="autoOpenPublishActionsSetting"
+          class="tw-w-full"
+          label="Auto Open Actions Pan"
+        >
+        </q-toggle>
+        <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+          <q-tooltip>
+            Automatically open the actions pan in the publish tab when an action is available
+          </q-tooltip>
+        </q-icon>
+      </q-card>
     </div>
 
     <div class="tw-fixed tw-bottom-2 tw-right-2 color-details">

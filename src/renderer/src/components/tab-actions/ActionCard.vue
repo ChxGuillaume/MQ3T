@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import ActionCardContextMenu from './ActionCardContextMenu.vue'
 import { Action } from '../../../../types/actions'
 import { useQuasar } from 'quasar'
-import ActionCardContextMenu from './ActionCardContextMenu.vue'
 
 const props = defineProps<{
   action: Action
   sendDisabled?: boolean
+  noGrab?: boolean
+  noContextMenu?: boolean
 }>()
 
 defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
@@ -37,12 +39,20 @@ const handleCopyPayload = () => {
   <q-card flat class="action-card tw-p-4 tw-h-fit">
     <div class="tw-flex tw-justify-between">
       <h2
-        class="tw-w-full tw-text-lg truncate-hover-one-line tw-cursor-grab drag-handle"
+        class="tw-w-full tw-text-lg truncate-hover-one-line drag-handle"
+        :class="{ 'tw-cursor-grab': !noGrab }"
         :title="action.name"
       >
         {{ action.name }}
       </h2>
-      <q-btn class="tw-ml-2" icon="fa-solid fa-ellipsis-vertical" flat round size="sm">
+      <q-btn
+        v-if="!noContextMenu"
+        class="tw-ml-2"
+        icon="fa-solid fa-ellipsis-vertical"
+        flat
+        round
+        size="sm"
+      >
         <action-card-context-menu
           @edit="$emit('edit')"
           @copy="$emit('copy')"
@@ -69,7 +79,7 @@ const handleCopyPayload = () => {
           <q-tooltip class="tw-whitespace-pre tw-text-sm" v-text="action.description" />
         </q-icon>
 
-        <q-icon name="fa-solid fa-ranking-star" class="tw-mt-2 color-details" size="xs">
+        <q-icon name="fa-solid fa-ranking-star" class="tw-px-1 tw-mt-2 color-details" size="xs">
           <q-tooltip class="tw-text-sm" v-text="`QoS ${action.qos}`" />
         </q-icon>
 
@@ -98,6 +108,7 @@ const handleCopyPayload = () => {
     </div>
 
     <action-card-context-menu
+      v-if="!noContextMenu"
       context-menu
       anchor="bottom left"
       self="top left"
