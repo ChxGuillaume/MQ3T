@@ -1,6 +1,6 @@
 {
   "name": "mq3t",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "MQTT Tools - A simple MQTT client for your development needs",
   "license": "GPL-2.0",
   "main": "./out/main/index.js",
