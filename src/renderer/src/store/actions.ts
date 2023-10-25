@@ -105,7 +105,7 @@ export const useActionsStore = defineStore('actions', {
     },
     addAction(action: Action) {
       if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
-      if (!this.actions[this.selectedConnection])
+      if (!this.actions[this.selectedConnection][this.selectedActionGroup])
         this.actions[this.selectedConnection][this.selectedActionGroup] = []
 
       this.actions[this.selectedConnection][this.selectedActionGroup].push(action)

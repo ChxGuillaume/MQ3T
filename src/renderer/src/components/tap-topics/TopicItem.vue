@@ -83,7 +83,15 @@ const isSelectedTopic = computed(() => {
 })
 
 const sortedTopicStructure = computed(() => {
-  return Object.entries(props.topicStructure || {}).sort((a, b) => a[0].localeCompare(b[0]))
+  return Object.entries(props.topicStructure || {}).sort((a, b) => {
+    const parsedA = Number(a[0])
+    const parsedB = Number(b[0])
+
+    if (isNaN(parsedA) && isNaN(parsedB)) return a[0].localeCompare(b[0])
+    else if (isNaN(parsedA)) return 1
+    else if (isNaN(parsedB)) return -1
+    else return parsedA - parsedB
+  })
 })
 
 const topicLastMessage = computed(() => {
