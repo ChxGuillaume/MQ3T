@@ -19,7 +19,7 @@ const updatePreviewValue = _.debounce(
     codeEditor?.setValue(value)
   },
   250,
-  { leading: true, trailing: false, maxWait: 1000 }
+  { leading: true, trailing: true, maxWait: 250 }
 )
 
 watch(

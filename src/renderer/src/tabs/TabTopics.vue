@@ -227,7 +227,7 @@ const handleClearRetained = () => {
             class="tw-p-0 tw-grid"
             style="grid-template-rows: auto auto 1fr"
           >
-            <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1 tw-h-[94px]">
+            <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1">
               <div class="tw-flex tw-gap-2">
                 <h2 class="tw-text-xl tw-font-bold">Topic</h2>
                 <copy-button

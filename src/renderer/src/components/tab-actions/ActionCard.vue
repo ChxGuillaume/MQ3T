@@ -8,6 +8,7 @@ const props = defineProps<{
   sendDisabled?: boolean
   noGrab?: boolean
   noContextMenu?: boolean
+  hideTopic?: boolean
 }>()
 
 defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
@@ -62,6 +63,7 @@ const handleCopyPayload = () => {
       </q-btn>
     </div>
     <p
+      v-if="!hideTopic"
       class="truncate-hover-one-line tw-cursor-pointer color-details"
       :title="action.topic"
       @click="handleCopyTopic"

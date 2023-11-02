@@ -124,7 +124,11 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
 const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
+  if (mqttClientsState.get(clientKey) === 'connecting') return
+
   mqttClientsState.set(clientKey, 'connecting')
+
+  sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
   try {
     const resolvedIp = await new Promise((resolve, reject) => {
@@ -139,8 +143,6 @@ const createConnection = async (connection: MqttConnection) => {
     sendMessageToRenderer('mqtt-error', { clientKey, error: e })
     return
   }
-
-  sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
   const clientMqtt = new MqttClient(connection)
 

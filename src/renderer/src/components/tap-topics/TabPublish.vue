@@ -279,6 +279,7 @@ watch(
           :key="action.id"
           :action="action"
           no-context-menu
+          hide-topic
           no-grab
           class="tw-bg-neutral-800"
           @send="actionsStore.sendAction(action)"
