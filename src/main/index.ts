@@ -255,7 +255,7 @@ const initIpcMain = () => {
   })
 
   ipcMain.on('quit-and-install-update', () => {
-    autoUpdater.quitAndInstall()
+    autoUpdater.quitAndInstall(true, true)
   })
 
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
