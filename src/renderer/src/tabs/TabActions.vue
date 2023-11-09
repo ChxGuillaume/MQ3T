@@ -320,7 +320,7 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
                     }
                   "
                   @delete="actionsStore.deleteAction(element.id)"
-                  @send="actionsStore.sendAction(element)"
+                  @send="actionsStore.sendAction(actionsStore.selectedConnection, element)"
                   @copy="
                     () => {
                       moveActionCurrentGroupId = selectedActionGroup
