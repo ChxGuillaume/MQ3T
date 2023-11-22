@@ -12,7 +12,7 @@ import TopicCard from '../components/tap-topics/TopicCard.vue'
 import CopyButton from '../components/buttons/CopyButton.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
@@ -63,8 +63,6 @@ const copyMessage = (message: string) => {
   navigator.clipboard.writeText(message)
 }
 
-const codePreviewData = ref('{}')
-
 const formatMessage = (message: string) => {
   let data = message
 
@@ -77,19 +75,6 @@ const formatMessage = (message: string) => {
 
   return data
 }
-
-const updateEditor = (message: string) => {
-  if (!message) return
-
-  codePreviewData.value = formatMessage(message)
-}
-
-watch(
-  () => mqttTopicsStore.getSelectedTopicLastMessage,
-  (mqttMessage) => {
-    mqttMessage?.message && updateEditor(mqttMessage.message)
-  }
-)
 
 onMounted(() => {
   setTimeout(() => {
@@ -109,9 +94,11 @@ const handleBreadcrumbClick = (index: number) => {
 }
 
 const handleSelectTopic = (clientKey: string, topic: string) => {
-  mqttTopicsStore.setSelectedTopic(clientKey, topic)
-  codePreviewData.value = ''
+  if (topic === mqttTopicsStore.selectedTopic) return
+
   selectedConnection.value = ''
+
+  mqttTopicsStore.setSelectedTopic(clientKey, topic)
 }
 
 const handleEraseTopic = () => {
@@ -299,7 +286,7 @@ const handleClearRetained = () => {
                   </div>
                 </div>
                 <code-preview
-                  :value="codePreviewData"
+                  :value="mqttTopicsStore.getSelectedTopicLastMessage?.message || ''"
                   :language="mqttTopicsStore.getSelectedTopicLastMessage?.dataType"
                 />
                 <div class="tw-px-4 tw-pt-2 tw-flex justify-between">

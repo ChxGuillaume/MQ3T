@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatCode } from '../../assets/js/format-code'
 import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
@@ -16,7 +17,7 @@ let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
 const updatePreviewValue = _.debounce(
   (value) => {
-    codeEditor?.setValue(value)
+    codeEditor?.setValue(formatCode(value, props.language || 'raw'))
   },
   250,
   { leading: true, trailing: true, maxWait: 250 }
