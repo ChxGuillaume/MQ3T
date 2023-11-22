@@ -213,8 +213,8 @@ export const useActionsStore = defineStore('actions', {
       this.saveActions()
       this.saveActionsGroups()
     },
-    sendAction(connectionId: string, action: Action) {
-      ElectronApi.sendMqttMessage(connectionId, action.topic, action.payload, {
+    sendAction(connectionId: string, action: Action, topicOverride?: string) {
+      ElectronApi.sendMqttMessage(connectionId, topicOverride || action.topic, action.payload, {
         qos: action.qos,
         retain: action.retained
       })

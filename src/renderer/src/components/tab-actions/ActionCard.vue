@@ -5,7 +5,8 @@ import { useQuasar } from 'quasar'
 
 const props = defineProps<{
   action: Action
-  sendDisabled?: boolean
+  disableDisconnected?: boolean
+  disableWildcard?: boolean
   noGrab?: boolean
   noContextMenu?: boolean
   hideTopic?: boolean
@@ -103,9 +104,19 @@ const handleCopyPayload = () => {
           <q-tooltip class="tw-text-sm" v-text="action.payload" />
         </q-icon>
       </div>
-      <q-btn color="primary" :disable="sendDisabled" @click="$emit('send')">
+      <q-btn
+        color="primary"
+        :disable="disableDisconnected || disableWildcard"
+        @click="$emit('send')"
+      >
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
+        <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-white tw-text-sm">
+          Connection is not active.
+        </q-tooltip>
+        <q-tooltip v-if="disableWildcard" class="tw-bg-primary tw-text-white tw-text-sm">
+          Wildcard topics are only supported in the Topics tab.
+        </q-tooltip>
       </q-btn>
     </div>
 

@@ -9,6 +9,7 @@ import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
 import ActionCard from '../tab-actions/ActionCard.vue'
 import { useActionsStore } from '../../store/actions'
 import { computed, reactive, ref, watch } from 'vue'
+import { matchTopics } from '../../assets/js/mqtt'
 
 const codeEditorRef = ref<ICodeEditor | null>(null)
 
@@ -120,7 +121,7 @@ const togglePublishType = (type: 'manual' | 'action') => {
 const sortedActions = computed(() => {
   const actions = actionsStore.getConnectionActions(mqttTopicsStore.selectedConnection)
 
-  return actions.filter((action) => action.topic === publishTopic.value)
+  return actions.filter((action) => matchTopics(action.topic, publishTopic.value))
 })
 
 watch(
@@ -282,7 +283,7 @@ watch(
           hide-topic
           no-grab
           class="tw-bg-neutral-800"
-          @send="actionsStore.sendAction(mqttTopicsStore.selectedConnection, action)"
+          @send="actionsStore.sendAction(mqttTopicsStore.selectedConnection, action, publishTopic)"
         />
       </q-card>
     </q-expansion-item>

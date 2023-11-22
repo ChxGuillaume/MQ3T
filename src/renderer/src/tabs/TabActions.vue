@@ -307,25 +307,26 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
             class="tw-relative actions-cards-grid tw-p-4 tw-gap-4 tw-overflow-auto"
             item-key="clientKey"
           >
-            <template #item="{ element }">
-              <q-intersection class="tw-h-[135px]" @dragstart="handleStartDrag($event, element.id)">
+            <template #item="{ element: action }">
+              <q-intersection class="tw-h-[135px]" @dragstart="handleStartDrag($event, action.id)">
                 <action-card
-                  :key="element.id"
-                  :action="element"
-                  :send-disabled="selectedConnectionStatus !== 'connected'"
+                  :key="action.id"
+                  :action="action"
+                  :disable-disconnected="selectedConnectionStatus !== 'connected'"
+                  :disable-wildcard="action.topic.includes('#') || action.topic.includes('+')"
                   @edit="
                     () => {
-                      editAction = element
+                      editAction = action
                       actionDialogOpened = true
                     }
                   "
-                  @delete="actionsStore.deleteAction(element.id)"
-                  @send="actionsStore.sendAction(actionsStore.selectedConnection, element)"
+                  @delete="actionsStore.deleteAction(action.id)"
+                  @send="actionsStore.sendAction(actionsStore.selectedConnection, action)"
                   @copy="
                     () => {
                       moveActionCurrentGroupId = selectedActionGroup
                       moveActionDialogOpened = true
-                      moveActionActionId = element.id
+                      moveActionActionId = action.id
                       moveActionType = 'copy'
                     }
                   "
@@ -333,7 +334,7 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
                     () => {
                       moveActionCurrentGroupId = selectedActionGroup
                       moveActionDialogOpened = true
-                      moveActionActionId = element.id
+                      moveActionActionId = action.id
                       moveActionType = 'move'
                     }
                   "
@@ -350,7 +351,12 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
         <connection-select
           v-model="selectedConnection"
           no-rules
-          @update:model-value="moveActionConnectionId = $event"
+          @update:model-value="
+            (ev) => {
+              moveActionConnectionId = ev
+              selectedActionGroup = 'default'
+            }
+          "
         />
         <q-separator />
         <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">

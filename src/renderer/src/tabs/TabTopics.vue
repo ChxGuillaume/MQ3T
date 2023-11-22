@@ -26,8 +26,13 @@ const showTopics = ref(false)
 const expandConnection = ref<{ [key: string]: boolean }>({})
 const selectedConnection = ref('')
 
-const tab = ref('values')
+const topicTabRecord = ref<Record<string, string>>({})
 const current = ref(1)
+
+const topicTab = computed({
+  get: () => topicTabRecord.value[mqttTopicsStore.selectedTopic] || 'values',
+  set: (value) => (topicTabRecord.value[mqttTopicsStore.selectedTopic] = value)
+})
 
 const selectedTopicLastMessage = computed(() => {
   return mqttTopicsStore.getSelectedTopicLastMessage
@@ -221,7 +226,7 @@ const handleClearRetained = () => {
         class="tw-relative tw-h-full tw-grid tw-overflow-hidden"
         style="grid-template-rows: 1fr auto auto"
       >
-        <q-tab-panels v-model="tab" animated keep-alive>
+        <q-tab-panels v-model="topicTab" animated keep-alive>
           <q-tab-panel
             name="values"
             class="tw-p-0 tw-grid"
@@ -358,7 +363,7 @@ const handleClearRetained = () => {
         <q-separator />
 
         <q-tabs
-          v-model="tab"
+          v-model="topicTab"
           inline-label
           active-color="white"
           active-bg-color="primary"
