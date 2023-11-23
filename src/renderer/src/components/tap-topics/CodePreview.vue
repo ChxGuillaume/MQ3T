@@ -10,6 +10,7 @@ const $q = useQuasar()
 const props = defineProps<{
   value: string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
+  hideTopBorder?: boolean
 }>()
 
 const monacoEditorRef = ref(null)
@@ -58,7 +59,7 @@ onMounted(() => {
   if (!monacoEditorRef.value) return
 
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
-    value: props.value,
+    value: formatCode(props.value, props.language || 'raw'),
     language: 'json',
     theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
@@ -77,13 +78,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="monaco-editor" />
+  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw-border-t': !hideTopBorder }" />
 </template>
 
 <style scoped lang="less">
 .monaco-editor {
-  @apply tw-w-full tw-border-y;
-  height: 200px;
+  @apply tw-w-full;
+  height: 100%;
 }
 
 .body--light {

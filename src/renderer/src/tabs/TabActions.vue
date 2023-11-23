@@ -9,6 +9,7 @@ import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import ConnectionSelect from '../components/ConnectionSelect.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
+import SplitterIcon from '../components/SplitterIcon.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
@@ -344,6 +345,10 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
           </draggable>
         </div>
       </div>
+    </template>
+
+    <template v-slot:separator>
+      <splitter-icon vertical />
     </template>
 
     <template #after>

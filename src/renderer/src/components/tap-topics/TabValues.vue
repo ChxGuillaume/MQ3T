@@ -1,0 +1,203 @@
+<script setup lang="ts">
+import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import { useSettingsStore } from '../../store/settings-store'
+import EraseButton from '../buttons/EraseButton.vue'
+import CopyButton from '../buttons/CopyButton.vue'
+import SplitterIcon from '../SplitterIcon.vue'
+import MessagesList from './MessagesList.vue'
+import CodePreview from './CodePreview.vue'
+import { computed, ref, watch } from 'vue'
+
+const electronApi = window.api as ElectronIpc
+
+const mqttTopicsStore = useMqttTopicsStore()
+const settingsStore = useSettingsStore()
+
+const codePreviewSplitter = ref(200)
+const selectedMessageCodePreviewSplitter = ref(200)
+
+const codePreviewLimits = ref([100, 400])
+const selectedMessage = ref<MqttMessage>()
+
+const breadcrumbs = computed(() => {
+  return mqttTopicsStore.selectedTopic.split('/').filter((t) => t !== '')
+})
+
+const selectedTopicLastMessage = computed(() => {
+  return mqttTopicsStore.getSelectedTopicLastMessage
+})
+
+const handleBreadcrumbClick = (index: number) => {
+  mqttTopicsStore.setSelectedTopic(
+    mqttTopicsStore.selectedConnection,
+    breadcrumbs.value.slice(0, index + 1).join('/')
+  )
+}
+
+const handleEraseTopic = () => {
+  mqttTopicsStore.clearTopicsAndSubTopicsMessages(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic
+  )
+}
+
+const handleClearRetained = () => {
+  electronApi.sendMqttMessage(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic,
+    '',
+    { retain: true, qos: 0 }
+  )
+
+  mqttTopicsStore.addPublishMessage(
+    mqttTopicsStore.selectedConnection,
+    mqttTopicsStore.selectedTopic,
+    '',
+    { retained: true, qos: 0 }
+  )
+}
+
+const copySelectedTopic = () => {
+  navigator.clipboard.writeText(mqttTopicsStore.selectedTopic)
+}
+
+const copySelectedTopicMessage = () => {
+  navigator.clipboard.writeText(selectedTopicLastMessage.value?.message || '')
+}
+
+watch(
+  () => mqttTopicsStore.selectedTopic,
+  () => {
+    selectedMessage.value = undefined
+  }
+)
+</script>
+
+<template>
+  <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1">
+    <div class="tw-flex tw-gap-2">
+      <h2 class="tw-text-xl tw-font-bold">Topic</h2>
+      <copy-button notification-message="Topic copied to clipboard" @click="copySelectedTopic" />
+      <erase-button @click="handleEraseTopic" />
+    </div>
+    <div class="tw-flex tw-items-center tw-min-h-[28px]">
+      <span v-if="!breadcrumbs.length">No Topic Selected</span>
+      <q-breadcrumbs v-else gutter="none">
+        <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
+          <q-chip
+            size="sm"
+            color="primary"
+            text-color="white"
+            square
+            ripple
+            clickable
+            :label="topicPart"
+            @click="handleBreadcrumbClick(index)"
+          />
+        </q-breadcrumbs-el>
+      </q-breadcrumbs>
+    </div>
+  </div>
+  <q-separator />
+  <div class="tw-overflow-auto">
+    <div v-if="selectedTopicLastMessage">
+      <div class="tw-p-4 tw-flex justify-between">
+        <div>
+          QoS: {{ selectedTopicLastMessage?.qos || 0 }}
+          <copy-button
+            notification-message="Last topic message copied to clipboard"
+            @click="copySelectedTopicMessage"
+          />
+        </div>
+        <div v-if="selectedTopicLastMessage?.retained">
+          <q-chip
+            size="sm"
+            class="text-weight-bold"
+            color="primary"
+            text-color="white"
+            icon-right="fa-solid fa-xmark"
+            square
+            clickable
+            label="Retained"
+            @click="handleClearRetained"
+          />
+        </div>
+        <div class="tw-flex tw-flex-col items-end">
+          <div>
+            {{
+              selectedTopicLastMessage?.createdAt &&
+              settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
+            }}
+          </div>
+          <div>
+            {{
+              selectedTopicLastMessage?.createdAt &&
+              settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
+            }}
+          </div>
+        </div>
+      </div>
+      <q-splitter v-model="codePreviewSplitter" horizontal :limits="codePreviewLimits" unit="px">
+        <template v-slot:before>
+          <code-preview
+            :value="mqttTopicsStore.getSelectedTopicLastMessage?.message || ''"
+            :language="mqttTopicsStore.getSelectedTopicLastMessage?.dataType"
+          />
+        </template>
+
+        <template v-slot:separator>
+          <splitter-icon />
+        </template>
+
+        <template v-slot:after>
+          <q-splitter
+            v-if="selectedMessage"
+            v-model="selectedMessageCodePreviewSplitter"
+            horizontal
+            :limits="codePreviewLimits"
+            unit="px"
+          >
+            <template v-slot:before>
+              <code-preview
+                v-if="selectedMessage"
+                :value="selectedMessage?.message || ''"
+                :language="selectedMessage?.dataType"
+                hide-top-border
+              />
+            </template>
+
+            <template v-slot:separator>
+              <splitter-icon />
+            </template>
+
+            <template v-slot:after>
+              <messages-list v-model:selected-message="selectedMessage" />
+            </template>
+          </q-splitter>
+          <messages-list v-else v-model:selected-message="selectedMessage" />
+        </template>
+      </q-splitter>
+    </div>
+    <div
+      v-else
+      class="tw-h-full tw-flex tw-justify-center tw-items-center tw-text-2xl tw-font-bold"
+    >
+      No Messages
+    </div>
+  </div>
+</template>
+
+<style scoped lang="less">
+.body--light {
+  .message-details {
+    @apply tw-text-neutral-500;
+  }
+}
+
+.body--dark {
+  .message-details {
+    @apply tw-text-neutral-400;
+  }
+}
+</style>
