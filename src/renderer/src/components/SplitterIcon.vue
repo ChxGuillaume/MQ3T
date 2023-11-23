@@ -1,11 +1,32 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 defineProps<{
   vertical?: boolean
 }>()
+
+const emit = defineEmits<{
+  'click:double': []
+}>()
+
+const clickTimeout = ref<NodeJS.Timeout | null>(null)
+
+const handleClick = () => {
+  if (clickTimeout.value) {
+    clearTimeout(clickTimeout.value)
+    clickTimeout.value = null
+
+    emit('click:double')
+  } else {
+    clickTimeout.value = setTimeout(() => {
+      clickTimeout.value = null
+    }, 250)
+  }
+}
 </script>
 
 <template>
-  <div class="icon" :class="{ vertical, horizontal: !vertical }">
+  <div class="icon" :class="{ vertical, horizontal: !vertical }" @click="handleClick">
     <q-icon v-if="!vertical" size="12px" name="fa-solid fa-ellipsis" />
     <q-icon v-else size="12px" name="fa-solid fa-ellipsis-vertical" />
   </div>

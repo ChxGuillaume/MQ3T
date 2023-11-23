@@ -147,7 +147,7 @@ watch(
         </template>
 
         <template v-slot:separator>
-          <splitter-icon />
+          <splitter-icon @click:double="codePreviewSplitter = 200" />
         </template>
 
         <template v-slot:after>
@@ -168,7 +168,7 @@ watch(
             </template>
 
             <template v-slot:separator>
-              <splitter-icon />
+              <splitter-icon @click:double="selectedMessageCodePreviewSplitter = 200" />
             </template>
 
             <template v-slot:after>

@@ -125,7 +125,7 @@ const handleExpandConnection = (clientKey: string) => {
     </template>
 
     <template v-slot:separator>
-      <splitter-icon vertical />
+      <splitter-icon vertical @click:double="splitterModel = 400" />
     </template>
 
     <template #after>
