@@ -10,6 +10,12 @@ import ActionCard from '../tab-actions/ActionCard.vue'
 import { useActionsStore } from '../../store/actions'
 import { computed, reactive, ref, watch } from 'vue'
 import { matchTopics } from '../../assets/js/mqtt'
+import { Action } from '../../../../types/actions'
+import SplitterIcon from '../SplitterIcon.vue'
+
+const emit = defineEmits<{
+  'click:publish': [topic: string]
+}>()
 
 const codeEditorRef = ref<ICodeEditor | null>(null)
 
@@ -20,6 +26,8 @@ const actionsStore = useActionsStore()
 const publishType = ref<'manual' | 'action'>('manual')
 
 const publishDataType = ref(settingsStore.defaultDataFormat)
+const codeEditorSplitter = ref(200)
+const codeEditorLimits = ref([100, 400])
 const codeEditorData = ref('')
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
@@ -72,6 +80,14 @@ const handlePublishMessage = () => {
     codeEditorData.value,
     { retained: retain.value, qos: qos.value, dataType: publishDataType.value }
   )
+
+  emit('click:publish', publishTopic.value)
+}
+
+const handleSendAction = (action: Action) => {
+  actionsStore.sendAction(mqttTopicsStore.selectedConnection, action, publishTopic.value)
+
+  emit('click:publish', publishTopic.value)
 }
 
 const handleMessageClick = (message: MqttMessage) => {
@@ -182,81 +198,92 @@ watch(
             </q-btn>
           </div>
         </div>
-        <code-editor v-model="codeEditorData" ref="codeEditorRef" :language="publishDataType" />
-        <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
-          <div class="tw-flex">
-            <q-select
-              v-model="qos"
-              :options="[0, 1, 2]"
-              filled
-              dense
-              label="QoS"
-              class="tw-w-[96px]"
-            />
-            <q-toggle v-model="retain" label="Retain" />
-          </div>
-          <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
-            Publish
-          </q-btn>
-        </div>
-        <q-separator />
-        <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
-          <div class="tw-flex items-center tw-gap-2">
-            History
-            <q-chip size="sm" color="primary" text-color="white">
-              {{ mqttTopicsStore.getSelectedPublishTopicMessages.length }} messages
-            </q-chip>
-          </div>
-          <q-pagination
-            v-if="settingsStore.messagesPagination"
-            v-model="current"
-            size="xs"
-            :max="Math.ceil(mqttTopicsStore.getSelectedPublishTopicMessages.length / 5)"
-            input
-          />
-        </div>
-        <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
-          <q-card
-            v-for="message in slicedMessages"
-            :key="message.uid"
-            flat
-            class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
-            @click="handleMessageClick(message)"
-          >
-            <div class="tw-mb-2 tw-flex tw-justify-between">
-              <div class="tw-max-h-[22px] tw-flex tw-items-start tw-gap-2">
-                <div>
-                  QoS: <span class="tw-font-bold">{{ message.qos }}</span>
-                </div>
+        <q-splitter v-model="codeEditorSplitter" horizontal :limits="codeEditorLimits" unit="px">
+          <template v-slot:before>
+            <code-editor v-model="codeEditorData" ref="codeEditorRef" :language="publishDataType" />
+          </template>
 
-                <q-chip
-                  v-if="message.retained"
-                  size="sm"
-                  color="primary"
-                  text-color="white"
-                  label="Retained"
-                  class="tw-m-0"
+          <template v-slot:separator>
+            <splitter-icon @click:double="codeEditorSplitter = 200" />
+          </template>
+
+          <template v-slot:after>
+            <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
+              <div class="tw-flex">
+                <q-select
+                  v-model="qos"
+                  :options="[0, 1, 2]"
+                  filled
+                  dense
+                  label="QoS"
+                  class="tw-w-[96px]"
                 />
+                <q-toggle v-model="retain" label="Retain" />
               </div>
-              <q-btn
-                size="sm"
-                color="secondary"
-                flat
-                round
-                icon="fa-solid fa-right-left"
-                @click.stop="handleConvertToAction(message)"
-              >
-                <q-tooltip class="tw-bg-secondary tw-text-white">
-                  Convert into action button
-                </q-tooltip>
+              <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
+                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+                Publish
               </q-btn>
             </div>
-            <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
-              {{ message.message }}
+            <q-separator />
+            <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
+              <div class="tw-flex items-center tw-gap-2">
+                History
+                <q-chip size="sm" color="primary" text-color="white">
+                  {{ mqttTopicsStore.getSelectedPublishTopicMessages.length }} messages
+                </q-chip>
+              </div>
+              <q-pagination
+                v-if="settingsStore.messagesPagination"
+                v-model="current"
+                size="xs"
+                :max="Math.ceil(mqttTopicsStore.getSelectedPublishTopicMessages.length / 5)"
+                input
+              />
             </div>
-          </q-card>
-        </div>
+            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
+              <q-card
+                v-for="message in slicedMessages"
+                :key="message.uid"
+                flat
+                class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
+                @click="handleMessageClick(message)"
+              >
+                <div class="tw-mb-2 tw-flex tw-justify-between">
+                  <div class="tw-max-h-[22px] tw-flex tw-items-start tw-gap-2">
+                    <div>
+                      QoS: <span class="tw-font-bold">{{ message.qos }}</span>
+                    </div>
+
+                    <q-chip
+                      v-if="message.retained"
+                      size="sm"
+                      color="primary"
+                      text-color="white"
+                      label="Retained"
+                      class="tw-m-0"
+                    />
+                  </div>
+                  <q-btn
+                    size="sm"
+                    color="secondary"
+                    flat
+                    round
+                    icon="fa-solid fa-right-left"
+                    @click.stop="handleConvertToAction(message)"
+                  >
+                    <q-tooltip class="tw-bg-secondary tw-text-white">
+                      Convert into action button
+                    </q-tooltip>
+                  </q-btn>
+                </div>
+                <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
+                  {{ message.message }}
+                </div>
+              </q-card>
+            </div>
+          </template>
+        </q-splitter>
       </q-card>
     </q-expansion-item>
 
@@ -283,7 +310,7 @@ watch(
           hide-topic
           no-grab
           class="tw-bg-neutral-800"
-          @send="actionsStore.sendAction(mqttTopicsStore.selectedConnection, action, publishTopic)"
+          @send="handleSendAction(action)"
         />
       </q-card>
     </q-expansion-item>

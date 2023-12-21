@@ -83,7 +83,7 @@ watch(
 <style scoped lang="less">
 .monaco-editor {
   @apply tw-w-full tw-border-y;
-  min-height: 200px;
+  height: 100%;
 }
 
 .body--light {

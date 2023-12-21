@@ -65,6 +65,10 @@ const handleExpandConnection = (clientKey: string) => {
   mqttTopicsStore.setSelectedTopic(clientKey, '')
   selectedConnection.value = clientKey
 }
+
+const handleMessagePublished = (topic: string) => {
+  topicTabRecord.value[topic] = 'publish'
+}
 </script>
 
 <template>
@@ -78,7 +82,14 @@ const handleExpandConnection = (clientKey: string) => {
     <template #before>
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
         <div class="">
-          <q-input v-model="topicSearch" filled label="Search Topic..." dense square />
+          <q-input
+            v-model="topicSearch"
+            filled
+            label="Search Topic..."
+            dense
+            square
+            debounce="100"
+          />
         </div>
         <q-separator />
         <div class="tw-overflow-auto">
@@ -133,7 +144,13 @@ const handleExpandConnection = (clientKey: string) => {
         class="tw-relative tw-h-full tw-grid tw-overflow-hidden"
         style="grid-template-rows: 1fr auto auto"
       >
-        <q-tab-panels v-model="topicTab" animated keep-alive>
+        <q-tab-panels
+          v-model="topicTab"
+          animated
+          keep-alive
+          transition-prev="slide-down"
+          transition-next="slide-up"
+        >
           <q-tab-panel
             name="values"
             class="tw-p-0 tw-grid"
@@ -143,7 +160,7 @@ const handleExpandConnection = (clientKey: string) => {
           </q-tab-panel>
 
           <q-tab-panel name="publish" class="tw-p-0">
-            <tab-publish />
+            <tab-publish @click:publish="handleMessagePublished" />
           </q-tab-panel>
 
           <q-tab-panel name="stats" class="tw-flex tw-justify-center tw-items-center">
@@ -168,7 +185,7 @@ const handleExpandConnection = (clientKey: string) => {
             <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" />
             Publish
           </q-tab>
-          <q-tab name="stats">
+          <q-tab name="stats" v-if="false">
             <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" />
             Stats
           </q-tab>
