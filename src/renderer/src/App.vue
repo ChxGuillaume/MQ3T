@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ImportActionsGroups from './components/ImportActionsGroups.vue'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import ImportActions from './components/ImportActions.vue'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import UpdateAlerts from './components/UpdateAlerts.vue'
@@ -9,7 +10,6 @@ import TabConnections from './tabs/TabConnections.vue'
 import { useActionsStore } from './store/actions'
 import TabSettings from './tabs/TabSettings.vue'
 import { useAppStore } from './store/app-store'
-import { computed, onMounted, ref } from 'vue'
 import TabActions from './tabs/TabActions.vue'
 import TabTopics from './tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
@@ -29,6 +29,25 @@ const currentTab = computed({
 const $q = useQuasar()
 
 const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
+
+const handleKeyUp = (event: KeyboardEvent) => {
+  if (event.ctrlKey) {
+    switch (event.key) {
+      case '1':
+        currentTab.value = 'topics'
+        break
+      case '2':
+        currentTab.value = 'actions'
+        break
+      case '4':
+        currentTab.value = 'settings'
+        break
+      case '5':
+        currentTab.value = 'connections'
+        break
+    }
+  }
+}
 
 onMounted(() => {
   const storedTheme = localStorage.getItem('darkMode')
@@ -131,6 +150,12 @@ onMounted(() => {
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
   })
+
+  window.addEventListener('keyup', handleKeyUp)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keyup', handleKeyUp)
 })
 </script>
 

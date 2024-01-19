@@ -68,6 +68,7 @@ const handleExpandConnection = (clientKey: string) => {
 
 const handleMessagePublished = (topic: string) => {
   topicTabRecord.value[topic] = 'publish'
+  mqttTopicsStore.setSelectedTopic(mqttTopicsStore.selectedConnection, topic)
 }
 </script>
 
