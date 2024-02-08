@@ -6,8 +6,10 @@ export class MqttClient {
   private client: mqtt.MqttClient
 
   constructor(connection: MqttConnection) {
-    const connectionOptions = {
-      clientId: connection.clientId
+    const connectionOptions: mqtt.IClientOptions = {
+      clientId: connection.clientId,
+      password: connection.password,
+      username: connection.username
     }
 
     this.client = mqtt.connect(
