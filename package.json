@@ -24,7 +24,8 @@
     "package:win:publish": "electron-builder --win --publish always --config",
     "package:mac:publish": "electron-builder --mac --publish always --config",
     "package:linux:publish": "electron-builder --linux --publish always --config",
-    "package:all:publish": "electron-builder -wlm --publish always --config"
+    "package:all:publish": "electron-builder -wlm --publish always --config",
+    "clear:linux:electron:cache:mac": "rm ~/Library/Caches/electron/*linux*"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
