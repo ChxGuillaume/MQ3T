@@ -31,6 +31,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     subTopicsTopicsCount: {} as Record<string, Record<string, number>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
     topicsStructure: {} as Record<string, MqttTopicStructure>,
+    topicGroupOpened: {} as Record<string, Record<string, boolean>>,
     selectedConnection: '',
     selectedTopic: '',
     topicsPublishMessages: {} as Record<string, Record<string, MqttMessage[]>>,
@@ -83,6 +84,35 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       },
     getSelectedTopicLastMessage(): MqttMessage | undefined {
       return this.topicsLastMessage[this.selectedConnection]?.[this.selectedTopic]
+    },
+    getTopicGroupOpened: (state) => (clientKey: string, topic: string) => {
+      return state.topicGroupOpened[clientKey]?.[topic] || false
+    },
+    getAllTopicList: (state) => (clientKey: string) => {
+      const topic = Object.assign({}, state.topicsMessages[clientKey])
+
+      // for each topic, add the subtopics
+      // example, if we have a topic like "a/b/c", we need to add "a" and "a/b" to the list
+      for (const topicKey in topic) {
+        const topicParts = topicKey.split('/')
+
+        let currentTopicPath = ''
+
+        for (const topicPart of topicParts) {
+          currentTopicPath += `${topicPart}`
+
+          if (!topic[currentTopicPath]) topic[currentTopicPath] = []
+
+          currentTopicPath += `/`
+        }
+      }
+
+      return Object.keys(topic)
+    },
+    topicHasSubTopics: (state) => (clientKey: string, topic: string) => {
+      return Object.keys(state.topicsMessages[clientKey] || {}).some((subTopic) => {
+        return subTopic.startsWith(topic + '/')
+      })
     },
     getFilteredTopicsList: (state) => (clientKey: string) => {
       return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
@@ -267,6 +297,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     setTopicSearch(topicSearch: string) {
       this.topicSearch = topicSearch
+    },
+    setTopicGroupOpened(clientKey: string, topic: string, opened: boolean) {
+      if (!this.topicGroupOpened[clientKey]) this.topicGroupOpened[clientKey] = {}
+
+      this.topicGroupOpened[clientKey][topic] = opened
     }
   }
 })

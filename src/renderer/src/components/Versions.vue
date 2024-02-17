@@ -1,46 +1,73 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
-const versions = reactive({ ...window.electron.process.versions })
+type Versions = {
+  node: string
+  acorn: string
+  ada: string
+  ares: string
+  brotli: string
+  cldr: string
+  icu: string
+  llhttp: string
+  modules: string
+  napi: string
+  nghttp2: string
+  openssl: string
+  simdutf: string
+  tz: string
+  undici: string
+  unicode: string
+  uv: string
+  uvwasi: string
+  v8: string
+  zlib: string
+  electron: string
+  chrome: string
+}
+
+const versions = reactive({ ...window.electron.process.versions } as Versions)
 </script>
 
 <template>
-  <ul class="versions">
-    <li class="electron-version">Electron v{{ versions.electron }}</li>
-    <li class="chrome-version">Chromium v{{ versions.chrome }}</li>
-    <li class="node-version">Node v{{ versions.node }}</li>
-    <li class="v8-version">V8 v{{ versions.v8 }}</li>
-  </ul>
+  <q-list class="versions">
+    <q-item class="tw-flex tw-items-center">
+      <q-icon name="fa-solid fa-atom" size="md" left color="indigo-8" />
+      <q-item-section>
+        <span>Electron</span>
+        <span class="version-color">v{{ versions.electron }}</span>
+      </q-item-section>
+    </q-item>
+    <q-item class="tw-flex tw-items-center">
+      <q-icon name="fa-brands fa-chrome" size="md" left color="blue-7" />
+      <q-item-section>
+        <span>Chromium</span>
+        <span class="version-color">v{{ versions.chrome }}</span>
+      </q-item-section>
+    </q-item>
+    <q-item class="tw-flex tw-items-center">
+      <q-icon name="fa-brands fa-node-js" size="md" left color="green" />
+      <q-item-section>
+        <span>Node</span>
+        <span class="version-color">v{{ versions.node }}</span>
+      </q-item-section>
+    </q-item>
+    <q-item class="tw-flex tw-items-center">
+      <q-icon name="fa-brands fa-js" size="md" left color="yellow" />
+      <q-item-section>
+        <span>V8 Engine</span>
+        <span class="version-color">v{{ versions.v8 }}</span>
+      </q-item-section>
+    </q-item>
+  </q-list>
 </template>
 
 <style scoped lang="less">
-@media (max-width: 840px) {
-  .versions {
-    display: none;
-  }
+.body--dark .version-color {
+  @apply tw-text-neutral-500;
 }
 
-.versions {
-  margin: 0 auto;
-  float: none;
-  clear: both;
-  overflow: hidden;
-  font-family: 'Menlo', 'Lucida Console', monospace;
-  color: #c2f5ff;
-  line-height: 1;
-  transition: all 0.3s;
-
-  li {
-    display: block;
-    float: left;
-    border-right: 1px solid rgba(194, 245, 255, 0.4);
-    padding: 0 20px;
-    font-size: 13px;
-    opacity: 0.8;
-
-    &:last-child {
-      border: none;
-    }
-  }
+.body--light .version-color {
+  @apply tw-text-neutral-400;
 }
 </style>

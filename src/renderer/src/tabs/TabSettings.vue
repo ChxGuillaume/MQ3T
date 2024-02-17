@@ -5,6 +5,7 @@ import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import moment from 'moment'
+import Versions from '../components/Versions.vue'
 
 const $q = useQuasar()
 const settingsStore = useSettingsStore()
@@ -140,6 +141,25 @@ const autoOpenPublishActionsSetting = computed({
   get: () => settingsStore.autoOpenPublishActions,
   set: (val) => settingsStore.setAutoOpenPublishActions(val)
 })
+
+const showVersionModal = ref(false)
+const versionClickCount = ref(0)
+const versionClickTimeout = ref()
+
+const handleVersionClick = () => {
+  clearTimeout(versionClickTimeout.value)
+
+  versionClickCount.value++
+
+  if (versionClickCount.value === 5) {
+    showVersionModal.value = true
+    versionClickCount.value = 0
+  }
+
+  versionClickTimeout.value = setTimeout(() => {
+    versionClickCount.value = 0
+  }, 1000)
+}
 </script>
 
 <template>
@@ -269,9 +289,17 @@ const autoOpenPublishActionsSetting = computed({
       </q-card>
     </div>
 
-    <div class="tw-fixed tw-bottom-2 tw-right-2 color-details">
+    <div
+      class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer tw-select-none"
+      @click="handleVersionClick"
+    >
       Version {{ appStore.appVersion }}
     </div>
+    <q-dialog v-model="showVersionModal">
+      <q-card flat>
+        <versions />
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 

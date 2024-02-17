@@ -10,7 +10,7 @@ import TabValues from '../components/tap-topics/TabValues.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
@@ -18,7 +18,6 @@ const settingsStore = useSettingsStore()
 
 const splitterModel = ref(400)
 
-const showTopics = ref(false)
 const expandConnection = ref<{ [key: string]: boolean }>({})
 const selectedConnection = ref('')
 
@@ -32,11 +31,6 @@ const topicTab = computed({
 const handleTopicClick = (clientKey: string, topic: string) => {
   handleSelectTopic(clientKey, topic)
 }
-onMounted(() => {
-  setTimeout(() => {
-    showTopics.value = true
-  }, 100)
-})
 
 const handleSelectTopic = (clientKey: string, topic: string) => {
   if (topic === mqttTopicsStore.selectedTopic) return
@@ -70,6 +64,48 @@ const handleMessagePublished = (topic: string) => {
   topicTabRecord.value[topic] = 'publish'
   mqttTopicsStore.setSelectedTopic(mqttTopicsStore.selectedConnection, topic)
 }
+
+const allTopics = computed(() =>
+  mqttTopicsStore.getAllTopicList(mqttTopicsStore.selectedConnection).sort()
+)
+
+const handleUpKey = () => {
+  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
+
+  // TODO: find a way to skip topic that are not visible
+
+  if (selectedTopicIndex > 0) {
+    handleSelectTopic(mqttTopicsStore.selectedConnection, allTopics.value[selectedTopicIndex - 1])
+  }
+}
+
+const handleDownKey = () => {
+  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
+
+  // TODO: find a way to skip topic that are not visible
+
+  if (selectedTopicIndex < allTopics.value.length - 1) {
+    handleSelectTopic(mqttTopicsStore.selectedConnection, allTopics.value[selectedTopicIndex + 1])
+  }
+}
+
+const handleLeftKey = () => {
+  const clientKey = mqttTopicsStore.selectedConnection
+  const topic = mqttTopicsStore.selectedTopic
+
+  const isGroup = mqttTopicsStore.topicHasSubTopics(clientKey, topic)
+
+  if (isGroup) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, false)
+}
+
+const handleRightKey = () => {
+  const clientKey = mqttTopicsStore.selectedConnection
+  const topic = mqttTopicsStore.selectedTopic
+
+  const isGroup = mqttTopicsStore.topicHasSubTopics(clientKey, topic)
+
+  if (isGroup) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
+}
 </script>
 
 <template>
@@ -93,7 +129,13 @@ const handleMessagePublished = (topic: string) => {
           />
         </div>
         <q-separator />
-        <div class="tw-overflow-auto">
+        <div
+          class="tw-overflow-auto"
+          @keydown.up.prevent="handleUpKey"
+          @keydown.down.prevent="handleDownKey"
+          @keydown.left.prevent="handleLeftKey"
+          @keydown.right.prevent="handleRightKey"
+        >
           <q-virtual-scroll
             v-slot="{ item: [_, value] }"
             class="tw-h-full tw-max-h-full"

@@ -22,7 +22,10 @@ const props = defineProps<{
   topicIndex: number
 }>()
 
-const expandedTopicsSection = ref(props.topicIndex === 0)
+const expandedTopicsSection = computed({
+  get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.topicPath),
+  set: (value) => mqttTopicsStore.setTopicGroupOpened(props.clientKey, props.topicPath, value)
+})
 
 const emits = defineEmits(['topic:click'])
 
