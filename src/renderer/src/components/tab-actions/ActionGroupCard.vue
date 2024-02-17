@@ -109,16 +109,18 @@ const handleDragEnd = (event: DragEvent) => {
 </template>
 
 <style scoped lang="less">
-.group-card.active {
-  @apply tw-bg-primary/70 tw-text-white;
-}
+.body--dark {
+  .group-card {
+    @apply tw-bg-neutral-800;
+  }
 
-.group-card.drop-zone {
-  @apply tw-bg-secondary;
-}
+  .group-card.active {
+    @apply tw-bg-primary/70 tw-text-white;
+  }
 
-.group-card.drop-zone .description {
-  @apply tw-text-neutral-100;
+  .group-card.active .color-details {
+    @apply tw-text-neutral-200;
+  }
 }
 
 .body--light {
@@ -132,5 +134,13 @@ const handleDragEnd = (event: DragEvent) => {
   .group-card.active .color-details {
     @apply tw-text-neutral-200;
   }
+}
+
+.group-card.drop-zone {
+  @apply tw-bg-secondary;
+}
+
+.group-card.drop-zone .description {
+  @apply tw-text-neutral-100;
 }
 </style>

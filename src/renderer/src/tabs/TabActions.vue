@@ -352,7 +352,12 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
     </template>
 
     <template #after>
-      <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto auto auto 1fr auto auto">
+      <q-card
+        class="tw-h-full tw-grid"
+        style="grid-template-rows: auto auto auto auto 1fr auto auto"
+        square
+        flat
+      >
         <connection-select
           v-model="selectedConnection"
           no-rules
@@ -456,7 +461,7 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
             Export
           </q-btn>
         </div>
-      </div>
+      </q-card>
     </template>
   </q-splitter>
   <action-dialog

@@ -186,6 +186,8 @@ const handleRightKey = () => {
       <q-card
         class="tw-relative tw-h-full tw-grid tw-overflow-hidden"
         style="grid-template-rows: 1fr auto auto"
+        square
+        flat
       >
         <q-tab-panels
           v-model="topicTab"
