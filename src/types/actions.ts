@@ -1,3 +1,6 @@
+type ConnectionId = string
+type GroupId = string
+
 export type Action = {
   id: string
   groupId: string | 'default'
@@ -11,18 +14,18 @@ export type Action = {
 }
 
 export type ActionGroup = {
-  id: string
+  id: GroupId
   name: string
   description?: string
 }
 
-export type ConnectionsActions = Record<string, Record<string, Action[]>>
-export type ConnectionsActionsGroups = Record<string, ActionGroup[]>
+export type ConnectionsActions = Record<ConnectionId, Record<GroupId, Action[]>>
+export type ConnectionsActionsGroups = Record<ConnectionId, ActionGroup[]>
 
 export type ConnectionsActionsFileV1 = { type: 'v1'; actions: Record<string, Action[]> }
 export type ConnectionsActionsFileV2 = {
   type: 'v2'
-  actions: Record<string, Record<string, Action[]>>
+  actions: Record<ConnectionId, Record<GroupId, Action[]>>
 }
 
 export type ConnectionsActionsFile = ConnectionsActionsFileV1 | ConnectionsActionsFileV2

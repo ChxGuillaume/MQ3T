@@ -47,7 +47,7 @@ const handleCreate = async () => {
   if (!(await validateForm())) return
 
   emits('create:actionGroup', {
-    id: `action-group-${uuidV4()}`,
+    id: `group-${uuidV4()}`,
     name: form.name,
     description: form.description
   })

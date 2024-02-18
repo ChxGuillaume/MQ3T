@@ -14,6 +14,7 @@ import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsStore } from '../store/actions'
 import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
+import { v4 as uuidV4 } from 'uuid'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsStore = useActionsStore()
@@ -119,7 +120,7 @@ const handleGroupExport = (groupId: string) => {
   let group: ActionGroup | undefined
 
   if (groupId === 'default') {
-    group = { id: 'default', name: 'Exported Default' }
+    group = { id: `group-${uuidV4()}`, name: 'Exported Default' }
   } else {
     group = actionsStore.getConnectionGroup(actionsStore.selectedConnection, groupId)
   }
@@ -145,10 +146,10 @@ const handleGroupExport = (groupId: string) => {
 
 const handleConnectionExport = () => {
   const allActions = actionsStore.selectedConnectionGroupActionsRecord
-  const allGroups = actionsStore.selectedConnectionGroups
+  const allGroups = [...actionsStore.selectedConnectionGroups]
 
   if (allActions['default']?.length) {
-    allGroups.push({ id: 'default', name: 'Exported Default' })
+    allGroups.push({ id: `group-${uuidV4()}`, name: 'Exported Default' })
   }
 
   const data = {
