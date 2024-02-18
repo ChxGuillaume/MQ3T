@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useSettingsStore } from '../../store/settings-store'
+import { useAppStore } from '../../store/app-store'
 import { computed, ref } from 'vue'
 
 const settingsStore = useSettingsStore()
+const appStore = useAppStore()
 
 export interface ITopicCard {
   animate: () => void
@@ -78,9 +80,10 @@ defineExpose({ animate })
     :class="[
       { active },
       { opened },
+      { animate: doAnimate },
       { 'tw-pl-1': expandable },
       { 'tw-pl-3': !expandable },
-      { animate: doAnimate },
+      { 'not-scrubbing': !appStore.isScrubbingTopics },
       `animation-${settingsStore.showActivityAnimationType}`
     ]"
     @click.stop="$emit('open:toggle')"
@@ -103,7 +106,11 @@ defineExpose({ animate })
 }
 
 .topic-item-card {
-  @apply tw-py-1 tw-line-clamp-1 tw-break-all tw-cursor-pointer tw-transition-colors tw-text-neutral-500;
+  @apply tw-py-1 tw-line-clamp-1 tw-break-all tw-cursor-pointer tw-text-neutral-500;
+}
+
+.topic-item-card.not-scrubbing {
+  @apply tw-transition-colors;
 }
 
 @keyframes slideIn {

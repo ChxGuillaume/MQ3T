@@ -10,14 +10,20 @@ import TabValues from '../components/tap-topics/TabValues.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
+import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
+import { scroll } from 'quasar'
+
+const { setVerticalScrollPosition } = scroll
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
+const appStore = useAppStore()
 
 const splitterModel = ref(400)
 
+const scrubbingTimeout = ref<NodeJS.Timeout | undefined>(undefined)
 const expandConnection = ref<{ [key: string]: boolean }>({})
 const selectedConnection = ref('')
 
@@ -65,28 +71,124 @@ const handleMessagePublished = (topic: string) => {
   mqttTopicsStore.setSelectedTopic(mqttTopicsStore.selectedConnection, topic)
 }
 
-const allTopics = computed(() =>
-  mqttTopicsStore.getAllTopicList(mqttTopicsStore.selectedConnection).sort()
-)
+const allTopics = computed(() => {
+  return mqttTopicsStore.getAllTopicList(mqttTopicsStore.selectedConnection).sort((a, b) => {
+    const aParts = a.split('/')
+    const bParts = b.split('/')
 
-const handleUpKey = () => {
-  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
+    const length = Math.max(aParts.length, bParts.length)
 
-  // TODO: find a way to skip topic that are not visible
+    for (let i = 0; i < length; i++) {
+      const aPart = aParts[i] || ''
+      const bPart = bParts[i] || ''
 
-  if (selectedTopicIndex > 0) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, allTopics.value[selectedTopicIndex - 1])
-  }
+      if (aPart === bPart) continue
+
+      const aIsNumber = !isNaN(Number(aPart))
+      const bIsNumber = !isNaN(Number(bPart))
+
+      if (aIsNumber && bIsNumber) {
+        return Number(aPart) - Number(bPart)
+      } else if (aIsNumber) {
+        return -1
+      } else if (bIsNumber) {
+        return 1
+      } else {
+        return aPart.localeCompare(bPart)
+      }
+    }
+
+    return 0
+  })
+})
+
+const topicToSelect = (index: number, direction: 'up' | 'down'): string | null => {
+  const nextIndex = direction === 'up' ? index - 1 : index + 1
+  const topic = allTopics.value[nextIndex]
+
+  if (!topic) return null
+
+  // split the topic into parts, if all the parts are opened then return the topic else call the function again
+  const parts = topic.split('/').slice(0, -1)
+
+  const isNotOpened = parts.find((_, index) => {
+    return !mqttTopicsStore.getTopicGroupOpened(
+      mqttTopicsStore.selectedConnection,
+      parts.slice(0, index + 1).join('/')
+    )
+  })
+
+  if (!isNotOpened) return topic
+  return topicToSelect(nextIndex, direction)
 }
 
-const handleDownKey = () => {
+const handleUpKeyDown = () => {
   const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
+  const nextTopic = topicToSelect(selectedTopicIndex, 'up')
 
-  // TODO: find a way to skip topic that are not visible
-
-  if (selectedTopicIndex < allTopics.value.length - 1) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, allTopics.value[selectedTopicIndex + 1])
+  if (nextTopic) {
+    handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
   }
+
+  const virtualScroll = document.getElementById('topicsVirtualScroll')
+  const element = document.getElementById(`topic-item-${nextTopic}`)
+
+  if (virtualScroll && element) {
+    if (element.offsetTop < virtualScroll.scrollTop) {
+      setVerticalScrollPosition(virtualScroll, element.offsetTop)
+    } else if (element.offsetTop > virtualScroll.scrollTop + virtualScroll.clientHeight) {
+      setVerticalScrollPosition(
+        virtualScroll,
+        element.offsetTop - virtualScroll.clientHeight + element.offsetHeight
+      )
+    }
+  }
+
+  scrubbingTimeout.value = setTimeout(() => {
+    appStore.setIsScrubbingTopics(true)
+  }, 100)
+}
+
+const handleUpKeyUp = () => {
+  clearTimeout(scrubbingTimeout.value)
+
+  appStore.setIsScrubbingTopics(false)
+}
+
+const handleDownKeyDown = () => {
+  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
+  const nextTopic = topicToSelect(selectedTopicIndex, 'down')
+
+  if (nextTopic) {
+    handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
+  }
+
+  const virtualScroll = document.getElementById('topicsVirtualScroll')
+  const element = document.getElementById(`topic-item-${nextTopic}`)
+
+  if (virtualScroll && element) {
+    if (
+      element.offsetTop + element.offsetHeight >
+      virtualScroll.scrollTop + virtualScroll.clientHeight
+    ) {
+      setVerticalScrollPosition(
+        virtualScroll,
+        element.offsetTop + element.offsetHeight - virtualScroll.clientHeight
+      )
+    } else if (element.offsetTop < virtualScroll.scrollTop) {
+      setVerticalScrollPosition(virtualScroll, element.offsetTop)
+    }
+  }
+
+  scrubbingTimeout.value = setTimeout(() => {
+    appStore.setIsScrubbingTopics(true)
+  }, 100)
+}
+
+const handleDownKeyUp = () => {
+  clearTimeout(scrubbingTimeout.value)
+
+  appStore.setIsScrubbingTopics(false)
 }
 
 const handleLeftKey = () => {
@@ -94,8 +196,14 @@ const handleLeftKey = () => {
   const topic = mqttTopicsStore.selectedTopic
 
   const isGroup = mqttTopicsStore.topicHasSubTopics(clientKey, topic)
+  const isOpened = mqttTopicsStore.getTopicGroupOpened(clientKey, topic)
 
-  if (isGroup) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, false)
+  if (isGroup && isOpened) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, false)
+  else {
+    const previousTopic = topic.split('/').slice(0, -1).join('/')
+
+    if (previousTopic) mqttTopicsStore.setSelectedTopic(clientKey, previousTopic)
+  }
 }
 
 const handleRightKey = () => {
@@ -103,8 +211,14 @@ const handleRightKey = () => {
   const topic = mqttTopicsStore.selectedTopic
 
   const isGroup = mqttTopicsStore.topicHasSubTopics(clientKey, topic)
+  const isOpened = mqttTopicsStore.getTopicGroupOpened(clientKey, topic)
 
-  if (isGroup) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
+  if (isGroup && !isOpened) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
+  else if (isGroup) {
+    const nextTopic = topicToSelect(allTopics.value.indexOf(topic), 'down')
+
+    if (nextTopic) mqttTopicsStore.setSelectedTopic(clientKey, nextTopic)
+  }
 }
 </script>
 
@@ -131,12 +245,15 @@ const handleRightKey = () => {
         <q-separator />
         <div
           class="tw-overflow-auto"
-          @keydown.up.prevent="handleUpKey"
-          @keydown.down.prevent="handleDownKey"
+          @keyup.up.prevent="handleUpKeyUp"
+          @keydown.up.prevent="handleUpKeyDown"
+          @keyup.down.prevent="handleDownKeyUp"
+          @keydown.down.prevent="handleDownKeyDown"
           @keydown.left.prevent="handleLeftKey"
           @keydown.right.prevent="handleRightKey"
         >
           <q-virtual-scroll
+            id="topicsVirtualScroll"
             v-slot="{ item: [_, value] }"
             class="tw-h-full tw-max-h-full"
             :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"

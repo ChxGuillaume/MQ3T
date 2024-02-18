@@ -129,7 +129,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="!isLastTopicPart">
+  <div v-if="!isLastTopicPart" :id="`topic-item-${topicPath}`">
     <div class="tw-flex">
       <q-intersection class="tw-h-[29px]">
         <topic-card
@@ -174,7 +174,7 @@ watch(
       />
     </template>
   </div>
-  <div v-else class="tw-flex">
+  <div v-else class="tw-flex" :id="`topic-item-${topicPath}`">
     <q-intersection class="tw-h-[29px]">
       <topic-card
         ref="topicCardRef"

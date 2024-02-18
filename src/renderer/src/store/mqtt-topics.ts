@@ -302,6 +302,12 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       if (!this.topicGroupOpened[clientKey]) this.topicGroupOpened[clientKey] = {}
 
       this.topicGroupOpened[clientKey][topic] = opened
+
+      if (!opened) {
+        Object.keys(this.topicGroupOpened[clientKey])
+          .filter((subTopic) => subTopic.startsWith(topic + '/'))
+          .forEach((subTopic) => (this.topicGroupOpened[clientKey][subTopic] = false))
+      }
     }
   }
 })

@@ -4,7 +4,8 @@ export const useAppStore = defineStore('app', {
   state: () => ({
     workingOnUpdate: false,
     currentTab: 'connections',
-    appVersion: ''
+    appVersion: '',
+    isScrubbingTopics: false
   }),
   actions: {
     setWorkingOnUpdate(working: boolean) {
@@ -15,6 +16,9 @@ export const useAppStore = defineStore('app', {
     },
     setAppVersion(version: string) {
       this.appVersion = version
+    },
+    setIsScrubbingTopics(scrubbing: boolean) {
+      this.isScrubbingTopics = scrubbing
     }
   }
 })
