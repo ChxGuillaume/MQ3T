@@ -2,7 +2,7 @@
   "name": "mq3t",
   "version": "1.4.8",
   "description": "MQTT Tools - A simple MQTT client for your development needs",
-  "license": "GPL-2.0",
+  "license": "GPL-3.0-only",
   "main": "./out/main/index.js",
   "author": "Guillaume Chx",
   "homepage": "https://mq3t.guillaumechx.dev/",
@@ -25,7 +25,8 @@
     "package:mac:publish": "electron-builder --mac --publish always --config",
     "package:linux:publish": "electron-builder --linux --publish always --config",
     "package:all:publish": "electron-builder -wlm --publish always --config",
-    "clear:linux:electron:cache:mac": "rm ~/Library/Caches/electron/*linux*"
+    "clear:linux:electron:cache:mac": "rm ~/Library/Caches/electron/*linux*",
+    "dependencies:license": "npx -y license-checker --production --json --out resources/licenses.json"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
