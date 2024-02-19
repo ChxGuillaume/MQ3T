@@ -71,6 +71,6 @@ npm run build:linux
 ```
 
 # License
-![https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green](https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green)
+[![https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green](https://img.shields.io/github/license/ChxGuillaume/MQ3T?color=green)](https://www.tldrlegal.com/license/gnu-general-public-license-v3-gpl-3)
 
-[GPL-2.0 License](LICENSE)
+[GPL-3.0 License](LICENSE)
