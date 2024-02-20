@@ -108,7 +108,7 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
 
   if (!topic) return null
 
-  // split the topic into parts, if all the parts are opened then return the topic else call the function again
+  // split the topic into parts, if all the parts are opened, then return the topic else call the function again
   const parts = topic.split('/').slice(0, -1)
 
   const isNotOpened = parts.find((_, index) => {
@@ -124,24 +124,11 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
 
 const handleUpKeyDown = () => {
   const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
-  const nextTopic = topicToSelect(selectedTopicIndex, 'up')
+  const previousTopic = topicToSelect(selectedTopicIndex, 'up')
 
-  if (nextTopic) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
-  }
-
-  const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${nextTopic}`)
-
-  if (virtualScroll && element) {
-    if (element.offsetTop < virtualScroll.scrollTop) {
-      setVerticalScrollPosition(virtualScroll, element.offsetTop)
-    } else if (element.offsetTop > virtualScroll.scrollTop + virtualScroll.clientHeight) {
-      setVerticalScrollPosition(
-        virtualScroll,
-        element.offsetTop - virtualScroll.clientHeight + element.offsetHeight
-      )
-    }
+  if (previousTopic) {
+    handleSelectTopic(mqttTopicsStore.selectedConnection, previousTopic)
+    handleScrollPreviousTopic(previousTopic)
   }
 
   scrubbingTimeout.value = setTimeout(() => {
@@ -161,23 +148,7 @@ const handleDownKeyDown = () => {
 
   if (nextTopic) {
     handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
-  }
-
-  const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${nextTopic}`)
-
-  if (virtualScroll && element) {
-    if (
-      element.offsetTop + element.offsetHeight >
-      virtualScroll.scrollTop + virtualScroll.clientHeight
-    ) {
-      setVerticalScrollPosition(
-        virtualScroll,
-        element.offsetTop + element.offsetHeight - virtualScroll.clientHeight
-      )
-    } else if (element.offsetTop < virtualScroll.scrollTop) {
-      setVerticalScrollPosition(virtualScroll, element.offsetTop)
-    }
+    handleScrollNextTopic(nextTopic)
   }
 
   scrubbingTimeout.value = setTimeout(() => {
@@ -202,7 +173,10 @@ const handleLeftKey = () => {
   else {
     const previousTopic = topic.split('/').slice(0, -1).join('/')
 
-    if (previousTopic) mqttTopicsStore.setSelectedTopic(clientKey, previousTopic)
+    if (previousTopic) {
+      handleSelectTopic(clientKey, previousTopic)
+      handleScrollPreviousTopic(previousTopic)
+    }
   }
 }
 
@@ -214,10 +188,48 @@ const handleRightKey = () => {
   const isOpened = mqttTopicsStore.getTopicGroupOpened(clientKey, topic)
 
   if (isGroup && !isOpened) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
-  else if (isGroup) {
+  else {
     const nextTopic = topicToSelect(allTopics.value.indexOf(topic), 'down')
 
-    if (nextTopic) mqttTopicsStore.setSelectedTopic(clientKey, nextTopic)
+    if (nextTopic) {
+      handleSelectTopic(clientKey, nextTopic)
+      handleScrollNextTopic(nextTopic)
+    }
+  }
+}
+
+const handleScrollPreviousTopic = (previousTopic: string) => {
+  const virtualScroll = document.getElementById('topicsVirtualScroll')
+  const element = document.getElementById(`topic-item-${previousTopic}`)
+
+  if (virtualScroll && element) {
+    if (element.offsetTop < virtualScroll.scrollTop) {
+      setVerticalScrollPosition(virtualScroll, element.offsetTop)
+    } else if (element.offsetTop > virtualScroll.scrollTop + virtualScroll.clientHeight) {
+      setVerticalScrollPosition(
+        virtualScroll,
+        element.offsetTop - virtualScroll.clientHeight + element.offsetHeight
+      )
+    }
+  }
+}
+
+const handleScrollNextTopic = (nextTopic: string) => {
+  const virtualScroll = document.getElementById('topicsVirtualScroll')
+  const element = document.getElementById(`topic-item-${nextTopic}`)
+
+  if (virtualScroll && element) {
+    if (
+      element.offsetTop + element.offsetHeight >
+      virtualScroll.scrollTop + virtualScroll.clientHeight
+    ) {
+      setVerticalScrollPosition(
+        virtualScroll,
+        element.offsetTop + element.offsetHeight - virtualScroll.clientHeight
+      )
+    } else if (element.offsetTop < virtualScroll.scrollTop) {
+      setVerticalScrollPosition(virtualScroll, element.offsetTop)
+    }
   }
 }
 </script>
