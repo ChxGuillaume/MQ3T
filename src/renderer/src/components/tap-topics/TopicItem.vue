@@ -140,7 +140,9 @@ watch(
           :style="{ 'margin-left': `${topicIndex * 20}px` }"
           @open:toggle="handleTopicClick"
         >
-          <span class="topic-item-key">{{ topicKey }}</span>
+          <span class="topic-item-key" :class="{ empty: !topicKey }">
+            {{ topicKey ? topicKey : '<\empty>' }}
+          </span>
           <span
             v-if="!expandedTopicsSection"
             class="tw-ml-1 tw-text-xs"
@@ -182,7 +184,9 @@ watch(
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
         @open:toggle="handleTopicClick"
       >
-        <span class="topic-item-key">{{ topicKey }}</span>
+        <span class="topic-item-key" :class="{ empty: !topicKey }">
+          {{ topicKey ? topicKey : '<\empty>' }}
+        </span>
         <span class="tw-ml-1 tw-text-xs" v-text="`= ${topicLastMessage?.message}`" />
         <topic-item-menu
           :hide-copy-last-message="!topicLastMessage?.message"
@@ -200,11 +204,19 @@ watch(
   .topic-item-key {
     @apply tw-text-black;
   }
+
+  .topic-item-key.empty {
+    @apply tw-text-neutral-300;
+  }
 }
 
 .body--dark {
   .topic-item-key {
     @apply tw-text-white;
+  }
+
+  .topic-item-key.empty {
+    @apply tw-text-neutral-500;
   }
 }
 </style>

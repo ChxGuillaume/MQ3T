@@ -21,7 +21,7 @@ const codePreviewLimits = ref([100, 400])
 const selectedMessage = ref<MqttMessage>()
 
 const breadcrumbs = computed(() => {
-  return mqttTopicsStore.selectedTopic.split('/').filter((t) => t !== '')
+  return mqttTopicsStore.selectedTopic.split('/')
 })
 
 const selectedTopicLastMessage = computed(() => {
@@ -88,11 +88,11 @@ watch(
           <q-chip
             size="sm"
             color="primary"
-            text-color="white"
+            :text-color="topicPart ? 'white' : 'grey-6'"
             square
             ripple
             clickable
-            :label="topicPart"
+            :label="topicPart ? topicPart : '<\empty>'"
             @click="handleBreadcrumbClick(index)"
           />
         </q-breadcrumbs-el>
