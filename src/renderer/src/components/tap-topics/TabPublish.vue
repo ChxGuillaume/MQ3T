@@ -165,12 +165,17 @@ watch(
       @show="togglePublishType('manual')"
       @hide="togglePublishType('action')"
       group="publish_type"
-      label="Manual Publish"
       default-opened
       dense
       class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
       header-class="tw-text-secondary"
     >
+      <template v-slot:header>
+        <q-item-section class="tw-flex tw-flex-row tw-justify-start tw-items-center tw-gap-6">
+          <q-icon name="fa-solid fa-pen" size="xs" />
+          <span>Manual Publish</span>
+        </q-item-section>
+      </template>
       <q-card class="tw-min-h-[calc(100vh-154px)]">
         <div class="tw-flex tw-flex-col">
           <q-separator />
@@ -295,11 +300,16 @@ watch(
       @show="togglePublishType('action')"
       @hide="togglePublishType('manual')"
       group="publish_type"
-      label="Actions"
       dense
       class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
       header-class="tw-text-secondary"
     >
+      <template v-slot:header>
+        <q-item-section class="tw-flex tw-flex-row tw-justify-start tw-items-center tw-gap-6">
+          <q-icon name="fa-solid fa-play" size="xs" />
+          <span>Actions</span>
+        </q-item-section>
+      </template>
       <q-separator />
       <q-card class="tw-p-2 tw-grid tw-gap-2">
         <action-card
