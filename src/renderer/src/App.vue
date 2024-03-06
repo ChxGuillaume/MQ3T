@@ -209,7 +209,7 @@ onUnmounted(() => {
         <q-tab-panel name="settings">
           <TabSettings />
         </q-tab-panel>
-        <q-tab-panel name="connections">
+        <q-tab-panel class="tw-p-0" name="connections">
           <TabConnections />
         </q-tab-panel>
       </q-tab-panels>

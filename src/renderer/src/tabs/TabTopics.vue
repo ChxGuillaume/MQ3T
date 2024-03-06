@@ -79,6 +79,10 @@ const allTopics = computed(() => {
     const length = Math.max(aParts.length, bParts.length)
 
     for (let i = 0; i < length; i++) {
+      if (aParts[i] === undefined && bParts[i] === undefined) return 0
+      else if (aParts[i] === undefined) return -1
+      else if (bParts[i] === undefined) return 1
+
       const aPart = aParts[i] || ''
       const bPart = bParts[i] || ''
 
@@ -87,15 +91,10 @@ const allTopics = computed(() => {
       const aIsNumber = !isNaN(Number(aPart))
       const bIsNumber = !isNaN(Number(bPart))
 
-      if (aIsNumber && bIsNumber) {
-        return Number(aPart) - Number(bPart)
-      } else if (aIsNumber) {
-        return -1
-      } else if (bIsNumber) {
-        return 1
-      } else {
-        return aPart.localeCompare(bPart)
-      }
+      if (aIsNumber && bIsNumber) return Number(aPart) - Number(bPart)
+      else if (aIsNumber) return -1
+      else if (bIsNumber) return 1
+      else return aPart.localeCompare(bPart)
     }
 
     return 0
@@ -108,7 +107,6 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
 
   if (!topic) return null
 
-  // split the topic into parts, if all the parts are opened, then return the topic else call the function again
   const parts = topic.split('/').slice(0, -1)
 
   const isNotOpened = parts.find((_, index) => {
@@ -118,7 +116,7 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
     )
   })
 
-  if (!isNotOpened) return topic
+  if (typeof isNotOpened !== 'string') return topic
   return topicToSelect(nextIndex, direction)
 }
 

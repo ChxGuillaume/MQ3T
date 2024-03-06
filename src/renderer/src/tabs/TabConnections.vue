@@ -93,4 +93,8 @@ const dragOptions = computed(() => {
   />
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.connections {
+  @apply tw-p-4;
+}
+</style>
