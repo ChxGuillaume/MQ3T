@@ -17,7 +17,9 @@ const connectionStatus = computed(() => {
 })
 
 const formatMqttUrl = (connection: MqttConnection) => {
-  return `${connection.protocol}://${connection.hostname}:${connection.port}`
+  const path = connection.path || ''
+
+  return `${connection.protocol}://${connection.hostname}:${connection.port}${path}`
 }
 </script>
 

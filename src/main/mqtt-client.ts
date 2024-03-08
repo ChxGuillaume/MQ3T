@@ -12,8 +12,10 @@ export class MqttClient {
       username: connection.username
     }
 
+    const path = connection.path || ''
+
     this.client = mqtt.connect(
-      `${connection.protocol}://${connection.hostname}:${connection.port}`,
+      `${connection.protocol}://${connection.hostname}:${connection.port}${path}`,
       connectionOptions
     )
   }

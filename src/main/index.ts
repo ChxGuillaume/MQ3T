@@ -130,18 +130,20 @@ const createConnection = async (connection: MqttConnection) => {
 
   sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
-  try {
-    const resolvedIp = await new Promise((resolve, reject) => {
-      dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
-        if (err) reject(err)
-        else resolve(address)
+  if (connection.hostname.includes('.local')) {
+    try {
+      const resolvedIp = await new Promise((resolve, reject) => {
+        dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
+          if (err) reject(err)
+          else resolve(address)
+        })
       })
-    })
 
-    connection.hostname = resolvedIp as string
-  } catch (e) {
-    sendMessageToRenderer('mqtt-error', { clientKey, error: e })
-    return
+      connection.hostname = resolvedIp as string
+    } catch (e) {
+      sendMessageToRenderer('mqtt-error', { clientKey, error: e })
+      return
+    }
   }
 
   const clientMqtt = new MqttClient(connection)

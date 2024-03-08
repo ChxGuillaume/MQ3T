@@ -32,6 +32,7 @@ const form = ref<MqttConnection>({
   name: '',
   protocol: 'mqtt',
   hostname: '',
+  path: '/mqtt',
   port: 1883,
   clientId: `mq3t_${uuidV4()}`,
   username: '',
@@ -172,7 +173,7 @@ watch(
             <q-select
               v-model="form.protocol"
               :options="mqttProtocolOptions"
-              class="tw-w-[128px]"
+              class="tw-w-[112px]"
               filled
               label="Protocol"
               emit-value
@@ -197,6 +198,13 @@ watch(
               label="Port"
               type="number"
               :rules="rules.port"
+            />
+            <q-input
+              v-if="form.protocol === 'ws' || form.protocol === 'wss'"
+              v-model="form.path"
+              class="tw-w-[128px]"
+              filled
+              label="Path"
             />
           </div>
           <div>

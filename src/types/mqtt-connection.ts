@@ -8,6 +8,7 @@ export type MqttConnection = {
   name: string
   protocol: 'mqtt' | 'mqtts' | 'ws' | 'wss'
   hostname: string
+  path: string
   port: number
   clientId: string
   username?: string
