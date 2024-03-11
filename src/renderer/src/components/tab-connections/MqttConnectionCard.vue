@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import MqttConnectionCardContextMenu from './MqttConnectionCardContextMenu.vue'
 import { useMqttConnectionsStore } from '../../store/mqtt-connections'
-import ConnectionStatusChip from '../ConnectionStatusChip.vue'
 import { MqttConnection } from '../../../../types/mqtt-connection'
+import ConnectionStatusChip from '../ConnectionStatusChip.vue'
 import { computed } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -33,31 +34,10 @@ const formatMqttUrl = (connection: MqttConnection) => {
         {{ connection.name }}
       </p>
       <q-btn icon="fa-solid fa-ellipsis-vertical" flat round size="sm">
-        <q-menu anchor="bottom right" self="top right">
-          <q-list style="min-width: 100px">
-            <q-item clickable v-close-popup @click="$emit('edit', connection)">
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-edit" class="tw-mr-2" />
-                  Edit
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              class="tw-text-red-500"
-              clickable
-              v-close-popup
-              @click="$emit('delete', connection)"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
-                  Delete
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
+        <mqtt-connection-card-context-menu
+          @edit="$emit('edit', connection)"
+          @delete="$emit('delete', connection)"
+        />
       </q-btn>
     </div>
     <p
@@ -76,6 +56,14 @@ const formatMqttUrl = (connection: MqttConnection) => {
       />
       <q-btn v-else color="primary" label="Disconnect" @click="$emit('disconnect', connection)" />
     </div>
+
+    <mqtt-connection-card-context-menu
+      context-menu
+      anchor="bottom right"
+      self="top right"
+      @edit="$emit('edit', connection)"
+      @delete="$emit('delete', connection)"
+    />
   </q-card>
 </template>
 
