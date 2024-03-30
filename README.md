@@ -61,13 +61,13 @@ npm run dev
 
 ```bash
 # For windows
-npm run build:win
+npm run package:win
 
 # For macOS
-npm run build:mac
+npm run package:mac
 
 # For Linux
-npm run build:linux
+npm run package:linux
 ```
 
 # License
