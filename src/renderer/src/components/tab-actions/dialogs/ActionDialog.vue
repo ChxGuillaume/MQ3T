@@ -43,7 +43,7 @@ const rules = {
   name: [(v: string) => !!v || 'Title is required'],
   topic: [
     (v: string) => !!v || 'Topic is required',
-    (v: string) => !v.endsWith('#') || 'Topic cannot end with #',
+    (v: string) => !v.includes('#') || 'Topic cannot include #',
     (v: string) => !v.endsWith('+') || 'Topic cannot end with +'
   ]
 }

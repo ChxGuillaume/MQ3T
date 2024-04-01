@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useActionsCacheStore } from '../../store/actions-cache'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
 import TopicItemMenu from './TopicItemMenu.vue'
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useActionsCacheStore } from '../../store/actions-cache'
 
 const $q = useQuasar()
 
@@ -30,7 +30,7 @@ const expandedTopicsSection = computed({
 })
 
 const hasActions = computed(() => {
-  return actionsCacheStore.topics[props.clientKey]?.[props.topicPath]
+  return actionsCacheStore.normalTopics[props.clientKey]?.[props.topicPath]
 })
 
 const emits = defineEmits(['topic:click'])

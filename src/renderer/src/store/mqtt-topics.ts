@@ -1,3 +1,4 @@
+import { useActionsCacheStore } from './actions-cache'
 import { useSettingsStore } from './settings-store'
 import { codeType } from '../assets/js/format-code'
 import { v4 as uuidV4 } from 'uuid'
@@ -154,6 +155,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       message: string,
       extras: { qos: MqttMessage['qos']; retained?: boolean }
     ) {
+      const actionsCacheStore = useActionsCacheStore()
+      const settingsStore = useSettingsStore()
+
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
 
       let topicExists = this.topicsMessages[clientKey][topic]
@@ -161,7 +165,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
       if (!this.topicsLastMessage[clientKey]) this.topicsLastMessage[clientKey] = {}
 
-      const settingsStore = useSettingsStore()
       const lastMessage = this.topicsLastMessage[clientKey][topic]
 
       if (lastMessage)
@@ -224,6 +227,10 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       }
 
       this.addTopicToStructure(clientKey, topic)
+
+      actionsCacheStore.getTopicsFromWildcard(clientKey, topic).forEach((wildcardTopic) => {
+        actionsCacheStore.addNormalTopic(clientKey, wildcardTopic)
+      })
     },
     addTopicToStructure(clientKey: string, topic: string) {
       if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}

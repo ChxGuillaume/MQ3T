@@ -97,9 +97,7 @@ export const useActionsStore = defineStore('actions', {
         for (const [connectionId, groups] of Object.entries(actions.actions)) {
           for (const [_, actionsArray] of Object.entries(groups)) {
             for (const action of actionsArray) {
-              if (action.topic.includes('#') || action.topic.includes('+')) {
-                actionsCacheStore.addWildcardTopic(connectionId, action.topic)
-              } else actionsCacheStore.addTopic(connectionId, action.topic)
+              actionsCacheStore.addTopic(connectionId, action.topic)
             }
           }
         }
@@ -133,17 +131,7 @@ export const useActionsStore = defineStore('actions', {
       this.selectedActionGroup = groupId
     },
     addAction(action: Action) {
-      const actionsCacheStore = useActionsCacheStore()
-
-      if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
-      if (!this.actions[this.selectedConnection][this.selectedActionGroup])
-        this.actions[this.selectedConnection][this.selectedActionGroup] = []
-
-      this.actions[this.selectedConnection][this.selectedActionGroup].push(action)
-
-      this.saveActions()
-
-      actionsCacheStore.addTopic(this.selectedConnection, action.topic)
+      this.addActionToConnectionGroup(action, this.selectedConnection, this.selectedActionGroup)
     },
     addActionToConnectionGroup(action: Action, connectionId: string, groupId: string) {
       const actionsCacheStore = useActionsCacheStore()
@@ -184,13 +172,23 @@ export const useActionsStore = defineStore('actions', {
       return copy
     },
     updateAction(action: Action) {
-      const index = this.actions[this.selectedConnection][this.selectedActionGroup].findIndex(
-        (a) => a.id === action.id
-      )
+      const actionsCacheStore = useActionsCacheStore()
 
-      this.actions[this.selectedConnection][this.selectedActionGroup].splice(index, 1, action)
+      const actions = this.actions[this.selectedConnection][this.selectedActionGroup]
+      const index = actions.findIndex((a) => a.id === action.id)
+      const oldAction = actions[index]
+
+      actions.splice(index, 1, action)
 
       this.saveActions()
+
+      if (oldAction.topic !== action.topic) {
+        if (!this.hasActionWithTopic(this.selectedConnection, oldAction.topic)) {
+          actionsCacheStore.removeNormalTopic(this.selectedConnection, oldAction.topic)
+        }
+
+        actionsCacheStore.addTopic(this.selectedConnection, action.topic)
+      }
     },
     updateActionGroup(group: ActionGroup) {
       const index = this.actionsGroups[this.selectedConnection].findIndex((g) => g.id === group.id)
@@ -200,19 +198,11 @@ export const useActionsStore = defineStore('actions', {
       this.saveActionsGroups()
     },
     deleteAction(actionId: string) {
-      const actionsCacheStore = useActionsCacheStore()
-
-      const actions = this.actions[this.selectedConnection][this.selectedActionGroup]
-      const index = actions.findIndex((a) => a.id === actionId)
-
-      const removedActions = actions.splice(index, 1)
-
-      this.saveActions()
-
-      const topicToDelete = removedActions[0].topic
-      if (!this.hasActionWithTopic(this.selectedConnection, topicToDelete)) {
-        actionsCacheStore.removeTopic(this.selectedConnection, removedActions[0].topic)
-      }
+      this.deleteActionFromConnectionGroup(
+        actionId,
+        this.selectedConnection,
+        this.selectedActionGroup
+      )
     },
     deleteActionFromConnectionGroup(actionId: string, connectionId: string, groupId: string) {
       const actionsCacheStore = useActionsCacheStore()
