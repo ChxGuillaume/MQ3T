@@ -176,15 +176,14 @@ export const useActionsStore = defineStore('actions', {
 
       const actions = this.actions[this.selectedConnection][this.selectedActionGroup]
       const index = actions.findIndex((a) => a.id === action.id)
-      const oldAction = actions[index]
 
-      actions.splice(index, 1, action)
+      const { 0: removedAction } = actions.splice(index, 1, action)
 
       this.saveActions()
 
-      if (oldAction.topic !== action.topic) {
-        if (!this.hasActionWithTopic(this.selectedConnection, oldAction.topic)) {
-          actionsCacheStore.removeNormalTopic(this.selectedConnection, oldAction.topic)
+      if (removedAction.topic !== action.topic) {
+        if (!this.hasActionWithTopic(this.selectedConnection, removedAction.topic)) {
+          actionsCacheStore.removeNormalTopic(this.selectedConnection, removedAction.topic)
         }
 
         actionsCacheStore.addTopic(this.selectedConnection, action.topic)
@@ -205,36 +204,36 @@ export const useActionsStore = defineStore('actions', {
       )
     },
     deleteActionFromConnectionGroup(actionId: string, connectionId: string, groupId: string) {
+      console.log(actionId, connectionId, groupId)
+
       const actionsCacheStore = useActionsCacheStore()
 
       const actions = this.actions[connectionId][groupId]
       const index = actions.findIndex((a) => a.id === actionId)
 
-      const removedActions = actions.splice(index, 1)
+      const { 0: removedAction } = actions.splice(index, 1)
 
       this.saveActions()
 
-      const topicToDelete = removedActions[0].topic
-      if (!this.hasActionWithTopic(connectionId, topicToDelete)) {
-        actionsCacheStore.removeTopic(connectionId, topicToDelete)
+      if (!this.hasActionWithTopic(connectionId, removedAction.topic)) {
+        actionsCacheStore.removeTopic(connectionId, removedAction.topic)
       }
     },
     deleteActionGroup(groupId: string, moveActionsToDefault = true) {
-      if (moveActionsToDefault) {
-        for (const action of this.actions[this.selectedConnection][groupId] || []) {
-          this.addActionToConnectionGroup(action, this.selectedConnection, 'default')
-        }
+      const connectionId = this.selectedConnection
+      const actions = this.actions[connectionId][groupId]
+
+      // Duplicating the actions array to avoid mutation while deleting
+      for (const action of JSON.parse(JSON.stringify(actions))) {
+        if (moveActionsToDefault) this.addActionToConnectionGroup(action, connectionId, 'default')
+        else this.deleteActionFromConnectionGroup(action.id, connectionId, groupId)
       }
 
-      const groupIndex = this.actionsGroups[this.selectedConnection].findIndex(
-        (g) => g.id === groupId
-      )
+      delete this.actions[connectionId][groupId]
 
-      this.actionsGroups[this.selectedConnection].splice(groupIndex, 1)
+      this.deleteActionGroupFromConnection(groupId, connectionId)
 
       if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
-
-      this.saveActionsGroups()
     },
     deleteActionGroupFromConnection(groupId: string, connectionId: string) {
       const groupIndex = this.actionsGroups[connectionId].findIndex((g) => g.id === groupId)

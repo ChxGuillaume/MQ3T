@@ -1,3 +1,4 @@
+import { topicMatchesSlicedWildcards } from '../assets/js/topic-matcher'
 import { useMqttTopicsStore } from './mqtt-topics'
 import { defineStore } from 'pinia'
 
@@ -12,25 +13,7 @@ export const useActionsCacheStore = defineStore('actionsCache', {
       (connectionId: string, topic: string): string[] => {
         let wildcardTopics = Object.keys(state.wildcardTopics[connectionId]) || []
 
-        let matchingWildcards = wildcardTopics.filter((wildcard) => {
-          let regexTopic = wildcard
-            .slice(0, wildcard.lastIndexOf('+') + 2)
-            .replace(/\+/g, '.+?')
-            .replace(/\//g, '\\/')
-
-          return new RegExp(regexTopic).test(topic)
-        })
-
-        return matchingWildcards.map((wildcard) => {
-          const splitWildcard = wildcard.split('/')
-          const splitTopic = topic.split('/')
-
-          return splitWildcard
-            .map((part, index) => {
-              return part === '+' ? splitTopic[index] : part
-            })
-            .join('/')
-        })
+        return topicMatchesSlicedWildcards(topic, wildcardTopics)
       }
   },
   actions: {
