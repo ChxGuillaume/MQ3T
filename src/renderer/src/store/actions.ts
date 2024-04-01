@@ -1,5 +1,6 @@
 import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
+import { useActionsCacheStore } from './actions-cache'
 import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
 import {
@@ -73,16 +74,35 @@ export const useActionsStore = defineStore('actions', {
         }
 
         return undefined
+      },
+    hasActionWithTopic:
+      (state) =>
+      (connectionId: string, topic: string): boolean => {
+        return Object.values(state.actions[connectionId] || {}).some((group) =>
+          group.some((action) => action.topic === topic)
+        )
       }
   },
   actions: {
     setActions(actions: ConnectionsActionsFile) {
+      const actionsCacheStore = useActionsCacheStore()
+
       if (actions.type === 'v1') {
         actions = convertActionsFileV1toV2(actions)
       }
 
       if (actions.type === 'v2') {
         this.actions = actions.actions
+
+        for (const [connectionId, groups] of Object.entries(actions.actions)) {
+          for (const [_, actionsArray] of Object.entries(groups)) {
+            for (const action of actionsArray) {
+              if (action.topic.includes('#') || action.topic.includes('+')) {
+                actionsCacheStore.addWildcardTopic(connectionId, action.topic)
+              } else actionsCacheStore.addTopic(connectionId, action.topic)
+            }
+          }
+        }
       }
     },
     setActionsGroups(actionsGroups: ConnectionsActionsGroups) {
@@ -113,6 +133,8 @@ export const useActionsStore = defineStore('actions', {
       this.selectedActionGroup = groupId
     },
     addAction(action: Action) {
+      const actionsCacheStore = useActionsCacheStore()
+
       if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
       if (!this.actions[this.selectedConnection][this.selectedActionGroup])
         this.actions[this.selectedConnection][this.selectedActionGroup] = []
@@ -120,8 +142,12 @@ export const useActionsStore = defineStore('actions', {
       this.actions[this.selectedConnection][this.selectedActionGroup].push(action)
 
       this.saveActions()
+
+      actionsCacheStore.addTopic(this.selectedConnection, action.topic)
     },
     addActionToConnectionGroup(action: Action, connectionId: string, groupId: string) {
+      const actionsCacheStore = useActionsCacheStore()
+
       if (!this.actions[connectionId]) this.actions[connectionId] = {}
       if (!this.actions[connectionId][groupId]) this.actions[connectionId][groupId] = []
 
@@ -133,6 +159,8 @@ export const useActionsStore = defineStore('actions', {
       this.actions[connectionId][groupId].push(copy)
 
       this.saveActions()
+
+      actionsCacheStore.addTopic(connectionId, action.topic)
     },
     addActionGroup(group: ActionGroup) {
       if (!this.actionsGroups[this.selectedConnection])
@@ -172,20 +200,34 @@ export const useActionsStore = defineStore('actions', {
       this.saveActionsGroups()
     },
     deleteAction(actionId: string) {
-      const index = this.actions[this.selectedConnection][this.selectedActionGroup].findIndex(
-        (a) => a.id === actionId
-      )
+      const actionsCacheStore = useActionsCacheStore()
 
-      this.actions[this.selectedConnection][this.selectedActionGroup].splice(index, 1)
+      const actions = this.actions[this.selectedConnection][this.selectedActionGroup]
+      const index = actions.findIndex((a) => a.id === actionId)
+
+      const removedActions = actions.splice(index, 1)
 
       this.saveActions()
+
+      const topicToDelete = removedActions[0].topic
+      if (!this.hasActionWithTopic(this.selectedConnection, topicToDelete)) {
+        actionsCacheStore.removeTopic(this.selectedConnection, removedActions[0].topic)
+      }
     },
     deleteActionFromConnectionGroup(actionId: string, connectionId: string, groupId: string) {
-      const index = this.actions[connectionId][groupId].findIndex((a) => a.id === actionId)
+      const actionsCacheStore = useActionsCacheStore()
 
-      this.actions[connectionId][groupId].splice(index, 1)
+      const actions = this.actions[connectionId][groupId]
+      const index = actions.findIndex((a) => a.id === actionId)
+
+      const removedActions = actions.splice(index, 1)
 
       this.saveActions()
+
+      const topicToDelete = removedActions[0].topic
+      if (!this.hasActionWithTopic(connectionId, topicToDelete)) {
+        actionsCacheStore.removeTopic(connectionId, topicToDelete)
+      }
     },
     deleteActionGroup(groupId: string, moveActionsToDefault = true) {
       if (moveActionsToDefault) {

@@ -41,7 +41,11 @@ const form = reactive({
 
 const rules = {
   name: [(v: string) => !!v || 'Title is required'],
-  topic: [(v: string) => !!v || 'Topic is required']
+  topic: [
+    (v: string) => !!v || 'Topic is required',
+    (v: string) => !v.endsWith('#') || 'Topic cannot end with #',
+    (v: string) => !v.endsWith('+') || 'Topic cannot end with +'
+  ]
 }
 
 const clearForm = () => {
@@ -155,7 +159,15 @@ watch(
           <h2 class="tw-mb-2 tw-text-xl">Action Group</h2>
           <div class="tw-grid tw-grid-cols-2 tw-gap-4">
             <q-input v-model="form.name" filled label="Title" :rules="rules.name" />
-            <q-input v-model="form.topic" filled label="Topic" :rules="rules.topic" />
+            <q-input
+              v-model="form.topic"
+              filled
+              label="Topic"
+              lazy-rules
+              :rules="rules.topic"
+              hide-hint
+              hint="Topics can include + wildcard"
+            />
           </div>
           <div class="tw-grid tw-grid-cols-2 tw-gap-4">
             <div class="tw-grid tw-gap-4">

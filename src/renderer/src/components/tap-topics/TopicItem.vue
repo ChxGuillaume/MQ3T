@@ -5,9 +5,11 @@ import TopicCard, { ITopicCard } from './TopicCard.vue'
 import TopicItemMenu from './TopicItemMenu.vue'
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useActionsCacheStore } from '../../store/actions-cache'
 
 const $q = useQuasar()
 
+const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
@@ -25,6 +27,10 @@ const props = defineProps<{
 const expandedTopicsSection = computed({
   get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.topicPath),
   set: (value) => mqttTopicsStore.setTopicGroupOpened(props.clientKey, props.topicPath, value)
+})
+
+const hasActions = computed(() => {
+  return actionsCacheStore.topics[props.clientKey]?.[props.topicPath]
 })
 
 const emits = defineEmits(['topic:click'])
@@ -135,6 +141,7 @@ watch(
         <topic-card
           ref="topicGroupTopicCardRef"
           expandable
+          :has-actions="hasActions"
           :active="isSelectedTopic"
           :opened="expandedTopicsSection"
           :style="{ 'margin-left': `${topicIndex * 20}px` }"
@@ -180,6 +187,7 @@ watch(
     <q-intersection class="tw-h-[29px]">
       <topic-card
         ref="topicCardRef"
+        :has-actions="hasActions"
         :active="isSelectedTopic"
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
         @open:toggle="handleTopicClick"
@@ -187,7 +195,11 @@ watch(
         <span class="topic-item-key" :class="{ empty: !topicKey }">
           {{ topicKey ? topicKey : '<\empty>' }}
         </span>
-        <span class="tw-ml-1 tw-text-xs" v-text="`= ${topicLastMessage?.message}`" />
+        <span
+          v-if="topicLastMessage?.message"
+          class="tw-ml-1 tw-text-xs"
+          v-text="`= ${topicLastMessage?.message}`"
+        />
         <topic-item-menu
           :hide-copy-last-message="!topicLastMessage?.message"
           @copy-last-message="handleCopyLastMessage"

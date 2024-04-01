@@ -302,7 +302,7 @@ watch(
       group="publish_type"
       dense
       class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
-      header-class="tw-text-secondary"
+      header-class="tw-text-accent"
     >
       <template v-slot:header>
         <q-item-section class="tw-flex tw-flex-row tw-justify-start tw-items-center tw-gap-6">

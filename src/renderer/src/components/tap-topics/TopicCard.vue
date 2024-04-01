@@ -2,18 +2,22 @@
 import { useSettingsStore } from '../../store/settings-store'
 import { useAppStore } from '../../store/app-store'
 import { computed, ref } from 'vue'
+import { useQuasar } from 'quasar'
 
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
+
+const $q = useQuasar()
 
 export interface ITopicCard {
   animate: () => void
 }
 
-defineProps<{
+const props = defineProps<{
   active?: boolean
   opened?: boolean
   expandable?: boolean
+  hasActions?: boolean
 }>()
 
 defineEmits(['open:toggle'])
@@ -26,12 +30,19 @@ const animationLastTime = ref(0)
 const topicHeatInterval = ref<NodeJS.Timeout | undefined>()
 const topicHeatPercentage = ref(-10)
 
+const animationColor = computed(() => {
+  if (props.hasActions) return '230, 117, 228'
+  else if (props.active) return $q.dark.isActive ? '255, 255, 255' : '0, 0, 0'
+
+  return '117, 230, 124'
+})
+
 const topicHeatFadeGradiant = computed(() => {
   return `linear-gradient(
     90deg,
-    rgba(20, 179, 66, 0.3) 0%,
-    rgba(20, 179, 66, 0.1) ${topicHeatPercentage.value}%,
-    rgba(20, 179, 66, 0) ${topicHeatPercentage.value + 10}%
+    rgba(${animationColor.value}, 0.3) 0%,
+    rgba(${animationColor.value}, 0.1) ${topicHeatPercentage.value}%,
+    rgba(${animationColor.value}, 0) ${topicHeatPercentage.value + 10}%
   )`
 })
 
@@ -94,6 +105,7 @@ defineExpose({ animate })
       size="xs"
       class="expand-icon tw-mr-1"
     />
+    <q-icon v-if="hasActions" name="fa-solid fa-play" color="accent" class="tw-mr-1" />
     <slot />
   </q-card>
 </template>
@@ -151,22 +163,16 @@ defineExpose({ animate })
 
 .body--light {
   .topic-item-card.animation-laser:before {
+    --color: v-bind(animationColor);
+
     background: rgb(255, 255, 255);
     background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.05) 20%,
-      rgba(20, 179, 66, 0.4) 80%,
-      rgba(20, 179, 66, 0) 100%
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.05),
+      rgba(var(--color), 0.4),
+      rgba(255, 255, 255, 0)
     );
-
-    //background: linear-gradient(
-    //  90deg,
-    //  rgba(255, 255, 255, 0) 0%,
-    //  rgba(255, 255, 255, 0.05) 20%,
-    //  rgba(101, 1, 100, 0.4) 80%,
-    //  rgba(101, 1, 100, 0) 100%
-    //);
   }
 
   .topic-item-card {
@@ -184,22 +190,16 @@ defineExpose({ animate })
 
 .body--dark {
   .topic-item-card.animation-laser:before {
+    --color: v-bind(animationColor);
+
     background: rgb(0, 0, 0);
     background: linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.05) 20%,
-      rgba(20, 179, 66, 0.5) 80%,
-      rgba(20, 179, 66, 0) 100%
+      rgba(0, 0, 0, 0),
+      rgba(0, 0, 0, 0.05),
+      rgba(var(--color), 0.5),
+      rgba(0, 0, 0, 0)
     );
-
-    //background: linear-gradient(
-    //  90deg,
-    //  rgba(255, 255, 255, 0) 0%,
-    //  rgba(255, 255, 255, 0.05) 20%,
-    //  rgba(101, 1, 100, 0.4) 80%,
-    //  rgba(101, 1, 100, 0) 100%
-    //);
   }
 
   .topic-item-card {

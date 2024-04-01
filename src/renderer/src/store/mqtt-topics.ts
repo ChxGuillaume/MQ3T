@@ -17,10 +17,10 @@ export type MqttTopicStructure = {
   [key: string]: MqttTopicStructure | null
 }
 
-// type MqttTopicsStructureTest = {
-//   opened: boolean
+// type MqttTopicsStructureV2 = {
+//   fromAction: boolean
 //   structure: {
-//     [key: string]: MqttTopicsStructureTest
+//     [key: string]: MqttTopicsStructureV2
 //   }
 // }
 
@@ -209,12 +209,28 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       if (topicExists) return
 
       ///////////
-      // Creating Topic structure cache
-      if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
+      // Increasing subtopics  count
       if (!this.subTopicsTopicsCount[clientKey]) this.subTopicsTopicsCount[clientKey] = {}
+      currentTopicPath = ''
+
+      for (const topicPart of topicParts) {
+        currentTopicPath += `${topicPart}`
+
+        if (!this.subTopicsTopicsCount[clientKey][currentTopicPath]) {
+          this.subTopicsTopicsCount[clientKey][currentTopicPath] = 1
+        } else this.subTopicsTopicsCount[clientKey][currentTopicPath] += 1
+
+        currentTopicPath += `/`
+      }
+
+      this.addTopicToStructure(clientKey, topic)
+    },
+    addTopicToStructure(clientKey: string, topic: string) {
+      if (!this.topicsStructure[clientKey]) this.topicsStructure[clientKey] = {}
 
       let currentTopicStructure = this.topicsStructure[clientKey]
-      currentTopicPath = ''
+      const topicParts = topic.split('/')
+      let currentTopicPath = ''
 
       for (const topicPart of topicParts) {
         currentTopicPath += `${topicPart}`
@@ -222,10 +238,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
 
         currentTopicStructure = currentTopicStructure[topicPart] || {}
-
-        if (!this.subTopicsTopicsCount[clientKey][currentTopicPath]) {
-          this.subTopicsTopicsCount[clientKey][currentTopicPath] = 1
-        } else this.subTopicsTopicsCount[clientKey][currentTopicPath] += 1
 
         currentTopicPath += `/`
       }
