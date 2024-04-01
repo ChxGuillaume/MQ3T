@@ -1,6 +1,10 @@
-import { topicMatchesSlicedWildcards } from '../assets/js/topic-matcher'
 import { useMqttTopicsStore } from './mqtt-topics'
 import { defineStore } from 'pinia'
+import {
+  slicedWildcardMatchesTopics,
+  topicMatchesSlicedWildcards,
+  wildcardMatchesTopics
+} from '../assets/js/topic-matcher'
 
 export const useActionsCacheStore = defineStore('actionsCache', {
   state: () => ({
@@ -42,11 +46,27 @@ export const useActionsCacheStore = defineStore('actionsCache', {
       delete this.normalTopics[connectionId][topic]
     },
     addWildcardTopic(connectionId: string, topic: string) {
+      const mqttTopicsStore = useMqttTopicsStore()
+
+      const connectionTopics = mqttTopicsStore.getConnectionTopics(connectionId)
+      const topicsToAdd = slicedWildcardMatchesTopics(topic, connectionTopics)
+
+      for (const topic of topicsToAdd) {
+        this.addNormalTopic(connectionId, topic)
+      }
+
       if (!this.wildcardTopics[connectionId]) this.wildcardTopics[connectionId] = {}
 
       this.wildcardTopics[connectionId][topic] = true
     },
     removeWildcardTopic(connectionId: string, topic: string) {
+      const normalTopics = Object.keys(this.normalTopics[connectionId] || {})
+      const matchedTopics = wildcardMatchesTopics(topic, normalTopics)
+
+      for (const matchedTopic of matchedTopics) {
+        this.removeNormalTopic(connectionId, matchedTopic)
+      }
+
       if (!this.wildcardTopics[connectionId]) return
 
       delete this.wildcardTopics[connectionId][topic]

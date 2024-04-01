@@ -204,8 +204,6 @@ export const useActionsStore = defineStore('actions', {
       )
     },
     deleteActionFromConnectionGroup(actionId: string, connectionId: string, groupId: string) {
-      console.log(actionId, connectionId, groupId)
-
       const actionsCacheStore = useActionsCacheStore()
 
       const actions = this.actions[connectionId][groupId]

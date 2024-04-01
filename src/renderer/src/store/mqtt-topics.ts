@@ -48,6 +48,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       (clientKey: string): MqttTopicStructure => {
         return state.topicsStructure[clientKey] || {}
       },
+    getConnectionTopics:
+      (state) =>
+      (clientKey: string): string[] => {
+        return Object.keys(state.topicsMessages[clientKey] || {})
+      },
     getSubTopicsTopicsCount: (state) => (clientKey: string, topic: string) => {
       return state.subTopicsTopicsCount[clientKey]?.[topic] || 0
     },
