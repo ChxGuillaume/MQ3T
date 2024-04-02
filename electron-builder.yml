@@ -23,7 +23,7 @@ win:
   executableName: MQ3T
   publisherName: ChxGuillaume
   # TODO: Enable after code signing is set up
-  sign: false
+  # sign: false
   verifyUpdateCodeSignature: false
   artifactName: ${name}-${version}-portable-${arch}.${ext}
   target:
