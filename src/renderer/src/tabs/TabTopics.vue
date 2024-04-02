@@ -7,6 +7,7 @@ import TabPublish from '../components/tap-topics/TabPublish.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
+import { useActionsCacheStore } from '../store/actions-cache'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
@@ -17,6 +18,7 @@ import { scroll } from 'quasar'
 const { setVerticalScrollPosition } = scroll
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
@@ -30,7 +32,26 @@ const selectedConnection = ref('')
 const topicTabRecord = ref<Record<string, string>>({})
 
 const topicTab = computed({
-  get: () => topicTabRecord.value[mqttTopicsStore.selectedTopic] || 'values',
+  get: () => {
+    if (topicTabRecord.value[mqttTopicsStore.selectedTopic])
+      return topicTabRecord.value[mqttTopicsStore.selectedTopic]
+
+    const lastMessage = mqttTopicsStore.getTopicLastMessage(
+      mqttTopicsStore.selectedConnection,
+      mqttTopicsStore.selectedTopic
+    )
+
+    if (lastMessage) return 'values'
+
+    const hasActions = actionsCacheStore.hasAction(
+      mqttTopicsStore.selectedConnection,
+      mqttTopicsStore.selectedTopic
+    )
+
+    if (hasActions) return 'publish'
+
+    return 'values'
+  },
   set: (value) => (topicTabRecord.value[mqttTopicsStore.selectedTopic] = value)
 })
 

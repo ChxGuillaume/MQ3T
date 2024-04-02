@@ -30,7 +30,7 @@ const expandedTopicsSection = computed({
 })
 
 const hasActions = computed(() => {
-  return actionsCacheStore.normalTopics[props.clientKey]?.[props.topicPath]
+  return actionsCacheStore.hasAction(props.clientKey, props.topicPath)
 })
 
 const emits = defineEmits(['topic:click'])

@@ -12,6 +12,11 @@ export const useActionsCacheStore = defineStore('actionsCache', {
     wildcardTopics: {} as Record<string, Record<string, true>>
   }),
   getters: {
+    hasAction:
+      (state) =>
+      (connectionId: string, topic: string): boolean => {
+        return state.normalTopics[connectionId]?.[topic]
+      },
     getTopicsFromWildcard:
       (state) =>
       (connectionId: string, topic: string): string[] => {
