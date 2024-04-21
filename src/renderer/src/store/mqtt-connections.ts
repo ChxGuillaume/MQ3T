@@ -1,8 +1,6 @@
-import { MqttConnection } from '../../../types/mqtt-connection'
+import { MqttConnection, MqttConnectionStatus } from '../../../types/mqtt-connection'
 import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
-
-type MqttConnectionStatus = 'connected' | 'connecting' | 'disconnected'
 
 export const useMqttConnectionsStore = defineStore('mqtt-connections', {
   state: () => ({
@@ -68,7 +66,7 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     saveConnections() {
       ElectronApi.saveMqttConnections(JSON.parse(JSON.stringify(this.connections)))
     },
-    setConnectionStatus(clientKey: string, status: 'connected' | 'connecting' | 'disconnected') {
+    setConnectionStatus(clientKey: string, status: MqttConnectionStatus) {
       this.connectionsStatus[clientKey] = status
     },
     hideConnection(clientKey: string) {

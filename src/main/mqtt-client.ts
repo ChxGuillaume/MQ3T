@@ -9,7 +9,10 @@ export class MqttClient {
     const connectionOptions: mqtt.IClientOptions = {
       clientId: connection.clientId,
       password: connection.password,
-      username: connection.username
+      username: connection.username,
+      protocolVersion: connection.protocolVersion,
+      connectTimeout: (connection.connectTimeout || 30) * 1000,
+      reconnectPeriod: (connection.reconnectPeriod || 1) * 1000
     }
 
     const path = connection.path || ''
@@ -36,7 +39,7 @@ export class MqttClient {
     this.client.on('close', callback)
   }
 
-  public subscribe(topic: string, extras?: { qos: 0 | 1 | 2 }) {
+  public subscribe(topic: string, extras?: mqtt.IClientSubscribeOptions) {
     this.client.subscribe(topic, extras)
   }
 
