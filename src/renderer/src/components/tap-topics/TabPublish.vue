@@ -2,8 +2,6 @@
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
-import { formatCode, validCode } from '../../assets/js/format-code'
-import DataValidBadge from '../tab-actions/DataValidBadge.vue'
 import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
 import ActionCard from '../tab-actions/ActionCard.vue'
@@ -245,7 +243,7 @@ watch(
                     icon="fa-solid fa-right-left"
                     @click.stop="handleConvertToAction(message)"
                   >
-                    <q-tooltip class="tw-bg-secondary tw-text-white">
+                    <q-tooltip class="tw-bg-secondary tw-text-black">
                       Convert into action button
                     </q-tooltip>
                   </q-btn>

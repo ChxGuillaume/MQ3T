@@ -15,6 +15,15 @@ export class MqttClient {
       reconnectPeriod: (connection.reconnectPeriod || 1) * 1000
     }
 
+    if (connection.lastWill && connection.lastWill.topic) {
+      connectionOptions.will = {
+        topic: connection.lastWill.topic,
+        qos: connection.lastWill.qos,
+        retain: connection.lastWill.retain,
+        payload: Buffer.from(connection.lastWill.payload)
+      }
+    }
+
     const path = connection.path || ''
 
     this.client = mqtt.connect(

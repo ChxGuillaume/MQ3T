@@ -2,8 +2,12 @@
 import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
 import AdvancedSettings from '../tab-settings/AdvancedSettings.vue'
 import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
+import { useSettingsStore } from '../../store/settings-store'
+import CodeEditor from '../tap-topics/CodeEditor.vue'
 import { nextTick, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
+
+const settingsStore = useSettingsStore()
 
 const props = defineProps<{
   dialogOpened: boolean
@@ -18,9 +22,10 @@ const addSubscriptionTopicFormRef = ref<QForm | null>(null)
 const generalSettingsFormRef = ref<QForm | null>(null)
 const settingsCategoryTab = ref('general')
 const dialogRef = ref<QDialog | null>(null)
-
 const advancedSettingsExpanded = ref(false)
+
 const subscribedTopicsExpanded = ref(false)
+const codeEditorLanguage = ref(settingsStore.defaultDataFormat)
 const showPassword = ref(false)
 
 const columns = [
@@ -46,7 +51,14 @@ const form = ref<MqttConnection>({
   ],
 
   connectTimeout: 30,
-  reconnectPeriod: 1
+  reconnectPeriod: 1,
+
+  lastWill: {
+    topic: '',
+    qos: 0,
+    retain: false,
+    payload: ''
+  }
 })
 
 const addTopicForm = ref<MqttTopicSubscription>({
@@ -71,6 +83,13 @@ const clearForm = () => {
 
   form.value.connectTimeout = 30
   form.value.reconnectPeriod = 1
+
+  form.value.lastWill = {
+    topic: '',
+    qos: 0,
+    retain: false,
+    payload: ''
+  }
 
   settingsCategoryTab.value = 'general'
 }
@@ -421,7 +440,35 @@ watch(
             </q-tab-panel>
 
             <q-tab-panel name="last-will">
-              <q-card flat class="tw-h-96"></q-card>
+              <q-card v-if="form.lastWill" flat class="tw-h-96">
+                <div class="tw-flex tw-gap-2">
+                  <q-input
+                    v-model="form.lastWill.topic"
+                    class="tw-flex-grow"
+                    filled
+                    label="Topic"
+                    lazy-rules
+                    hide-hint
+                  />
+                  <q-select
+                    v-model="form.lastWill.qos"
+                    :options="[0, 1, 2]"
+                    filled
+                    label="QoS"
+                    class="tw-w-[128px]"
+                  />
+                  <q-toggle v-model="form.lastWill.retain" label="Retain" />
+                </div>
+                <div class="tw-mt-4 tw-h-[300px]">
+                  <code-editor
+                    v-model:language="codeEditorLanguage"
+                    v-model="form.lastWill.payload"
+                    ref="codeEditorRef"
+                    class="tw-h-[300px]"
+                    font-size="14"
+                  />
+                </div>
+              </q-card>
             </q-tab-panel>
           </q-tab-panels>
         </template>
