@@ -154,10 +154,10 @@ const valideCode = computed(() => {
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto;
+  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto tw-transition-colors;
 }
 
-.validation-error {
+.monaco-editor.validation-error {
   @apply tw-border-red-500/40;
 }
 </style>

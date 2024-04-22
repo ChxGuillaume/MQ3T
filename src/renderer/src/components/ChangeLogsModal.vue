@@ -43,7 +43,7 @@ watch(
 
 <template>
   <q-dialog v-model="dialogOpened">
-    <q-card flat class="tw-w-full tw-max-w-[600px] tw-h-full tw-min-h-[300px]">
+    <q-card flat class="dialog-card">
       <div
         v-if="releasesLoading"
         class="tw-w-full tw-h-full tw-flex tw-justify-center tw-items-center"
@@ -72,6 +72,14 @@ watch(
 </template>
 
 <style scoped lang="less">
+.dialog-card {
+  width: 100%;
+  min-width: 700px;
+
+  min-height: 300px;
+  height: 100%;
+}
+
 .release-title {
   @apply tw-text-2xl tw-text-neutral-500;
 }

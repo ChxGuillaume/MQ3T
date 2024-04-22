@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ChangeLogsModal from '../components/ChangeLogsModal.vue'
 import LicensesModal from '../components/AppDetailsModal.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { ElectronApi } from '../assets/js/electron-api'
@@ -143,11 +144,8 @@ const autoOpenPublishActionsSetting = computed({
   set: (val) => settingsStore.setAutoOpenPublishActions(val)
 })
 
+const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
-
-const handleVersionClick = () => {
-  showVersionModal.value = true
-}
 </script>
 
 <template>
@@ -280,14 +278,19 @@ const handleVersionClick = () => {
       </q-card>
     </div>
 
-    <div
-      class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer tw-select-none"
-      @click="handleVersionClick"
-    >
-      <q-icon name="fa-solid fa-info-circle" class="tw-mx-1" />
-      Version {{ appStore.appVersion }}
+    <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
+      <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
+        <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
+        Change Logs
+      </div>
+      |
+      <div class="tw-cursor-pointer" @click="showVersionModal = true">
+        <q-icon name="fa-solid fa-info-circle" class="tw-mr-1" />
+        Version {{ appStore.appVersion }}
+      </div>
     </div>
     <licenses-modal v-model:opened="showVersionModal" />
+    <change-logs-modal v-model:opened="showChangeLogsModal" />
   </div>
 </template>
 
