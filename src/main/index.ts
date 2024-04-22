@@ -159,6 +159,11 @@ const createConnection = async (connection: MqttConnection) => {
     sendMessageToRenderer('mqtt-status', { clientKey, status: 'connected' })
   })
 
+  clientMqtt.onReconnect(() => {
+    mqttClientsState.set(clientKey, 'reconnecting')
+    sendMessageToRenderer('mqtt-status', { clientKey, status: 'reconnecting' })
+  })
+
   clientMqtt.onMessage((topic, payload, packet) => {
     sendMessageToRenderer('mqtt-message', {
       clientKey,

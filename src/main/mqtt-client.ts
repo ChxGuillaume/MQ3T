@@ -40,6 +40,10 @@ export class MqttClient {
     this.client.on('connect', callback)
   }
 
+  public onReconnect(callback: () => void) {
+    this.client.on('reconnect', callback)
+  }
+
   public onMessage(callback: OnMessageCallback) {
     this.client.on('message', callback)
   }

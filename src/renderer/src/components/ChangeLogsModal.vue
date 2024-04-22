@@ -54,12 +54,7 @@ watch(
         <h1 class="tw-text-3xl">Change Logs</h1>
         <div class="tw-mt-6 tw-flex tw-flex-col tw-gap-4">
           <div v-for="release in releases" :key="release.id">
-            <h1
-              class="release-title"
-              :class="{
-                current: release.name === appStore.appVersion
-              }"
-            >
+            <h1 class="release-title" :class="{ current: release.name === appStore.appVersion }">
               {{ release.name }}
               {{ release.name === appStore.appVersion ? '(Current version)' : '' }}
             </h1>
