@@ -26,8 +26,6 @@ const releases = ref<any>([])
 const fetchReleases = async () => {
   const { data } = await axios.get('https://api.github.com/repos/ChxGuillaume/MQ3T/releases')
 
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
   releasesLoading.value = false
   releases.value = data
 }

@@ -13,9 +13,9 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "start": "electron-vite preview",
-    "dev": "electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "start": "npm run dependencies:license:parse && electron-vite preview",
+    "dev": "npm run dependencies:license:parse && electron-vite dev",
+    "build": "npm run dependencies:license:parse && npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "package:win": "electron-builder --win --config",
     "package:mac": "electron-builder --mac --config",
@@ -26,7 +26,8 @@
     "package:linux:publish": "electron-builder --linux --publish always --config",
     "package:all:publish": "electron-builder -wlm --publish always --config",
     "clear:linux:electron:cache:mac": "rm ~/Library/Caches/electron/*linux*",
-    "dependencies:license": "npx -y license-checker --production --json --out resources/licenses.json"
+    "dependencies:license": "npx -y license-checker --production --json --out src/renderer/src/assets/licenses.json",
+    "dependencies:license:parse": "npm run dependencies:license && node scripts/stripe-licenses.js src/renderer/src/assets/licenses.json"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",

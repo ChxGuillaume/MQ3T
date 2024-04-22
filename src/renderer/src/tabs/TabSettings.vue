@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import LicensesModal from '../components/AppDetailsModal.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import moment from 'moment'
-import Versions from '../components/Versions.vue'
 
 const $q = useQuasar()
 const settingsStore = useSettingsStore()
@@ -144,22 +144,9 @@ const autoOpenPublishActionsSetting = computed({
 })
 
 const showVersionModal = ref(false)
-const versionClickCount = ref(0)
-const versionClickTimeout = ref()
 
 const handleVersionClick = () => {
-  clearTimeout(versionClickTimeout.value)
-
-  versionClickCount.value++
-
-  if (versionClickCount.value === 5) {
-    showVersionModal.value = true
-    versionClickCount.value = 0
-  }
-
-  versionClickTimeout.value = setTimeout(() => {
-    versionClickCount.value = 0
-  }, 1000)
+  showVersionModal.value = true
 }
 </script>
 
@@ -297,13 +284,10 @@ const handleVersionClick = () => {
       class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer tw-select-none"
       @click="handleVersionClick"
     >
+      <q-icon name="fa-solid fa-info-circle" class="tw-mx-1" />
       Version {{ appStore.appVersion }}
     </div>
-    <q-dialog v-model="showVersionModal">
-      <q-card flat>
-        <versions />
-      </q-card>
-    </q-dialog>
+    <licenses-modal v-model:opened="showVersionModal" />
   </div>
 </template>
 
