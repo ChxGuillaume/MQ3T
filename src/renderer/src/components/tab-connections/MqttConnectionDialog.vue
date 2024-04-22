@@ -19,6 +19,7 @@ const emits = defineEmits(['create:connection', 'update:connection', 'update:dia
 
 const addSubscriptionTopicPopupProxyRef = ref<QPopupProxy | null>(null)
 const addSubscriptionTopicFormRef = ref<QForm | null>(null)
+const advancedSettingsFormRef = ref<QForm | null>(null)
 const generalSettingsFormRef = ref<QForm | null>(null)
 const settingsCategoryTab = ref('general')
 const dialogRef = ref<QDialog | null>(null)
@@ -141,13 +142,16 @@ const validForms = async () => {
   await nextTick()
 
   const validGeneralForm = await generalSettingsFormRef.value?.validate()
-
   if (!validGeneralForm) return false
 
   settingsCategoryTab.value = 'subscriptions'
   await nextTick()
   settingsCategoryTab.value = 'advanced'
   await nextTick()
+
+  const validAdvancedSettingsForm = await advancedSettingsFormRef.value?.validate()
+  if (!validAdvancedSettingsForm) return false
+
   settingsCategoryTab.value = 'last-will'
   await nextTick()
 
@@ -431,12 +435,14 @@ watch(
             </q-tab-panel>
 
             <q-tab-panel name="advanced">
-              <advanced-settings
-                v-model:protocol-version="form.protocolVersion"
-                v-model:reconnect-period="form.reconnectPeriod"
-                v-model:connect-timeout="form.connectTimeout"
-                class="tw-h-96"
-              />
+              <q-form ref="advancedSettingsFormRef">
+                <advanced-settings
+                  v-model:protocol-version="form.protocolVersion"
+                  v-model:reconnect-period="form.reconnectPeriod"
+                  v-model:connect-timeout="form.connectTimeout"
+                  class="tw-h-96"
+                />
+              </q-form>
             </q-tab-panel>
 
             <q-tab-panel name="last-will">

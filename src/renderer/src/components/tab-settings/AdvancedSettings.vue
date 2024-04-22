@@ -15,6 +15,17 @@ const mqttProtocolVersions = [
   { label: 'MQTT 3.1', value: 3 }
 ]
 
+const advancedSettingsRules = {
+  connectTimeout: [
+    (v: number) => !!v || 'Connect timeout is required',
+    (v: number) => v > 0 || 'Connect timeout must be greater than 0'
+  ],
+  reconnectPeriod: [
+    (v: number) => !!v || 'Reconnect period is required',
+    (v: number) => v >= 0 || 'Reconnect period must be greater than or equal to 0'
+  ]
+}
+
 const selectedProtocolVersion = computed(() => {
   return mqttProtocolVersions.find((o) => o.value === props.protocolVersion)?.label
 })
@@ -43,6 +54,7 @@ const selectedProtocolVersion = computed(() => {
         label="Connect timeout"
         type="number"
         min="1"
+        :rules="advancedSettingsRules.connectTimeout"
         @update:model-value="$emit('update:connectTimeout', $event)"
       />
       <q-input
@@ -52,6 +64,7 @@ const selectedProtocolVersion = computed(() => {
         label="Reconnect period"
         type="number"
         min="0"
+        :rules="advancedSettingsRules.reconnectPeriod"
         @update:model-value="$emit('update:reconnectPeriod', $event)"
       />
     </div>
