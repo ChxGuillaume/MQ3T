@@ -1,9 +1,9 @@
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import iconIcns from '../../build/logo/mac512pts.icns?asset'
 import iconIco from '../../build/logo/win512pts.ico?asset'
 import installExtension from 'electron-devtools-installer'
-import { MqttConnection } from '../types/mqtt-connection'
 import { autoUpdater } from 'electron-updater'
 import { MqttClient } from './mqtt-client'
 import FileFilter = Electron.FileFilter
@@ -12,7 +12,7 @@ import * as dns from 'dns'
 import * as fs from 'fs'
 
 const mqttClients: Map<string, MqttClient> = new Map()
-const mqttClientsState: Map<string, 'connected' | 'connecting' | 'disconnected'> = new Map()
+const mqttClientsState: Map<string, MqttConnectionStatus> = new Map()
 const configFolder = path.join(app.getPath('userData'), 'config')
 const configFilePath = {
   mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
@@ -159,6 +159,11 @@ const createConnection = async (connection: MqttConnection) => {
     sendMessageToRenderer('mqtt-status', { clientKey, status: 'connected' })
   })
 
+  clientMqtt.onReconnect(() => {
+    mqttClientsState.set(clientKey, 'reconnecting')
+    sendMessageToRenderer('mqtt-status', { clientKey, status: 'reconnecting' })
+  })
+
   clientMqtt.onMessage((topic, payload, packet) => {
     sendMessageToRenderer('mqtt-message', {
       clientKey,
@@ -175,7 +180,7 @@ const createConnection = async (connection: MqttConnection) => {
   })
 
   connection.subscribedTopics.forEach((topic) => {
-    clientMqtt.subscribe(topic.topic, { qos: topic.qos })
+    clientMqtt.subscribe(topic.topic, { qos: topic.qos, rap: true })
   })
 }
 

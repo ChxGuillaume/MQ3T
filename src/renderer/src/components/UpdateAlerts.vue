@@ -2,6 +2,7 @@
 import UpdateDownloadModal from './UpdateDownloadModal.vue'
 import UpdateInstallModal from './UpdateInstallModal.vue'
 import { ElectronApi } from '../assets/js/electron-api'
+import ChangeLogsModal from './ChangeLogsModal.vue'
 import { useAppStore } from '../store/app-store'
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
@@ -12,6 +13,7 @@ const $q = useQuasar()
 
 const downloadUpdateModalOpened = ref(false)
 const installUpdateModalOpened = ref(false)
+const changeLogsModalOpened = ref(false)
 const downloadUpdateVersion = ref('vx.x.x')
 const updateProgressNotify = ref<ReturnType<typeof $q.notify> | null>(null)
 const updateCheckNotify = ref<ReturnType<typeof $q.notify> | null>(null)
@@ -132,7 +134,9 @@ const handleUpdateDownload = () => {
     v-model:opened="downloadUpdateModalOpened"
     :version="downloadUpdateVersion"
     @download="handleUpdateDownload"
+    @see-change-logs="changeLogsModalOpened = true"
   />
+  <change-logs-modal v-model:opened="changeLogsModalOpened" />
 </template>
 
 <style scoped lang="less"></style>

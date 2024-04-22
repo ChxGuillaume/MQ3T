@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import ChangeLogsModal from '../components/ChangeLogsModal.vue'
+import LicensesModal from '../components/AppDetailsModal.vue'
 import { useSettingsStore } from '../store/settings-store'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import moment from 'moment'
-import Versions from '../components/Versions.vue'
 
 const $q = useQuasar()
 const settingsStore = useSettingsStore()
@@ -42,7 +43,8 @@ const showActivityAnimationTypeOptions = [
 const defaultDataFormatOptions = [
   { label: 'Raw', value: 'raw' },
   { label: 'JSON', value: 'json' },
-  { label: 'XML', value: 'xml' }
+  { label: 'XML', value: 'xml' },
+  { label: 'YAML', value: 'yaml' }
 ]
 
 const dateFormatOptions = computed(() => {
@@ -142,24 +144,8 @@ const autoOpenPublishActionsSetting = computed({
   set: (val) => settingsStore.setAutoOpenPublishActions(val)
 })
 
+const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
-const versionClickCount = ref(0)
-const versionClickTimeout = ref()
-
-const handleVersionClick = () => {
-  clearTimeout(versionClickTimeout.value)
-
-  versionClickCount.value++
-
-  if (versionClickCount.value === 5) {
-    showVersionModal.value = true
-    versionClickCount.value = 0
-  }
-
-  versionClickTimeout.value = setTimeout(() => {
-    versionClickCount.value = 0
-  }, 1000)
-}
 </script>
 
 <template>
@@ -212,8 +198,11 @@ const handleVersionClick = () => {
         </template>
       </q-select>
       <q-card class="card-toggle" square flat>
-        <q-toggle v-model="smartTopicGroupCloseSetting" class="tw-w-full" label="Smart Topic Group">
-        </q-toggle>
+        <q-toggle
+          v-model="smartTopicGroupCloseSetting"
+          class="tw-w-full"
+          label="Smart Topic Group"
+        />
         <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
           <q-tooltip>
             When enabled topic groups closes if they are selected and clicked again
@@ -289,17 +278,19 @@ const handleVersionClick = () => {
       </q-card>
     </div>
 
-    <div
-      class="tw-fixed tw-bottom-2 tw-right-2 color-details tw-cursor-pointer tw-select-none"
-      @click="handleVersionClick"
-    >
-      Version {{ appStore.appVersion }}
+    <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
+      <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
+        <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
+        Change Logs
+      </div>
+      |
+      <div class="tw-cursor-pointer" @click="showVersionModal = true">
+        <q-icon name="fa-solid fa-info-circle" class="tw-mr-1" />
+        Version {{ appStore.appVersion }}
+      </div>
     </div>
-    <q-dialog v-model="showVersionModal">
-      <q-card flat>
-        <versions />
-      </q-card>
-    </q-dialog>
+    <licenses-modal v-model:opened="showVersionModal" />
+    <change-logs-modal v-model:opened="showChangeLogsModal" />
   </div>
 </template>
 

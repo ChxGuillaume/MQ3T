@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
-import { formatCode, validCode } from '../../../assets/js/format-code'
 import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
-import { computed, reactive, ref, watch } from 'vue'
-import DataValidBadge from '../DataValidBadge.vue'
+import { reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
@@ -110,14 +108,6 @@ const handleUpdate = async () => {
   handleCloseForm()
 }
 
-const handleFormatCode = () => {
-  codeEditorRef.value?.updateCodeEditorValue(formatCode(form.payload, editorLanguage.value))
-}
-
-const validDate = computed(() => {
-  return validCode(form.payload, editorLanguage.value)
-})
-
 watch(
   () => props.opened,
   (opened) => {
@@ -169,66 +159,36 @@ watch(
               hint="Topics can include + wildcard"
             />
           </div>
-          <div class="tw-grid tw-grid-cols-2 tw-gap-4">
-            <div class="tw-grid tw-gap-4">
-              <div class="tw-flex tw-justify-center tw-items-center tw-gap-4">
-                <q-card flat bordered class="tw-inline-block">
-                  <q-btn-toggle
-                    v-model="editorLanguage"
-                    toggle-color="primary"
-                    :options="[
-                      { label: 'Raw', value: 'raw' },
-                      { label: 'JSON', value: 'json' },
-                      { label: 'XML', value: 'xml' }
-                    ]"
-                  />
-                </q-card>
-                <div class="tw-min-w-[32px]">
-                  <data-valid-badge
-                    v-if="editorLanguage !== 'raw'"
-                    :is-valid="validDate"
-                    :language="editorLanguage"
-                  />
-                </div>
-                <q-btn
-                  color="primary"
-                  :disable="editorLanguage === 'raw'"
-                  @click="handleFormatCode"
-                >
-                  <q-icon size="xs" name="fa-solid fa-align-left" />
-                  <q-tooltip class="tw-bg-primary tw-text-sm">Format</q-tooltip>
-                </q-btn>
-              </div>
-
-              <div class="tw-flex tw-justify-center">
+          <div class="tw-grid tw-grid-cols tw-gap-4">
+            <div class="tw-flex tw-gap-4">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
                 <q-select
                   v-model="form.qos"
                   :options="[0, 1, 2]"
                   filled
-                  dense
                   label="QoS"
-                  class="tw-w-[96px]"
+                  class="tw-w-[128px]"
                 />
-                <q-toggle v-model="form.retained" label="Retain" />
+                <q-toggle v-model="form.retained" label="Retain" class="tw-pr-3" />
               </div>
+              <q-input
+                v-model="form.description"
+                filled
+                label="Description"
+                type="textarea"
+                rows="4"
+                class="action-description tw-flex-grow"
+              />
             </div>
-            <q-input
-              v-model="form.description"
-              filled
-              label="Description"
-              type="textarea"
-              rows="3"
-              class="action-description"
-            />
           </div>
           <div class="tw-mt-4 tw-h-[300px]">
             <code-editor
               v-if="showEditor"
+              v-model:language="editorLanguage"
               v-model="form.payload"
               ref="codeEditorRef"
               class="tw-h-[300px]"
               font-size="14"
-              :language="editorLanguage"
             />
           </div>
         </q-form>

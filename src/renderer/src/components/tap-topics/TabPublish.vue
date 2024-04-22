@@ -2,8 +2,6 @@
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
-import { formatCode, validCode } from '../../assets/js/format-code'
-import DataValidBadge from '../tab-actions/DataValidBadge.vue'
 import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
 import ActionCard from '../tab-actions/ActionCard.vue'
@@ -26,8 +24,8 @@ const actionsStore = useActionsStore()
 const publishType = ref<'manual' | 'action'>('manual')
 
 const publishDataType = ref(settingsStore.defaultDataFormat)
-const codeEditorSplitter = ref(200)
-const codeEditorLimits = ref([100, 400])
+const codeEditorSplitter = ref(250)
+const codeEditorLimits = ref([150, 450])
 const codeEditorData = ref('')
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
@@ -45,10 +43,6 @@ const convertToActionForm = reactive({
 const publishTopic = computed({
   get: () => mqttTopicsStore.selectedPublishTopic,
   set: (value) => mqttTopicsStore.setSelectedPublishTopic(value)
-})
-
-const validDate = computed(() => {
-  return validCode(codeEditorData.value, publishDataType.value)
 })
 
 const canPublish = computed(() => {
@@ -94,12 +88,6 @@ const handleMessageClick = (message: MqttMessage) => {
   codeEditorRef.value?.updateCodeEditorValue(message.message)
   retain.value = message.retained
   qos.value = message.qos
-}
-
-const handleFormatCode = () => {
-  codeEditorRef.value?.updateCodeEditorValue(
-    formatCode(codeEditorData.value, publishDataType.value)
-  )
 }
 
 const handleConvertToAction = (message: MqttMessage) => {
@@ -177,39 +165,17 @@ watch(
         </q-item-section>
       </template>
       <q-card class="tw-min-h-[calc(100vh-154px)]">
-        <div class="tw-flex tw-flex-col">
-          <q-separator />
-          <div class="tw-my-3 tw-px-3 tw-flex tw-justify-between tw-items-center">
-            <q-card flat bordered class="tw-inline-block">
-              <q-btn-toggle
-                v-model="publishDataType"
-                toggle-color="primary"
-                :options="[
-                  { label: 'Raw', value: 'raw' },
-                  { label: 'JSON', value: 'json' },
-                  { label: 'XML', value: 'xml' }
-                ]"
-              />
-            </q-card>
-            <data-valid-badge
-              v-if="publishDataType !== 'raw'"
-              :is-valid="validDate"
-              :language="publishDataType"
-              size="xs"
-            />
-            <q-btn color="primary" :disable="publishDataType === 'raw'" @click="handleFormatCode">
-              <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
-              Format
-            </q-btn>
-          </div>
-        </div>
         <q-splitter v-model="codeEditorSplitter" horizontal :limits="codeEditorLimits" unit="px">
           <template v-slot:before>
-            <code-editor v-model="codeEditorData" ref="codeEditorRef" :language="publishDataType" />
+            <code-editor
+              v-model:language="publishDataType"
+              v-model="codeEditorData"
+              ref="codeEditorRef"
+            />
           </template>
 
           <template v-slot:separator>
-            <splitter-icon @click:double="codeEditorSplitter = 200" />
+            <splitter-icon @click:double="codeEditorSplitter = 250" />
           </template>
 
           <template v-slot:after>
@@ -277,7 +243,7 @@ watch(
                     icon="fa-solid fa-right-left"
                     @click.stop="handleConvertToAction(message)"
                   >
-                    <q-tooltip class="tw-bg-secondary tw-text-white">
+                    <q-tooltip class="tw-bg-secondary tw-text-black">
                       Convert into action button
                     </q-tooltip>
                   </q-btn>

@@ -1,6 +1,6 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
+import { MqttConnection, MqttConnectionStatus } from './mqtt-connection'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
-import { MqttConnection } from './mqtt-connection'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
 import {
@@ -21,7 +21,7 @@ export type MqttMessageCallback = (
 
 export type MqttStatusCallback = (
   event: never,
-  value: { clientKey: string; status: 'connected' | 'connecting' | 'disconnected' }
+  value: { clientKey: string; status: MqttConnectionStatus }
 ) => void
 
 export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void

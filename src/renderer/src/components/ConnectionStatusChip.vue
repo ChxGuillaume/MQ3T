@@ -1,34 +1,59 @@
 <script setup lang="ts">
-defineProps<{
-  connectionStatus: 'connected' | 'connecting' | 'disconnected'
+import { MqttConnectionStatus } from '../../../types/mqtt-connection'
+import { computed } from 'vue'
+
+interface Props {
+  connectionStatus: MqttConnectionStatus
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
-}>()
+}
+
+const props = withDefaults(defineProps<Props>(), { connectionStatus: 'disconnected', size: 'md' })
+
+const color = computed(() => {
+  switch (props.connectionStatus) {
+    case 'connected':
+      return 'green'
+    case 'connecting':
+    case 'reconnecting':
+      return 'yellow'
+    default:
+      return 'red'
+  }
+})
+
+const label = computed(() => {
+  switch (props.connectionStatus) {
+    case 'connected':
+      return 'Connected'
+    case 'connecting':
+      return 'Connecting'
+    case 'disconnected':
+      return 'Disconnected'
+    case 'reconnecting':
+      return 'Reconnecting'
+    default:
+      return 'Unknown'
+  }
+})
+
+const textColor = computed(() => {
+  switch (props.connectionStatus) {
+    case 'connecting':
+    case 'reconnecting':
+      return 'black'
+    default:
+      return 'white'
+  }
+})
 </script>
 
 <template>
   <q-chip
-    v-if="connectionStatus === 'connected'"
     class="text-weight-bold"
-    :size="size || 'md'"
-    color="green"
-    text-color="white"
-    label="Connected"
-  />
-  <q-chip
-    v-else-if="connectionStatus === 'connecting'"
-    class="text-weight-bold"
-    :size="size || 'md'"
-    color="yellow"
-    text-color="black"
-    label="Connecting"
-  />
-  <q-chip
-    v-else
-    class="text-weight-bold"
-    :size="size || 'md'"
-    color="red"
-    text-color="white"
-    label="Disconnected"
+    :text-color="textColor"
+    :color="color"
+    :label="label"
+    :size="size"
   />
 </template>
 

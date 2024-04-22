@@ -13,6 +13,8 @@ import '@quasar/extras/animate/fadeOutRight.css'
 import '@quasar/extras/animate/fadeInRight.css'
 import '@quasar/extras/animate/fadeOut.css'
 import '@quasar/extras/animate/fadeIn.css'
+import '@quasar/extras/animate/slideOutRight.css'
+import '@quasar/extras/animate/slideInRight.css'
 
 import 'quasar/src/css/index.sass'
 import './assets/css/fonts.css'
