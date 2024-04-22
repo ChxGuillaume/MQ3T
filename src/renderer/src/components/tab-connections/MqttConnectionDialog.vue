@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
 import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
+import AdvancedSettings from '../tab-settings/AdvancedSettings.vue'
+import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
+import { nextTick, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
-import { ref, watch } from 'vue'
 
 const props = defineProps<{
   dialogOpened: boolean
@@ -14,8 +15,8 @@ const emits = defineEmits(['create:connection', 'update:connection', 'update:dia
 
 const addSubscriptionTopicPopupProxyRef = ref<QPopupProxy | null>(null)
 const addSubscriptionTopicFormRef = ref<QForm | null>(null)
-const settingsCategoryTab = ref('advanced')
-const connectionFormRef = ref<QForm | null>(null)
+const generalSettingsFormRef = ref<QForm | null>(null)
+const settingsCategoryTab = ref('general')
 const dialogRef = ref<QDialog | null>(null)
 
 const advancedSettingsExpanded = ref(false)
@@ -70,6 +71,8 @@ const clearForm = () => {
 
   form.value.connectTimeout = 30
   form.value.reconnectPeriod = 1
+
+  settingsCategoryTab.value = 'general'
 }
 
 const handleAddTopic = async () => {
@@ -96,21 +99,40 @@ const handleDeleteSubscribedTopic = (index: number) => {
 }
 
 const handleAddConnection = async () => {
-  const validForm = await connectionFormRef.value?.validate()
+  const valideForms = await validForms()
 
-  if (!validForm) return
+  if (!valideForms) return
 
   emits('create:connection', Object.assign({}, form.value))
   handleCloseForm()
 }
 
 const handleUpdateConnection = async () => {
-  const validForm = await connectionFormRef.value?.validate()
+  const valideForms = await validForms()
 
-  if (!validForm) return
+  if (!valideForms) return
 
   emits('update:connection', Object.assign({}, form.value))
   handleCloseForm()
+}
+
+const validForms = async () => {
+  settingsCategoryTab.value = 'general'
+
+  await nextTick()
+
+  const validGeneralForm = await generalSettingsFormRef.value?.validate()
+
+  if (!validGeneralForm) return false
+
+  settingsCategoryTab.value = 'subscriptions'
+  await nextTick()
+  settingsCategoryTab.value = 'advanced'
+  await nextTick()
+  settingsCategoryTab.value = 'last-will'
+  await nextTick()
+
+  return true
 }
 
 const handleCloseForm = () => {
@@ -145,12 +167,6 @@ const mqttProtocolOptions = [
   { label: 'mqtts://', value: 'mqtts' },
   { label: 'ws://', value: 'ws' },
   { label: 'wss://', value: 'wss' }
-]
-
-const mqttProtocolVersions = [
-  { label: 'MQTT 5', value: 5 },
-  { label: 'MQTT 3.1.1', value: 4 },
-  { label: 'MQTT 3.1', value: 3 }
 ]
 
 const rules = {
@@ -199,7 +215,7 @@ watch(
             transition-next="jump-left"
           >
             <q-tab-panel name="general" class="tw-overflow-x-hidden">
-              <q-form ref="connectionFormRef" class="tw-h-96 tw-flex tw-flex-col tw-gap-4">
+              <q-form ref="generalSettingsFormRef" class="tw-h-96 tw-flex tw-flex-col tw-gap-4">
                 <div>
                   <q-input v-model="form.name" filled label="Name" :rules="rules.name" />
                 </div>
@@ -396,40 +412,12 @@ watch(
             </q-tab-panel>
 
             <q-tab-panel name="advanced">
-              <q-card flat class="tw-h-96">
-                <div class="tw-flex tw-gap-4">
-                  <q-select
-                    v-model="form.protocolVersion"
-                    :options="mqttProtocolVersions"
-                    class="tw-min-w-[200px] tw-flex-grow"
-                    filled
-                    label="Protocol version"
-                    emit-value
-                  >
-                    <template #selected-item>
-                      {{
-                        mqttProtocolVersions.find((o) => o.value === form.protocolVersion)?.label
-                      }}
-                    </template>
-                  </q-select>
-                  <q-input
-                    v-model.number="form.connectTimeout"
-                    class="tw-flex-grow"
-                    filled
-                    label="Connect timeout"
-                    type="number"
-                    min="1"
-                  />
-                  <q-input
-                    v-model.number="form.reconnectPeriod"
-                    class="tw-flex-grow"
-                    filled
-                    label="Reconnect period"
-                    type="number"
-                    min="0"
-                  />
-                </div>
-              </q-card>
+              <advanced-settings
+                v-model:protocol-version="form.protocolVersion"
+                v-model:reconnect-period="form.reconnectPeriod"
+                v-model:connect-timeout="form.connectTimeout"
+                class="tw-h-96"
+              />
             </q-tab-panel>
 
             <q-tab-panel name="last-will">

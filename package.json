@@ -41,7 +41,8 @@
     "quasar": "^2.14.4",
     "uuid": "^9.0.1",
     "vuedraggable": "^4.1.0",
-    "xml-formatter": "^3.5.0"
+    "xml-formatter": "^3.5.0",
+    "yaml": "^2.4.1"
   },
   "devDependencies": {
     "@babel/traverse": ">=7.23.2",

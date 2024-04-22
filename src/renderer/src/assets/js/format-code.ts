@@ -1,3 +1,4 @@
+import { parse, stringify } from 'yaml'
 import xmlFormat from 'xml-formatter'
 
 export const formatJson = (message: string) => {
@@ -13,6 +14,16 @@ export const formatXml = (message: string) => {
     return xmlFormat(message, {
       indentation: '    ',
       collapseContent: true
+    })
+  } catch (e) {
+    return message
+  }
+}
+
+export const formatYaml = (message: string) => {
+  try {
+    return stringify(parse(message), {
+      indent: 4
     })
   } catch (e) {
     return message
@@ -51,12 +62,22 @@ export const validXml = (message: string): boolean => {
   }
 }
 
-export const validCode = (message: string, contentType: 'json' | 'xml' | string) => {
+export const validYaml = (message: string): boolean => {
+  try {
+    return parse(message) !== null
+  } catch (e) {
+    return false
+  }
+}
+
+export const validCode = (message: string, contentType: 'json' | 'xml' | 'yaml' | string) => {
   switch (contentType) {
     case 'json':
       return validJson(message)
     case 'xml':
       return validXml(message)
+    case 'yaml':
+      return validYaml(message)
   }
 
   return true

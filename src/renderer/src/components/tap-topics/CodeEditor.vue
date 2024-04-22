@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { validCode } from '../../assets/js/format-code'
+import { computed, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
 
@@ -15,7 +16,7 @@ const props = defineProps<{
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
 }>()
 
-const emits = defineEmits(['update:modelValue'])
+const emits = defineEmits(['update:modelValue', 'update:language'])
 
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
@@ -74,27 +75,89 @@ watch(
     monaco.editor.setModelLanguage(codeEditor.getModel()!, newLanguage || 'json')
   }
 )
+
+const editorLanguage = computed({
+  get: () => props.language || 'raw',
+  set: (value) => {
+    emits('update:modelValue', codeEditor!.getValue())
+    emits('update:language', value)
+
+    monaco.editor.setModelLanguage(codeEditor!.getModel()!, value)
+  }
+})
+
+const handleFormatCode = () => {
+  codeEditor?.getAction('editor.action.formatDocument')?.run()
+}
+
+const valideCode = computed(() => {
+  return validCode(props.modelValue, editorLanguage.value)
+})
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="monaco-editor" />
+  <div class="editor">
+    <div
+      ref="monacoEditorRef"
+      class="monaco-editor tw-w-full tw-flex-grow"
+      :class="{ 'validation-error': !valideCode, raw: editorLanguage === 'raw' }"
+    />
+    <div class="options tw-p-3 tw-flex tw-justify-between">
+      <q-btn-toggle
+        v-model="editorLanguage"
+        toggle-color="primary"
+        unelevated
+        dense
+        padding="4px 12px"
+        :options="[
+          { label: 'Raw', value: 'raw' },
+          { label: 'JSON', value: 'json' },
+          { label: 'XML', value: 'xml' },
+          { label: 'YAML', value: 'yaml' }
+        ]"
+      />
+      <q-btn
+        color="primary"
+        dense
+        padding="0px 12px"
+        :disable="editorLanguage === 'raw'"
+        @click="handleFormatCode"
+      >
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
+        Format
+      </q-btn>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="less">
-.monaco-editor {
-  @apply tw-w-full tw-border-y;
-  height: 100%;
-}
-
 .body--light {
-  .monaco-editor {
+  .monaco-editor.raw,
+  .options {
     @apply tw-border-black/20;
   }
 }
 
 .body--dark {
-  .monaco-editor {
+  .monaco-editor.raw,
+  .options {
     @apply tw-border-white/20;
   }
+}
+
+.options {
+  @apply tw-border-t-2;
+}
+
+.editor {
+  @apply tw-h-full tw-flex tw-flex-col-reverse;
+}
+
+.monaco-editor {
+  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto;
+}
+
+.validation-error {
+  @apply tw-border-red-500/40;
 }
 </style>

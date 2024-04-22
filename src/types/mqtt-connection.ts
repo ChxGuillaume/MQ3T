@@ -20,6 +20,13 @@ export type MqttConnection = {
 
   connectTimeout?: number
   reconnectPeriod?: number
+
+  lastWill?: {
+    topic: string
+    qos: 0 | 1 | 2
+    retain: boolean
+    payload: string
+  }
 }
 
 export type MqttConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'disconnected'

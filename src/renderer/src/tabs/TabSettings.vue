@@ -42,7 +42,8 @@ const showActivityAnimationTypeOptions = [
 const defaultDataFormatOptions = [
   { label: 'Raw', value: 'raw' },
   { label: 'JSON', value: 'json' },
-  { label: 'XML', value: 'xml' }
+  { label: 'XML', value: 'xml' },
+  { label: 'YAML', value: 'yaml' }
 ]
 
 const dateFormatOptions = computed(() => {
@@ -212,8 +213,11 @@ const handleVersionClick = () => {
         </template>
       </q-select>
       <q-card class="card-toggle" square flat>
-        <q-toggle v-model="smartTopicGroupCloseSetting" class="tw-w-full" label="Smart Topic Group">
-        </q-toggle>
+        <q-toggle
+          v-model="smartTopicGroupCloseSetting"
+          class="tw-w-full"
+          label="Smart Topic Group"
+        />
         <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
           <q-tooltip>
             When enabled topic groups closes if they are selected and clicked again
