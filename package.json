@@ -34,6 +34,7 @@
     "@electron-toolkit/utils": "^2.0.0",
     "@quasar/extras": "^1.16.9",
     "axios": "^1.6.8",
+    "echarts": "^5.5.0",
     "electron-updater": "^6.2.1",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
@@ -42,6 +43,7 @@
     "pinia": "^2.1.6",
     "quasar": "^2.14.4",
     "uuid": "^9.0.1",
+    "vue-echarts": "^6.7.1",
     "vuedraggable": "^4.1.0",
     "xml-formatter": "^3.5.0",
     "yaml": "^2.4.1"

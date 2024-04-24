@@ -97,7 +97,7 @@ const groups = computed({
 })
 
 const dragOptions = computed(() => {
-  return { animation: 200, group: 'mqtt-connections', ghostClass: 'ghost' }
+  return { animation: 200, group: 'actions', ghostClass: 'ghost' }
 })
 
 const handleImport = () => {
