@@ -1,15 +1,16 @@
 <script setup lang="ts">
+import { parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
+import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { formatCode } from '../../assets/js/format-code'
-import TestChartCard from '../graphs/TestChartCard.vue'
+import { useDataGraphs } from '../../store/data-graphs'
+import LineChartCard from '../graphs/LineChartCard.vue'
 import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
 import _ from 'lodash'
-import {
-  parseJsonForGlyphs,
-  getDataFromPath,
-  GlyphLine
-} from '../../assets/js/parse-json-for-glyphs'
+
+const mqttTopicsStore = useMqttTopicsStore()
+const dataGraphsStore = useDataGraphs()
 
 const $q = useQuasar()
 
@@ -24,12 +25,19 @@ let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
 const monacoEditorRef = ref(null)
 
+const currentDataPath = ref('')
+const forceShowGraph = ref(false)
+const showGraph = ref(false)
+const myGraph = ref<HTMLDivElement | null>(null)
+const x = ref(0)
+const y = ref(0)
+
 const updatePreviewValue = _.debounce(
   (value) => {
     const formatedValue = formatCode(value, props.language || 'raw')
     codeEditor?.setValue(formatedValue)
 
-    if (props.language === 'json') addGlyphs(parseJsonForGlyphs(formatedValue))
+    if (props.language === 'json') addGlyphs(formatedValue)
   },
   250,
   { leading: true, trailing: true, maxWait: 250 }
@@ -40,7 +48,9 @@ const encodePathToClass = (path: string): string =>
 const decodePathFromClass = (path: string): string =>
   path.replace(/---_/g, ']').replace(/--/g, '[').replace(/-/g, '.').replace(/_/g, '')
 
-const addGlyphs = (positions: GlyphLine[]) => {
+const addGlyphs = (formatedValue: string) => {
+  const positions = parseJsonForGlyphs(formatedValue)
+
   codeEditor?.createDecorationsCollection(
     positions.map((lineNumber) => ({
       range: new monaco.Range(lineNumber.lineNumber, 0, lineNumber.lineNumber, 0),
@@ -69,11 +79,8 @@ watch(
   (isDark) => {
     if (!codeEditor) return
 
-    if (isDark) {
-      monaco.editor.setTheme('vs-dark-darker')
-    } else {
-      monaco.editor.setTheme('vs-lighter')
-    }
+    if (isDark) monaco.editor.setTheme('vs-dark-darker')
+    else monaco.editor.setTheme('vs-lighter')
   }
 )
 
@@ -109,7 +116,7 @@ onMounted(() => {
     glyphMargin: true
   })
 
-  if (props.language === 'json') addGlyphs(parseJsonForGlyphs(formatedValue))
+  if (props.language === 'json') addGlyphs(formatedValue)
 
   codeEditor.onMouseDown((e) => {
     const element = e.target.element
@@ -117,15 +124,14 @@ onMounted(() => {
     if (!element) return
     if (!checkForGlyphElement(element)) return
 
-    const dataPathClass =
-      element.className
-        .split(' ')
-        .find((t) => t.startsWith('data-path---'))
-        ?.replace('data-path---', '') || ''
+    const dataPathClass = getElementDataPathClass(element)
     const dataPath = decodePathFromClass(dataPathClass)
 
-    console.log(dataPath)
-    console.log(getDataFromPath(JSON.parse(props.value), dataPath))
+    dataGraphsStore.addDataGraph({
+      clientKey: mqttTopicsStore.selectedConnection,
+      topic: mqttTopicsStore.selectedTopic,
+      dataPath
+    })
   })
 
   codeEditor.onMouseMove(function (e) {
@@ -145,22 +151,38 @@ onMounted(() => {
     if (!graphRect) return
     if (graphRect.width === 0 || graphRect.width === 0) return
 
-    x.value = rect.x - graphRect.width
+    x.value = rect.x - graphRect.width - 10
     y.value = rect.y + rect.height / 2 - graphRect.height / 2
+
+    const dataPathClass = getElementDataPathClass(element)
+    const dataPath = decodePathFromClass(dataPathClass)
+
+    if (dataPath === currentDataPath.value) return
+
+    currentDataPath.value = decodePathFromClass(dataPath)
+  })
+
+  codeEditor.onMouseLeave(() => {
+    setTimeout(() => {
+      showGraph.value = false
+    }, 100)
   })
 })
+
+const getElementDataPathClass = (element: HTMLElement): string => {
+  return (
+    element.className
+      .split(' ')
+      .find((t) => t.startsWith('data-path---'))
+      ?.replace('data-path---', '') || ''
+  )
+}
 
 const checkForGlyphElement = (element: HTMLElement | null): boolean => {
   if (!element) return false
 
   return element.classList.contains(glyphMarginClass)
 }
-
-const x = ref(0)
-const y = ref(0)
-const forceShowGraph = ref(false)
-const showGraph = ref(false)
-const myGraph = ref<HTMLDivElement | null>(null)
 </script>
 
 <template>
@@ -168,26 +190,43 @@ const myGraph = ref<HTMLDivElement | null>(null)
   <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
     <div
       ref="myGraph"
+      v-if="language === 'json'"
       v-show="showGraph || forceShowGraph"
-      class="tw-fixed"
+      class="tw-fixed tw-w-fit"
       :style="{ top: `${y}px`, left: `${x}px` }"
       @mouseenter="forceShowGraph = true"
       @mouseleave="forceShowGraph = false"
     >
-      <test-chart-card />
+      <line-chart-card
+        class="tw-w-[500px]"
+        :topic="mqttTopicsStore.selectedTopic"
+        :connectionId="mqttTopicsStore.selectedConnection"
+        :data-path="currentDataPath"
+      />
     </div>
   </transition>
 </template>
 
-<!-- TODO: Theming -->
 <style lang="less">
 .code-preview-glyph {
-  @apply tw-transition-colors tw-rounded-full tw-text-white;
+  @apply tw-transition-colors tw-rounded-full;
   font-size: 10px;
 }
 
+.body--dark {
+  .code-preview-glyph {
+    @apply tw-text-white;
+  }
+}
+
+.body--light {
+  .code-preview-glyph {
+    @apply tw-text-black;
+  }
+}
+
 .code-preview-glyph:hover {
-  @apply tw-bg-accent tw-cursor-pointer tw-text-black;
+  @apply tw-bg-secondary tw-cursor-pointer tw-text-black;
 }
 </style>
 

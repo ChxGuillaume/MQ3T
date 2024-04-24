@@ -7,10 +7,12 @@ import TabPublish from '../components/tap-topics/TabPublish.vue'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
+import GraphList from '../components/tap-topics/GraphList.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
+import { useDataGraphs } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { scroll } from 'quasar'
@@ -20,16 +22,28 @@ const { setVerticalScrollPosition } = scroll
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
+const dataGraphsStore = useDataGraphs()
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
 
-const splitterModel = ref(400)
+const visualizationSplitter = ref(400)
 
 const scrubbingTimeout = ref<NodeJS.Timeout | undefined>(undefined)
 const expandConnection = ref<{ [key: string]: boolean }>({})
 const selectedConnection = ref('')
 
 const topicTabRecord = ref<Record<string, string>>({})
+
+const graphSplitterData = ref(40)
+const graphSplitter = computed({
+  get: () => {
+    if (!dataGraphsStore.dataGraph.length) return 0
+    return graphSplitterData.value
+  },
+  set: (value) => {
+    graphSplitterData.value = value
+  }
+})
 
 const topicTab = computed({
   get: () => {
@@ -255,79 +269,103 @@ const handleScrollNextTopic = (nextTopic: string) => {
 
 <template>
   <q-splitter
-    v-model="splitterModel"
+    v-model="visualizationSplitter"
     class="tw-h-full tw-max-h-full"
     :limits="[400, 700]"
     unit="px"
     reverse
   >
     <template #before>
-      <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
-        <div class="">
-          <q-input
-            v-model="topicSearch"
-            filled
-            label="Search Topic..."
-            dense
-            square
-            debounce="100"
-          />
-        </div>
-        <q-separator />
-        <div
-          class="tw-overflow-auto"
-          @keyup.up.prevent="handleUpKeyUp"
-          @keydown.up.prevent="handleUpKeyDown"
-          @keyup.down.prevent="handleDownKeyUp"
-          @keydown.down.prevent="handleDownKeyDown"
-          @keydown.left.prevent="handleLeftKey"
-          @keydown.right.prevent="handleRightKey"
-        >
-          <q-virtual-scroll
-            id="topicsVirtualScroll"
-            v-slot="{ item: [_, value] }"
-            class="tw-h-full tw-max-h-full"
-            :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
-          >
-            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1" :key="value.clientKey">
-              <topic-card
-                expandable
-                :active="selectedConnection === value.clientKey"
-                :opened="!expandConnection[value.clientKey]"
-                @open:toggle="handleExpandConnection(value.clientKey)"
-              >
-                <span class="connection-card-title">{{ value.name }}</span>
-                <span class="tw-ml-1">
-                  <connection-status-chip
-                    :connection-status="mqttConnectionsStore.getConnectionStatus(value.clientKey)"
-                    size="xs"
-                  />
-                </span>
-                <connection-context-menu :connection="value" />
-              </topic-card>
-              <template v-if="!expandConnection[value.clientKey]">
-                <TopicItem
-                  v-for="[pathKey, structure] in Object.entries(
-                    mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
-                  ).sort((a, b) => a[0].localeCompare(b[0]))"
-                  :key="pathKey"
-                  :client-key="value.clientKey"
-                  :topic-key="pathKey"
-                  :topic-path="pathKey"
-                  :topic-index="1"
-                  :topic-structure="structure"
-                  @topic:click="handleTopicClick(value.clientKey, $event)"
-                />
-              </template>
+      <q-splitter
+        v-model="graphSplitter"
+        class="overflow-hidden"
+        :limits="[0, 90]"
+        horizontal
+        reverse
+        :disable="!dataGraphsStore.dataGraph.length"
+      >
+        <template #before>
+          <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
+            <div class="">
+              <q-input
+                v-model="topicSearch"
+                filled
+                label="Search Topic..."
+                dense
+                square
+                debounce="100"
+              />
             </div>
             <q-separator />
-          </q-virtual-scroll>
-        </div>
-      </div>
+            <div
+              class="tw-overflow-auto"
+              @keyup.up.prevent="handleUpKeyUp"
+              @keydown.up.prevent="handleUpKeyDown"
+              @keyup.down.prevent="handleDownKeyUp"
+              @keydown.down.prevent="handleDownKeyDown"
+              @keydown.left.prevent="handleLeftKey"
+              @keydown.right.prevent="handleRightKey"
+            >
+              <q-virtual-scroll
+                id="topicsVirtualScroll"
+                v-slot="{ item: [_, value] }"
+                class="tw-h-full tw-max-h-full"
+                :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
+              >
+                <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1" :key="value.clientKey">
+                  <topic-card
+                    expandable
+                    :active="selectedConnection === value.clientKey"
+                    :opened="!expandConnection[value.clientKey]"
+                    @open:toggle="handleExpandConnection(value.clientKey)"
+                  >
+                    <span class="connection-card-title">{{ value.name }}</span>
+                    <span class="tw-ml-1">
+                      <connection-status-chip
+                        :connection-status="
+                          mqttConnectionsStore.getConnectionStatus(value.clientKey)
+                        "
+                        size="xs"
+                      />
+                    </span>
+                    <connection-context-menu :connection="value" />
+                  </topic-card>
+                  <template v-if="!expandConnection[value.clientKey]">
+                    <TopicItem
+                      v-for="[pathKey, structure] in Object.entries(
+                        mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
+                      ).sort((a, b) => a[0].localeCompare(b[0]))"
+                      :key="pathKey"
+                      :client-key="value.clientKey"
+                      :topic-key="pathKey"
+                      :topic-path="pathKey"
+                      :topic-index="1"
+                      :topic-structure="structure"
+                      @topic:click="handleTopicClick(value.clientKey, $event)"
+                    />
+                  </template>
+                </div>
+                <q-separator />
+              </q-virtual-scroll>
+            </div>
+          </div>
+        </template>
+
+        <template #separator>
+          <splitter-icon
+            v-if="dataGraphsStore.dataGraph.length"
+            @click:double="graphSplitter = 40"
+          />
+        </template>
+
+        <template #after>
+          <graph-list />
+        </template>
+      </q-splitter>
     </template>
 
     <template v-slot:separator>
-      <splitter-icon vertical @click:double="splitterModel = 400" />
+      <splitter-icon vertical @click:double="visualizationSplitter = 400" />
     </template>
 
     <template #after>

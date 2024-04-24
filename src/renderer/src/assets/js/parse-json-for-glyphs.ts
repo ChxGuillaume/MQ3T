@@ -60,6 +60,8 @@ const trimLine = (line: string): string => {
 }
 
 export const getDataFromPath = (data: any, path: string): number | null => {
+  if (path === '' && !isNaN(data)) return data
+
   const pathParts = path.replace(/[\[\]]/g, '').split('.')
   let result = data
 
