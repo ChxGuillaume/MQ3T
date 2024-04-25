@@ -2,14 +2,16 @@ import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
 
 export type DataGraph = {
-  id: string
+  id: string | null
   clientKey: string
   topic: string
   dataPath: string
-  size: 'small' | 'medium' | 'large'
+  color?: string
+  size?: 'small' | 'medium' | 'large'
+  curveType?: 'linear' | 'curve' | 'step-start' | 'step-end'
 }
 
-export const useDataGraphs = defineStore('data-graphs', {
+export const useDataGraphsStore = defineStore('data-graphs', {
   state: () => ({
     dataGraph: [] as DataGraph[]
   }),
@@ -27,19 +29,22 @@ export const useDataGraphs = defineStore('data-graphs', {
 
       if (hasDuplicate) return
 
-      this.dataGraph.push({ ...dataGraph, size: 'small', id: uuidV4() })
+      this.dataGraph.push({ ...dataGraph, size: 'small', curveType: 'curve', id: uuidV4() })
     },
-    removeDataGraph(id: string) {
+    removeDataGraph(id: DataGraph['id']) {
       this.dataGraph = this.dataGraph.filter((graph) => graph.id !== id)
     },
-    setDataGraphSize(id: string, size: 'small' | 'medium' | 'large') {
-      this.dataGraph = this.dataGraph.map((graph) => {
-        if (graph.id === id) {
-          return { ...graph, size }
-        }
-
-        return graph
-      })
+    setDataGraphSize(id: DataGraph['id'], size: 'small' | 'medium' | 'large') {
+      this.dataGraph.find((graph) => graph.id === id)!.size = size
+    },
+    setDataGraphColor(id: DataGraph['id'], color: string) {
+      this.dataGraph.find((graph) => graph.id === id)!.color = color
+    },
+    setDataGraphCurveType(
+      id: DataGraph['id'],
+      curveType: 'linear' | 'curve' | 'step-start' | 'step-end'
+    ) {
+      this.dataGraph.find((graph) => graph.id === id)!.curveType = curveType
     }
   }
 })
