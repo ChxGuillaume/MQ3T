@@ -7,46 +7,66 @@ export type GlyphLine = {
 export const parseJsonForGlyphs = (value: string): GlyphLine[] => {
   const splitValue = value.split('\n')
   const linesNumbers: GlyphLine[] = []
-  let currentPath: string[] = []
-  let arrayIndex: Record<string, number> = {}
-  let arrayPath: string[] = []
+  const contextPath: ('object' | 'array')[] = []
+  const currentPath: string[] = []
+  const arrayIndex: Record<string, number> = {}
 
   splitValue.forEach((line, index) => {
     let trimmedLine = trimLine(line)
+    const [key, value] = trimmedLine.replace(/"/g, '').split(':')
+    const isKeyValueLine = trimmedLine.includes(':')
+    const endsWithOpenBracket = trimmedLine.endsWith('{')
+    const endsWithCloseBracket = trimmedLine.endsWith('}')
+    const endsWithOpenSquareBracket = trimmedLine.endsWith('[')
+    const endsWithCloseSquareBracket = trimmedLine.endsWith(']')
 
-    if (trimmedLine.includes(':') && trimmedLine.endsWith('{')) {
-      const [key, _] = trimmedLine.split(':')
-      currentPath.push(key.trim().replace(/"/g, ''))
-    } else if (trimmedLine.includes(':') && trimmedLine.endsWith('[')) {
-      const [key, _] = trimmedLine.split(':')
-      currentPath.pop()
-      currentPath.push(key.trim().replace(/"/g, ''))
-      arrayIndex[currentPath.join('.')] = 0
-      arrayPath.push(key.trim())
-    } else if (trimmedLine.includes(':')) {
-      const [key, _] = trimmedLine.split(':')
-      if (
-        !trimLine(splitValue[index - 1]).endsWith('{') &&
-        !trimLine(splitValue[index - 1]).endsWith(']')
-      )
+    const currentContext = contextPath[contextPath.length - 1]
+
+    if (isKeyValueLine) {
+      if (endsWithOpenBracket) {
+        currentPath.push(key)
+      } else if (endsWithOpenSquareBracket) {
+        currentPath.push(key)
+        arrayIndex[currentPath.join('.')] = 0
+      } else {
+        currentPath.push(key)
+      }
+    } else {
+      if (endsWithOpenBracket) {
+        if (currentContext === 'array') currentPath.push(`[${arrayIndex[currentPath.join('.')]++}]`)
+      } else if (endsWithOpenSquareBracket) {
+        arrayIndex[currentPath.join('.')] = 0
+      } else if (endsWithCloseBracket) {
         currentPath.pop()
-      currentPath.push(key.trim().replace(/"/g, ''))
-    } else if (trimmedLine.endsWith('}')) {
-      if (!trimLine(splitValue[index - 1]).endsWith(']')) currentPath.pop()
-    } else if (trimmedLine.endsWith(']')) {
-      currentPath.pop()
-      currentPath.pop()
-      arrayPath.pop()
-    } else if (arrayPath.length) {
-      if (!splitValue[index - 1].endsWith('[')) currentPath.pop()
-      currentPath.push(`[${arrayIndex[currentPath.join('.')]++}]`)
+      } else if (endsWithCloseSquareBracket) {
+        currentPath.pop()
+      } else {
+        if (currentContext === 'array') currentPath.push(`[${arrayIndex[currentPath.join('.')]++}]`)
+      }
     }
 
+    // Update Context
+    if (endsWithOpenBracket) contextPath.push('object')
+    else if (endsWithOpenSquareBracket) contextPath.push('array')
+    else if (endsWithCloseBracket || endsWithCloseSquareBracket) contextPath.pop()
+
     let valueToTest = trimmedLine.trim()
-    if (trimmedLine.includes(':')) valueToTest = trimmedLine.split(':')[1].trim()
+    if (isKeyValueLine) valueToTest = value.trim()
 
     if (!isNaN(Number(valueToTest.trim()))) {
       linesNumbers.push({ lineNumber: index + 1, path: currentPath.join('.') })
+    }
+
+    if (isKeyValueLine && !endsWithOpenBracket && !endsWithOpenSquareBracket) currentPath.pop()
+    else if (
+      !isKeyValueLine &&
+      !endsWithOpenBracket &&
+      !endsWithOpenSquareBracket &&
+      !endsWithCloseBracket &&
+      !endsWithCloseSquareBracket &&
+      currentContext === 'array'
+    ) {
+      currentPath.pop()
     }
   })
 

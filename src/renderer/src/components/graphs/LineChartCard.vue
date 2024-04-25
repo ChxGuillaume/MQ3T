@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { GridComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { DataGraph, useDataGraphsStore } from '../../store/data-graphs'
 import { getDataFromPath } from '../../assets/js/parse-json-for-glyphs'
 import LineChartContextMenu from './LineChartContextMenu.vue'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
@@ -8,46 +9,44 @@ import { useAppStore } from '../../store/app-store'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import colors from 'tailwindcss/colors'
-import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { use } from 'echarts/core'
 import moment from 'moment/moment'
 import VChart from 'vue-echarts'
+import { computed } from 'vue'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, GridComponent])
 
 const mqttTopicsStore = useMqttTopicsStore()
+const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
 
 const $q = useQuasar()
 
 const props = defineProps<{
   showTitle?: boolean
-  connectionId: string
-  topic: string
-  dataPath: string
-  cardWidth?: 'small' | 'medium' | 'large'
+  dataGraph: DataGraph
 }>()
 
 defineEmits<{
-  'update:cardWidth': ['small' | 'medium' | 'large']
   delete: []
 }>()
 
 const girdColor = computed(() => ($q.dark.isActive ? colors.neutral[700] : colors.neutral[200]))
 
-const curveType = ref<'linear' | 'curve' | 'step-start' | 'step-end'>('curve')
-const graphColor = ref<string>(colors.blue[500])
-
 const messagesForGraph = computed(() => {
-  if (!props.connectionId || !props.topic) return []
+  const clientKey = props.dataGraph.clientKey
+  const topic = props.dataGraph.topic
+  const dataPath = props.dataGraph.dataPath
 
-  const messages = mqttTopicsStore.topicsMessages[props.connectionId][props.topic]
+  if (!clientKey || !topic) return []
+
+  const messages = mqttTopicsStore.topicsMessages[clientKey][topic]
 
   return messages
     .map((m) => ({
-      value: getDataFromPath(JSON.parse(m.message), props.dataPath),
-      date: moment(m.createdAt).format('YYYY-MM-DD HH:mm:ss')
+      value: getDataFromPath(JSON.parse(m.message), dataPath),
+      date: moment(m.createdAt).format()
     }))
     .filter((d) => d.value !== null)
 })
@@ -55,11 +54,11 @@ const messagesForGraph = computed(() => {
 const options = computed(() => {
   const sortedData = messagesForGraph.value
     .slice()
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => moment(a.date).unix() - moment(b.date).unix())
 
   let step: string = ''
 
-  switch (curveType.value) {
+  switch (props.dataGraph.curveType) {
     case 'step-start':
       step = 'start'
       break
@@ -71,7 +70,7 @@ const options = computed(() => {
   return {
     tooltip: { trigger: 'axis' },
     xAxis: {
-      data: sortedData.map((d) => d.date),
+      type: 'time',
       show: false,
       splitLine: { show: false }
     },
@@ -95,11 +94,11 @@ const options = computed(() => {
     },
     series: [
       {
-        data: sortedData.map((d) => d.value),
+        data: sortedData.map((d) => [d.date, d.value]),
         type: 'line',
-        itemStyle: { color: graphColor.value },
+        itemStyle: { color: props.dataGraph.color },
         step,
-        smooth: curveType.value === 'curve'
+        smooth: props.dataGraph.curveType === 'curve'
       }
     ]
   }
@@ -108,42 +107,51 @@ const options = computed(() => {
 const showGraph = computed(() => {
   return appStore.currentTab === 'topics'
 })
+
+const defaultDataPathText = '<value>'
 </script>
 
 <template>
-  <q-card class="graph-card tw-p-2 tw-border" flat :class="[cardWidth]">
+  <q-card class="graph-card tw-p-2 tw-border" flat :class="[dataGraph.size]">
     <q-card-section v-if="showTitle" class="tw-p-2 tw-cursor-grab drag-handle">
-      <div class="tw-text-xl">{{ dataPath }}</div>
-      <div class="tw-text-sm color-details">{{ topic }}</div>
-      <q-btn
-        class="tw-absolute tw-top-2 tw-right-2 tw-text-neutral-500"
-        round
-        flat
-        size="sm"
-        icon="fa-solid fa-gear"
-      >
-        <line-chart-context-menu
-          anchor="top left"
-          self="top end"
-          :offset="[10, 0]"
-          @update:card-width="$emit('update:cardWidth', $event)"
-          @update:curve-type="curveType = $event"
-          @update:color="graphColor = $event"
-          @delete="$emit('delete')"
-        />
-      </q-btn>
+      <div class="tw-h-7 tw-text-xl">{{ dataGraph.dataPath || defaultDataPathText }}</div>
+      <div
+        class="tw-max-w-full tw-text-sm color-details tw-overflow-hidden tw-overflow-ellipsis tw-line-clamp-1"
+        :title="dataGraph.topic"
+        v-text="dataGraph.topic"
+      />
     </q-card-section>
 
     <div class="tw-h-[200px]">
       <v-chart v-if="showGraph" class="chart" :option="options" autoresize />
     </div>
 
+    <slot name="bottom" />
+
+    <q-btn
+      class="tw-absolute tw-top-1 tw-right-1 tw-text-neutral-500"
+      round
+      flat
+      size="sm"
+      icon="fa-solid fa-gear"
+    >
+      <line-chart-context-menu
+        anchor="top left"
+        self="top end"
+        :offset="[10, 0]"
+        @update:card-width="dataGraphsStore.setDataGraphSize(dataGraph.id, $event)"
+        @update:curve-type="dataGraphsStore.setDataGraphCurveType(dataGraph.id, $event)"
+        @update:color="dataGraphsStore.setDataGraphColor(dataGraph.id, $event)"
+        @delete="dataGraphsStore.removeDataGraph(dataGraph.id)"
+      />
+    </q-btn>
+
     <line-chart-context-menu
       context-menu
-      @update:card-width="$emit('update:cardWidth', $event)"
-      @update:curve-type="curveType = $event"
-      @update:color="graphColor = $event"
-      @delete="$emit('delete')"
+      @update:card-width="dataGraphsStore.setDataGraphSize(dataGraph.id, $event)"
+      @update:curve-type="dataGraphsStore.setDataGraphCurveType(dataGraph.id, $event)"
+      @update:color="dataGraphsStore.setDataGraphColor(dataGraph.id, $event)"
+      @delete="dataGraphsStore.removeDataGraph(dataGraph.id)"
     />
   </q-card>
 </template>

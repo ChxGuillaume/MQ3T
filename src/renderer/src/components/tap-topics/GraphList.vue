@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import LineChartCard from '../graphs/LineChartCard.vue'
-import { useDataGraphs } from '../../store/data-graphs'
+import { useDataGraphsStore } from '../../store/data-graphs'
 import draggable from 'vuedraggable'
 import { computed } from 'vue'
 
-const dataGraphsStore = useDataGraphs()
+const dataGraphsStore = useDataGraphsStore()
 
 const dragOptions = computed(() => {
   return { animation: 200, group: 'topics-graph-list', ghostClass: 'ghost' }
@@ -25,15 +25,7 @@ const graphs = computed({
     item-key="clientKey"
   >
     <template #item="{ element }">
-      <line-chart-card
-        :connection-id="element.clientKey"
-        :data-path="element.dataPath"
-        :card-width="element.size"
-        :topic="element.topic"
-        show-title
-        @update:card-width="dataGraphsStore.setDataGraphSize(element.id, $event)"
-        @delete="dataGraphsStore.removeDataGraph(element.id)"
-      />
+      <line-chart-card :data-graph="element" show-title />
     </template>
   </draggable>
 </template>

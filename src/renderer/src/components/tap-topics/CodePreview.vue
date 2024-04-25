@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useDataGraphsStore } from '../../store/data-graphs'
 import { formatCode } from '../../assets/js/format-code'
-import { useDataGraphs } from '../../store/data-graphs'
 import LineChartCard from '../graphs/LineChartCard.vue'
 import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
@@ -10,7 +10,7 @@ import { useQuasar } from 'quasar'
 import _ from 'lodash'
 
 const mqttTopicsStore = useMqttTopicsStore()
-const dataGraphsStore = useDataGraphs()
+const dataGraphsStore = useDataGraphsStore()
 
 const $q = useQuasar()
 
@@ -199,10 +199,17 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
     >
       <line-chart-card
         class="tw-w-[500px]"
-        :topic="mqttTopicsStore.selectedTopic"
-        :connectionId="mqttTopicsStore.selectedConnection"
-        :data-path="currentDataPath"
-      />
+        :data-graph="{
+          id: null,
+          clientKey: mqttTopicsStore.selectedConnection,
+          topic: mqttTopicsStore.selectedTopic,
+          dataPath: currentDataPath
+        }"
+      >
+        <template #bottom>
+          <div class="tw-mt-3 tw-text-center color-details">Click to add widget</div>
+        </template>
+      </line-chart-card>
     </div>
   </transition>
 </template>

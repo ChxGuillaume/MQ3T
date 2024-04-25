@@ -12,7 +12,7 @@ import { useActionsCacheStore } from '../store/actions-cache'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
-import { useDataGraphs } from '../store/data-graphs'
+import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { scroll } from 'quasar'
@@ -22,7 +22,7 @@ const { setVerticalScrollPosition } = scroll
 const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
-const dataGraphsStore = useDataGraphs()
+const dataGraphsStore = useDataGraphsStore()
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
 
