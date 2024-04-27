@@ -13,27 +13,31 @@ mqttClient.on('connect', () => {
       JSON.stringify({
         data: [
           {
-            name: 'A',
+            name: 'ZERO',
+            value: 0
+          },
+          {
+            name: 'HUNDRED',
             value: parseFloat((Math.random() * 100).toFixed(2)),
             temperature: parseFloat((Math.random() * 100).toFixed(2))
           },
           {
-            name: 'B',
+            name: 'THOUSAND',
             value: parseFloat((Math.random() * 100000).toFixed(2)),
             power: parseFloat((Math.random() * 100000).toFixed(2))
           },
           {
-            name: 'C',
+            name: 'MILLION',
             value: parseFloat((Math.random() * 100000000).toFixed(2)),
             voltage: parseFloat((Math.random() * 100000000).toFixed(2))
           },
           {
-            name: 'D',
+            name: 'BILLION',
             value: parseFloat((Math.random() * 100000000000).toFixed(2)),
             voltage: parseFloat((Math.random() * 100000000000).toFixed(2))
           },
           {
-            name: 'E',
+            name: 'TRILLION',
             value: parseFloat((Math.random() * 100000000000000).toFixed(2)),
             voltage: parseFloat((Math.random() * 100000000000000).toFixed(2))
           }
