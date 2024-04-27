@@ -41,12 +41,13 @@ const messagesForGraph = computed(() => {
 
   if (!clientKey || !topic) return []
 
-  const messages = mqttTopicsStore.topicsMessages[clientKey][topic]
+  const messages = mqttTopicsStore.topicsMessages[clientKey][topic] || []
 
   return messages
+    .filter((m) => m.dataType === 'json')
     .map((m) => ({
       value: getDataFromPath(JSON.parse(m.message), dataPath),
-      date: moment(m.createdAt).format()
+      date: m.createdAt
     }))
     .filter((d) => d.value !== null)
 })
@@ -54,7 +55,7 @@ const messagesForGraph = computed(() => {
 const options = computed(() => {
   const sortedData = messagesForGraph.value
     .slice()
-    .sort((a, b) => moment(a.date).unix() - moment(b.date).unix())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   let step: string = ''
 
@@ -68,7 +69,14 @@ const options = computed(() => {
   }
 
   return {
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        label: {
+          formatter: (params: any) => moment(params.value).format('HH:mm:ss')
+        }
+      }
+    },
     xAxis: {
       type: 'time',
       show: false,

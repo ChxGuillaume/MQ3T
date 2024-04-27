@@ -203,7 +203,8 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
           id: null,
           clientKey: mqttTopicsStore.selectedConnection,
           topic: mqttTopicsStore.selectedTopic,
-          dataPath: currentDataPath
+          dataPath: currentDataPath,
+          curveType: 'curve'
         }"
       >
         <template #bottom>

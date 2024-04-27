@@ -86,7 +86,7 @@ export const getDataFromPath = (data: any, path: string): number | null => {
   let result = data
 
   for (const part of pathParts) {
-    if (!result[part]) return null
+    if (result[part] === undefined) return null
     result = result[part]
   }
 
