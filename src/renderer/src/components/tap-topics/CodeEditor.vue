@@ -154,7 +154,7 @@ const valideCode = computed(() => {
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto tw-transition-colors;
+  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto tw-transition-colors tw-outline-0;
 }
 
 .monaco-editor.validation-error {

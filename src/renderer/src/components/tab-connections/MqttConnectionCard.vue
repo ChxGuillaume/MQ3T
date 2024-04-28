@@ -18,7 +18,7 @@ const connectionStatus = computed(() => {
 })
 
 const formatMqttUrl = (connection: MqttConnection) => {
-  const path = connection.path || ''
+  const path = ['mqtt', 'mqtts'].includes(connection.protocol) ? '' : connection.path || ''
 
   return `${connection.protocol}://${connection.hostname}:${connection.port}${path}`
 }

@@ -73,6 +73,7 @@ const clearForm = () => {
   form.value.protocol = 'mqtt'
   form.value.protocolVersion = 4
   form.value.hostname = ''
+  form.value.path = '/mqtt'
   form.value.port = 1883
   form.value.clientId = `mq3t_${uuidV4()}`
   form.value.username = ''
