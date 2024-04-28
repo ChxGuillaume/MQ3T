@@ -24,6 +24,7 @@ const appStore = useAppStore()
 const $q = useQuasar()
 
 const props = defineProps<{
+  showContextMenu?: boolean
   showTitle?: boolean
   dataGraph: DataGraph
 }>()
@@ -137,6 +138,7 @@ const defaultDataPathText = '<value>'
     <slot name="bottom" />
 
     <q-btn
+      v-if="showContextMenu"
       class="tw-absolute tw-top-1 tw-right-1 tw-text-neutral-500"
       round
       flat
@@ -155,6 +157,7 @@ const defaultDataPathText = '<value>'
     </q-btn>
 
     <line-chart-context-menu
+      v-if="showContextMenu"
       context-menu
       @update:card-width="dataGraphsStore.setDataGraphSize(dataGraph.id, $event)"
       @update:curve-type="dataGraphsStore.setDataGraphCurveType(dataGraph.id, $event)"

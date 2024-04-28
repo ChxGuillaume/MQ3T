@@ -193,6 +193,10 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages + 1
 
       if (amountMessagesToRemove > 1) {
+        this.topicsMessages[clientKey][topic].sort(
+          (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+        )
+
         this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
       }
 

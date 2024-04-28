@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import LineChartCard from '../graphs/LineChartCard.vue'
 import { useDataGraphsStore } from '../../store/data-graphs'
+import LineChartCard from '../graphs/LineChartCard.vue'
 import draggable from 'vuedraggable'
 import { computed } from 'vue'
 
@@ -25,7 +25,7 @@ const graphs = computed({
     item-key="clientKey"
   >
     <template #item="{ element }">
-      <line-chart-card :data-graph="element" show-title />
+      <line-chart-card :data-graph="element" show-title show-context-menu />
     </template>
   </draggable>
 </template>

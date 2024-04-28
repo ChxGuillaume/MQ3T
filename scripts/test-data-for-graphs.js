@@ -13,6 +13,16 @@ mqttClient.on('connect', () => {
       JSON.stringify({
         data: [
           {
+            name: 'STRING',
+            value: 'Hello World',
+            temperature: `${parseFloat((Math.random() * 100).toFixed(2))}`
+          },
+          {
+            name: 'MINUS',
+            value: -parseFloat((Math.random() * 100).toFixed(2)),
+            temperature: -parseFloat((Math.random() * 100).toFixed(2))
+          },
+          {
             name: 'ZERO',
             value: 0
           },
