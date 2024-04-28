@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ElectronApi } from '../assets/js/electron-api'
+import IconElectronJs from './icons/IconElectronJs.vue'
 import { reactive } from 'vue'
 
 type Versions = {
@@ -31,28 +33,44 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 
 <template>
   <q-list class="versions">
-    <q-item class="tw-flex tw-items-center">
-      <q-icon name="fa-solid fa-atom" size="md" left color="indigo-8" />
+    <q-item
+      class="tw-flex tw-items-center"
+      clickable
+      @click="ElectronApi.openUrl('https://www.electronjs.org/')"
+    >
+      <icon-electron-js class="tw-mr-3" />
       <q-item-section>
         <span>Electron</span>
         <span class="version-color">v{{ versions.electron }}</span>
       </q-item-section>
     </q-item>
-    <q-item class="tw-flex tw-items-center">
+    <q-item
+      class="tw-flex tw-items-center"
+      clickable
+      @click="ElectronApi.openUrl('https://www.chromium.org/')"
+    >
       <q-icon name="fa-brands fa-chrome" size="md" left color="blue-7" />
       <q-item-section>
         <span>Chromium</span>
         <span class="version-color">v{{ versions.chrome }}</span>
       </q-item-section>
     </q-item>
-    <q-item class="tw-flex tw-items-center">
+    <q-item
+      class="tw-flex tw-items-center"
+      clickable
+      @click="ElectronApi.openUrl('https://nodejs.org/')"
+    >
       <q-icon name="fa-brands fa-node-js" size="md" left color="green" />
       <q-item-section>
         <span>Node</span>
         <span class="version-color">v{{ versions.node }}</span>
       </q-item-section>
     </q-item>
-    <q-item class="tw-flex tw-items-center">
+    <q-item
+      class="tw-flex tw-items-center"
+      clickable
+      @click="ElectronApi.openUrl('https://v8.dev/')"
+    >
       <q-icon name="fa-brands fa-js" size="md" left color="yellow" />
       <q-item-section>
         <span>V8 Engine</span>
@@ -72,6 +90,7 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 }
 
 .versions {
-  @apply tw-grid tw-grid-cols-2;
+  @apply tw-grid;
+  grid-template-columns: 150px 1fr;
 }
 </style>
