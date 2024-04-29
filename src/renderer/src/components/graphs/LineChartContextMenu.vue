@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { QMenu, useQuasar } from 'quasar'
 import colors from 'tailwindcss/colors'
-import { QMenu } from 'quasar'
+
+const $q = useQuasar()
 
 const graphColors = Object.keys(colors)
   .filter((c) => !c.endsWith('Blue') && !c.endsWith('Gray'))

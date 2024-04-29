@@ -24,7 +24,7 @@ export class MqttClient {
       }
     }
 
-    const path = connection.path || ''
+    const path = ['mqtt', 'mqtts'].includes(connection.protocol) ? '' : connection.path || ''
 
     this.client = mqtt.connect(
       `${connection.protocol}://${connection.hostname}:${connection.port}${path}`,

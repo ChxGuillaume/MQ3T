@@ -2,7 +2,7 @@
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { MqttConnection } from '../../../types/mqtt-connection'
 import ConnectionStatusChip from './ConnectionStatusChip.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 
@@ -52,16 +52,10 @@ const sortedConnectionsFunc = (a: MqttConnection, b: MqttConnection) => {
   return 0
 }
 
-const sortedConnections = ref(mqttConnectionsStore.connections.slice().sort(sortedConnectionsFunc))
-const sortedConnectionsFiltered = ref(sortedConnections.value)
-
-watch(
-  () => mqttConnectionsStore.connections,
-  (connections) => {
-    sortedConnections.value = connections.slice().sort(sortedConnectionsFunc)
-    sortedConnectionsFiltered.value = sortedConnections.value
-  }
+const sortedConnections = computed(() =>
+  mqttConnectionsStore.connections.slice().sort(sortedConnectionsFunc)
 )
+const sortedConnectionsFiltered = ref(sortedConnections.value)
 
 const handleFilterConnections = (val: string, update: (cbFn: () => void) => void) => {
   update(() => {

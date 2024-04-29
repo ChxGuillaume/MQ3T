@@ -240,7 +240,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 
 <style scoped lang="less">
 .monaco-editor {
-  @apply tw-w-full;
+  @apply tw-w-full tw-outline-0;
   height: 100%;
 }
 

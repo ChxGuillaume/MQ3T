@@ -59,6 +59,8 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       this.saveConnections()
     },
     removeConnection(clientKey: string) {
+      ElectronApi.disconnectMqtt(clientKey)
+
       this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
 
       this.saveConnections()
