@@ -15,7 +15,7 @@ const handleClick = () => {
     icon="fa-solid fa-eraser"
     @click="handleClick"
   >
-    <q-tooltip class="tw-bg-red-500 tw-text-white">Erase</q-tooltip>
+    <q-tooltip class="tw-bg-red-500 tw-text-white" :offset="[5, 5]">Erase</q-tooltip>
   </q-btn>
 </template>
 

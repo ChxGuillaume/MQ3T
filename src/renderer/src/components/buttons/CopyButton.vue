@@ -19,7 +19,7 @@ const handleClick = () => {
 
 <template>
   <q-btn size="sm" color="secondary" flat round icon="fa-solid fa-copy" @click.stop="handleClick">
-    <q-tooltip class="tw-bg-secondary tw-text-black">Copy to clipboard</q-tooltip>
+    <q-tooltip class="tw-bg-secondary tw-text-black" :offset="[5, 5]">Copy to clipboard</q-tooltip>
   </q-btn>
 </template>
 

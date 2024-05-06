@@ -64,14 +64,14 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       if (!connectionTopics) return []
 
-      return (connectionTopics[this.selectedTopic] || []).reverse()
+      return (connectionTopics[this.selectedTopic] || []).slice().reverse()
     },
     getSelectedPublishTopicMessages(): MqttMessage[] {
       const connectionTopics = this.topicsPublishMessages[this.selectedConnection]
 
       if (!connectionTopics) return []
 
-      return (connectionTopics[this.selectedPublishTopic] || []).reverse()
+      return (connectionTopics[this.selectedPublishTopic] || []).slice().reverse()
     },
     sortedSelectedTopicMessages(): MqttMessage[] {
       return this.getSelectedTopicMessages.slice().sort((a, b) => {

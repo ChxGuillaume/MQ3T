@@ -86,17 +86,27 @@ const formatDuration = (duration: number) => {
       }"
       @click="handleMessageClick(message)"
     >
-      <div class="tw-mb-2 tw-flex tw-justify-between">
+      <div class="tw-mb-1 tw-flex tw-justify-between">
         <div>
-          {{ settingsStore.formatDateTime(message.createdAt) }}
-          <span v-if="message.createdDiff" class="tw-text-xs message-details">
-            ({{ formatDuration(message.createdDiff) }})
-          </span>
+          <div class="tw-h-fit tw-flex tw-items-center tw-gap-1 color-details">
+            {{ settingsStore.formatDateTime(message.createdAt) }}
+            <span v-if="message.createdDiff" class="tw-text-xs tw-opacity-70">
+              ({{ formatDuration(message.createdDiff) }})
+            </span>
+            <q-icon size="12px" name="fa-solid fa-info-circle" class="tw-ml-1 tw-opacity-70">
+              <q-tooltip :offset="[5, 5]">
+                <div>QoS: {{ message.qos }}</div>
+                <div>Retained: {{ message.retained }}</div>
+              </q-tooltip>
+            </q-icon>
+          </div>
         </div>
-        <copy-button
-          notification-message="Message copied to clipboard"
-          @click="copyMessage(message.message)"
-        />
+        <div class="tw-flex">
+          <copy-button
+            notification-message="Message copied to clipboard"
+            @click="copyMessage(message.message)"
+          />
+        </div>
       </div>
       <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
         {{ formatMessage(message.message) }}
