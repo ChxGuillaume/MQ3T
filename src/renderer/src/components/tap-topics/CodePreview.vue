@@ -2,9 +2,9 @@
 import { parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useDataGraphsStore } from '../../store/data-graphs'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { formatCode } from '../../assets/js/format-code'
 import LineChartCard from '../graphs/LineChartCard.vue'
-import { onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
 import _ from 'lodash'
@@ -167,6 +167,10 @@ onMounted(() => {
       showGraph.value = false
     }, 100)
   })
+})
+
+onBeforeUnmount(() => {
+  if (codeEditor) codeEditor.dispose()
 })
 
 const getElementDataPathClass = (element: HTMLElement): string => {

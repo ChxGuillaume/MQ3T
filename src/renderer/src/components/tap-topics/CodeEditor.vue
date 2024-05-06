@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { validCode } from '../../assets/js/format-code'
-import { computed, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
 
@@ -65,6 +65,10 @@ onMounted(() => {
   codeEditor.onDidChangeModelContent(() => {
     emits('update:modelValue', codeEditor!.getValue())
   })
+})
+
+onBeforeUnmount(() => {
+  if (codeEditor) codeEditor.dispose()
 })
 
 watch(
