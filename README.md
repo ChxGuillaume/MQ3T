@@ -1,4 +1,4 @@
-# MQ3T
+# [MQ3T](https://mq3t.guillaumechx.dev/)
 
 [//]: # (![https://img.shields.io/badge/Release-working%20on%20it%20!!-red]&#40;https://img.shields.io/badge/Release-working%20on%20it%20!!-red&#41;)
 [![Release Version](https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release)](https://github.com/ChxGuillaume/MQ3T/releases)
@@ -18,13 +18,9 @@ You can simplify your development processes by using the built-in actions.
 # Download
 |                   <img src='docs/platforms-logo/windows-logo.png' width='100'>                    |                 <img src='docs/platforms-logo/apple-logo.png' width='100'>                  |                     <img src='docs/platforms-logo/linux-logo.png' width='100'>                     |               <img src='docs/platforms-logo/debian-logo.png' width='100'>                |
 |:-------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
-| [Windows Portable](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=portable) | [Mac Apple Silicon](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=arm64&type=dmg) |  [AppImage (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=AppImage)   |  [Deb (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=deb)   |
+| [Windows Portable](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=portable) | [Mac Apple Silicon](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=arm64&type=dmg) |  [AppImage (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=x86_64&type=AppImage)  |  [Deb (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=deb)   |
 |    [Windows Setup](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=setup)    |      [Mac Intel](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=x64&type=dmg)      | [AppImage (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=AppImage)  | [Deb (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=deb)  |
 |                                                                                                   |                                                                                             | [AppImage (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=AppImage) | [Deb (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=deb) |
-
-
-
-
 
 ## Project Setup
 
