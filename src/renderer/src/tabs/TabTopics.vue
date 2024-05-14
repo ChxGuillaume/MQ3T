@@ -160,6 +160,18 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
   return topicToSelect(nextIndex, direction)
 }
 
+const handleKeyUp = (event: KeyboardEvent) => {
+  if (event.key === 'ArrowUp') handleUpKeyUp()
+  else if (event.key === 'ArrowDown') handleDownKeyUp()
+}
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'ArrowUp') handleUpKeyDown()
+  else if (event.key === 'ArrowDown') handleDownKeyDown()
+  else if (event.key === 'ArrowLeft') handleLeftKey()
+  else if (event.key === 'ArrowRight') handleRightKey()
+}
+
 const handleUpKeyDown = () => {
   const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
   const previousTopic = topicToSelect(selectedTopicIndex, 'up')
@@ -304,12 +316,8 @@ const handleScrollNextTopic = (nextTopic: string) => {
             <q-separator />
             <div
               class="tw-overflow-auto"
-              @keyup.up.prevent="handleUpKeyUp"
-              @keydown.up.prevent="handleUpKeyDown"
-              @keyup.down.prevent="handleDownKeyUp"
-              @keydown.down.prevent="handleDownKeyDown"
-              @keydown.left.prevent="handleLeftKey"
-              @keydown.right.prevent="handleRightKey"
+              @keyup.prevent="handleKeyUp"
+              @keydown.prevent="handleKeyDown"
             >
               <q-virtual-scroll
                 id="topicsVirtualScroll"
