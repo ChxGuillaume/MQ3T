@@ -2,14 +2,18 @@
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { useSettingsStore } from '../../store/settings-store'
+import CopyContextMenu from '../CopyContextMenu.vue'
 import EraseButton from '../buttons/EraseButton.vue'
 import CopyButton from '../buttons/CopyButton.vue'
 import SplitterIcon from '../SplitterIcon.vue'
 import MessagesList from './MessagesList.vue'
 import CodePreview from './CodePreview.vue'
 import { computed, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
 
 const electronApi = window.api as ElectronIpc
+
+const $q = useQuasar()
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
@@ -33,6 +37,17 @@ const handleBreadcrumbClick = (index: number) => {
     mqttTopicsStore.selectedConnection,
     breadcrumbs.value.slice(0, index + 1).join('/')
   )
+}
+
+const handleBreadcrumbCopyPart = (part: string) => {
+  navigator.clipboard.writeText(part)
+
+  $q.notify({
+    message: 'Topic key copied to clipboard',
+    icon: 'fa-solid fa-clipboard',
+    color: 'positive',
+    timeout: 1000
+  })
 }
 
 const handleEraseTopic = () => {
@@ -94,7 +109,13 @@ watch(
             clickable
             :label="topicPart ? topicPart : '<\empty>'"
             @click="handleBreadcrumbClick(index)"
-          />
+          >
+            <copy-context-menu
+              anchor="bottom left"
+              self="top left"
+              @copy="handleBreadcrumbCopyPart(topicPart)"
+            />
+          </q-chip>
         </q-breadcrumbs-el>
       </q-breadcrumbs>
     </div>

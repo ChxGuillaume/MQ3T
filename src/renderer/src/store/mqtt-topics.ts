@@ -286,9 +286,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       this.subTopicsMessagesCount[clientKey] = {}
       this.topicsStructure[clientKey] = {}
     },
-    clearTopicsAndSubTopicsMessages(clientKey: string, topic: string) {
-      const topics = Object.keys(this.topicsMessages[clientKey]).filter((filterTopic) => {
-        return filterTopic.startsWith(topic)
+    clearTopicsAndSubTopicsMessages(clientKey: string, topicToRemove: string) {
+      const topics = Object.keys(this.subTopicsTopicsCount[clientKey]).filter((topic) => {
+        return topic.startsWith(`${topicToRemove}/`) || topic === topicToRemove
       })
 
       for (const topic of topics) {
@@ -298,7 +298,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         delete this.subTopicsMessagesCount[clientKey][topic]
       }
 
-      this.clearTopicsAndSubTopicsStructure(clientKey, topic)
+      this.clearTopicsAndSubTopicsStructure(clientKey, topicToRemove)
     },
     clearTopicsAndSubTopicsStructure(clientKey: string, topic: string) {
       const topicParts = topic.split('/')

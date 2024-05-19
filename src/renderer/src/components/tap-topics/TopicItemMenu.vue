@@ -3,7 +3,7 @@ defineProps<{
   hideCopyLastMessage?: boolean
 }>()
 
-defineEmits(['copyLastMessage', 'copyTopic', 'erase'])
+defineEmits(['copyLastMessage', 'copyTopic', 'copyTopicKey', 'erase'])
 </script>
 
 <template>
@@ -14,6 +14,15 @@ defineEmits(['copyLastMessage', 'copyTopic', 'erase'])
           <div>
             <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
             Copy Topic
+          </div>
+        </q-item-section>
+      </q-item>
+
+      <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopicKey')">
+        <q-item-section>
+          <div>
+            <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
+            Copy Topic Key
           </div>
         </q-item-section>
       </q-item>
