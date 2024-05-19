@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ImportActionsGroups from './components/ImportActionsGroups.vue'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import ImportActions from './components/ImportActions.vue'
 import { useMqttTopicsStore } from './store/mqtt-topics'
 import UpdateAlerts from './components/UpdateAlerts.vue'
@@ -48,6 +48,16 @@ const handleKeyUp = (event: KeyboardEvent) => {
     }
   }
 }
+
+watch(
+  () => $q.dark.isActive,
+  (value) => {
+    const classDark = 'dark'
+
+    if (value) document.documentElement.classList.add(classDark)
+    else document.documentElement.classList.remove(classDark)
+  }
+)
 
 onMounted(() => {
   const storedTheme = localStorage.getItem('darkMode')
