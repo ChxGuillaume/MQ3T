@@ -62,6 +62,17 @@ const handleCopyTopic = () => {
   })
 }
 
+const handleCopyTopicKey = () => {
+  navigator.clipboard.writeText(props.topicKey)
+
+  $q.notify({
+    message: 'Topic key copied to clipboard',
+    icon: 'fa-solid fa-clipboard',
+    color: 'positive',
+    timeout: 1000
+  })
+}
+
 const handleCopyLastMessage = () => {
   if (topicLastMessage.value?.message) {
     navigator.clipboard.writeText(topicLastMessage.value.message)
@@ -163,6 +174,7 @@ watch(
           <topic-item-menu
             :hide-copy-last-message="!topicLastMessage?.message"
             @copy-last-message="handleCopyLastMessage"
+            @copy-topic-key="handleCopyTopicKey"
             @copy-topic="handleCopyTopic"
             @erase="handleEraseTopic"
           />
@@ -203,6 +215,7 @@ watch(
         <topic-item-menu
           :hide-copy-last-message="!topicLastMessage?.message"
           @copy-last-message="handleCopyLastMessage"
+          @copy-topic-key="handleCopyTopicKey"
           @copy-topic="handleCopyTopic"
           @erase="handleEraseTopic"
         />
