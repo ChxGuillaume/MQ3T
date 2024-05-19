@@ -2,6 +2,7 @@ import type { Config } from 'tailwindcss'
 
 export default {
   prefix: 'tw-',
+  darkMode: 'selector',
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {

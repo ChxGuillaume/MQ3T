@@ -150,7 +150,7 @@ const showVersionModal = ref(false)
 
 <template>
   <div class="settings">
-    <div class="tw-mb-3 tw-flex tw-justify-between tw-items-center">
+    <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
       <q-btn
         color="primary"
@@ -161,121 +161,145 @@ const showVersionModal = ref(false)
         Check for Update
       </q-btn>
     </div>
-    <div
-      class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
-    >
-      <q-card class="card-toggle" square flat>
-        <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
-      </q-card>
-      <q-select
-        v-model="showActivityAnimationSpeedSetting"
-        filled
-        :options="showActivityAnimationSpeedOptions"
-        label="Activity Animation Speed"
-        emit-value
-      >
-        <template v-slot:selected-item>
-          {{
-            showActivityAnimationSpeedOptions.find(
-              (o) => o.value === showActivityAnimationSpeedSetting
-            )?.label
-          }}
-        </template>
-      </q-select>
-      <q-select
-        v-model="showActivityAnimationTypeSetting"
-        filled
-        :options="showActivityAnimationTypeOptions"
-        label="Activity Animation Style"
-        emit-value
-      >
-        <template v-slot:selected-item>
-          {{
-            showActivityAnimationTypeOptions.find(
-              (o) => o.value === showActivityAnimationTypeSetting
-            )?.label
-          }}
-        </template>
-      </q-select>
-      <q-card class="card-toggle" square flat>
-        <q-toggle
-          v-model="smartTopicGroupCloseSetting"
-          class="tw-w-full"
-          label="Smart Topic Group"
-        />
-        <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
-          <q-tooltip>
-            When enabled topic groups closes if they are selected and clicked again
-          </q-tooltip>
-        </q-icon>
-      </q-card>
-      <q-select v-model="darkMode" filled :options="darkModeOptions" label="Dark Mode" emit-value>
-        <template v-slot:selected-item>
-          {{ darkModeOptions.find((o) => o.value === darkMode)?.label }}
-        </template>
-      </q-select>
-      <q-select
-        v-model="dateFormatSetting"
-        filled
-        class="tw-text-white"
-        :options="dateFormatOptions"
-        label="Date Format"
-        emit-value
-      >
-        <template v-slot:selected-item>
-          {{ dateFormatOptions.find((o) => o.value === dateFormatSetting)?.label }}
-        </template>
-      </q-select>
-      <q-select
-        v-model="timeFormatSetting"
-        filled
-        class="tw-text-white"
-        :options="timeFormatOptions"
-        label="Time Format"
-        emit-value
-      >
-        <template v-slot:selected-item>
-          {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
-        </template>
-      </q-select>
-      <q-input
-        v-model="maxMessagesSetting"
-        filled
-        label="Messages History per Topic"
-        type="number"
-      />
-      <q-card class="card-toggle" square flat>
-        <q-toggle
-          v-model="messagesPaginationSetting"
-          label="Messages Pagination"
-          class="tw-w-full"
-        />
-      </q-card>
-      <q-select
-        v-model="defaultDataFormatSetting"
-        filled
-        class="tw-text-white"
-        :options="defaultDataFormatOptions"
-        label="Default Data Format"
-        emit-value
-      >
-        <template v-slot:selected-item>
-          {{ defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label }}
-        </template>
-      </q-select>
-      <q-card class="card-toggle" square flat>
-        <q-toggle
-          v-model="autoOpenPublishActionsSetting"
-          class="tw-w-full"
-          label="Auto Open Actions Pan"
-        >
-        </q-toggle>
-        <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
-          <q-tooltip>
-            Automatically open the actions pan in the publish tab when an action is available
-          </q-tooltip>
-        </q-icon>
-      </q-card>
+    <div class="tw-flex tw-flex-col tw-gap-6">
+      <div class="settings-group">
+        <h2 class="settings-group-title">App</h2>
+        <hr class="settings-group-separator" />
+        <div class="settings-group-item-container">
+          <q-select
+            v-model="darkMode"
+            filled
+            :options="darkModeOptions"
+            label="Dark Mode"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{ darkModeOptions.find((o) => o.value === darkMode)?.label }}
+            </template>
+          </q-select>
+          <q-select
+            v-model="dateFormatSetting"
+            filled
+            class="tw-text-white"
+            :options="dateFormatOptions"
+            label="Date Format"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{ dateFormatOptions.find((o) => o.value === dateFormatSetting)?.label }}
+            </template>
+          </q-select>
+          <q-select
+            v-model="timeFormatSetting"
+            filled
+            class="tw-text-white"
+            :options="timeFormatOptions"
+            label="Time Format"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
+            </template>
+          </q-select>
+        </div>
+      </div>
+      <div class="settings-group">
+        <h2 class="settings-group-title">Topics</h2>
+        <hr class="settings-group-separator" />
+        <div class="settings-group-item-container">
+          <q-card class="card-toggle" square flat>
+            <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
+          </q-card>
+          <q-select
+            v-model="showActivityAnimationSpeedSetting"
+            filled
+            :options="showActivityAnimationSpeedOptions"
+            label="Activity Animation Speed"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{
+                showActivityAnimationSpeedOptions.find(
+                  (o) => o.value === showActivityAnimationSpeedSetting
+                )?.label
+              }}
+            </template>
+          </q-select>
+          <q-select
+            v-model="showActivityAnimationTypeSetting"
+            filled
+            :options="showActivityAnimationTypeOptions"
+            label="Activity Animation Style"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{
+                showActivityAnimationTypeOptions.find(
+                  (o) => o.value === showActivityAnimationTypeSetting
+                )?.label
+              }}
+            </template>
+          </q-select>
+          <q-input
+            v-model="maxMessagesSetting"
+            filled
+            label="Messages History per Topic"
+            type="number"
+          />
+          <q-card class="card-toggle" square flat>
+            <q-toggle
+              v-model="smartTopicGroupCloseSetting"
+              class="tw-w-full"
+              label="Smart Topic Group"
+            />
+            <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+              <q-tooltip>
+                When enabled topic groups closes if they are selected and clicked again
+              </q-tooltip>
+            </q-icon>
+          </q-card>
+          <q-card class="card-toggle" square flat>
+            <q-toggle
+              v-model="messagesPaginationSetting"
+              label="Messages Pagination"
+              class="tw-w-full"
+            />
+          </q-card>
+        </div>
+      </div>
+      <div class="settings-group">
+        <h2 class="settings-group-title">Actions</h2>
+        <hr class="settings-group-separator" />
+        <div class="settings-group-item-container">
+          <q-select
+            v-model="defaultDataFormatSetting"
+            filled
+            class="tw-text-white"
+            :options="defaultDataFormatOptions"
+            label="Default Data Format"
+            emit-value
+          >
+            <template v-slot:selected-item>
+              {{
+                defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label
+              }}
+            </template>
+          </q-select>
+          <q-card class="card-toggle" square flat>
+            <q-toggle
+              v-model="autoOpenPublishActionsSetting"
+              class="tw-w-full"
+              label="Auto Open Actions Pan"
+            >
+            </q-toggle>
+            <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+              <q-tooltip>
+                Automatically open the actions pan in the publish tab when an action is available
+              </q-tooltip>
+            </q-icon>
+          </q-card>
+        </div>
+      </div>
     </div>
 
     <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
@@ -295,6 +319,22 @@ const showVersionModal = ref(false)
 </template>
 
 <style scoped lang="less">
+.settings-group {
+  @apply tw-flex tw-flex-col tw-gap-2;
+}
+
+.settings-group .settings-group-title {
+  @apply tw-text-lg tw-font-bold;
+}
+
+.settings-group .settings-group-separator {
+  @apply tw-border-0 tw-h-px tw-bg-neutral-700;
+}
+
+.settings-group .settings-group-item-container {
+  @apply tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4;
+}
+
 .card-toggle {
   @apply tw-flex tw-items-center;
   min-height: 56px;
