@@ -250,7 +250,7 @@ const handleRightKey = () => {
 
 const handleScrollPreviousTopic = (previousTopic: string) => {
   const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${previousTopic}`)
+  const element = document.getElementById(`topic-item-${previousTopic}-intersection`)
 
   if (virtualScroll && element) {
     if (element.offsetTop < virtualScroll.scrollTop) {
@@ -266,7 +266,7 @@ const handleScrollPreviousTopic = (previousTopic: string) => {
 
 const handleScrollNextTopic = (nextTopic: string) => {
   const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${nextTopic}`)
+  const element = document.getElementById(`topic-item-${nextTopic}-intersection`)
 
   if (virtualScroll && element) {
     if (
