@@ -43,6 +43,8 @@ function createWindow(): void {
     }
   })
 
+  mainWindow.removeMenu()
+
   initIpcMain()
 
   mainWindow.on('close', () => {

@@ -161,11 +161,19 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
 }
 
 const handleKeyUp = (event: KeyboardEvent) => {
+  if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+    event.preventDefault()
+  }
+
   if (event.key === 'ArrowUp') handleUpKeyUp()
   else if (event.key === 'ArrowDown') handleDownKeyUp()
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    event.preventDefault()
+  }
+
   if (event.key === 'ArrowUp') handleUpKeyDown()
   else if (event.key === 'ArrowDown') handleDownKeyDown()
   else if (event.key === 'ArrowLeft') handleLeftKey()
@@ -314,11 +322,7 @@ const handleScrollNextTopic = (nextTopic: string) => {
               />
             </div>
             <q-separator />
-            <div
-              class="tw-overflow-auto"
-              @keyup.prevent="handleKeyUp"
-              @keydown.prevent="handleKeyDown"
-            >
+            <div class="tw-overflow-auto" @keyup="handleKeyUp" @keydown="handleKeyDown">
               <q-virtual-scroll
                 id="topicsVirtualScroll"
                 v-slot="{ item: [_, value] }"
