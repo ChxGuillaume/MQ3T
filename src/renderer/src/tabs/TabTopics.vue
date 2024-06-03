@@ -181,12 +181,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
 }
 
 const handleUpKeyDown = () => {
+  const clientKey = mqttTopicsStore.selectedConnection
   const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
   const previousTopic = topicToSelect(selectedTopicIndex, 'up')
 
   if (previousTopic) {
     handleSelectTopic(mqttTopicsStore.selectedConnection, previousTopic)
-    handleScrollPreviousTopic(previousTopic)
+    handleScrollPreviousTopic(clientKey, previousTopic)
   }
 
   scrubbingTimeout.value = setTimeout(() => {
@@ -201,12 +202,13 @@ const handleUpKeyUp = () => {
 }
 
 const handleDownKeyDown = () => {
+  const clientKey = mqttTopicsStore.selectedConnection
   const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
   const nextTopic = topicToSelect(selectedTopicIndex, 'down')
 
   if (nextTopic) {
     handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
-    handleScrollNextTopic(nextTopic)
+    handleScrollNextTopic(clientKey, nextTopic)
   }
 
   scrubbingTimeout.value = setTimeout(() => {
@@ -233,7 +235,7 @@ const handleLeftKey = () => {
 
     if (previousTopic) {
       handleSelectTopic(clientKey, previousTopic)
-      handleScrollPreviousTopic(previousTopic)
+      handleScrollPreviousTopic(clientKey, previousTopic)
     }
   }
 }
@@ -251,14 +253,14 @@ const handleRightKey = () => {
 
     if (nextTopic) {
       handleSelectTopic(clientKey, nextTopic)
-      handleScrollNextTopic(nextTopic)
+      handleScrollNextTopic(clientKey, nextTopic)
     }
   }
 }
 
-const handleScrollPreviousTopic = (previousTopic: string) => {
+const handleScrollPreviousTopic = (clientKey: string, previousTopic: string) => {
   const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${previousTopic}-intersection`)
+  const element = document.getElementById(`topic-item-${clientKey}:${previousTopic}-intersection`)
 
   if (virtualScroll && element) {
     if (element.offsetTop < virtualScroll.scrollTop) {
@@ -272,9 +274,9 @@ const handleScrollPreviousTopic = (previousTopic: string) => {
   }
 }
 
-const handleScrollNextTopic = (nextTopic: string) => {
+const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
   const virtualScroll = document.getElementById('topicsVirtualScroll')
-  const element = document.getElementById(`topic-item-${nextTopic}-intersection`)
+  const element = document.getElementById(`topic-item-${clientKey}:${nextTopic}-intersection`)
 
   if (virtualScroll && element) {
     if (
