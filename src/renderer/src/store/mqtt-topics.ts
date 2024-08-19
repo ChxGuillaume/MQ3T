@@ -73,6 +73,15 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       return (connectionTopics[this.selectedPublishTopic] || []).slice().reverse()
     },
+    sortedTopicMessages:
+      (state) =>
+      (clientKey: string, topic: string): MqttMessage[] => {
+        return (
+          state.topicsMessages[clientKey]?.[topic]?.slice().sort((a, b) => {
+            return b.createdAt.getTime() - a.createdAt.getTime()
+          }) || []
+        )
+      },
     sortedSelectedTopicMessages(): MqttMessage[] {
       return this.getSelectedTopicMessages.slice().sort((a, b) => {
         return b.createdAt.getTime() - a.createdAt.getTime()

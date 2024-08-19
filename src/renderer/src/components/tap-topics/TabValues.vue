@@ -19,9 +19,10 @@ const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
 const codePreviewSplitter = ref(200)
-const selectedMessageCodePreviewSplitter = ref(200)
-
 const codePreviewLimits = ref([100, 400])
+
+const selectedMessageCodePreviewSplitter = ref(0)
+const selectedCodePreviewLimits = ref([100, 400])
 const selectedMessage = ref<MqttMessage>()
 
 const breadcrumbs = computed(() => {
@@ -85,6 +86,19 @@ watch(
   () => mqttTopicsStore.selectedTopic,
   () => {
     selectedMessage.value = undefined
+  }
+)
+
+watch(
+  () => selectedMessage.value,
+  (newValue) => {
+    if (newValue) {
+      selectedCodePreviewLimits.value = [100, 400]
+      selectedMessageCodePreviewSplitter.value = 200
+    } else {
+      selectedCodePreviewLimits.value = [0, 0]
+      selectedMessageCodePreviewSplitter.value = 0
+    }
   }
 )
 </script>
@@ -173,13 +187,13 @@ watch(
 
         <template v-slot:after>
           <q-splitter
-            v-if="selectedMessage"
             v-model="selectedMessageCodePreviewSplitter"
+            :limits="selectedCodePreviewLimits"
+            :disable="!selectedMessage"
             horizontal
-            :limits="codePreviewLimits"
             unit="px"
           >
-            <template v-slot:before>
+            <template v-if="selectedMessage" v-slot:before>
               <code-preview
                 v-if="selectedMessage"
                 :value="selectedMessage?.message || ''"
@@ -189,14 +203,16 @@ watch(
             </template>
 
             <template v-slot:separator>
-              <splitter-icon @click:double="selectedMessageCodePreviewSplitter = 200" />
+              <splitter-icon
+                v-if="selectedMessage"
+                @click:double="selectedMessageCodePreviewSplitter = 200"
+              />
             </template>
 
             <template v-slot:after>
               <messages-list v-model:selected-message="selectedMessage" />
             </template>
           </q-splitter>
-          <messages-list v-else v-model:selected-message="selectedMessage" />
         </template>
       </q-splitter>
     </div>

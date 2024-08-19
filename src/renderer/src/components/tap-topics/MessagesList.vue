@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useMqttTopicsStore, MqttMessage } from '../../store/mqtt-topics'
 import { useSettingsStore } from '../../store/settings-store'
+import { computed, nextTick, ref, watch } from 'vue'
 import CopyButton from '../buttons/CopyButton.vue'
-import { computed, ref } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
@@ -16,14 +16,24 @@ const emit = defineEmits<{
 }>()
 
 const currentPage = ref(1)
+const intersectionTransition = ref('slide-up')
+
+const selectedTopic = ref(mqttTopicsStore.selectedTopic)
+const selectedTopicWatchTimeout = ref<NodeJS.Timeout | undefined>(undefined)
 
 const slicedMessages = computed(() => {
-  if (!settingsStore.messagesPagination) return mqttTopicsStore.sortedSelectedTopicMessages
+  if (!settingsStore.messagesPagination)
+    return mqttTopicsStore.sortedTopicMessages(
+      mqttTopicsStore.selectedConnection,
+      selectedTopic.value
+    )
 
   const start = (currentPage.value - 1) * 5
   const end = start + 5
 
-  return mqttTopicsStore.sortedSelectedTopicMessages.slice(start, end)
+  return mqttTopicsStore
+    .sortedTopicMessages(mqttTopicsStore.selectedConnection, selectedTopic.value)
+    .slice(start, end)
 })
 
 const handleMessageClick = (message: MqttMessage) => {
@@ -56,6 +66,22 @@ const formatDuration = (duration: number) => {
 
   return `${(duration / 1000).toFixed(2)} s`
 }
+
+watch(
+  () => mqttTopicsStore.selectedTopic,
+  () => {
+    clearTimeout(selectedTopicWatchTimeout.value)
+    intersectionTransition.value = 'jump-up'
+
+    nextTick(() => {
+      selectedTopic.value = mqttTopicsStore.selectedTopic
+
+      selectedTopicWatchTimeout.value = setTimeout(() => {
+        intersectionTransition.value = 'slide-up'
+      }, 100)
+    })
+  }
+)
 </script>
 
 <template>
@@ -74,44 +100,49 @@ const formatDuration = (duration: number) => {
       input
     />
   </div>
-  <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
-    <q-card
+  <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2 tw-overflow-hidden">
+    <q-intersection
       v-for="message in slicedMessages"
       :key="message.uid"
-      flat
-      class="tw-p-2 tw-cursor-pointer tw-select-none tw-bg-primary tw-transition-all"
-      :class="{
-        'card-secondary-background': selectedMessage?.uid !== message.uid,
-        'tw-bg-primary tw-text-white': selectedMessage?.uid === message.uid
-      }"
-      @click="handleMessageClick(message)"
+      once
+      :transition="intersectionTransition"
     >
-      <div class="tw-mb-1 tw-flex tw-justify-between">
-        <div>
-          <div class="tw-h-fit tw-flex tw-items-center tw-gap-1 color-details">
-            {{ settingsStore.formatDateTime(message.createdAt) }}
-            <span v-if="message.createdDiff" class="tw-text-xs tw-opacity-70">
-              ({{ formatDuration(message.createdDiff) }})
-            </span>
-            <q-icon size="12px" name="fa-solid fa-info-circle" class="tw-ml-1 tw-opacity-70">
-              <q-tooltip :offset="[5, 5]">
-                <div>QoS: {{ message.qos }}</div>
-                <div>Retained: {{ message.retained }}</div>
-              </q-tooltip>
-            </q-icon>
+      <q-card
+        flat
+        class="tw-p-2 tw-cursor-pointer tw-select-none tw-bg-primary tw-transition-all"
+        :class="{
+          'card-secondary-background': selectedMessage?.uid !== message.uid,
+          'tw-bg-primary tw-text-white': selectedMessage?.uid === message.uid
+        }"
+        @click="handleMessageClick(message)"
+      >
+        <div class="tw-mb-1 tw-flex tw-justify-between">
+          <div>
+            <div class="tw-h-fit tw-flex tw-items-center tw-gap-1 color-details">
+              {{ settingsStore.formatDateTime(message.createdAt) }}
+              <span v-if="message.createdDiff" class="tw-text-xs tw-opacity-70">
+                ({{ formatDuration(message.createdDiff) }})
+              </span>
+              <q-icon size="12px" name="fa-solid fa-info-circle" class="tw-ml-1 tw-opacity-70">
+                <q-tooltip :offset="[5, 5]">
+                  <div>QoS: {{ message.qos }}</div>
+                  <div>Retained: {{ message.retained }}</div>
+                </q-tooltip>
+              </q-icon>
+            </div>
+          </div>
+          <div class="tw-flex">
+            <copy-button
+              notification-message="Message copied to clipboard"
+              @click="copyMessage(message.message)"
+            />
           </div>
         </div>
-        <div class="tw-flex">
-          <copy-button
-            notification-message="Message copied to clipboard"
-            @click="copyMessage(message.message)"
-          />
+        <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
+          {{ formatMessage(message.message) }}
         </div>
-      </div>
-      <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
-        {{ formatMessage(message.message) }}
-      </div>
-    </q-card>
+      </q-card>
+    </q-intersection>
   </div>
 </template>
 

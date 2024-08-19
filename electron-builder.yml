@@ -29,10 +29,11 @@ win:
   target:
     - target: nsis
       arch:
-      - x64
+        - x64
     - target: portable
       arch:
-      - x64
+        - x64
+
 nsis:
   artifactName: ${name}-${version}-setup-${arch}.${ext}
   shortcutName: ${productName}
@@ -45,16 +46,14 @@ nsis:
 
 # macOS build configuration
 mac:
-  icon: build/logo/mac512pts.icns
+  icon: icon.icns
+  category: public.app-category.developer-tools
   entitlementsInherit: build/entitlements.mac.plist
   darkModeSupport: true
-  forceCodeSigning: false
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  # Temporarily disabled
   notarize:
-    # ascProvider: YU3G6A39G4
      teamId: YU3G6A39G4
   target:
     - target: dmg

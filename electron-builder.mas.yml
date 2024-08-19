@@ -1,0 +1,39 @@
+appId: dev.guillaumechx.mq3t
+productName: MQ3T
+forceCodeSigning: false
+artifactName: ${name}-${version}-${arch}.${ext}
+buildVersion: 1
+
+directories:
+  buildResources: build
+files:
+  - '!**/.idea/*'
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+
+# macOS build configuration
+mac:
+  icon: icon.icns
+  category: public.app-category.developer-tools
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+  provisioningProfile: build/MacAppStore.provisionprofile
+  hardenedRuntime: false
+  darkModeSupport: true
+  extendInfo:
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  notarize: false
+  target:
+    - target: mas
+      arch:
+        - universal
+
+npmRebuild: false
