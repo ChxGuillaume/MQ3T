@@ -28,10 +28,12 @@ win:
         - arm64
 
 appx:
-#  publisher: CN=ChxGuillaume
-#  publisherDisplayName: Guillaume Chx
+  applicationId: ChxGuillaume.MQ3T
+  identityName: ChxGuillaume.MQ3T
+  publisher: CN=3DC4E7BA-6DA0-4DE2-9879-90F6F9525A1C
+  publisherDisplayName: ChxGuillaume
+  displayName: MQ3T
   backgroundColor: transparent
   showNameOnTiles: true
-  setBuildNumber: true
 
 npmRebuild: false
