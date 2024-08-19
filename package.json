@@ -18,6 +18,7 @@
     "build": "npm run dependencies:license:parse && npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "package:win": "electron-builder --win --config",
+    "package:win:store": "node ./scripts/prepack.win.js && electron-builder --win --config electron-builder.appx.dist.yml",
     "package:mac": "electron-builder --mac --config",
     "package:mac:store": "node ./scripts/prepack.mas.js && electron-builder --mac --config electron-builder.mas.dist.yml",
     "package:linux": "electron-builder --linux --config",

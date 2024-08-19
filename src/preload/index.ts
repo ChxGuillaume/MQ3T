@@ -54,7 +54,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('platform', process.platform)
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('hasAutoUpdate', process.mas)
+    contextBridge.exposeInMainWorld('hasAutoUpdate', process.mas || process.windowsStore)
   } catch (error) {
     console.error(error)
   }
@@ -66,5 +66,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
   // @ts-ignore (define in dts)
-  window.hasAutoUpdate = process.mas
+  window.hasAutoUpdate = process.mas || process.windowsStore
 }
