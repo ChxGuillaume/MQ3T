@@ -79,6 +79,8 @@ const trimLine = (line: string): string => {
   return trimmedLine
 }
 
+const isNullOrUndefined = (value: any): boolean => [null, undefined].includes(value)
+
 export const getDataFromPath = (data: any, path: string): number | null => {
   if (path === '' && !isNaN(data)) return data
 
@@ -86,7 +88,9 @@ export const getDataFromPath = (data: any, path: string): number | null => {
   let result = data
 
   for (const part of pathParts) {
-    if (result[part] === undefined) return null
+    if (isNullOrUndefined(result)) return null
+    if (isNullOrUndefined(result[part])) return null
+
     result = result[part]
   }
 
