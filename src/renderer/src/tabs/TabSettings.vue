@@ -156,7 +156,7 @@ const hasAutoUpdate = window.hasAutoUpdate
     <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
       <q-btn
-        v-if="!hasAutoUpdate"
+        v-if="hasAutoUpdate"
         color="primary"
         :disable="appStore.workingOnUpdate"
         @click="ElectronApi.checkForUpdates"

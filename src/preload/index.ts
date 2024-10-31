@@ -3,7 +3,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 import { ElectronIpc } from '../types/electron-ipc-callbacks'
 
-// Custom APIs for renderer
 const api: ElectronIpc = {
   handleMqttError: (callback) => ipcRenderer.on('mqtt-error', callback as any),
   handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
@@ -46,15 +45,14 @@ const api: ElectronIpc = {
   handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any)
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
+const hasAutoUpdate = !process.mas && !process.windowsStore
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('platform', process.platform)
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('hasAutoUpdate', process.mas || process.windowsStore)
+    contextBridge.exposeInMainWorld('hasAutoUpdate', hasAutoUpdate)
   } catch (error) {
     console.error(error)
   }
@@ -66,5 +64,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
   // @ts-ignore (define in dts)
-  window.hasAutoUpdate = process.mas || process.windowsStore
+  window.hasAutoUpdate = hasAutoUpdate
 }

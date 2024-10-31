@@ -62,7 +62,7 @@ export const useActionsStore = defineStore('actions', {
       (connectionId: string, groupId: string): Record<string, Action[]> => {
         const record = state.actions[connectionId]
 
-        return { [groupId]: record[groupId] } || {}
+        return { [groupId]: record[groupId] }
       },
     getAction:
       (state) =>
