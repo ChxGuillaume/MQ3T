@@ -87,7 +87,7 @@ linux:
 npmRebuild: false
 
 # Publish to GitHub Releases
-#publish:
-#  provider: github
-#  owner: ChxGuillaume
-#  repo: MQ3T
+publish:
+  provider: github
+  owner: ChxGuillaume
+  repo: MQ3T
