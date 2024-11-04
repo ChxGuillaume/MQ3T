@@ -11,6 +11,8 @@ jobs:
         os: [ macos-latest, windows-latest, ubuntu-latest ]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set version from tag
+      - name: Set version from tag (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
+            npm version $matches[1] --no-git-tag-version
+          }
+
+      - name: Set version from tag (Mac & Linux)
+        if: matrix.os != 'windows-latest'
         run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version
 
       - name: Build
@@ -99,6 +109,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: matrix.os == 'macos-latest' || matrix.os == 'windows-latest'
         with:
           name: app-store-artifacts-${{ matrix.os }}
           retention-days: 60
