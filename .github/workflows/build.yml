@@ -29,7 +29,6 @@ jobs:
         run: npm run build
 
       - name: Install Apple Code Signing Certificate
-        if: matrix.os == 'macos-latest'
         env:
           APPLE_THIRD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64 }}
           APPLE_THIRD_PARTY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
@@ -59,7 +58,6 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: Install Mac Profiles
-        if: matrix.os == 'macos-latest'
         env:
           APPLE_APPLE_DEVELOPMENT_PROFILE: ${{ secrets.APPLE_APPLE_DEVELOPMENT_PROFILE }}
           APPLE_MAC_APP_STORE_PROFILE: ${{ secrets.APPLE_MAC_APP_STORE_PROFILE }}
@@ -68,11 +66,9 @@ jobs:
           echo -n "$APPLE_MAC_APP_STORE_PROFILE" | base64 -d -o build/MacAppStore.provisionprofile
 
       - name: Package (Mac App Store)
-        if: matrix.os == 'macos-latest'
         run: npm run package:mac:store
 
       - name: Package (Mac)
-        if: matrix.os == 'macos-latest'
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
