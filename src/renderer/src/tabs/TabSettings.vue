@@ -146,6 +146,9 @@ const autoOpenPublishActionsSetting = computed({
 
 const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
+
+// @ts-ignore (define in dts)
+const hasAutoUpdate = window.hasAutoUpdate
 </script>
 
 <template>
@@ -153,6 +156,7 @@ const showVersionModal = ref(false)
     <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
       <q-btn
+        v-if="hasAutoUpdate"
         color="primary"
         :disable="appStore.workingOnUpdate"
         @click="ElectronApi.checkForUpdates"

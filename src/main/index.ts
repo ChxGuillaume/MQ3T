@@ -20,6 +20,8 @@ const configFilePath = {
   actionsGroups: path.join(configFolder, 'actions-groups.json')
 }
 
+const HAS_AUTO_UPDATE = !process.mas && !process.windowsStore
+
 fs.mkdirSync(configFolder, { recursive: true })
 
 let mainWindow: BrowserWindow | null = null
@@ -260,7 +262,7 @@ const initIpcMain = () => {
   })
 
   ipcMain.on('check-for-updates', () => {
-    autoUpdater.checkForUpdates()
+    if (HAS_AUTO_UPDATE) autoUpdater.checkForUpdates()
   })
 
   ipcMain.on('quit-and-install-update', () => {
@@ -328,5 +330,5 @@ const initAutoUpdater = () => {
     sendMessageToRenderer('update-downloaded', info)
   })
 
-  autoUpdater.checkForUpdates()
+  if (HAS_AUTO_UPDATE) autoUpdater.checkForUpdates()
 }
