@@ -53,6 +53,9 @@ jobs:
 
       - name: Install Mac Profiles
         if: matrix.os == 'macos-latest'
+        env:
+          APPLE_APPLE_DEVELOPMENT_PROFILE: ${{ secrets.APPLE_APPLE_DEVELOPMENT_PROFILE }}
+          APPLE_MAC_APP_STORE_PROFILE: ${{ secrets.APPLE_MAC_APP_STORE_PROFILE }}
         run: |
           echo -n "$APPLE_APPLE_DEVELOPMENT_PROFILE" | base64 -d -o build/AppleDevelopment.provisionprofile
           echo -n "$APPLE_MAC_APP_STORE_PROFILE" | base64 -d -o build/MacAppStore.provisionprofile
