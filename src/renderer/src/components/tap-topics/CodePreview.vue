@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
+import { GlyphLine, parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useDataGraphsStore } from '../../store/data-graphs'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -27,6 +27,7 @@ const monacoEditorRef = ref(null)
 
 const currentDataPath = ref('')
 const forceShowGraph = ref(false)
+const glyphsData = ref<GlyphLine[]>([])
 const showGraph = ref(false)
 const myGraph = ref<HTMLDivElement | null>(null)
 const x = ref(0)
@@ -43,21 +44,19 @@ const updatePreviewValue = _.debounce(
   { leading: true, trailing: true, maxWait: 250 }
 )
 
-const encodePathToClass = (path: string): string =>
-  path.replace(/\./g, '_-_').replace(/\[/g, '_--_').replace(/]/g, '_---_')
-const decodePathFromClass = (path: string): string =>
-  path.replace(/---_/g, ']').replace(/--/g, '[').replace(/-/g, '.').replace(/_/g, '')
+const decodePathFromClass = (index: string): string | undefined =>
+  glyphsData.value[parseInt(index)]?.path
 
 const addGlyphs = (formatedValue: string) => {
-  const positions = parseJsonForGlyphs(formatedValue)
+  glyphsData.value = parseJsonForGlyphs(formatedValue)
 
   codeEditor?.createDecorationsCollection(
-    positions.map((lineNumber) => ({
-      range: new monaco.Range(lineNumber.lineNumber, 0, lineNumber.lineNumber, 0),
+    glyphsData.value.map(({ lineNumber }, index) => ({
+      range: new monaco.Range(lineNumber, 0, lineNumber, 0),
       options: {
         glyphMarginClassName: [
           glyphMarginClass,
-          `data-path---${encodePathToClass(lineNumber.path)}`,
+          `data-path---${index}`,
           'fa-solid fa-chart-line'
         ].join(' ')
       }
@@ -159,7 +158,7 @@ onMounted(() => {
 
     if (dataPath === currentDataPath.value) return
 
-    currentDataPath.value = decodePathFromClass(dataPath)
+    currentDataPath.value = dataPath
   })
 
   codeEditor.onMouseLeave(() => {
