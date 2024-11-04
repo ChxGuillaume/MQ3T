@@ -5,12 +5,9 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build_package:
-    strategy:
-      matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  mac:
+    name: macos
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
@@ -25,15 +22,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set version from tag (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
-            npm version $matches[1] --no-git-tag-version
-          }
-
-      - name: Set version from tag (Mac & Linux)
-        if: matrix.os != 'windows-latest'
+      - name: Set version from tag
         run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version
 
       - name: Build
@@ -91,28 +80,80 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:mac:publish
 
-      - name: Package (Windows App Store)
-        if: matrix.os == 'windows-latest'
-        run: npm run package:win:store
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mac App Store Artifacts
+          retention-days: 60
+          path: |
+            dist/**/*.pkg
 
-      - name: Package (Windows)
-        if: matrix.os == 'windows-latest'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run package:win:publish
+
+  linux:
+    name: linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version from tag
+        run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version
+
+      - name: Build
+        run: npm run build
 
       - name: Package (Linux)
-        if: matrix.os == 'ubuntu-latest'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:linux:publish
 
+  windows:
+    name: windows
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version from tag
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
+            npm version $matches[1] --no-git-tag-version
+          }
+      - name: Build
+        run: npm run build
+
+      - name: Package (Windows App Store)
+        run: npm run package:win:store
+
+      - name: Package (Windows)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run package:win:publish
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-latest' || matrix.os == 'windows-latest'
         with:
-          name: app-store-artifacts-${{ matrix.os }}
+          name: Windows App Store Artifacts
           retention-days: 60
           path: |
-            dist/**/*.pkg
             dist/*.appx
