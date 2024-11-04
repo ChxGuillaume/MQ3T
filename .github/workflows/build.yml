@@ -74,6 +74,11 @@ jobs:
 
       - name: Package (Mac)
         if: matrix.os == 'macos-latest'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:mac:publish
 
       - name: Package (Windows App Store)
@@ -82,10 +87,14 @@ jobs:
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:win:publish
 
       - name: Package (Linux)
         if: matrix.os == 'ubuntu-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:linux:publish
 
       - name: Upload artifacts
