@@ -32,7 +32,7 @@ jobs:
       - name: Install Apple Code Signing Certificate
         if: matrix.os == 'macos-latest'
         env:
-          APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
+          APPLE_THIRD_PARTY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_SIGNING_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
