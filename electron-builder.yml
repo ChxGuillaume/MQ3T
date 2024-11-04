@@ -21,7 +21,8 @@ asarUnpack:
 win:
   icon: build/logo/win512pts.png
   executableName: MQ3T
-  publisherName: ChxGuillaume
+  signtoolOptions:
+    publisherName: ChxGuillaume
   # TODO: Enable after code signing is set up
   # sign: false
   verifyUpdateCodeSignature: false
@@ -53,8 +54,7 @@ mac:
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize:
-     teamId: YU3G6A39G4
+  notarize: true
   target:
     - target: dmg
       arch:
@@ -87,7 +87,7 @@ linux:
 npmRebuild: false
 
 # Publish to GitHub Releases
-publish:
-  provider: github
-  owner: ChxGuillaume
-  repo: MQ3T
+#publish:
+#  provider: github
+#  owner: ChxGuillaume
+#  repo: MQ3T

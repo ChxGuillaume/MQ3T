@@ -1,0 +1,65 @@
+name: build-package
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build_package:
+    strategy:
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version from tag
+        run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Mac Profiles
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo -n "$APPLE_APPLE_DEVELOPMENT_PROFILE" | base64 -d -o build/AppleDevelopment.provisionprofile
+          echo -n "$APPLE_MAC_APP_STORE_PROFILE" | base64 -d -o build/MacAppStore.provisionprofile
+
+      - name: Package (Mac App Store)
+        if: matrix.os == 'macos-latest'
+        run: npm run package:mac:store
+
+      - name: Package (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npm run package:mac:publish
+
+      - name: Package (Windows App Store)
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:store
+
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:publish
+
+      - name: Package (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run package:linux:publish
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-store-artifacts-${{ matrix.os }}
+          retention-days: 60
+          path: |
+            dist/*.pkg
+            dist/*.appx
