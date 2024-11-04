@@ -66,6 +66,8 @@ jobs:
           echo -n "$APPLE_MAC_APP_STORE_PROFILE" | base64 -d -o build/MacAppStore.provisionprofile
 
       - name: Package (Mac App Store)
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: npm run package:mac:store
 
       - name: Package (Mac)
@@ -139,6 +141,8 @@ jobs:
         run: npm run build
 
       - name: Package (Windows App Store)
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: npm run package:win:store
 
       - name: Package (Windows)

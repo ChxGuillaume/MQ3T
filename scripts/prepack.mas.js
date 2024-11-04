@@ -11,14 +11,17 @@ const distYamlData = yaml.parse(distFile)
 
 yamlData.buildVersion = distYamlData?.buildVersion || yamlData?.buildVersion || 0
 
-console.log(
-  '  • Updating build version from',
-  yamlData.buildVersion,
-  'to',
-  yamlData.buildVersion + 1
-)
+let newBuildVersion = yamlData.buildVersion + 1
 
-yamlData.buildVersion += 1
+if (process.env.GITHUB_RUN_NUMBER) {
+  newBuildVersion = parseInt(process.env.GITHUB_RUN_NUMBER)
+
+  console.log('  • Setting build version to', newBuildVersion)
+} else {
+  console.log('  • Updating build version from', yamlData.buildVersion, 'to', newBuildVersion)
+}
+
+yamlData.buildVersion = newBuildVersion
 
 const newYamlData = yaml.stringify(yamlData)
 
