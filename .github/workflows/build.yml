@@ -65,11 +65,6 @@ jobs:
           echo -n "$APPLE_APPLE_DEVELOPMENT_PROFILE" | base64 -d -o build/AppleDevelopment.provisionprofile
           echo -n "$APPLE_MAC_APP_STORE_PROFILE" | base64 -d -o build/MacAppStore.provisionprofile
 
-      - name: Package (Mac App Store)
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: npm run package:mac:store
-
       - name: Package (Mac)
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -77,6 +72,14 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:mac:publish
+
+      - name: Set version from tag (without pre-release)
+        run: npm version "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//' --no-git-tag-version
+
+      - name: Package (Mac App Store)
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: npm run package:mac:store
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -137,18 +140,26 @@ jobs:
           if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
             npm version $matches[1] --no-git-tag-version
           }
+
       - name: Build
         run: npm run build
-
-      - name: Package (Windows App Store)
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: npm run package:win:store
 
       - name: Package (Windows)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:win:publish
+
+      - name: Set version from tag (without pre-release)
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
+            $version = $matches[1] -replace '-.*', ''
+            npm version $version --no-git-tag-version
+          }
+
+      - name: Package (Windows App Store)
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: npm run package:win:store
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

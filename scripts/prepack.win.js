@@ -16,9 +16,9 @@ let newBuildNumber = yamlData.buildVersion + 1
 if (process.env.GITHUB_RUN_NUMBER) {
   newBuildNumber = parseInt(process.env.GITHUB_RUN_NUMBER)
 
-  console.log('  • Setting build version to', newBuildNumber)
+  console.log('  • Setting build number to', newBuildNumber)
 } else {
-  console.log('  • Updating build version from', yamlData.buildVersion, 'to', newBuildNumber)
+  console.log('  • Updating build number from', yamlData.buildVersion, 'to', newBuildNumber)
 }
 
 yamlData.buildNumber = newBuildNumber
