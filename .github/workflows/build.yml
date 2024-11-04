@@ -32,14 +32,17 @@ jobs:
       - name: Install Apple Code Signing Certificate
         if: matrix.os == 'macos-latest'
         env:
+          APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_SIGNING_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          3RD_PARTY_CERTIFICATE_PATH=$RUNNER_TEMP/3rd_party_certificate.p12
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
           # import certificate and provisioning profile from secrets
+          echo -n "APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64" | base64 --decode -o $3RD_PARTY_CERTIFICATE_PATH
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
 
           # create temporary keychain
@@ -48,6 +51,7 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
           # import certificate to keychain
+          security import $3RD_PARTY_CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
