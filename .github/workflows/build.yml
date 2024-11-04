@@ -74,7 +74,9 @@ jobs:
         run: npm run package:mac:publish
 
       - name: Set version from tag (without pre-release)
-        run: npm version "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//' --no-git-tag-version
+        run: |
+          VERSION=$(echo "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//')
+          npm version "$VERSION" --no-git-tag-version
 
       - name: Package (Mac App Store)
         env:
