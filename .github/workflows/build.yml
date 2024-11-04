@@ -1,4 +1,4 @@
-name: build-package
+name: build
 on:
   push:
     tags:
@@ -114,5 +114,5 @@ jobs:
           name: app-store-artifacts-${{ matrix.os }}
           retention-days: 60
           path: |
-            dist/*.pkg
+            dist/**/*.pkg
             dist/*.appx
