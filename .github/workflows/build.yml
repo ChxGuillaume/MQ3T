@@ -23,6 +23,8 @@ jobs:
         run: npm ci
 
       - name: Set version from tag
+        env:
+          GITHUB_REF: ${{ github.ref }}
         run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version
 
       - name: Build
@@ -74,6 +76,8 @@ jobs:
         run: npm run package:mac:publish
 
       - name: Set version from tag (without pre-release)
+        env:
+          GITHUB_REF: ${{ github.ref }}
         run: |
           VERSION=$(echo "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//')
           npm version "$VERSION" --no-git-tag-version
@@ -138,6 +142,8 @@ jobs:
         run: npm ci
 
       - name: Set version from tag
+        env:
+          GITHUB_REF: ${{ github.ref }}
         run: |
           if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
             npm version $matches[1] --no-git-tag-version
@@ -152,6 +158,8 @@ jobs:
         run: npm run package:win:publish
 
       - name: Set version from tag (without pre-release)
+        env:
+          GITHUB_REF: ${{ github.ref }}
         run: |
           if ($env:GITHUB_REF -match 'refs/tags/v(.+)') {
             $version = $matches[1] -replace '-.*', ''
