@@ -1,14 +1,43 @@
 <script setup lang="ts">
-defineProps<{
-  hideCopyLastMessage?: boolean
+const props = defineProps<{
+  hasLastMessage?: boolean
+  favorite?: boolean
 }>()
 
-defineEmits(['copyLastMessage', 'copyTopic', 'copyTopicKey', 'erase'])
+const emit = defineEmits([
+  'copyLastMessage',
+  'copyTopic',
+  'copyTopicKey',
+  'erase',
+  'favorite',
+  'unfavorite'
+])
+
+const handleFavorite = () => {
+  if (props.favorite) emit('unfavorite')
+  else emit('favorite')
+}
 </script>
 
 <template>
   <q-menu anchor="center end" self="center left" context-menu>
     <q-list class="tw-min-w-[150px]">
+      <q-item
+        :disable="hasLastMessage"
+        class="tw-text-yellow-500"
+        clickable
+        v-close-popup
+        @click="handleFavorite"
+      >
+        <q-item-section>
+          <div>
+            <q-icon v-if="favorite" name="fa-solid fa-star" class="tw-mr-2" />
+            <q-icon v-else name="fa-regular fa-star" class="tw-mr-2" />
+            {{ favorite ? 'Unfavorite' : 'Favorite' }}
+          </div>
+        </q-item-section>
+      </q-item>
+
       <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopic')">
         <q-item-section>
           <div>
@@ -28,11 +57,11 @@ defineEmits(['copyLastMessage', 'copyTopic', 'copyTopicKey', 'erase'])
       </q-item>
 
       <q-item
+        :disable="hasLastMessage"
         class="tw-text-secondary"
         clickable
         v-close-popup
         @click="$emit('copyLastMessage')"
-        :disable="hideCopyLastMessage"
       >
         <q-item-section>
           <div>
