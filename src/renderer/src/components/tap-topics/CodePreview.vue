@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { GlyphLine, parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useDataGraphsStore } from '../../store/data-graphs'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { formatCode } from '../../assets/js/format-code'
 import LineChartCard from '../graphs/LineChartCard.vue'
 import * as monaco from 'monaco-editor'
@@ -15,6 +15,8 @@ const dataGraphsStore = useDataGraphsStore()
 const $q = useQuasar()
 
 const props = defineProps<{
+  connectionKey?: string
+  topicKey?: string
   value: string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
   hideTopBorder?: boolean
@@ -32,6 +34,12 @@ const showGraph = ref(false)
 const myGraph = ref<HTMLDivElement | null>(null)
 const x = ref(0)
 const y = ref(0)
+
+const ySafe = computed(() => {
+  const graphCardHeight = myGraph.value?.getBoundingClientRect().height || 0
+
+  return Math.max(10, Math.min(window.innerHeight - graphCardHeight - 10, y.value))
+})
 
 const updatePreviewValue = _.debounce(
   (value) => {
@@ -129,8 +137,8 @@ onMounted(() => {
     if (!dataPath) return
 
     dataGraphsStore.addDataGraph({
-      clientKey: mqttTopicsStore.selectedConnection,
-      topic: mqttTopicsStore.selectedTopic,
+      clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
+      topic: props.topicKey || mqttTopicsStore.selectedTopic,
       dataPath
     })
   })
@@ -199,7 +207,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
       v-if="language === 'json'"
       v-show="showGraph || forceShowGraph"
       class="tw-fixed tw-w-fit"
-      :style="{ top: `${y}px`, left: `${x}px` }"
+      :style="{ left: `${x}px`, top: `${ySafe}px` }"
       @mouseenter="forceShowGraph = true"
       @mouseleave="forceShowGraph = false"
     >
@@ -207,8 +215,8 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
         class="tw-w-[500px]"
         :data-graph="{
           id: null,
-          clientKey: mqttTopicsStore.selectedConnection,
-          topic: mqttTopicsStore.selectedTopic,
+          clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
+          topic: props.topicKey || mqttTopicsStore.selectedTopic,
           dataPath: currentDataPath,
           curveType: 'curve'
         }"

@@ -16,6 +16,7 @@ export interface ITopicCard {
 const props = defineProps<{
   active?: boolean
   opened?: boolean
+  favorite?: boolean
   expandable?: boolean
   hasActions?: boolean
 }>()
@@ -103,9 +104,10 @@ defineExpose({ animate })
       v-if="expandable"
       name="fa-solid fa-caret-right"
       size="xs"
-      class="expand-icon tw-mr-1"
+      class="expand-icon topic-item-icon"
     />
-    <q-icon v-if="hasActions" name="fa-solid fa-play" color="accent" class="tw-mr-1" />
+    <q-icon v-if="hasActions" name="fa-solid fa-play" class="topic-item-icon tw-text-accent" />
+    <q-icon v-if="favorite" name="fa-solid fa-star" class="topic-item-icon tw-text-yellow-500" />
     <slot />
   </q-card>
 </template>
@@ -123,6 +125,13 @@ defineExpose({ animate })
 
 .topic-item-card.not-scrubbing {
   @apply tw-transition-colors;
+}
+
+.topic-item-icon {
+  @apply tw-h-4;
+
+  margin-right: 5px;
+  margin-bottom: 2px;
 }
 
 @keyframes slideIn {

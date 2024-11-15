@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
 import { useActionsCacheStore } from '../../store/actions-cache'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
@@ -9,6 +10,7 @@ import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 
+const favoriteTopicsStore = useFavoriteTopicsStore()
 const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
@@ -31,6 +33,10 @@ const expandedTopicsSection = computed({
 
 const hasActions = computed(() => {
   return actionsCacheStore.hasAction(props.clientKey, props.topicPath)
+})
+
+const favoritedTopics = computed(() => {
+  return favoriteTopicsStore.isFavoriteTopic(props.clientKey, props.topicPath)
 })
 
 const emits = defineEmits(['topic:click'])
@@ -88,6 +94,14 @@ const handleCopyLastMessage = () => {
 
 const handleEraseTopic = () => {
   mqttTopicsStore.clearTopicsAndSubTopicsMessages(props.clientKey, props.topicPath)
+}
+
+const handleFavorite = () => {
+  favoriteTopicsStore.addFavoriteTopic(props.clientKey, props.topicPath)
+}
+
+const handleUnfavorite = () => {
+  favoriteTopicsStore.removeFavoriteTopic(props.clientKey, props.topicPath)
 }
 
 const isLastTopicPart = computed(() => {
@@ -153,6 +167,7 @@ watch(
           ref="topicGroupTopicCardRef"
           expandable
           :has-actions="hasActions"
+          :favorite="favoritedTopics"
           :active="isSelectedTopic"
           :opened="expandedTopicsSection"
           :style="{ 'margin-left': `${topicIndex * 20}px` }"
@@ -172,10 +187,13 @@ watch(
             v-text="`= ${topicLastMessage?.message}`"
           />
           <topic-item-menu
-            :hide-copy-last-message="!topicLastMessage?.message"
+            :has-last-message="!topicLastMessage?.message"
+            :favorite="favoritedTopics"
             @copy-last-message="handleCopyLastMessage"
             @copy-topic-key="handleCopyTopicKey"
             @copy-topic="handleCopyTopic"
+            @unfavorite="handleUnfavorite"
+            @favorite="handleFavorite"
             @erase="handleEraseTopic"
           />
         </topic-card>
@@ -200,6 +218,7 @@ watch(
       <topic-card
         ref="topicCardRef"
         :has-actions="hasActions"
+        :favorite="favoritedTopics"
         :active="isSelectedTopic"
         :style="{ 'margin-left': `${topicIndex * 20}px` }"
         @open:toggle="handleTopicClick"
@@ -213,10 +232,13 @@ watch(
           v-text="`= ${topicLastMessage?.message}`"
         />
         <topic-item-menu
-          :hide-copy-last-message="!topicLastMessage?.message"
+          :has-last-message="!topicLastMessage?.message"
+          :favorite="favoritedTopics"
           @copy-last-message="handleCopyLastMessage"
           @copy-topic-key="handleCopyTopicKey"
           @copy-topic="handleCopyTopic"
+          @unfavorite="handleUnfavorite"
+          @favorite="handleFavorite"
           @erase="handleEraseTopic"
         />
       </topic-card>
