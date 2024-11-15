@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
+import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
@@ -9,6 +10,7 @@ import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
+import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
@@ -45,8 +47,11 @@ const graphSplitter = computed({
   }
 })
 
+const isFavoriteTab = ref(false)
 const topicTab = computed({
   get: () => {
+    if (isFavoriteTab.value) return 'favorites'
+
     if (topicTabRecord.value[mqttTopicsStore.selectedTopic])
       return topicTabRecord.value[mqttTopicsStore.selectedTopic]
 
@@ -67,6 +72,12 @@ const topicTab = computed({
     return 'values'
   },
   set: (value) => {
+    if (value === 'favorites') {
+      isFavoriteTab.value = true
+      return
+    }
+
+    isFavoriteTab.value = false
     topicTabRecord.value[mqttTopicsStore.selectedTopic] = value
   }
 })
@@ -112,33 +123,7 @@ const allTopics = computed(() => {
   return mqttTopicsStore
     .getAllTopicList(mqttTopicsStore.selectedConnection)
     .slice()
-    .sort((a, b) => {
-      const aParts = a.split('/')
-      const bParts = b.split('/')
-
-      const length = Math.max(aParts.length, bParts.length)
-
-      for (let i = 0; i < length; i++) {
-        if (aParts[i] === undefined && bParts[i] === undefined) return 0
-        else if (aParts[i] === undefined) return -1
-        else if (bParts[i] === undefined) return 1
-
-        const aPart = aParts[i] || ''
-        const bPart = bParts[i] || ''
-
-        if (aPart === bPart) continue
-
-        const aIsNumber = !isNaN(Number(aPart))
-        const bIsNumber = !isNaN(Number(bPart))
-
-        if (aIsNumber && bIsNumber) return Number(aPart) - Number(bPart)
-        else if (aIsNumber) return -1
-        else if (bIsNumber) return 1
-        else return aPart.localeCompare(bPart)
-      }
-
-      return 0
-    })
+    .sort(sortTopics)
 })
 
 const topicToSelect = (index: number, direction: 'up' | 'down'): string | null => {
@@ -416,6 +401,10 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
           <q-tab-panel name="stats" class="tw-flex tw-justify-center tw-items-center">
             <div class="text-h6">Stats In Work</div>
           </q-tab-panel>
+
+          <q-tab-panel name="favorites" class="tw-p-0">
+            <tab-favorites />
+          </q-tab-panel>
         </q-tab-panels>
 
         <q-separator />
@@ -438,6 +427,10 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
           <q-tab name="stats" v-if="false">
             <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" />
             Stats
+          </q-tab>
+          <q-tab name="favorites">
+            <q-icon name="fa-solid fa-star" class="tw-mr-2" />
+            Favorites
           </q-tab>
         </q-tabs>
 
