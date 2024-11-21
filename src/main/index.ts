@@ -20,7 +20,7 @@ const configFilePath = {
   actionsGroups: path.join(configFolder, 'actions-groups.json')
 }
 
-const HAS_AUTO_UPDATE = !process.mas && !process.windowsStore
+const HAS_AUTO_UPDATE = !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
 
 fs.mkdirSync(configFolder, { recursive: true })
 
