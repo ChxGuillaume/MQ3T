@@ -44,12 +44,12 @@
     "monaco-editor": "^0.52.0",
     "mqtt": "^5.10.2",
     "pinia": "^2.2.6",
-    "quasar": "^2.17.2",
+    "quasar": "^2.17.4",
     "uuid": "^11.0.3",
     "vue-echarts": "^7.0.3",
     "vuedraggable": "^4.1.0",
     "xml-formatter": "^3.6.3",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.1"
   },
   "devDependencies": {
     "@babel/traverse": ">=7.25.9",
@@ -60,7 +60,7 @@
     "@rushstack/eslint-patch": "^1.10.4",
     "@types/electron-devtools-installer": "^2.2.5",
     "@types/lodash": "^4.17.13",
-    "@types/node": "^20.17.6",
+    "@types/node": "^22.9.3",
     "@types/uuid": "^10.0.0",
     "@types/xml-formatter": "^2.1.1",
     "@vitejs/plugin-vue": "^5.2.0",
@@ -78,7 +78,7 @@
     "prettier": "^3.3.3",
     "sass": "^1.81.0",
     "tailwindcss": "^3.4.15",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vue": "^3.5.13",
