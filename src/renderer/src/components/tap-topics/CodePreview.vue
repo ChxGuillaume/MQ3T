@@ -134,7 +134,7 @@ onMounted(() => {
     const dataPathClass = getElementDataPathClass(element)
     const dataPath = decodePathFromClass(dataPathClass)
 
-    if (!dataPath) return
+    if (typeof dataPath === 'undefined') return
 
     dataGraphsStore.addDataGraph({
       clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
@@ -166,7 +166,7 @@ onMounted(() => {
     const dataPathClass = getElementDataPathClass(element)
     const dataPath = decodePathFromClass(dataPathClass)
 
-    if (!dataPath) return
+    if (typeof dataPath === 'undefined') return
     if (dataPath === currentDataPath.value) return
 
     currentDataPath.value = dataPath
