@@ -1,0 +1,62 @@
+name: build
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  linux:
+    name: linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Snapcraft
+        uses: snapcore/action-build@v1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version from tag
+        run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version --allow-same-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Package (Linux)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run package:linux:publish
+
+      - name: Set version from tag (without pre-release)
+        run: |
+          VERSION=$(echo "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//')
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        id: version
+
+      - name: Package (Linux Snap)
+        run: npm run package:linux:snap
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux Snap Artifacts
+          retention-days: 60
+          path: |
+            dist/*.snap
+
+      - name: Upload to Snap Store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: dist/mq3t_${{ steps.version.outputs.VERSION }}_amd64.snap
