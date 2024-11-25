@@ -27,7 +27,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node_modules
-          path: [ 'node_modules', 'package.json', 'package-lock.json' ]
+          path: |
+            node_modules
+            package.json
+            package-lock.json
           retention-days: 1
 
   build:
