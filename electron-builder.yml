@@ -82,8 +82,9 @@ linux:
         - x64
         - armv7l
         - arm64
-  maintainer: electronjs.org
-  category: Utility
+  maintainer: ChxGuillaume
+  category: Development
+
 npmRebuild: false
 
 # Publish to GitHub Releases
