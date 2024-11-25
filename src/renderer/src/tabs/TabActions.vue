@@ -6,6 +6,7 @@ import { Action, ActionGroup, ExportActionsFile, ExportGroupsFile } from '../../
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
 import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
+import VueFlowTest from '@renderer/components/tab-actions/ChainActionScreen.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import ConnectionSelect from '../components/ConnectionSelect.vue'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
@@ -240,14 +241,33 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
       <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
         <div class="tw-p-4 tw-flex tw-justify-between tw-items-center">
           <h1 class="tw-text-xl tw-font-bold">Actions</h1>
-          <q-btn
-            color="primary"
-            :disable="!selectedActionGroup || !selectedConnection"
-            @click="actionDialogOpened = true"
-          >
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
-            Add Action
-          </q-btn>
+          <q-btn-group>
+            <q-btn color="primary" :disable="!selectedActionGroup || !selectedConnection">
+              <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+              Create New
+
+              <q-menu anchor="bottom right" self="top right">
+                <q-list>
+                  <q-item clickable v-close-popup @click="actionDialogOpened = true">
+                    <q-item-section>
+                      <div>
+                        <q-icon class="tw-mr-2" name="fa-solid fa-paper-plane" />
+                        Action
+                      </div>
+                    </q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup>
+                    <q-item-section>
+                      <div>
+                        <q-icon class="tw-mr-2" name="fa-solid fa-diagram-project" />
+                        Chain Action
+                      </div>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
+          </q-btn-group>
         </div>
         <q-separator />
         <div class="tw-relative">
@@ -301,6 +321,8 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
               class="create-action-arrow tw-text-primary tw-rotate-[55deg]"
             />
           </div>
+
+          <vue-flow-test />
 
           <draggable
             v-model="actions"

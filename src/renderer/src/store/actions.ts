@@ -221,10 +221,12 @@ export const useActionsStore = defineStore('actions', {
       const connectionId = this.selectedConnection
       const actions = this.actions[connectionId][groupId]
 
-      // Duplicating the actions array to avoid mutation while deleting
-      for (const action of JSON.parse(JSON.stringify(actions))) {
-        if (moveActionsToDefault) this.addActionToConnectionGroup(action, connectionId, 'default')
-        else this.deleteActionFromConnectionGroup(action.id, connectionId, groupId)
+      if (actions) {
+        // Duplicating the actions array to avoid mutation while deleting
+        for (const action of JSON.parse(JSON.stringify(actions))) {
+          if (moveActionsToDefault) this.addActionToConnectionGroup(action, connectionId, 'default')
+          else this.deleteActionFromConnectionGroup(action.id, connectionId, groupId)
+        }
       }
 
       delete this.actions[connectionId][groupId]

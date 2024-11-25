@@ -3,7 +3,7 @@ import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
 import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
@@ -15,6 +15,8 @@ const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
   opened: boolean
+  noTitle?: boolean
+  noWildcard?: boolean
   editMode?: boolean
   action?: Action
 }>()
@@ -37,14 +39,27 @@ const form = reactive({
   description: ''
 })
 
-const rules = {
-  name: [(v: string) => !!v || 'Title is required'],
-  topic: [
-    (v: string) => !!v || 'Topic is required',
-    (v: string) => !v.includes('#') || 'Topic cannot include #',
-    (v: string) => !v.endsWith('+') || 'Topic cannot end with +'
-  ]
-}
+const rules = computed(() => {
+  const extraTopicRules: ((v: string) => true | string)[] = []
+
+  if (props.noWildcard) {
+    extraTopicRules.push((v: string) => !v.includes('+') || 'Topic cannot include +')
+  }
+
+  return {
+    name: [(v: string) => !!v || 'Title is required'],
+    topic: [
+      (v: string) => !!v || 'Topic is required',
+      (v: string) => !v.includes('#') || 'Topic cannot include #',
+      (v: string) => !v.endsWith('+') || 'Topic cannot end with +',
+      ...extraTopicRules
+    ]
+  }
+})
+
+const hint = computed(() => {
+  return props.noWildcard ? 'Topics cannot include + or #' : 'Topics can include + wildcard'
+})
 
 const clearForm = () => {
   form.name = ''
@@ -146,9 +161,15 @@ watch(
     <q-card flat class="tw-min-w-[760px]">
       <q-card-section>
         <q-form ref="formRef" class="tw-grid tw-gap-2">
-          <h2 class="tw-mb-2 tw-text-xl">Action Group</h2>
-          <div class="tw-grid tw-grid-cols-2 tw-gap-4">
-            <q-input v-model="form.name" filled label="Title" :rules="rules.name" />
+          <h2 class="tw-mb-2 tw-text-xl">Action</h2>
+          <div
+            class="tw-grid tw-gap-4"
+            :class="{
+              'tw-grid-cols-2': !noTitle,
+              'tw-grid-cols-1': noTitle
+            }"
+          >
+            <q-input v-if="!noTitle" v-model="form.name" filled label="Title" :rules="rules.name" />
             <q-input
               v-model="form.topic"
               filled
@@ -156,7 +177,7 @@ watch(
               lazy-rules
               :rules="rules.topic"
               hide-hint
-              hint="Topics can include + wildcard"
+              :hint="hint"
             />
           </div>
           <div class="tw-grid tw-grid-cols tw-gap-4">
