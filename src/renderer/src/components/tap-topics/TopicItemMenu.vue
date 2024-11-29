@@ -31,8 +31,8 @@ const handleFavorite = () => {
       >
         <q-item-section>
           <div>
-            <q-icon v-if="favorite" name="fa-solid fa-star" class="tw-mr-2" />
-            <q-icon v-else name="fa-regular fa-star" class="tw-mr-2" />
+            <q-icon v-if="favorite" name="fa-regular fa-star" class="tw-mr-2" />
+            <q-icon v-else name="fa-solid fa-star" class="tw-mr-2" />
             {{ favorite ? 'Unfavorite' : 'Favorite' }}
           </div>
         </q-item-section>

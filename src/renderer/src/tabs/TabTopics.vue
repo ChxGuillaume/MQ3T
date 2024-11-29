@@ -78,8 +78,10 @@ const topicTab = computed({
     switch (value) {
       case 'chain-actions':
         isChainActionsTab.value = true
+        isFavoriteTab.value = false
         return
       case 'favorites':
+        isChainActionsTab.value = false
         isFavoriteTab.value = true
         return
     }

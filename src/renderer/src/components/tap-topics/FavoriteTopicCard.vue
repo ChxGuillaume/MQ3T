@@ -3,7 +3,10 @@ import CodePreview from '@renderer/components/tap-topics/CodePreview.vue'
 import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
 import CopyContextMenu from '@renderer/components/CopyContextMenu.vue'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { useQuasar } from 'quasar'
 import { computed } from 'vue'
+
+const $q = useQuasar()
 
 const favoriteTopicsStore = useFavoriteTopicsStore()
 const mqttTopicsStore = useMqttTopicsStore()
@@ -20,11 +23,22 @@ const breadcrumbs = computed(() => {
 const lastMessage = computed(() => {
   return mqttTopicsStore.getTopicLastMessage(props.clientKey, props.topicKey)
 })
+
+const handleBreadcrumbCopyPart = (part: string) => {
+  navigator.clipboard.writeText(part)
+
+  $q.notify({
+    message: 'Topic key copied to clipboard',
+    icon: 'fa-solid fa-clipboard',
+    color: 'positive',
+    timeout: 1000
+  })
+}
 </script>
 
 <template>
   <q-card flat>
-    <q-card-section class="tw-p-2 tw-flex tw-items-center tw-justify-between">
+    <q-card-section class="tw-flex tw-items-center tw-justify-between tw-p-2">
       <q-breadcrumbs gutter="none">
         <q-breadcrumbs-el>
           <q-chip
@@ -37,6 +51,7 @@ const lastMessage = computed(() => {
             @click="favoriteTopicsStore.removeFavoriteTopic(props.clientKey, props.topicKey)"
           >
             <q-icon name="fa-regular fa-star" color="black" />
+            <q-tooltip>Unfavorite</q-tooltip>
           </q-chip>
         </q-breadcrumbs-el>
         <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
@@ -49,7 +64,11 @@ const lastMessage = computed(() => {
             clickable
             :label="topicPart ? topicPart : '<\empty>'"
           >
-            <copy-context-menu anchor="bottom left" self="top left" />
+            <copy-context-menu
+              anchor="bottom left"
+              self="top left"
+              @copy="handleBreadcrumbCopyPart(topicPart)"
+            />
           </q-chip>
         </q-breadcrumbs-el>
       </q-breadcrumbs>
@@ -63,7 +82,7 @@ const lastMessage = computed(() => {
         :topic-key="props.topicKey"
         :connection-key="props.clientKey"
       />
-      <q-chip v-else class="tw-mr-2" color="grey-5" text-color="grey-10"> No messages </q-chip>
+      <q-chip v-else class="tw-mr-2" color="grey-5" text-color="grey-10">No messages</q-chip>
     </q-card-section>
   </q-card>
   <q-separator />
