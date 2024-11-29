@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ImportActionsGroups from './components/ImportActionsGroups.vue'
+import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from './store/mqtt-connections'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import ImportActions from './components/ImportActions.vue'
@@ -15,6 +16,7 @@ import TabTopics from './tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
@@ -157,6 +159,10 @@ onMounted(() => {
     actionsStore.setActions(actions)
   })
 
+  ElectronApi.handleLoadChainActions((_, chainActions) => {
+    chainActionsStore.setChainActions(chainActions)
+  })
+
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
   })
@@ -170,7 +176,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="tw-h-full tw-flex tw-content-between">
+  <div class="tw-flex tw-h-full tw-content-between">
     <div class="nav-bar-left">
       <q-tabs
         v-model="currentTab"
@@ -180,7 +186,7 @@ onUnmounted(() => {
         active-color="white"
         indicator-color="transparent"
       >
-        <div class="tw-h-full tw-flex tw-flex-col tw-justify-between">
+        <div class="tw-flex tw-h-full tw-flex-col tw-justify-between">
           <div>
             <q-tab name="topics" icon="fa-solid fa-code" label="Topics" />
             <q-tab name="actions" icon="fa-solid fa-play" label="Actions" />
@@ -241,13 +247,13 @@ onUnmounted(() => {
 
 .body--light {
   .nav-bar-left {
-    @apply tw-bg-zinc-100 tw-border-black/10;
+    @apply tw-border-black/10 tw-bg-zinc-100;
   }
 }
 
 .body--dark {
   .nav-bar-left {
-    @apply tw-bg-neutral-900 tw-border-white/10;
+    @apply tw-border-white/10 tw-bg-neutral-900;
   }
 }
 </style>

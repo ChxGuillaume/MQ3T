@@ -27,21 +27,21 @@ const isFinished = computed(() => {
 </script>
 
 <template>
-  <div class="tw-w-full tw-h-full tw-p-1 tw-flex tw-flex-col tw-justify-around">
-    <div class="tw-flex tw-justify-center tw-items-center tw-gap-2 tw-text-lg">
+  <div class="tw-flex tw-h-full tw-w-full tw-flex-col tw-justify-around tw-p-1">
+    <div class="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-lg">
       <node-icon :isRunning="isRunning" :isFinished="isFinished" icon="fa-solid fa-clock" />
       Wait
     </div>
 
     <q-separator />
 
-    <div class="tw-min-h-[28px] tw-px-1 tw-flex tw-justify-around tw-items-center tw-gap-2">
+    <div class="tw-flex tw-min-h-[28px] tw-items-center tw-justify-around tw-gap-2 tw-px-1">
       {{ duration }} {{ durationType }}
     </div>
   </div>
 
   <q-menu context-menu>
-    <div class="tw-p-2 tw-flex tw-gap-2">
+    <div class="tw-flex tw-gap-2 tw-p-2">
       <q-input v-model="duration" type="number" autofocus filled dense />
       <q-select v-model="durationType" :options="['ms', 's']" filled dense />
     </div>

@@ -180,7 +180,7 @@ watch(
               :hint="hint"
             />
           </div>
-          <div class="tw-grid tw-grid-cols tw-gap-4">
+          <div class="tw-grid-cols tw-grid tw-gap-4">
             <div class="tw-flex tw-gap-4">
               <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
                 <q-select

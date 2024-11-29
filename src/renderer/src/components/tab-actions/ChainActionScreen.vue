@@ -1,97 +1,33 @@
 <script setup lang="ts">
+import { Connection, ConnectionMode, Edge, NodeProps, useVueFlow, VueFlow } from '@vue-flow/core'
 import ActionNode from '@renderer/components/tab-actions/action-chain/ActionNode.vue'
 import StartNode from '@renderer/components/tab-actions/action-chain/StartNode.vue'
 import WaitNode from '@renderer/components/tab-actions/action-chain/WaitNode.vue'
-import { Background } from '@vue-flow/background'
-import { v4 as uuidV4 } from 'uuid'
-import { ref } from 'vue'
-import {
-  ConnectionMode,
-  useVueFlow,
-  Connection,
-  NodeProps,
-  VueFlow,
-  Edge,
-  Node
-} from '@vue-flow/core'
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { ChainAction, ChainActionNode } from '../../../../types/actions'
+import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useActionsStore } from '@renderer/store/actions'
+import { Background } from '@vue-flow/background'
+import { onMounted, ref } from 'vue'
+import { v4 as uuidV4 } from 'uuid'
+
+const props = defineProps<{
+  chainAction?: ChainAction
+}>()
+const emit = defineEmits(['back'])
 
 const trackPadMode = ref(true)
 
-// TODO: DELETE
-const aBase = { qos: 0, retained: false }
-const ps = () => JSON.parse(JSON.stringify(aBase))
-const s = (value: string) => JSON.stringify(value)
+const nodes = ref<ChainActionNode[]>([])
+const edges = ref<Edge[]>([])
 
-const nodes = ref<Node[]>([
-  { id: 'start', type: 'start', position: { x: 30, y: 40 }, deletable: false },
+const name = ref('Chain Action Name')
+const editName = ref(false)
 
-  {
-    id: '2',
-    type: 'action',
-    position: { x: 250, y: 30 },
-    data: {
-      action: {
-        ...ps(),
-        topic: 'mq3t/chain-action-one',
-        payload: s('message 1')
-      }
-    }
-  },
-  { id: '5', type: 'wait', position: { x: 470, y: 30 }, data: { duration: 3000 } },
-  {
-    id: '6',
-    type: 'action',
-    position: { x: 690, y: 30 },
-    data: {
-      action: {
-        ...ps(),
-        topic: 'mq3t/chain-action-three',
-        payload: s('message 3')
-      }
-    }
-  },
+const chainActionsStore = useChainActionsStore()
+const actionsStore = useActionsStore()
 
-  { id: '3', type: 'wait', position: { x: 250, y: 180 }, data: { duration: 2000 } },
-  {
-    id: '4',
-    type: 'action',
-    position: { x: 470, y: 130 },
-    data: {
-      action: {
-        ...ps(),
-        topic: 'mq3t/chain-action-two',
-        payload: s('message 2.1')
-      }
-    }
-  },
-  {
-    id: '7',
-    type: 'action',
-    position: { x: 470, y: 230 },
-    data: {
-      action: {
-        ...ps(),
-        topic: 'mq3t/chain-action-two',
-        payload: s('message 2.2')
-      }
-    }
-  }
-])
-
-const edges = ref<Edge[]>([
-  { id: 'e1-2', source: 'start', target: '2', animated: true },
-  { id: 'e1-3', source: 'start', target: '3', animated: true },
-  { id: 'e3-4', source: '3', target: '4', animated: true },
-  { id: 'e5-6', source: '5', target: '6', animated: true },
-  { id: 'e2-5', source: '2', target: '5', animated: true },
-  { id: 'e3-7', source: '3', target: '7', animated: true }
-])
-
-const { selectedConnection } = useActionsStore()
-
-const { onConnect, addEdges, fitView, removeNodes } = useVueFlow()
+const { onConnect, addNodes, addEdges, fitView, removeNodes } = useVueFlow()
 const { running, run } = useRunActionChain()
 
 onConnect((params) => {
@@ -112,7 +48,7 @@ const copyNode = (node: NodeProps) => {
     type: node.type,
     position: { x: node.position.x + 40, y: node.position.y + 60 },
     data: node.data
-  })
+  } as ChainActionNode)
 }
 
 function resetTransform() {
@@ -122,10 +58,47 @@ function resetTransform() {
 const isValid = (node: Connection) => {
   return !edges.value.some((edge) => edge.target === node.target)
 }
+
+const save = () => {
+  if (!props.chainAction) {
+    chainActionsStore.addChainAction(actionsStore.selectedConnection, 'default', {
+      groupId: actionsStore.selectedActionGroup,
+      name: name.value,
+      nodes: nodes.value,
+      edges: edges.value
+    })
+  } else {
+    chainActionsStore.updateChainAction(
+      actionsStore.selectedConnection,
+      props.chainAction.groupId,
+      {
+        ...props.chainAction,
+        name: name.value,
+        nodes: nodes.value,
+        edges: edges.value
+      }
+    )
+  }
+
+  emit('back')
+}
+
+onMounted(() => {
+  if (props.chainAction) {
+    name.value = props.chainAction.name
+
+    addNodes(props.chainAction.nodes)
+    addEdges(props.chainAction.edges)
+  } else {
+    addNodes({ id: 'start', type: 'start', position: { x: 30, y: 40 }, deletable: false })
+  }
+
+  fitView()
+})
 </script>
 
 <template>
-  <div class="tw-w-full tw-h-full">
+  <div class="tw-h-full tw-w-full">
     <vue-flow
       v-model:nodes="nodes"
       v-model:edges="edges"
@@ -161,6 +134,26 @@ const isValid = (node: Connection) => {
       </template>
     </vue-flow>
 
+    <q-card flat class="tw-absolute tw-left-0 tw-top-0 tw-bg-transparent">
+      <q-card-section v-if="editName" class="tw-flex tw-items-center tw-gap-2">
+        <q-input
+          v-model="name"
+          standout
+          class="tw-w-80 tw-text-xl"
+          @keydown.enter.prevent="editName = false"
+        />
+        <q-btn color="secondary" @click="editName = false" flat round>
+          <q-icon name="fa-solid fa-check" />
+        </q-btn>
+      </q-card-section>
+      <q-card-actions v-else class="tw-flex tw-items-center tw-gap-2 tw-px-[27px] tw-py-[23px]">
+        <h1 class="tw-text-xl">{{ name }}</h1>
+        <q-btn color="secondary" @click="editName = true" flat round>
+          <q-icon name="fa-solid fa-pen" size="xs" />
+        </q-btn>
+      </q-card-actions>
+    </q-card>
+
     <q-btn-group class="tw-absolute tw-bottom-4 tw-left-4" rounded>
       <q-btn color="primary">
         <q-icon name="fa-solid fa-plus" />
@@ -185,13 +178,22 @@ const isValid = (node: Connection) => {
         <q-tooltip>Reset zoom and pan</q-tooltip>
       </q-btn>
 
-      <div class="tw-bg-primary tw-pr-4 tw-rounded-r-full">
+      <div class="tw-rounded-r-full tw-bg-primary tw-pr-4">
         <q-checkbox v-model="trackPadMode" label="Trackpad mode" color="accent" />
       </div>
     </q-btn-group>
 
     <q-btn-group class="tw-absolute tw-bottom-4 tw-right-4" rounded>
-      <q-btn color="primary" @click="run(selectedConnection, nodes, edges)" :disable="running">
+      <q-btn color="primary" @click="$emit('back')">
+        <q-icon name="fa-solid fa-arrow-left" />
+        <q-tooltip>Back</q-tooltip>
+      </q-btn>
+
+      <q-btn
+        color="primary"
+        @click="run(actionsStore.selectedConnection, nodes, edges)"
+        :disable="!actionsStore.selectedConnection || running"
+      >
         <q-circular-progress
           v-if="running"
           color="white"
@@ -204,7 +206,7 @@ const isValid = (node: Connection) => {
         <q-tooltip>Play Chain Action</q-tooltip>
       </q-btn>
 
-      <q-btn color="primary">
+      <q-btn :disable="running" color="primary" @click="save">
         <q-icon name="fa-solid fa-save" />
         <q-tooltip>Save</q-tooltip>
       </q-btn>

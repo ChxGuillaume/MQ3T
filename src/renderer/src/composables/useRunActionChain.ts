@@ -17,8 +17,6 @@ export function useRunActionChain() {
   const run = (connectionId: string, nodes: Node[], edges: Edge[]) => {
     if (running.value) return
 
-    console.log(connectionId, nodes, edges)
-
     running.value = true
 
     _connectionId.value = connectionId

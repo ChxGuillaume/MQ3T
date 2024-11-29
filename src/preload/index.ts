@@ -30,8 +30,10 @@ const api: ElectronIpc = {
   openUrl: (url) => ipcRenderer.send('open-url', url),
 
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
+  saveChainActions: (chainActions) => ipcRenderer.send('save-chain-actions', chainActions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),
+  handleLoadChainActions: (callback) => ipcRenderer.on('load-chain-actions', callback as any),
   handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any),
 
   debug: (callback) => ipcRenderer.on('debug', callback as any),

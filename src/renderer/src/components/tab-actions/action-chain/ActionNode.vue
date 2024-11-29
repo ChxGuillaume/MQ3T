@@ -26,8 +26,8 @@ const isFinished = computed(() => {
 </script>
 
 <template>
-  <div class="tw-w-full tw-h-full tw-p-1 tw-flex tw-flex-col tw-justify-around">
-    <div class="tw-flex tw-justify-center tw-items-center tw-gap-2 tw-text-lg">
+  <div class="tw-flex tw-h-full tw-w-full tw-flex-col tw-justify-around tw-p-1">
+    <div class="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-lg">
       <node-icon :isRunning="isRunning" :isFinished="isFinished" icon="fa-solid fa-paper-plane" />
       Action
     </div>
@@ -36,8 +36,12 @@ const isFinished = computed(() => {
 
     <div
       v-if="action"
-      class="tw-min-h-[28px] tw-px-1 tw-flex tw-justify-around tw-items-center tw-gap-2"
+      class="tw-flex tw-min-h-[28px] tw-items-center tw-justify-around tw-gap-2 tw-px-1"
     >
+      <q-icon name="fa-solid fa-exchange-alt" class="color-details tw-cursor-pointer" size="xs">
+        <q-tooltip class="tw-text-sm" v-text="action.topic" />
+      </q-icon>
+
       <q-icon
         v-if="action.description"
         name="fa-solid fa-info-circle"
@@ -47,7 +51,7 @@ const isFinished = computed(() => {
         <q-tooltip class="tw-whitespace-pre tw-text-sm" v-text="action.description" />
       </q-icon>
 
-      <q-icon name="fa-solid fa-ranking-star" class="tw-px-1 color-details" size="xs">
+      <q-icon name="fa-solid fa-ranking-star" class="color-details tw-px-1" size="xs">
         <q-tooltip class="tw-text-sm" v-text="`QoS ${action.qos}`" />
       </q-icon>
 
@@ -55,11 +59,11 @@ const isFinished = computed(() => {
         <q-tooltip class="tw-text-sm">Retained</q-tooltip>
       </q-icon>
 
-      <q-icon name="fa-solid fa-file-lines" class="tw-cursor-pointer color-details" size="xs">
+      <q-icon name="fa-solid fa-file-lines" class="color-details tw-cursor-pointer" size="xs">
         <q-tooltip class="tw-text-sm" v-text="action.payload" />
       </q-icon>
     </div>
-    <div v-else class="tw-min-h-[28px] tw-flex tw-justify-center tw-items-center">
+    <div v-else class="tw-flex tw-min-h-[28px] tw-items-center tw-justify-center">
       <q-btn size="sm" color="accent" flat class="tw-px-2" @click="actionDialogOpened = true">
         <q-icon name="fa-solid fa-wrench" class="tw-mr-2" size="16px" />
         Setup

@@ -38,10 +38,10 @@ const handleCopyPayload = () => {
 </script>
 
 <template>
-  <q-card flat class="action-card tw-p-4 tw-h-fit">
+  <q-card flat class="action-card tw-h-fit tw-p-4">
     <div class="tw-flex tw-justify-between">
       <h2
-        class="tw-w-full tw-text-lg truncate-hover-one-line drag-handle"
+        class="truncate-hover-one-line drag-handle tw-w-full tw-text-lg"
         :class="{ 'tw-cursor-grab': !noGrab }"
         :title="action.name"
       >
@@ -65,7 +65,7 @@ const handleCopyPayload = () => {
     </div>
     <p
       v-if="!hideTopic"
-      class="truncate-hover-one-line tw-cursor-pointer color-details"
+      class="truncate-hover-one-line color-details tw-cursor-pointer"
       :title="action.topic"
       @click="handleCopyTopic"
     >
@@ -76,20 +76,20 @@ const handleCopyPayload = () => {
         <q-icon
           v-if="action.description"
           name="fa-solid fa-info-circle"
-          class="tw-mt-2 color-details"
+          class="color-details tw-mt-2"
           size="xs"
         >
           <q-tooltip class="tw-whitespace-pre tw-text-sm" v-text="action.description" />
         </q-icon>
 
-        <q-icon name="fa-solid fa-ranking-star" class="tw-px-1 tw-mt-2 color-details" size="xs">
+        <q-icon name="fa-solid fa-ranking-star" class="color-details tw-mt-2 tw-px-1" size="xs">
           <q-tooltip class="tw-text-sm" v-text="`QoS ${action.qos}`" />
         </q-icon>
 
         <q-icon
           v-if="action.retained"
           name="fa-solid fa-retweet"
-          class="tw-mt-2 color-details"
+          class="color-details tw-mt-2"
           size="xs"
         >
           <q-tooltip class="tw-text-sm">Retained</q-tooltip>
@@ -97,7 +97,7 @@ const handleCopyPayload = () => {
 
         <q-icon
           name="fa-solid fa-file-lines"
-          class="tw-mt-2 tw-cursor-pointer color-details"
+          class="color-details tw-mt-2 tw-cursor-pointer"
           size="xs"
           @click="handleCopyPayload"
         >
@@ -111,10 +111,10 @@ const handleCopyPayload = () => {
       >
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
-        <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-white tw-text-sm">
+        <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-sm tw-text-white">
           Connection is not active.
         </q-tooltip>
-        <q-tooltip v-if="disableWildcard" class="tw-bg-primary tw-text-white tw-text-sm">
+        <q-tooltip v-if="disableWildcard" class="tw-bg-primary tw-text-sm tw-text-white">
           Wildcard topics are only supported in the Topics tab.
         </q-tooltip>
       </q-btn>
@@ -135,7 +135,7 @@ const handleCopyPayload = () => {
 
 <style scoped lang="less">
 .truncate-hover-one-line {
-  @apply tw-text-ellipsis tw-overflow-hidden tw-break-all tw-line-clamp-1;
+  @apply tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all;
 }
 
 .body--light {
