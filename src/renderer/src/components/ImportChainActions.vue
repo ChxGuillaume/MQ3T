@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import SelectConnectionAndGroupDialog from './tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
-import { ExportChainActionsFile } from '../../../types/actions'
-import { ElectronApi } from '../assets/js/electron-api'
-import { useActionsStore } from '../store/actions'
-import { useQuasar } from 'quasar'
-import { ref } from 'vue'
 import { validateChainAction } from '@renderer/assets/js/validate-chain-action'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
+import { ExportChainActionsFile } from '../../../types/actions'
+import { ElectronApi } from '../assets/js/electron-api'
+import { useQuasar } from 'quasar'
+import { ref } from 'vue'
 
 const chainActionsStore = useChainActionsStore()
-const actionsStore = useActionsStore()
 const $q = useQuasar()
 
 const chainActions = ref<ExportChainActionsFile['chainActions']>([])
