@@ -4,6 +4,19 @@ $start: $secondary;
 $action: $accent;
 $wait: #f0ad4e;
 
+.vue-flow__nodesselection-rect {
+  //background: transparent;
+  //border: 0;
+  background: rgba($primary, 0.08);
+  border: 1px dotted $primary;
+}
+
+.vue-flow__selectionpane,
+.vue-flow__selection {
+  background: rgba($primary, 0.08);
+  border: 1px dotted $primary;
+}
+
 .vue-flow__handle {
   height: 24px;
   width: 10px;
@@ -25,7 +38,7 @@ $wait: #f0ad4e;
   border-radius: 8px;
   transition: outline-color 0.2s ease !important;
 
-  @apply tw-py-[10px] tw-flex tw-justify-center tw-items-center;
+  @apply tw-flex tw-items-center tw-justify-center tw-py-[10px];
 }
 
 .vue-flow__node-action,

@@ -6,9 +6,10 @@ import WaitNode from '@renderer/components/tab-actions/action-chain/WaitNode.vue
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
 import { ChainAction, ChainActionNode } from '../../../../types/actions'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
+import { useSettingsStore } from '@renderer/store/settings-store'
 import { useActionsStore } from '@renderer/store/actions'
 import { Background } from '@vue-flow/background'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
 const props = defineProps<{
@@ -16,7 +17,9 @@ const props = defineProps<{
 }>()
 const emit = defineEmits(['back'])
 
-const trackPadMode = ref(true)
+const chainActionsStore = useChainActionsStore()
+const settingsStore = useSettingsStore()
+const actionsStore = useActionsStore()
 
 const nodes = ref<ChainActionNode[]>([])
 const edges = ref<Edge[]>([])
@@ -24,8 +27,10 @@ const edges = ref<Edge[]>([])
 const name = ref('Chain Action Name')
 const editName = ref(false)
 
-const chainActionsStore = useChainActionsStore()
-const actionsStore = useActionsStore()
+const trackPadMode = computed({
+  get: () => settingsStore.chainActionsTrackpadMode,
+  set: (value) => settingsStore.setChainActionsTrackpadMode(value)
+})
 
 const { onConnect, addNodes, addEdges, fitView, removeNodes } = useVueFlow()
 const { running, run } = useRunActionChain()
@@ -146,7 +151,10 @@ onMounted(() => {
           <q-icon name="fa-solid fa-check" />
         </q-btn>
       </q-card-section>
-      <q-card-actions v-else class="tw-flex tw-items-center tw-gap-2 tw-px-[27px] tw-py-[23px]">
+      <q-card-actions
+        v-else
+        class="tw-flex tw-select-none tw-items-center tw-gap-2 tw-px-[27px] tw-py-[23px]"
+      >
         <h1 class="tw-text-xl">{{ name }}</h1>
         <q-btn color="secondary" @click="editName = true" flat round>
           <q-icon name="fa-solid fa-pen" size="xs" />
@@ -179,7 +187,12 @@ onMounted(() => {
       </q-btn>
 
       <div class="tw-rounded-r-full tw-bg-primary tw-pr-4">
-        <q-checkbox v-model="trackPadMode" label="Trackpad mode" color="accent" />
+        <q-checkbox
+          v-model="trackPadMode"
+          class="tw-select-none tw-text-white"
+          label="Trackpad mode"
+          color="accent"
+        />
       </div>
     </q-btn-group>
 
