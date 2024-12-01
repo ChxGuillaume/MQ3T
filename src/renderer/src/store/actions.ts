@@ -231,11 +231,11 @@ export const useActionsStore = defineStore('actions', {
 
       delete this.actions[connectionId][groupId]
 
-      this.deleteActionGroupFromConnection(groupId, connectionId)
+      this.deleteActionGroupFromConnection(connectionId, groupId)
 
       if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
     },
-    deleteActionGroupFromConnection(groupId: string, connectionId: string) {
+    deleteActionGroupFromConnection(connectionId: string, groupId: string) {
       const groupIndex = this.actionsGroups[connectionId].findIndex((g) => g.id === groupId)
 
       delete this.actions[connectionId][groupId]

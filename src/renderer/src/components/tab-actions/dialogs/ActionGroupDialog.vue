@@ -68,6 +68,14 @@ const handleUpdate = async () => {
   handleCloseForm()
 }
 
+const handleSubmit = async () => {
+  if (props.editMode) {
+    await handleUpdate()
+  } else {
+    await handleCreate()
+  }
+}
+
 watch(
   () => props.opened && props.actionGroup,
   (actionGroup) => {
@@ -85,7 +93,13 @@ watch(
       <q-card-section>
         <q-form ref="formRef" class="tw-grid tw-gap-2">
           <h2 class="tw-mb-2 tw-text-xl">Action Group</h2>
-          <q-input v-model="form.name" filled label="Title" :rules="rules.name" />
+          <q-input
+            v-model="form.name"
+            filled
+            label="Title"
+            :rules="rules.name"
+            @keydown.enter.prevent="handleSubmit"
+          />
           <q-input v-model="form.description" filled label="Description" type="textarea" />
         </q-form>
       </q-card-section>

@@ -15,23 +15,20 @@ withDefaults(
   }
 )
 
-defineEmits(['addAction', 'edit', 'delete', 'copy', 'move', 'export:actions', 'export:group'])
+defineEmits([
+  'edit',
+  'delete',
+  'copy',
+  'move',
+  'export:chain-actions',
+  'export:actions',
+  'export:group'
+])
 </script>
 
 <template>
   <q-menu :anchor="anchor" :self="self" :context-menu="contextMenu">
     <q-list style="min-width: 170px">
-      <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('addAction')">
-        <q-item-section>
-          <div>
-            <q-icon name="fa-solid fa-plus" class="tw-mr-2" />
-            Add Action
-          </div>
-        </q-item-section>
-      </q-item>
-
-      <q-separator v-if="!cantModify" />
-
       <q-item
         v-if="!cantModify"
         class="tw-text-blue-500"
@@ -89,6 +86,15 @@ defineEmits(['addAction', 'edit', 'delete', 'copy', 'move', 'export:actions', 'e
 
       <q-separator />
 
+      <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:group')">
+        <q-item-section>
+          <div>
+            <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
+            Export Group
+          </div>
+        </q-item-section>
+      </q-item>
+
       <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:actions')">
         <q-item-section>
           <div>
@@ -98,11 +104,16 @@ defineEmits(['addAction', 'edit', 'delete', 'copy', 'move', 'export:actions', 'e
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:group')">
+      <q-item
+        class="tw-text-teal-500"
+        clickable
+        v-close-popup
+        @click="$emit('export:chain-actions')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
-            Export Group
+            Export Chain Actions
           </div>
         </q-item-section>
       </q-item>

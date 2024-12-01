@@ -18,6 +18,7 @@ import draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import {
+  ExportChainActionsFile,
   ExportActionsFile,
   ExportGroupsFile,
   ActionGroup,
@@ -43,6 +44,13 @@ const moveActionActionId = ref<string | undefined>()
 const moveActionGroupId = ref<string>('default')
 const moveActionType = ref<'copy' | 'move'>('copy')
 
+const moveChainActionCurrentGroupId = ref<string>('default')
+const moveChainActionDialogOpened = ref<boolean>(false)
+const moveChainActionConnectionId = ref<string | undefined>()
+const moveChainActionChainActionId = ref<string | undefined>()
+const moveChainActionGroupId = ref<string>('default')
+const moveChainActionType = ref<'copy' | 'move'>('copy')
+
 const moveOrCopyActionGroup = ref({
   dialogOpened: false,
   type: 'copy' as 'copy' | 'move',
@@ -52,6 +60,7 @@ const moveOrCopyActionGroup = ref({
 
 const deleteGroupActionDialog = ref({
   dialogOpened: false,
+  chainActionCount: 0,
   actionCount: 0,
   groupId: ''
 })
@@ -59,6 +68,10 @@ const deleteGroupActionDialog = ref({
 const tab = ref<string>('list')
 
 const isDraggingAction = ref<boolean>(false)
+
+const copyObject = (obj: any) => {
+  return JSON.parse(JSON.stringify(obj))
+}
 
 const handleMoveAction = () => {
   if (!moveActionConnectionId.value || !moveActionActionId.value || !moveActionGroupId.value) return
@@ -78,6 +91,34 @@ const handleMoveAction = () => {
       moveActionActionId.value,
       moveActionConnectionId.value,
       moveActionCurrentGroupId.value
+    )
+  }
+}
+
+const handleMoveChainAction = () => {
+  if (
+    !moveChainActionConnectionId.value ||
+    !moveChainActionChainActionId.value ||
+    !moveChainActionGroupId.value
+  ) {
+    return
+  }
+
+  const chainAction = chainActionsStore.getChainAction(moveChainActionChainActionId.value)
+
+  if (!chainAction) return
+
+  chainActionsStore.copyChainAction(
+    moveChainActionConnectionId.value,
+    moveChainActionGroupId.value,
+    chainAction
+  )
+
+  if (moveChainActionType.value === 'move') {
+    chainActionsStore.deleteChainAction(
+      moveChainActionConnectionId.value,
+      moveChainActionCurrentGroupId.value,
+      moveChainActionChainActionId.value
     )
   }
 }
@@ -130,6 +171,18 @@ const handleImport = () => {
   ElectronApi.importData([{ name: 'JSON', extensions: ['json'] }])
 }
 
+const handleChainActionsExport = (groupId: string) => {
+  const data = {
+    version: 1,
+    type: 'chain-actions',
+    chainActions: chainActionsStore.getGroupChainActions(actionsStore.selectedConnection, groupId)
+  } as ExportChainActionsFile
+
+  ElectronApi.exportData('mq3t-chain-actions.json', copyObject(data), [
+    { name: 'JSON', extensions: ['json'] }
+  ])
+}
+
 const handleActionsExport = (groupId: string) => {
   const data = {
     version: 1,
@@ -137,7 +190,7 @@ const handleActionsExport = (groupId: string) => {
     actions: actionsStore.getSelectedConnectionGroupActions(groupId)
   } as ExportActionsFile
 
-  ElectronApi.exportData('mq3t-actions.json', JSON.parse(JSON.stringify(data)), [
+  ElectronApi.exportData('mq3t-actions.json', copyObject(data), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
@@ -156,56 +209,96 @@ const handleGroupExport = (groupId: string) => {
     groupId
   )
 
+  const chainActions = chainActionsStore.getGroupChainActionsRecord(
+    actionsStore.selectedConnection,
+    groupId
+  )
+
   if (!group) return
 
   const data = {
     version: 1,
     type: 'groups',
     groups: [group],
-    actions: actionsRecord
+    actions: actionsRecord,
+    chainActions: chainActions
   } as ExportGroupsFile
 
-  ElectronApi.exportData('mq3t-group.json', JSON.parse(JSON.stringify(data)), [
+  ElectronApi.exportData('mq3t-group.json', copyObject(data), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
 
 const handleConnectionExport = () => {
-  const allActions = actionsStore.selectedConnectionGroupActionsRecord
+  const allChainActions = copyObject(
+    chainActionsStore.getConnectionChainActions(actionsStore.selectedConnection)
+  )
+
+  const allActions = copyObject(actionsStore.selectedConnectionGroupActionsRecord)
   const allGroups = [...actionsStore.selectedConnectionGroups]
 
-  if (allActions['default']?.length) {
-    allGroups.push({ id: `group-${uuidV4()}`, name: 'Exported Default' })
+  if (allActions['default']?.length || allChainActions['default']?.length) {
+    const groupId = `group-${uuidV4()}`
+
+    allGroups.push({ id: groupId, name: 'Exported Default' })
+
+    if (allActions['default']) {
+      allActions[groupId] = allActions['default'].map((action) => {
+        return { ...action, groupId }
+      })
+
+      delete allActions['default']
+    }
+
+    if (allChainActions['default']) {
+      allChainActions[groupId] = allChainActions['default'].map((chainAction) => {
+        return { ...chainAction, groupId }
+      })
+
+      delete allChainActions['default']
+    }
   }
 
   const data = {
     version: 1,
     type: 'groups',
     groups: allGroups,
-    actions: allActions
+    actions: allActions,
+    chainActions: allChainActions
   } as ExportGroupsFile
 
-  ElectronApi.exportData('mq3t-groups-actions.json', JSON.parse(JSON.stringify(data)), [
+  ElectronApi.exportData('mq3t-groups-actions.json', copyObject(data), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
 
 const handleDeleteGroup = (groupId: string) => {
   const actionsCount = actionsStore.getSelectedConnectionGroupActions(groupId).length
+  const chainActionsCount = chainActionsStore.getGroupChainActions(
+    actionsStore.selectedConnection,
+    groupId
+  ).length
 
-  if (actionsCount === 0) {
+  if (actionsCount === 0 && chainActionsCount === 0) {
     actionsStore.deleteActionGroup(groupId)
+    chainActionsStore.deleteGroupChainActions(actionsStore.selectedConnection, groupId)
     return
   }
 
   deleteGroupActionDialog.value.dialogOpened = true
   deleteGroupActionDialog.value.groupId = groupId
 
+  deleteGroupActionDialog.value.chainActionCount = chainActionsCount
   deleteGroupActionDialog.value.actionCount = actionsCount
 }
 
 const handleDeleteGroupDialog = (moveToDefault: boolean) => {
   actionsStore.deleteActionGroup(deleteGroupActionDialog.value.groupId, moveToDefault)
+  chainActionsStore.deleteGroupChainActions(
+    actionsStore.selectedConnection,
+    deleteGroupActionDialog.value.groupId,
+    moveToDefault
+  )
 }
 
 const handleDropped = (id: string, groupId: string) => {
@@ -254,19 +347,28 @@ const handleMoveOrCopyActionGroup = (actionGroup: ActionGroup, action: 'copy' | 
 const handleMoveOrCopyActionGroupDialog = () => {
   if (!moveOrCopyActionGroup.value.connectionId || !moveOrCopyActionGroup.value.actionGroup) return
 
-  const actionGroupCopy = JSON.parse(JSON.stringify(moveOrCopyActionGroup.value.actionGroup))
+  const actionGroupCopy = copyObject(moveOrCopyActionGroup.value.actionGroup)
+  const currentConnectionId = actionsStore.selectedConnection
   const connectionId = moveOrCopyActionGroup.value.connectionId
 
-  const actions = actionsStore.getSelectedConnectionGroupActions(actionGroupCopy.id)
+  const chainActions = copyObject(
+    chainActionsStore.getGroupChainActions(actionsStore.selectedConnection, actionGroupCopy.id)
+  )
+  const actions = copyObject(actionsStore.getSelectedConnectionGroupActions(actionGroupCopy.id))
 
   const newActionGroup = actionsStore.addActionGroupToConnection(actionGroupCopy, connectionId)
+
+  for (const chainAction of chainActions) {
+    chainActionsStore.addChainAction(connectionId, newActionGroup.id, chainAction)
+  }
 
   for (const action of actions) {
     actionsStore.addActionToConnectionGroup(action, connectionId, newActionGroup.id)
   }
 
   if (moveOrCopyActionGroup.value.type === 'move') {
-    actionsStore.deleteActionGroupFromConnection(actionGroupCopy.id, connectionId)
+    chainActionsStore.deleteGroupChainActions(currentConnectionId, actionGroupCopy.id, false)
+    actionsStore.deleteActionGroupFromConnection(currentConnectionId, actionGroupCopy.id)
   }
 }
 
@@ -445,7 +547,24 @@ const chainActionEdit = ref<ChainAction | undefined>()
                     <chain-action-card
                       :connection-id="actionsStore.selectedConnection"
                       :chain-action="chainAction"
+                      :disable="selectedConnectionStatus !== 'connected'"
                       :key="chainAction.id"
+                      @copy="
+                        () => {
+                          moveChainActionCurrentGroupId = selectedActionGroup
+                          moveChainActionDialogOpened = true
+                          moveChainActionChainActionId = chainAction.id
+                          moveChainActionType = 'copy'
+                        }
+                      "
+                      @move="
+                        () => {
+                          moveChainActionCurrentGroupId = selectedActionGroup
+                          moveChainActionDialogOpened = true
+                          moveChainActionChainActionId = chainAction.id
+                          moveChainActionType = 'move'
+                        }
+                      "
                       @edit="
                         () => {
                           chainActionEdit = chainAction
@@ -484,6 +603,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
               @update:model-value="
                 (ev) => {
                   moveActionConnectionId = ev
+                  moveChainActionConnectionId = ev
                   selectedActionGroup = 'default'
                 }
               "
@@ -519,12 +639,6 @@ const chainActionEdit = ref<ChainAction | undefined>()
                     :key="element.id"
                     :active="selectedActionGroup === element.id"
                     :disable-drop-zone="isDraggingAction"
-                    @add-action="
-                      () => {
-                        actionsStore.setSelectedActionGroup(element.id)
-                        actionDialogOpened = true
-                      }
-                    "
                     @edit="
                       () => {
                         editActionGroup = element
@@ -533,6 +647,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
                     "
                     @delete="handleDeleteGroup(element.id)"
                     @action:dropped="handleDropped($event, element.id)"
+                    @export:chain-actions="handleChainActionsExport(element.id)"
                     @export:actions="handleActionsExport(element.id)"
                     @export:group="handleGroupExport(element.id)"
                     @click.stop="selectedActionGroup = element.id"
@@ -550,13 +665,8 @@ const chainActionEdit = ref<ChainAction | undefined>()
                 description="This action group cannot be deleted."
                 :active="selectedActionGroup === 'default'"
                 :disable-drop-zone="isDraggingAction"
-                @add-action="
-                  () => {
-                    actionsStore.setSelectedActionGroup('default')
-                    actionDialogOpened = true
-                  }
-                "
                 @action:dropped="handleDropped($event, 'default')"
+                @export:chain-actions="handleChainActionsExport('default')"
                 @export:actions="handleActionsExport('default')"
                 @export:group="handleGroupExport('default')"
                 @click.stop="selectedActionGroup = 'default'"
@@ -633,8 +743,18 @@ const chainActionEdit = ref<ChainAction | undefined>()
     :action-icon="moveActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
     @input="handleMoveAction"
   />
+  <select-connection-and-group-dialog
+    v-model:connection-id="moveChainActionConnectionId"
+    v-model:opened="moveChainActionDialogOpened"
+    v-model:group-id="moveChainActionGroupId"
+    :title="moveChainActionType === 'copy' ? 'Copy Chain Action' : 'Move Chain Action'"
+    :action-title="moveChainActionType === 'copy' ? 'Copy' : 'Move'"
+    :action-icon="moveChainActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
+    @input="handleMoveChainAction"
+  />
   <actions-to-default-group-dialog
     v-model:opened="deleteGroupActionDialog.dialogOpened"
+    :chain-actions-count="deleteGroupActionDialog.chainActionCount"
     :action-count="deleteGroupActionDialog.actionCount"
     @actions:move="handleDeleteGroupDialog(true)"
     @actions:delete="handleDeleteGroupDialog(false)"

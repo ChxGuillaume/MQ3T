@@ -14,6 +14,11 @@ export const useChainActionsStore = defineStore('chain-actions', {
     getGroupChainActions: (state) => (connectionId: string, groupId: string) => {
       return state.chainActions[connectionId]?.[groupId] || []
     },
+    getGroupChainActionsRecord: (state) => (connectionId: string, groupId: string) => {
+      const record = state.chainActions[connectionId]
+
+      return { [groupId]: record[groupId] }
+    },
     getChainAction: (state) => (chainActionId: string) => {
       for (const connectionId in state.chainActions) {
         for (const groupId in state.chainActions[connectionId]) {
@@ -48,8 +53,9 @@ export const useChainActionsStore = defineStore('chain-actions', {
       if (!this.chainActions[connectionId][groupId]) this.chainActions[connectionId][groupId] = []
 
       this.chainActions[connectionId][groupId].push({
-        id: `chain-action-${uuidV4()}`,
-        ...chainActions
+        ...chainActions,
+        groupId: groupId,
+        id: `chain-action-${uuidV4()}`
       })
 
       this.saveChainActions()
@@ -91,6 +97,26 @@ export const useChainActionsStore = defineStore('chain-actions', {
       if (index === -1) return
 
       this.chainActions[connectionId][groupId].splice(index, 1)
+
+      this.saveChainActions()
+    },
+    deleteGroupChainActions(connectionId: string, groupId: string, moveToDefault = true) {
+      if (!this.chainActions[connectionId]) return
+      if (!this.chainActions[connectionId][groupId]) return
+
+      if (moveToDefault) {
+        if (!this.chainActions[connectionId]['default']) {
+          this.chainActions[connectionId]['default'] = []
+        }
+
+        this.chainActions[connectionId]['default'].push(...this.chainActions[connectionId][groupId])
+
+        this.chainActions[connectionId]['default'].forEach((action) => {
+          action.groupId = 'default'
+        })
+      }
+
+      delete this.chainActions[connectionId][groupId]
 
       this.saveChainActions()
     },

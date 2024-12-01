@@ -9,6 +9,7 @@ const props = defineProps<{
   connectionId: string
   noContextMenu?: boolean
   noGrab?: boolean
+  disable?: boolean
 }>()
 
 defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
@@ -65,7 +66,7 @@ const actionCount = computed(() => {
         </div>
       </div>
       <q-btn
-        :disable="running"
+        :disable="running || disable"
         color="primary"
         @click="run(connectionId, chainAction.nodes, chainAction.edges)"
       >
@@ -79,6 +80,9 @@ const actionCount = computed(() => {
         />
         <q-icon v-else class="tw-mr-2" size="xs" name="fa-solid fa-play" />
         Run
+        <q-tooltip v-if="disable" class="tw-bg-primary tw-text-sm tw-text-white">
+          Connection is not active.
+        </q-tooltip>
       </q-btn>
     </div>
 

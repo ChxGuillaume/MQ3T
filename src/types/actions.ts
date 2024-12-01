@@ -51,6 +51,14 @@ export type ConnectionsActionsFileV2 = {
 
 export type ConnectionsActionsFile = ConnectionsActionsFileV1 | ConnectionsActionsFileV2
 
+export type ExportChainActionsFileV1 = {
+  version: 1
+  type: 'chain-actions'
+  chainActions: ChainAction[]
+}
+
+export type ExportChainActionsFile = ExportChainActionsFileV1
+
 export type ExportActionsFileV1 = {
   version: 1
   type: 'actions'
@@ -64,6 +72,7 @@ export type ExportGroupsFileV1 = {
   type: 'groups'
   groups: ActionGroup[]
   actions: Record<string, Action[]>
+  chainActions: Record<string, ChainAction[]>
 }
 
 export type ExportGroupsFile = ExportGroupsFileV1
