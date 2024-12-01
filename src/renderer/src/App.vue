@@ -14,6 +14,7 @@ import { useAppStore } from './store/app-store'
 import TabActions from './tabs/TabActions.vue'
 import TabTopics from './tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
+import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -233,6 +234,7 @@ onUnmounted(() => {
   </div>
   <update-alerts />
   <import-actions />
+  <import-chain-actions />
   <import-actions-groups />
 </template>
 

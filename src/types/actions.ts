@@ -15,13 +15,15 @@ export type Action = {
   payloadFormat?: 'raw' | 'json' | 'xml'
 }
 
-export type StartNode = Node<{}, {}, 'start'>
+type Empty = Record<string, never>
+
+export type StartNode = Node<Empty, Empty, 'start'>
 
 export type ActionNodeData = { action: Action }
-export type ActionNode = Node<ActionNodeData, {}, 'action'>
+export type ActionNode = Node<ActionNodeData, Empty, 'action'>
 
 export type WaitNodeData = { duration: number; durationType: 'ms' | 's' }
-export type WaitNode = Node<WaitNodeData, {}, 'wait'>
+export type WaitNode = Node<WaitNodeData, Empty, 'wait'>
 
 export type ChainActionNode = StartNode | ActionNode | WaitNode
 
