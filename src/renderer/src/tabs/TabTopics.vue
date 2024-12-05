@@ -87,7 +87,8 @@ const handleTopicClick = (clientKey: string, topic: string) => {
 }
 
 const handleSelectTopic = (clientKey: string, topic: string) => {
-  if (topic === mqttTopicsStore.selectedTopic) return
+  if (mqttTopicsStore.selectedConnection === clientKey && mqttTopicsStore.selectedTopic === topic)
+    return
 
   selectedConnection.value = ''
 
