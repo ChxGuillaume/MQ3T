@@ -66,12 +66,16 @@ const isValid = (node: Connection) => {
 
 const save = () => {
   if (!props.chainAction) {
-    chainActionsStore.addChainAction(actionsStore.selectedConnection, 'default', {
-      groupId: actionsStore.selectedActionGroup,
-      name: name.value,
-      nodes: nodes.value,
-      edges: edges.value
-    })
+    chainActionsStore.addChainAction(
+      actionsStore.selectedConnection,
+      actionsStore.selectedActionGroup,
+      {
+        groupId: actionsStore.selectedActionGroup,
+        name: name.value,
+        nodes: nodes.value,
+        edges: edges.value
+      }
+    )
   } else {
     chainActionsStore.updateChainAction(
       actionsStore.selectedConnection,
