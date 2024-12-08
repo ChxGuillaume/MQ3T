@@ -22,6 +22,7 @@
     "package:mac": "electron-builder --mac --config --publish never",
     "package:mac:store": "node ./scripts/prepack.mas.js && electron-builder --mac --config electron-builder.mas.dist.yml --publish never",
     "package:linux": "electron-builder --linux --config --publish never",
+    "package:linux:snap": "electron-builder --linux --config electron-builder.snap.yml --publish never",
     "package:all": "electron-builder -wlm --config --publish never",
     "package:win:publish": "electron-builder --win --publish always --config",
     "package:mac:publish": "electron-builder --mac --publish always --config",

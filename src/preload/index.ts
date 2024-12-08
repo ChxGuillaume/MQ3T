@@ -47,7 +47,7 @@ const api: ElectronIpc = {
   handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any)
 }
 
-const hasAutoUpdate = !process.mas && !process.windowsStore
+const hasAutoUpdate = !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
 
 if (process.contextIsolated) {
   try {
