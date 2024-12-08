@@ -22,9 +22,19 @@ const chainActions = computed(() => {
   if (!mqttTopicsStore.selectedConnection) return []
   if (!chainActionsStore.chainActions[mqttTopicsStore.selectedConnection]) return []
 
-  return Object.values(chainActionsStore.chainActions[mqttTopicsStore.selectedConnection])
-    .flat()
-    .filter((chainAction) => chainAction.name.toLowerCase().includes(search.value.toLowerCase()))
+  return Object.values(chainActionsStore.chainActions[mqttTopicsStore.selectedConnection]).flat()
+})
+
+const transformForSearch = (value: string) => {
+  return value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+}
+
+const filteredChainActions = computed(() => {
+  const transformedSearch = transformForSearch(search.value)
+
+  return chainActions.value.filter((chainAction) =>
+    transformForSearch(chainAction.name).includes(transformedSearch)
+  )
 })
 </script>
 
@@ -49,8 +59,11 @@ const chainActions = computed(() => {
     <q-separator />
 
     <q-card-section class="tw-flex tw-flex-col tw-gap-2 tw-overflow-auto tw-p-2">
+      <q-card v-if="!filteredChainActions.length" flat class="tw-flex tw-h-full tw-items-center">
+        <h1 class="tw-w-full tw-text-center tw-text-2xl tw-font-bold">No chain actions found</h1>
+      </q-card>
       <chain-action-card
-        v-for="chainAction in chainActions"
+        v-for="chainAction in filteredChainActions"
         class="tw-bg-neutral-800"
         :connection-id="mqttTopicsStore.selectedConnection"
         :chain-action="chainAction"
