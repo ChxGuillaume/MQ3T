@@ -3,7 +3,9 @@
 [//]: # (![https://img.shields.io/badge/Release-working%20on%20it%20!!-red]&#40;https://img.shields.io/badge/Release-working%20on%20it%20!!-red&#41;)
 [![Release Version](https://img.shields.io/github/v/release/ChxGuillaume/MQ3T?label=Release)](https://github.com/ChxGuillaume/MQ3T/releases)
 [![Download Total](https://img.shields.io/github/downloads/ChxGuillaume/MQ3T/total?label=Downloads)](https://github.com/ChxGuillaume/MQ3T/releases)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ChxGuillaume/MQ3T/.github%2Fworkflows%2Fbuild.yml?logo=github&label=Build)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ChxGuillaume/MQ3T/.github%2Fworkflows%2Fbuild-windows.yml?logo=github&label=Build%20Windows)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ChxGuillaume/MQ3T/.github%2Fworkflows%2Fbuild-mac.yml?logo=github&label=Build%20Mac)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ChxGuillaume/MQ3T/.github%2Fworkflows%2Fbuild-linux.yml?logo=github&label=Build%20Linux)
 
 
 | ![Connections Theme Mix](docs/screenshots/connections-dark.png) | ![Settings](docs/screenshots/settings-mix.png) |
