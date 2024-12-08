@@ -12,7 +12,7 @@ export const validateAction = (action: Action): boolean => {
   if (description && typeof description !== 'string') return false
   if (!topic || typeof topic !== 'string') return false
   if (qos !== 0 && qos !== 1 && qos !== 2) return false
-  if (!payload || typeof payload !== 'string') return false
+  if (payload && typeof payload !== 'string') return false
   if (typeof retained !== 'boolean') return false
 
   return true

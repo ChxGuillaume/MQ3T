@@ -29,11 +29,21 @@ const favoriteTopics = computed(() => {
 </script>
 
 <template>
-  <div class="tw-w-full tw-h-full tw-flex tw-flex-col tw-gap-8">
+  <q-card
+    v-if="favoriteTopics.length === 0"
+    flat
+    class="tw-flex tw-h-full tw-flex-col tw-justify-center tw-gap-4"
+  >
+    <h1 class="tw-w-full tw-text-center tw-text-2xl tw-font-bold">No favorite topic found</h1>
+    <h2 class="tw-w-full tw-px-4 tw-text-center tw-text-sm">
+      To add a topic to your favorites, right click on a topic and select "Favorite"
+    </h2>
+  </q-card>
+  <div v-else class="tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-8">
     <div v-for="([clientKey, topics], index) in favoriteTopics" :key="clientKey">
       <q-separator v-if="index" />
-      <div class="tw-py-2 title-container">
-        <h1 class="tw-text-xl text-weight-bold tw-text-center">
+      <div class="title-container tw-py-2">
+        <h1 class="text-weight-bold tw-text-center tw-text-xl">
           {{ mqttConnectionsStore.getConnection(clientKey)?.name }}
         </h1>
       </div>
@@ -41,7 +51,6 @@ const favoriteTopics = computed(() => {
       <favorite-topic-card
         v-for="topic in topics"
         :key="topic"
-        class="tw-flex tw-items-center tw-mb-2"
         :clientKey="clientKey"
         :topicKey="topic"
       />

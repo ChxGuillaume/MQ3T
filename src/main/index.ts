@@ -17,6 +17,7 @@ const configFolder = path.join(app.getPath('userData'), 'config')
 const configFilePath = {
   mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
   actions: path.join(configFolder, 'actions.json'),
+  chainActions: path.join(configFolder, 'chain-actions.json'),
   actionsGroups: path.join(configFolder, 'actions-groups.json')
 }
 
@@ -219,10 +220,12 @@ const initIpcMain = () => {
 
     const connections = readJsonFile(configFilePath.mqttConnections)
     const actions = readActionsFile()
+    const chainActions = readJsonFile(configFilePath.chainActions)
     const actionsGroups = readJsonFile(configFilePath.actionsGroups)
 
     if (connections) event.reply('load-mqtt-connections', connections)
     if (actions) event.reply('load-actions', actions)
+    if (chainActions) event.reply('load-chain-actions', chainActions)
     if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
 
     event.reply('app-version', app.getVersion())
@@ -291,6 +294,10 @@ const initIpcMain = () => {
 
   ipcMain.on('save-actions', (_, actions) => {
     fs.writeFileSync(configFilePath.actions, JSON.stringify(actions))
+  })
+
+  ipcMain.on('save-chain-actions', (_, chainActions) => {
+    fs.writeFileSync(configFilePath.chainActions, JSON.stringify(chainActions))
   })
 
   ipcMain.on('save-actions-groups', (_, actionsGroups) => {

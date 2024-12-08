@@ -8,6 +8,7 @@ const graphColors = Object.keys(colors)
   .filter((c) => !c.endsWith('Blue') && !c.endsWith('Gray'))
   .map((color) => ({ color, value: colors[color][500] }))
   .filter((c) => c.value)
+  .filter((c) => !['slate', 'gray', 'zinc', 'stone'].includes(c.color))
 
 withDefaults(
   defineProps<{
@@ -57,7 +58,7 @@ defineEmits<{
             <q-item
               v-for="n in graphColors"
               :key="n.value"
-              class="tw-select-none"
+              class="tw-select-none tw-pr-12"
               dense
               clickable
               v-close-popup
@@ -67,7 +68,7 @@ defineEmits<{
               }"
               @click="$emit('update:color', n.value)"
             >
-              <q-item-section>Submenu Label</q-item-section>
+              <q-item-section>{{ n.color }}</q-item-section>
             </q-item>
           </q-list>
         </q-menu>

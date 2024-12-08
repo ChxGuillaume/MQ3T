@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
+import TabChainActions from '@renderer/components/tap-topics/TabChainActions.vue'
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
 import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
@@ -47,9 +48,11 @@ const graphSplitter = computed({
   }
 })
 
+const isChainActionsTab = ref(false)
 const isFavoriteTab = ref(false)
 const topicTab = computed({
   get: () => {
+    if (isChainActionsTab.value) return 'chain-actions'
     if (isFavoriteTab.value) return 'favorites'
 
     if (topicTabRecord.value[mqttTopicsStore.selectedTopic])
@@ -72,12 +75,20 @@ const topicTab = computed({
     return 'values'
   },
   set: (value) => {
-    if (value === 'favorites') {
-      isFavoriteTab.value = true
-      return
+    switch (value) {
+      case 'chain-actions':
+        isChainActionsTab.value = true
+        isFavoriteTab.value = false
+        return
+      case 'favorites':
+        isChainActionsTab.value = false
+        isFavoriteTab.value = true
+        return
     }
 
+    isChainActionsTab.value = false
     isFavoriteTab.value = false
+
     topicTabRecord.value[mqttTopicsStore.selectedTopic] = value
   }
 })
@@ -278,6 +289,14 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
     }
   }
 }
+
+const tabIconSize = computed(() => {
+  return visualizationSplitter.value > 480 ? 'xs' : 'sm'
+})
+
+const showTabsText = computed(() => {
+  return visualizationSplitter.value > 480
+})
 </script>
 
 <template>
@@ -285,6 +304,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
     v-model="visualizationSplitter"
     class="tw-h-full tw-max-h-full"
     :limits="[400, 700]"
+    emit-immediately
     unit="px"
     reverse
   >
@@ -298,7 +318,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
         :disable="!dataGraphsStore.dataGraph.length"
       >
         <template #before>
-          <div class="tw-h-full tw-grid" style="grid-template-rows: auto auto 1fr">
+          <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
             <div class="">
               <q-input
                 v-model="topicSearch"
@@ -317,7 +337,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
                 class="tw-h-full tw-max-h-full"
                 :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
               >
-                <div class="tw-p-3 tw-flex tw-flex-col tw-gap-1" :key="value.clientKey">
+                <div class="tw-flex tw-flex-col tw-gap-1 tw-p-3" :key="value.clientKey">
                   <topic-card
                     expandable
                     :active="selectedConnection === value.clientKey"
@@ -375,7 +395,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
 
     <template #after>
       <q-card
-        class="tw-relative tw-h-full tw-grid tw-overflow-hidden"
+        class="tw-relative tw-grid tw-h-full tw-overflow-hidden"
         style="grid-template-rows: 1fr auto auto"
         square
         flat
@@ -389,7 +409,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
         >
           <q-tab-panel
             name="values"
-            class="tw-p-0 tw-grid"
+            class="tw-grid tw-p-0"
             style="grid-template-rows: auto auto 1fr"
           >
             <tab-values />
@@ -399,12 +419,16 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
             <tab-publish @click:publish="handleMessagePublished" />
           </q-tab-panel>
 
-          <q-tab-panel name="stats" class="tw-flex tw-justify-center tw-items-center">
+          <q-tab-panel name="stats" class="tw-flex tw-items-center tw-justify-center">
             <div class="text-h6">Stats In Work</div>
           </q-tab-panel>
 
           <q-tab-panel name="favorites" class="tw-p-0">
             <tab-favorites />
+          </q-tab-panel>
+
+          <q-tab-panel name="chain-actions" class="tw-p-0">
+            <tab-chain-actions />
           </q-tab-panel>
         </q-tab-panels>
 
@@ -418,20 +442,39 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
           indicator-color="transparent"
         >
           <q-tab name="values">
-            <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" />
-            Values
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+              <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" :size="tabIconSize" />
+              <div v-if="showTabsText">Values</div>
+              <q-tooltip v-else>Values</q-tooltip>
+            </div>
           </q-tab>
           <q-tab name="publish">
-            <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" />
-            Publish
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+              <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" :size="tabIconSize" />
+              <div v-if="showTabsText">Publish</div>
+              <q-tooltip v-else>Publish</q-tooltip>
+            </div>
           </q-tab>
           <q-tab name="stats" v-if="false">
-            <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" />
-            Stats
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+              <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" :size="tabIconSize" />
+              <div v-if="showTabsText">Stats</div>
+              <q-tooltip v-else>Stats</q-tooltip>
+            </div>
           </q-tab>
           <q-tab name="favorites">
-            <q-icon name="fa-solid fa-star" class="tw-mr-2" />
-            Favorites
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+              <q-icon name="fa-solid fa-star" class="tw-mr-2" :size="tabIconSize" />
+              <div v-if="showTabsText">Favorites</div>
+              <q-tooltip v-else>Favorites</q-tooltip>
+            </div>
+          </q-tab>
+          <q-tab name="chain-actions">
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+              <q-icon name="fa-solid fa-diagram-project" class="tw-mr-2" :size="tabIconSize" />
+              <div v-if="showTabsText">Chain Actions</div>
+              <q-tooltip v-else>Chain Actions</q-tooltip>
+            </div>
           </q-tab>
         </q-tabs>
 
@@ -452,7 +495,7 @@ const handleScrollNextTopic = (clientKey: string, nextTopic: string) => {
 
 <style scoped lang="less">
 .broker-details-panel {
-  @apply tw-absolute tw-w-full tw-h-full tw-transition-transform;
+  @apply tw-absolute tw-h-full tw-w-full tw-transition-transform;
 }
 
 .broker-details-panel.show {

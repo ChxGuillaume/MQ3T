@@ -15,6 +15,7 @@ type SettingsStore = {
   messagesPagination: boolean
   defaultDataFormat: DefaultDataFormat
   autoOpenPublishActions: boolean
+  chainActionsTrackpadMode: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -31,7 +32,9 @@ export const useSettingsStore = defineStore('settings', {
     smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true',
     messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true',
     defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw',
-    autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true'
+    autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true',
+    chainActionsTrackpadMode:
+      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true'
   }),
   getters: {
     dateTimeFormat(): string {
@@ -87,6 +90,10 @@ export const useSettingsStore = defineStore('settings', {
     setAutoOpenPublishActions(value: boolean) {
       this.autoOpenPublishActions = value
       localStorage.setItem('autoOpenPublishActions', value.toString())
+    },
+    setChainActionsTrackpadMode(value: boolean) {
+      this.chainActionsTrackpadMode = value
+      localStorage.setItem('chainActionsTrackpadMode', value.toString())
     }
   }
 })

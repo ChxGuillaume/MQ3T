@@ -1,0 +1,83 @@
+@import 'quasar-variables';
+
+$start: $secondary;
+$action: $accent;
+$wait: #f0ad4e;
+
+.vue-flow__nodesselection-rect {
+  //background: transparent;
+  //border: 0;
+  background: rgba($primary, 0.08);
+  border: 1px dotted $primary;
+}
+
+.vue-flow__selectionpane,
+.vue-flow__selection {
+  background: rgba($primary, 0.08);
+  border: 1px dotted $primary;
+}
+
+.vue-flow__handle {
+  height: 24px;
+  width: 10px;
+  background: #aaa;
+  border: none;
+  border-radius: 4px;
+}
+
+.vue-flow__edges path {
+  stroke-width: 3;
+}
+
+.vue-flow__node {
+  width: 160px;
+  min-height: 60px;
+  text-align: center;
+  border: transparent !important;
+  outline: 2px solid transparent;
+  border-radius: 8px;
+  transition: outline-color 0.2s ease !important;
+
+  @apply tw-flex tw-items-center tw-justify-center tw-py-[10px];
+}
+
+.vue-flow__node-action,
+.vue-flow__node-wait {
+  @apply tw-h-[80px] tw-py-0;
+}
+
+.body--dark {
+  .vue-flow__node {
+    @apply tw-bg-neutral-800 tw-text-white;
+  }
+}
+
+.body--light {
+  .vue-flow__node {
+    @apply tw-bg-neutral-100 tw-text-black tw-shadow-lg;
+  }
+}
+
+.vue-flow__node-start.selected {
+  outline: 2px solid $start !important;
+}
+
+.vue-flow__node-start .vue-flow__handle {
+  background-color: $start;
+}
+
+.vue-flow__node-action.selected {
+  outline: 2px solid $action !important;
+}
+
+.vue-flow__node-action .vue-flow__handle {
+  background-color: $action;
+}
+
+.vue-flow__node-wait.selected {
+  outline: 2px solid $wait !important;
+}
+
+.vue-flow__node-wait .vue-flow__handle {
+  background-color: $wait;
+}

@@ -14,9 +14,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'action:dropped': [actionId: string]
+  'export:chain-actions': []
   'export:actions': []
   'export:group': []
-  addAction: []
   delete: []
   edit: []
   copy: []
@@ -47,7 +47,7 @@ const handleDragEnd = (event: DragEvent) => {
 
 <template>
   <q-card
-    class="group-card tw-p-2 tw-h-fit tw-grid hover:tw-bg-primary/50 tw-transition-colors tw-cursor-pointer"
+    class="group-card tw-grid tw-h-fit tw-cursor-pointer tw-p-2 tw-transition-colors hover:tw-bg-primary/50"
     :class="{ active, 'drop-zone': dropZoneActiveAndNotActive }"
     flat
     @dragleave.prevent="setDropZoneActive(false)"
@@ -56,15 +56,15 @@ const handleDragEnd = (event: DragEvent) => {
     @drop.prevent="handleDragEnd"
   >
     <div
-      class="tw-my-1 tw-flex tw-justify-between tw-items-start tw-pointer-events-none tw-select-none"
+      class="tw-pointer-events-none tw-my-1 tw-flex tw-select-none tw-items-start tw-justify-between"
     >
       <div>
         <h2
-          class="tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-cursor-pointer"
+          class="tw-line-clamp-1 tw-cursor-pointer tw-overflow-hidden tw-text-ellipsis tw-text-lg"
         >
           {{ title }}
         </h2>
-        <p class="description tw-line-clamp-3 tw-transition-colors color-details">
+        <p class="description color-details tw-line-clamp-3 tw-transition-colors">
           {{ description }}
         </p>
       </div>
@@ -80,11 +80,11 @@ const handleDragEnd = (event: DragEvent) => {
         <action-group-context-menu
           :cantModify="cantModify"
           :notMovable="notMovable"
-          @addAction="$emit('addAction')"
           @edit="$emit('edit')"
           @delete="$emit('delete')"
           @copy="$emit('copy')"
           @move="$emit('move')"
+          @export:chain-actions="$emit('export:chain-actions')"
           @export:actions="$emit('export:actions')"
           @export:group="$emit('export:group')"
         />
@@ -97,11 +97,11 @@ const handleDragEnd = (event: DragEvent) => {
       self="top left"
       :cantModify="cantModify"
       :notMovable="notMovable"
-      @addAction="$emit('addAction')"
       @edit="$emit('edit')"
       @delete="$emit('delete')"
       @copy="$emit('copy')"
       @move="$emit('move')"
+      @export:chain-actions="$emit('export:chain-actions')"
       @export:actions="$emit('export:actions')"
       @export:group="$emit('export:group')"
     />

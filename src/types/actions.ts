@@ -1,3 +1,5 @@
+import { Edge, Node } from '@vue-flow/core'
+
 type ConnectionId = string
 type GroupId = string
 
@@ -13,6 +15,26 @@ export type Action = {
   payloadFormat?: 'raw' | 'json' | 'xml'
 }
 
+type Empty = Record<string, never>
+
+export type StartNode = Node<Empty, Empty, 'start'>
+
+export type ActionNodeData = { action: Action }
+export type ActionNode = Node<ActionNodeData, Empty, 'action'>
+
+export type WaitNodeData = { duration: number; durationType: 'ms' | 's' }
+export type WaitNode = Node<WaitNodeData, Empty, 'wait'>
+
+export type ChainActionNode = StartNode | ActionNode | WaitNode
+
+export type ChainAction = {
+  id: string
+  groupId: string | 'default'
+  name: string
+  nodes: ChainActionNode[]
+  edges: Edge[]
+}
+
 export type ActionGroup = {
   id: GroupId
   name: string
@@ -20,6 +42,7 @@ export type ActionGroup = {
 }
 
 export type ConnectionsActions = Record<ConnectionId, Record<GroupId, Action[]>>
+export type ConnectionsChainActions = Record<ConnectionId, Record<GroupId, ChainAction[]>>
 export type ConnectionsActionsGroups = Record<ConnectionId, ActionGroup[]>
 
 export type ConnectionsActionsFileV1 = { type: 'v1'; actions: Record<string, Action[]> }
@@ -29,6 +52,14 @@ export type ConnectionsActionsFileV2 = {
 }
 
 export type ConnectionsActionsFile = ConnectionsActionsFileV1 | ConnectionsActionsFileV2
+
+export type ExportChainActionsFileV1 = {
+  version: 1
+  type: 'chain-actions'
+  chainActions: ChainAction[]
+}
+
+export type ExportChainActionsFile = ExportChainActionsFileV1
 
 export type ExportActionsFileV1 = {
   version: 1
@@ -43,6 +74,7 @@ export type ExportGroupsFileV1 = {
   type: 'groups'
   groups: ActionGroup[]
   actions: Record<string, Action[]>
+  chainActions: Record<string, ChainAction[]>
 }
 
 export type ExportGroupsFile = ExportGroupsFileV1

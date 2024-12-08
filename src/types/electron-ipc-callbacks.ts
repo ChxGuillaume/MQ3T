@@ -6,6 +6,7 @@ import { IPublishPacket } from 'mqtt'
 import {
   ConnectionsActionsFile,
   ConnectionsActionsGroups,
+  ConnectionsChainActions,
   ExportActionsFile,
   ExportGroupsFile
 } from './actions'
@@ -49,6 +50,7 @@ export type ElectronIpc = {
 
   saveMqttConnections: (connections: MqttConnection[]) => void
   saveActions: (actions: ConnectionsActionsFile) => void
+  saveChainActions: (chainActions: ConnectionsChainActions) => void
   saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
 
   importData: (fileFilter?: FileFilter[]) => void
@@ -62,6 +64,7 @@ export type ElectronIpc = {
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
   handleLoadActions: (callback: (event: never, value: ConnectionsActionsFile) => void) => void
+  handleLoadChainActions: (callback: (event: never, value: ConnectionsChainActions) => void) => void
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
   ) => void
