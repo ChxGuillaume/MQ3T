@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.vue'
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
@@ -39,6 +40,9 @@ const convertToActionForm = reactive({
   title: '',
   message: {} as MqttMessage
 })
+
+const actionDialogOpened = ref<boolean>(false)
+const editAction = ref<Action | undefined>()
 
 const publishTopic = computed({
   get: () => mqttTopicsStore.selectedPublishTopic,
@@ -282,11 +286,17 @@ watch(
           v-for="action in sortedActions"
           :key="action.id"
           :action="action"
-          no-context-menu
           hide-topic
+          edit-only
           no-grab
           class="tw-bg-neutral-800"
           @send="handleSendAction(action)"
+          @edit="
+            () => {
+              editAction = action
+              actionDialogOpened = true
+            }
+          "
         />
       </q-card>
     </q-expansion-item>
@@ -302,6 +312,16 @@ watch(
     action-icon="fa-solid fa-plus"
     action-title="Convert"
     @input="handleConvertToActionDialogInput"
+  />
+
+  <action-dialog
+    v-model:opened="actionDialogOpened"
+    edit-mode
+    :action="editAction"
+    @update:action="
+      actionsStore.updateAction(mqttTopicsStore.selectedConnection, $event.groupId, $event)
+    "
+    @close="editAction = undefined"
   />
 </template>
 

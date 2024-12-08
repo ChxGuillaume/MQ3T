@@ -20,9 +20,10 @@ export const useActionsCacheStore = defineStore('actionsCache', {
     getTopicsFromWildcard:
       (state) =>
       (connectionId: string, topic: string): string[] => {
-        let wildcardTopics = Object.keys(state.wildcardTopics[connectionId]) || []
+        const wildcardTopics = state.wildcardTopics[connectionId] || {}
+        const wildcardTopicsArray = Object.keys(wildcardTopics)
 
-        return topicMatchesSlicedWildcards(topic, wildcardTopics)
+        return topicMatchesSlicedWildcards(topic, wildcardTopicsArray)
       }
   },
   actions: {
