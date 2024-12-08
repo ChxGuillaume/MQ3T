@@ -470,7 +470,7 @@ const handleStartDrag = (ev: DragEvent, actionId: string) => {
     :edit-mode="!!editAction"
     :action="editAction"
     @create:action="actionsStore.addAction($event)"
-    @update:action="actionsStore.updateAction($event)"
+    @update:action="actionsStore.updateSelectedActionGroupAction($event)"
     @close="editAction = undefined"
   />
   <action-group-dialog

@@ -6,6 +6,7 @@ withDefaults(
     contextMenu?: boolean
     anchor?: QMenu['anchor']
     self?: QMenu['self']
+    editOnly?: boolean
   }>(),
   {
     contextMenu: false,
@@ -29,7 +30,13 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-red-500" clickable v-close-popup @click="$emit('delete')">
+      <q-item
+        v-if="!editOnly"
+        class="tw-text-red-500"
+        clickable
+        v-close-popup
+        @click="$emit('delete')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
@@ -40,7 +47,13 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
 
       <q-separator />
 
-      <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('copy')">
+      <q-item
+        v-if="!editOnly"
+        class="tw-text-amber-500"
+        clickable
+        v-close-popup
+        @click="$emit('copy')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
@@ -49,7 +62,13 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('move')">
+      <q-item
+        v-if="!editOnly"
+        class="tw-text-amber-500"
+        clickable
+        v-close-popup
+        @click="$emit('move')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-right-left" class="tw-mr-2" />

@@ -10,6 +10,7 @@ const props = defineProps<{
   noGrab?: boolean
   noContextMenu?: boolean
   hideTopic?: boolean
+  editOnly?: boolean
 }>()
 
 defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
@@ -56,6 +57,7 @@ const handleCopyPayload = () => {
         size="sm"
       >
         <action-card-context-menu
+          :edit-only="editOnly"
           @edit="$emit('edit')"
           @copy="$emit('copy')"
           @move="$emit('move')"
@@ -122,6 +124,7 @@ const handleCopyPayload = () => {
 
     <action-card-context-menu
       v-if="!noContextMenu"
+      :edit-only="editOnly"
       context-menu
       anchor="bottom left"
       self="top left"
