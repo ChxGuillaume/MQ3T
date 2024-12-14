@@ -3,6 +3,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { validCode } from '../../assets/js/format-code'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
+import {
+  unregisterCompletionProvider,
+  registerCompletionProvider
+} from '@renderer/assets/js/init-monaco-editor'
 
 export interface ICodeEditor {
   updateCodeEditorValue: (value: string) => void
@@ -14,6 +18,7 @@ const props = defineProps<{
   modelValue: string
   fontSize?: number | string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
+  variableCompletion?: boolean
 }>()
 
 const emits = defineEmits(['update:modelValue', 'update:language'])
@@ -43,8 +48,11 @@ watch(
   }
 )
 
+let decoration = ref<string[]>([])
 onMounted(() => {
   if (!monacoEditorRef.value) return
+
+  if (props.variableCompletion) registerCompletionProvider()
 
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
     value: props.modelValue,
@@ -62,13 +70,74 @@ onMounted(() => {
     }
   })
 
+  updateCodeEditorOptions(props.language || 'raw')
+  updateDecorations()
+
   codeEditor.onDidChangeModelContent(() => {
     emits('update:modelValue', codeEditor!.getValue())
+    updateDecorations()
   })
 })
 
+const updateDecorations = () => {
+  if (!codeEditor) return
+  if (!props.variableCompletion) return
+
+  const acceptedList = [
+    {
+      regex: /\$s\$[a-zA-Z0-9_-]+\$/,
+      description: 'This will prompt you to enter a String when executing the Action'
+    },
+    {
+      regex: /\$n\$[a-zA-Z0-9_-]+\$/,
+      description: 'This will prompt you to enter a Number when executing the Action'
+    },
+    {
+      regex: /\$b\$[a-zA-Z0-9_-]+\$/,
+      description: 'This will prompt you to enter a Boolean when executing the Action'
+    },
+    {
+      regex: /\$uuid\$v4\$/,
+      description: 'This will generate a UUID v4 when executing the Action'
+    }
+  ]
+  const editorModel: monaco.editor.ITextModel = codeEditor.getModel()!
+
+  const matcheGroups = acceptedList.map((item) => {
+    return {
+      description: item.description,
+      matches: editorModel.findMatches(
+        item.regex.toString().slice(1, -1),
+        false,
+        true,
+        true,
+        null,
+        false
+      )
+    }
+  })
+
+  decoration.value = editorModel.deltaDecorations(
+    decoration.value,
+    matcheGroups
+      .flat()
+      .map((matchGroup): monaco.editor.IModelDeltaDecoration[] => {
+        return matchGroup.matches.map((match) => ({
+          range: match.range,
+          options: {
+            isWholeLine: false,
+            inlineClassName: `mq3t-variable-highlight`,
+            hoverMessage: { value: matchGroup.description }
+          }
+        }))
+      })
+      .flat()
+  )
+}
+
 onBeforeUnmount(() => {
   if (codeEditor) codeEditor.dispose()
+  unregisterCompletionProvider()
 })
 
 watch(
@@ -76,9 +145,26 @@ watch(
   (newLanguage) => {
     if (!codeEditor) return
 
-    monaco.editor.setModelLanguage(codeEditor.getModel()!, newLanguage || 'json')
+    const language = newLanguage || 'json'
+
+    monaco.editor.setModelLanguage(codeEditor.getModel()!, language)
+
+    updateCodeEditorOptions(language)
   }
 )
+
+const updateCodeEditorOptions = (language: string) => {
+  if (!codeEditor) return
+
+  switch (language) {
+    case 'yaml':
+      codeEditor.updateOptions({ quickSuggestions: { strings: true } })
+      break
+    default:
+      codeEditor.updateOptions({ quickSuggestions: { strings: false } })
+      break
+  }
+}
 
 const editorLanguage = computed({
   get: () => props.language || 'raw',
@@ -106,7 +192,7 @@ const valideCode = computed(() => {
       class="monaco-editor tw-w-full tw-flex-grow"
       :class="{ 'validation-error': !valideCode, raw: editorLanguage === 'raw' }"
     />
-    <div class="options tw-p-3 tw-flex tw-justify-between">
+    <div class="options tw-flex tw-justify-between tw-p-3">
       <q-btn-toggle
         v-model="editorLanguage"
         toggle-color="primary"
@@ -154,14 +240,20 @@ const valideCode = computed(() => {
 }
 
 .editor {
-  @apply tw-h-full tw-flex tw-flex-col-reverse;
+  @apply tw-flex tw-h-full tw-flex-col-reverse;
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto tw-transition-colors tw-outline-0;
+  @apply tw-w-full tw-overflow-auto tw-border-y-2 tw-border-green-500/40 tw-outline-0 tw-transition-colors;
 }
 
 .monaco-editor.validation-error {
   @apply tw-border-red-500/40;
+}
+</style>
+
+<style lang="less">
+.mq3t-variable-highlight {
+  @apply tw-underline;
 }
 </style>

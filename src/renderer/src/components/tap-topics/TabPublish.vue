@@ -82,9 +82,7 @@ const handlePublishMessage = () => {
   emit('click:publish', publishTopic.value)
 }
 
-const handleSendAction = (action: Action) => {
-  actionsStore.sendAction(mqttTopicsStore.selectedConnection, action, publishTopic.value)
-
+const handleSendAction = () => {
   emit('click:publish', publishTopic.value)
 }
 
@@ -163,7 +161,7 @@ watch(
       header-class="tw-text-secondary"
     >
       <template v-slot:header>
-        <q-item-section class="tw-flex tw-flex-row tw-justify-start tw-items-center tw-gap-6">
+        <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
           <q-icon name="fa-solid fa-pen" size="xs" />
           <span>Manual Publish</span>
         </q-item-section>
@@ -183,7 +181,7 @@ watch(
           </template>
 
           <template v-slot:after>
-            <div class="tw-p-3 tw-flex tw-justify-between tw-items-center">
+            <div class="tw-flex tw-items-center tw-justify-between tw-p-3">
               <div class="tw-flex">
                 <q-select
                   v-model="qos"
@@ -201,8 +199,8 @@ watch(
               </q-btn>
             </div>
             <q-separator />
-            <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
-              <div class="tw-flex items-center tw-gap-2">
+            <div class="justify-between tw-flex tw-px-4 tw-pt-2">
+              <div class="items-center tw-flex tw-gap-2">
                 History
                 <q-chip size="sm" color="primary" text-color="white">
                   {{ mqttTopicsStore.getSelectedPublishTopicMessages.length }} messages
@@ -216,16 +214,16 @@ watch(
                 input
               />
             </div>
-            <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2">
+            <div class="tw-flex tw-flex-col tw-gap-2 tw-p-3">
               <q-card
                 v-for="message in slicedMessages"
                 :key="message.uid"
                 flat
-                class="tw-p-2 tw-cursor-pointer tw-select-none card-secondary-background"
+                class="card-secondary-background tw-cursor-pointer tw-select-none tw-p-2"
                 @click="handleMessageClick(message)"
               >
                 <div class="tw-mb-2 tw-flex tw-justify-between">
-                  <div class="tw-max-h-[22px] tw-flex tw-items-start tw-gap-2">
+                  <div class="tw-flex tw-max-h-[22px] tw-items-start tw-gap-2">
                     <div>
                       QoS: <span class="tw-font-bold">{{ message.qos }}</span>
                     </div>
@@ -252,7 +250,7 @@ watch(
                     </q-tooltip>
                   </q-btn>
                 </div>
-                <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
+                <div class="tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
                   {{ message.message }}
                 </div>
               </q-card>
@@ -275,22 +273,23 @@ watch(
       header-class="tw-text-accent"
     >
       <template v-slot:header>
-        <q-item-section class="tw-flex tw-flex-row tw-justify-start tw-items-center tw-gap-6">
+        <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
           <q-icon name="fa-solid fa-play" size="xs" />
           <span>Actions</span>
         </q-item-section>
       </template>
       <q-separator />
-      <q-card class="tw-p-2 tw-grid tw-gap-2">
+      <q-card class="tw-grid tw-gap-2 tw-p-2">
         <action-card
           v-for="action in sortedActions"
           :key="action.id"
           :action="action"
+          :connection-id="mqttTopicsStore.selectedConnection"
           hide-topic
           edit-only
           no-grab
           class="tw-bg-neutral-800"
-          @send="handleSendAction(action)"
+          @send="handleSendAction"
           @edit="
             () => {
               editAction = action
@@ -316,6 +315,7 @@ watch(
 
   <action-dialog
     v-model:opened="actionDialogOpened"
+    variable-completion
     edit-mode
     :action="editAction"
     @update:action="

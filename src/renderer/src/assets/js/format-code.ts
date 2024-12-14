@@ -83,9 +83,11 @@ export const validCode = (message: string, contentType: 'json' | 'xml' | 'yaml' 
   return true
 }
 
-export const codeType = (message: string): 'json' | 'xml' | 'raw' => {
+export const codeType = (message: string): 'raw' | 'json' | 'xml' | 'yaml' => {
   if (validJson(message)) return 'json'
+  // NOTE: XML is a valid YAML format, please keep XML before YAML validation
   if (validXml(message)) return 'xml'
+  if (validYaml(message)) return 'yaml'
 
   return 'raw'
 }

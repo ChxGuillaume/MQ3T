@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import ActionCardContextMenu from './ActionCardContextMenu.vue'
+import { useActionsStore } from '@renderer/store/actions'
 import { Action } from '../../../../types/actions'
+import { v4 as uuidV4 } from 'uuid'
 import { useQuasar } from 'quasar'
 
 const props = defineProps<{
   action: Action
+  connectionId: string
   disableDisconnected?: boolean
   disableWildcard?: boolean
   noGrab?: boolean
@@ -13,7 +16,9 @@ const props = defineProps<{
   editOnly?: boolean
 }>()
 
-defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+
+const actionsStore = useActionsStore()
 
 const $q = useQuasar()
 
@@ -35,6 +40,17 @@ const handleCopyPayload = () => {
     type: 'positive',
     timeout: 1000
   })
+}
+
+const send = () => {
+  if (props.disableDisconnected) return
+
+  emit('send')
+
+  const actionCopy = { ...props.action }
+  actionCopy.payload = actionCopy.payload.replace(/\$uuid\$v4\$/, uuidV4())
+
+  actionsStore.sendAction(props.connectionId, actionCopy)
 }
 </script>
 
@@ -106,11 +122,7 @@ const handleCopyPayload = () => {
           <q-tooltip class="tw-text-sm" v-text="action.payload" />
         </q-icon>
       </div>
-      <q-btn
-        color="primary"
-        :disable="disableDisconnected || disableWildcard"
-        @click="$emit('send')"
-      >
+      <q-btn color="primary" :disable="disableDisconnected || disableWildcard" @click="send">
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
         <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-sm tw-text-white">
