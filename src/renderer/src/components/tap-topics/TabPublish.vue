@@ -173,6 +173,7 @@ watch(
               v-model:language="publishDataType"
               v-model="codeEditorData"
               ref="codeEditorRef"
+              hide-warning
             />
           </template>
 

@@ -64,7 +64,7 @@ export const validXml = (message: string): boolean => {
 
 export const validYaml = (message: string): boolean => {
   try {
-    return parse(message) !== null
+    return !validJson(message) && parse(message) !== null
   } catch (e) {
     return false
   }

@@ -7,6 +7,10 @@ import {
   unregisterCompletionProvider,
   registerCompletionProvider
 } from '@renderer/assets/js/init-monaco-editor'
+import {
+  getPayloadVariablesGrouped,
+  actionsVariablesArray
+} from '@renderer/assets/js/actions-variables'
 
 export interface ICodeEditor {
   updateCodeEditorValue: (value: string) => void
@@ -18,6 +22,7 @@ const props = defineProps<{
   modelValue: string
   fontSize?: number | string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
+  hideWarning?: boolean
   variableCompletion?: boolean
 }>()
 
@@ -40,11 +45,8 @@ watch(
   (isDark) => {
     if (!codeEditor) return
 
-    if (isDark) {
-      monaco.editor.setTheme('vs-dark-darker')
-    } else {
-      monaco.editor.setTheme('vs-lighter')
-    }
+    if (isDark) monaco.editor.setTheme('vs-dark-darker')
+    else monaco.editor.setTheme('vs-lighter')
   }
 )
 
@@ -79,35 +81,30 @@ onMounted(() => {
   })
 })
 
+const variableTypesGrouped = computed(() => {
+  if (!props.variableCompletion) return []
+
+  return getPayloadVariablesGrouped(props.modelValue)
+    .map((item) => item.variables)
+    .flat()
+})
+
+const variableTypesGroupedDuplicates = computed(() => {
+  return variableTypesGrouped.value.filter(
+    (item, index) => variableTypesGrouped.value.indexOf(item) !== index
+  )
+})
+
 const updateDecorations = () => {
   if (!codeEditor) return
   if (!props.variableCompletion) return
-
-  const acceptedList = [
-    {
-      regex: /\$s\$[a-zA-Z0-9_-]+\$/,
-      description: 'This will prompt you to enter a String when executing the Action'
-    },
-    {
-      regex: /\$n\$[a-zA-Z0-9_-]+\$/,
-      description: 'This will prompt you to enter a Number when executing the Action'
-    },
-    {
-      regex: /\$b\$[a-zA-Z0-9_-]+\$/,
-      description: 'This will prompt you to enter a Boolean when executing the Action'
-    },
-    {
-      regex: /\$uuid\$v4\$/,
-      description: 'This will generate a UUID v4 when executing the Action'
-    }
-  ]
   const editorModel: monaco.editor.ITextModel = codeEditor.getModel()!
 
-  const matcheGroups = acceptedList.map((item) => {
+  const matcheGroups = actionsVariablesArray.map((item) => {
     return {
       description: item.description,
       matches: editorModel.findMatches(
-        item.regex.toString().slice(1, -1),
+        item.regex.toString().slice(1, -2),
         false,
         true,
         true,
@@ -183,15 +180,19 @@ const handleFormatCode = () => {
 const valideCode = computed(() => {
   return validCode(props.modelValue, editorLanguage.value)
 })
+
+const editorStatus = computed(() => {
+  if (editorLanguage.value === 'raw') return 'raw'
+  if (!valideCode.value) return 'validation-error'
+  if (variableTypesGroupedDuplicates.value.length) return 'validation-warning'
+
+  return ''
+})
 </script>
 
 <template>
   <div class="editor">
-    <div
-      ref="monacoEditorRef"
-      class="monaco-editor tw-w-full tw-flex-grow"
-      :class="{ 'validation-error': !valideCode, raw: editorLanguage === 'raw' }"
-    />
+    <div ref="monacoEditorRef" class="monaco-editor tw-w-full tw-flex-grow" :class="editorStatus" />
     <div class="options tw-flex tw-justify-between tw-p-3">
       <q-btn-toggle
         v-model="editorLanguage"
@@ -206,6 +207,26 @@ const valideCode = computed(() => {
           { label: 'YAML', value: 'yaml' }
         ]"
       />
+      <div v-if="!valideCode && !hideWarning" class="items-center tw-flex tw-select-none">
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
+        Invalid {{ editorLanguage.toUpperCase() }} format
+      </div>
+      <div
+        v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
+        class="items-center tw-flex tw-select-none"
+      >
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-triangle" color="yellow" />
+        Duplicate variables
+        <q-tooltip anchor="top middle" self="bottom middle">
+          <div>
+            <div class="tw-text-sm tw-font-semibold">Variable duplicates</div>
+            <div class="tw-text-xs">
+              The following variables names are duplicated: <br />
+              {{ variableTypesGroupedDuplicates.map((item) => `"${item}"`).join(', ') }}
+            </div>
+          </div>
+        </q-tooltip>
+      </div>
       <q-btn
         color="primary"
         dense
@@ -249,6 +270,10 @@ const valideCode = computed(() => {
 
 .monaco-editor.validation-error {
   @apply tw-border-red-500/40;
+}
+
+.monaco-editor.validation-warning {
+  @apply tw-border-yellow-500/40;
 }
 </style>
 
