@@ -27,8 +27,8 @@ const $q = useQuasar()
 
 const variablesDialogOpened = ref(false)
 
-const hasVariables = computed(() => {
-  return getPayloadVariablesCount(props.action.payload) > 0
+const variablesCount = computed(() => {
+  return getPayloadVariablesCount(props.action.payload)
 })
 
 const handleCopyTopic = () => {
@@ -54,7 +54,7 @@ const handleCopyPayload = () => {
 const send = () => {
   if (props.disableDisconnected) return
 
-  if (hasVariables.value) {
+  if (variablesCount.value) {
     variablesDialogOpened.value = true
     return
   }
@@ -109,8 +109,13 @@ const send = () => {
     </p>
     <div class="tw-mt-4 tw-flex tw-justify-between">
       <div class="tw-flex tw-gap-4">
-        <q-icon v-if="hasVariables" name="fa-solid fa-code" class="color-details tw-mt-2" size="xs">
-          <q-tooltip class="tw-text-sm">Contains variables</q-tooltip>
+        <q-icon
+          v-if="variablesCount"
+          name="fa-solid fa-code"
+          class="color-details tw-mt-2"
+          size="xs"
+        >
+          <q-tooltip class="tw-text-sm">{{ variablesCount }} variables</q-tooltip>
         </q-icon>
 
         <q-icon

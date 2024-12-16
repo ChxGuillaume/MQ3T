@@ -136,13 +136,13 @@ watch(
   }
 )
 
-const codeEditorSplitter = ref(400)
-const codeEditorLimits = ref([300, 600])
+const codeEditorSplitter = ref(500)
+const codeEditorLimits = ref([400, 700])
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" v-model="opened" @hide="handleCloseForm">
-    <q-card flat class="tw-min-w-[800px]">
+  <q-dialog ref="dialogRef" v-model="opened" @hide="handleCloseForm" full-width>
+    <q-card flat class="action-variables-card">
       <q-form ref="formRef" @submit="handleSend">
         <q-splitter
           v-model="codeEditorSplitter"
@@ -173,7 +173,18 @@ const codeEditorLimits = ref([300, 600])
                       dense
                       @keydown.enter.prevent="handleSend"
                       @update:model-value="form[`${index}:${variable.full}`] = $event"
-                    />
+                    >
+                      <template #append>
+                        <q-checkbox
+                          :model-value="form[`${index}:${variable.full}`] === null"
+                          @update:model-value="
+                            form[`${index}:${variable.full}`] = $event ? null : ''
+                          "
+                        >
+                          <q-tooltip :offset="[0, 0]">Set to null</q-tooltip>
+                        </q-checkbox>
+                      </template>
+                    </q-input>
                     <q-input
                       v-else-if="variableGroup.type === 'number'"
                       v-for="(variable, index) in variableGroup.variables"
@@ -187,7 +198,18 @@ const codeEditorLimits = ref([300, 600])
                       @update:model-value="
                         form[`${index}:${variable.full}`] = parseInt(($event as string) || '0')
                       "
-                    />
+                    >
+                      <template #append>
+                        <q-checkbox
+                          :model-value="form[`${index}:${variable.full}`] === null"
+                          @update:model-value="
+                            form[`${index}:${variable.full}`] = $event ? null : 0
+                          "
+                        >
+                          <q-tooltip :offset="[0, 0]">Set to null</q-tooltip>
+                        </q-checkbox>
+                      </template>
+                    </q-input>
                     <q-toggle
                       v-for="(variable, index) in variableGroup.variables"
                       v-else-if="variableGroup.type === 'boolean'"
@@ -203,7 +225,7 @@ const codeEditorLimits = ref([300, 600])
           </template>
 
           <template #separator>
-            <splitter-icon @click:double="codeEditorSplitter = 400" vertical />
+            <splitter-icon @click:double="codeEditorSplitter = 500" vertical />
           </template>
 
           <template #after>
@@ -235,4 +257,8 @@ const codeEditorLimits = ref([300, 600])
   </q-dialog>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.action-variables-card {
+  max-width: 1000px !important;
+}
+</style>
