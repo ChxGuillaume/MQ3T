@@ -19,6 +19,7 @@ const props = defineProps<{
   noWildcard?: boolean
   editMode?: boolean
   action?: Action
+  variableCompletion?: boolean
 }>()
 
 const emits = defineEmits<{
@@ -204,10 +205,11 @@ watch(
           </div>
           <div class="tw-mt-4 tw-h-[300px]">
             <code-editor
+              ref="codeEditorRef"
               v-if="showEditor"
               v-model:language="editorLanguage"
               v-model="form.payload"
-              ref="codeEditorRef"
+              :variable-completion="variableCompletion"
               class="tw-h-[300px]"
               font-size="14"
             />
