@@ -56,7 +56,7 @@ const handleSend = async () => {
 }
 
 const variablesGroups = computed(() => {
-  return getPayloadVariablesGrouped(props.action.payload)
+  return getPayloadVariablesGrouped(props.action.payload).filter((group) => group.variables.length)
 })
 
 const getVariableTypeTitle = (type: string) => {
