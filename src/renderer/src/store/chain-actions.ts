@@ -17,6 +17,8 @@ export const useChainActionsStore = defineStore('chain-actions', {
     getGroupChainActionsRecord: (state) => (connectionId: string, groupId: string) => {
       const record = state.chainActions[connectionId]
 
+      if (!record) return {}
+
       return { [groupId]: record[groupId] }
     },
     getChainAction: (state) => (chainActionId: string) => {
