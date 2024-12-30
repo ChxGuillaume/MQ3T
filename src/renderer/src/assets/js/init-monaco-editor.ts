@@ -77,6 +77,15 @@ export const registerCompletionProvider = () => {
       range: range
     },
     {
+      label: '$enum$',
+      kind: monaco.languages.CompletionItemKind.Variable,
+      detail: 'Enum Variable',
+      documentation: 'Create a Enum Variable',
+      insertText: '"\\$enum\\$${1:my_enum}\\$"',
+      insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+      range: range
+    },
+    {
       label: '$uuid$v4$',
       kind: monaco.languages.CompletionItemKind.Variable,
       detail: 'UUID V4',

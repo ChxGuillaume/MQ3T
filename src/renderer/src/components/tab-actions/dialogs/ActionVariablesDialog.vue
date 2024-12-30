@@ -67,6 +67,8 @@ const getVariableTypeTitle = (type: string) => {
       return 'Number variables'
     case 'boolean':
       return 'Boolean variables'
+    case 'enum':
+      return 'Enum variables'
     default:
       return 'Unknown variables'
   }
@@ -124,6 +126,10 @@ watch(
           case 'boolean':
             form.value[`${index}:${variable.full}`] = false
             break
+          case 'enum':
+            const firstOption = props.action.enumOptions?.[variable.name]?.[0]
+            form.value[`${index}:${variable.full}`] = firstOption !== undefined ? firstOption : ''
+            break
         }
       })
     })
@@ -156,7 +162,7 @@ const codeEditorLimits = ref([400, 700])
                 <h2 class="tw-line-clamp-1 tw-text-lg">{{ props.action.name }}</h2>
                 <span class="tw-caption-top tw-text-neutral-500">{{ props.action.topic }}</span>
               </q-card-section>
-              <q-card-section class="tw-grid tw-gap-6 tw-pt-0">
+              <q-card-section class="tw-grid tw-select-none tw-gap-6 tw-pt-0">
                 <div v-for="variableGroup in variablesGroups" :key="variableGroup.type">
                   <h2 class="tw-text-base">{{ getVariableTypeTitle(variableGroup.type) }}</h2>
                   <div
@@ -214,7 +220,20 @@ const codeEditorLimits = ref([400, 700])
                       v-for="(variable, index) in variableGroup.variables"
                       v-else-if="variableGroup.type === 'boolean'"
                       :model-value="form[`${index}:${variable.full}`] || false"
+                      dense
+                      @update:model-value="form[`${index}:${variable.full}`] = $event"
+                    >
+                      <div class="color-details tw-line-clamp-1" :title="variable.name">
+                        {{ variable.name }}
+                      </div>
+                    </q-toggle>
+                    <q-select
+                      v-else-if="variableGroup.type === 'enum'"
+                      v-for="(variable, index) in variableGroup.variables"
+                      :model-value="form[`${index}:${variable.full}`]"
+                      :options="action.enumOptions?.[variable.name] || []"
                       :label="variable.name"
+                      filled
                       dense
                       @update:model-value="form[`${index}:${variable.full}`] = $event"
                     />

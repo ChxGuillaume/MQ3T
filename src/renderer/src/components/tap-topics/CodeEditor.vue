@@ -91,7 +91,7 @@ const variableTypesGrouped = computed(() => {
 
 const variableTypesGroupedDuplicates = computed(() => {
   return variableTypesGrouped.value.filter(
-    (item, index) => variableTypesGrouped.value.indexOf(item) !== index
+    (item, index, self) => self.findIndex((t) => t.name === item.name) !== index
   )
 })
 
@@ -222,7 +222,7 @@ const editorStatus = computed(() => {
             <div class="tw-text-sm tw-font-semibold">Variable duplicates</div>
             <div class="tw-text-xs">
               The following variables names are duplicated: <br />
-              {{ variableTypesGroupedDuplicates.map((item) => `"${item}"`).join(', ') }}
+              {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
             </div>
           </div>
         </q-tooltip>

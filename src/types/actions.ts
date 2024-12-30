@@ -13,6 +13,7 @@ export type Action = {
   payload: string
   retained: boolean
   payloadFormat?: 'raw' | 'json' | 'xml' | 'yaml'
+  enumOptions?: Record<string, (string | number)[]>
 }
 
 type Empty = Record<string, never>

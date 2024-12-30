@@ -1,4 +1,4 @@
-type ActionsVariablesTypes = 'string' | 'number' | 'boolean' | 'uuidV4'
+type ActionsVariablesTypes = 'string' | 'number' | 'boolean' | 'enum' | 'uuidV4'
 
 type ActionsVariables = {
   type: ActionsVariablesTypes
@@ -24,6 +24,11 @@ export const actionsVariables: ActionsVariablesRecord = {
     type: 'boolean',
     regex: /"?\$b\$([a-zA-Z0-9_ -]+)\$"?/g,
     description: 'This will prompt you to enter a Boolean when executing the Action'
+  },
+  enum: {
+    type: 'enum',
+    regex: /"?\$enum\$([a-zA-Z0-9_ -]+)\$"?/g,
+    description: 'This will prompt you to select a predefined value when executing the Action'
   },
   uuidV4: {
     type: 'uuidV4',
