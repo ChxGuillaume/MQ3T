@@ -59,21 +59,6 @@ const variablesGroups = computed(() => {
   return getPayloadVariablesGrouped(props.action.payload).filter((group) => group.variables.length)
 })
 
-const getVariableTypeTitle = (type: string) => {
-  switch (type) {
-    case 'string':
-      return 'String variables'
-    case 'number':
-      return 'Number variables'
-    case 'boolean':
-      return 'Boolean variables'
-    case 'enum':
-      return 'Enum variables'
-    default:
-      return 'Unknown variables'
-  }
-}
-
 const transformedPayload = ref('')
 const transformPayload = () => {
   const keys = Object.keys(form.value)
@@ -164,10 +149,12 @@ const codeEditorLimits = ref([400, 700])
               </q-card-section>
               <q-card-section class="tw-grid tw-select-none tw-gap-6 tw-pt-0">
                 <div v-for="variableGroup in variablesGroups" :key="variableGroup.type">
-                  <h2 class="tw-text-base">{{ getVariableTypeTitle(variableGroup.type) }}</h2>
                   <div
-                    class="tw-mt-2 tw-grid tw-gap-2"
-                    :class="{ 'tw-grid-cols-2': variableGroup.type !== 'string' }"
+                    class="tw-grid tw-gap-2"
+                    :class="{
+                      'tw-grid-cols-2':
+                        variableGroup.type !== 'string' && variableGroup.variables.length > 1
+                    }"
                   >
                     <q-input
                       v-if="variableGroup.type === 'string'"
