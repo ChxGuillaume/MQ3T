@@ -415,12 +415,6 @@ watch(
 .action-description {
   @apply tw-resize-none;
 }
-</style>
-
-<style lang="less">
-.action-description textarea {
-  resize: none !important;
-}
 
 .dialog-card {
   @apply tw-flex tw-transition-all;
@@ -430,5 +424,11 @@ watch(
 
 .dialog-card.has-enum {
   min-width: 1040px;
+}
+</style>
+
+<style lang="less">
+.action-description textarea {
+  resize: none !important;
 }
 </style>
