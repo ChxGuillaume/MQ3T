@@ -3,6 +3,14 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { validCode } from '../../assets/js/format-code'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
+import {
+  unregisterCompletionProvider,
+  registerCompletionProvider
+} from '@renderer/assets/js/init-monaco-editor'
+import {
+  getPayloadVariablesGrouped,
+  actionsVariablesArray
+} from '@renderer/assets/js/actions-variables'
 
 export interface ICodeEditor {
   updateCodeEditorValue: (value: string) => void
@@ -14,6 +22,8 @@ const props = defineProps<{
   modelValue: string
   fontSize?: number | string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
+  hideWarning?: boolean
+  variableCompletion?: boolean
 }>()
 
 const emits = defineEmits(['update:modelValue', 'update:language'])
@@ -35,16 +45,16 @@ watch(
   (isDark) => {
     if (!codeEditor) return
 
-    if (isDark) {
-      monaco.editor.setTheme('vs-dark-darker')
-    } else {
-      monaco.editor.setTheme('vs-lighter')
-    }
+    if (isDark) monaco.editor.setTheme('vs-dark-darker')
+    else monaco.editor.setTheme('vs-lighter')
   }
 )
 
+let decoration = ref<string[]>([])
 onMounted(() => {
   if (!monacoEditorRef.value) return
+
+  if (props.variableCompletion) registerCompletionProvider()
 
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
     value: props.modelValue,
@@ -62,13 +72,69 @@ onMounted(() => {
     }
   })
 
+  updateCodeEditorOptions(props.language || 'raw')
+  updateDecorations()
+
   codeEditor.onDidChangeModelContent(() => {
     emits('update:modelValue', codeEditor!.getValue())
+    updateDecorations()
   })
 })
 
+const variableTypesGrouped = computed(() => {
+  if (!props.variableCompletion) return []
+
+  return getPayloadVariablesGrouped(props.modelValue)
+    .map((item) => item.variables)
+    .flat()
+})
+
+const variableTypesGroupedDuplicates = computed(() => {
+  return variableTypesGrouped.value.filter(
+    (item, index, self) => self.findIndex((t) => t.name === item.name) !== index
+  )
+})
+
+const updateDecorations = () => {
+  if (!codeEditor) return
+  if (!props.variableCompletion) return
+  const editorModel: monaco.editor.ITextModel = codeEditor.getModel()!
+
+  const matcheGroups = actionsVariablesArray.map((item) => {
+    return {
+      description: item.description,
+      matches: editorModel.findMatches(
+        item.regex.toString().slice(1, -2),
+        false,
+        true,
+        true,
+        null,
+        false
+      )
+    }
+  })
+
+  decoration.value = editorModel.deltaDecorations(
+    decoration.value,
+    matcheGroups
+      .flat()
+      .map((matchGroup): monaco.editor.IModelDeltaDecoration[] => {
+        return matchGroup.matches.map((match) => ({
+          range: match.range,
+          options: {
+            isWholeLine: false,
+            inlineClassName: `mq3t-variable-highlight`,
+            hoverMessage: { value: matchGroup.description }
+          }
+        }))
+      })
+      .flat()
+  )
+}
+
 onBeforeUnmount(() => {
   if (codeEditor) codeEditor.dispose()
+  unregisterCompletionProvider()
 })
 
 watch(
@@ -76,9 +142,26 @@ watch(
   (newLanguage) => {
     if (!codeEditor) return
 
-    monaco.editor.setModelLanguage(codeEditor.getModel()!, newLanguage || 'json')
+    const language = newLanguage || 'json'
+
+    monaco.editor.setModelLanguage(codeEditor.getModel()!, language)
+
+    updateCodeEditorOptions(language)
   }
 )
+
+const updateCodeEditorOptions = (language: string) => {
+  if (!codeEditor) return
+
+  switch (language) {
+    case 'yaml':
+      codeEditor.updateOptions({ quickSuggestions: { strings: true } })
+      break
+    default:
+      codeEditor.updateOptions({ quickSuggestions: { strings: false } })
+      break
+  }
+}
 
 const editorLanguage = computed({
   get: () => props.language || 'raw',
@@ -97,16 +180,20 @@ const handleFormatCode = () => {
 const valideCode = computed(() => {
   return validCode(props.modelValue, editorLanguage.value)
 })
+
+const editorStatus = computed(() => {
+  if (editorLanguage.value === 'raw') return 'raw'
+  if (!valideCode.value) return 'validation-error'
+  if (variableTypesGroupedDuplicates.value.length) return 'validation-warning'
+
+  return ''
+})
 </script>
 
 <template>
   <div class="editor">
-    <div
-      ref="monacoEditorRef"
-      class="monaco-editor tw-w-full tw-flex-grow"
-      :class="{ 'validation-error': !valideCode, raw: editorLanguage === 'raw' }"
-    />
-    <div class="options tw-p-3 tw-flex tw-justify-between">
+    <div ref="monacoEditorRef" class="monaco-editor tw-w-full tw-flex-grow" :class="editorStatus" />
+    <div class="options tw-flex tw-justify-between tw-p-3">
       <q-btn-toggle
         v-model="editorLanguage"
         toggle-color="primary"
@@ -120,6 +207,26 @@ const valideCode = computed(() => {
           { label: 'YAML', value: 'yaml' }
         ]"
       />
+      <div v-if="!valideCode && !hideWarning" class="items-center tw-flex tw-select-none">
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
+        Invalid {{ editorLanguage.toUpperCase() }} format
+      </div>
+      <div
+        v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
+        class="items-center tw-flex tw-select-none"
+      >
+        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-triangle" color="yellow" />
+        Duplicate variables
+        <q-tooltip anchor="top middle" self="bottom middle">
+          <div>
+            <div class="tw-text-sm tw-font-semibold">Variable duplicates</div>
+            <div class="tw-text-xs">
+              The following variables names are duplicated: <br />
+              {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
+            </div>
+          </div>
+        </q-tooltip>
+      </div>
       <q-btn
         color="primary"
         dense
@@ -154,14 +261,24 @@ const valideCode = computed(() => {
 }
 
 .editor {
-  @apply tw-h-full tw-flex tw-flex-col-reverse;
+  @apply tw-flex tw-h-full tw-flex-col-reverse;
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-border-y-2 tw-border-green-500/40 tw-overflow-auto tw-transition-colors tw-outline-0;
+  @apply tw-w-full tw-overflow-auto tw-border-y-2 tw-border-green-500/40 tw-outline-0 tw-transition-colors;
 }
 
 .monaco-editor.validation-error {
   @apply tw-border-red-500/40;
+}
+
+.monaco-editor.validation-warning {
+  @apply tw-border-yellow-500/40;
+}
+</style>
+
+<style lang="less">
+.mq3t-variable-highlight {
+  @apply tw-underline;
 }
 </style>

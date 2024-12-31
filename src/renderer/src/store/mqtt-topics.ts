@@ -8,7 +8,7 @@ export type MqttMessage = {
   uid: string
   qos: 0 | 1 | 2
   message: string
-  dataType?: 'json' | 'xml' | 'raw'
+  dataType?: 'raw' | 'json' | 'xml' | 'yaml'
   retained: boolean
   createdDiff?: number
   createdAt: Date
