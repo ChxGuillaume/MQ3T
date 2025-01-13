@@ -1,136 +1,58 @@
 <script setup lang="ts">
-import { useMqttTopicsStore } from '../../store/mqtt-topics'
+import MosquittoBrokerDetails from '@renderer/components/tap-topics/broker-details-panels/MosquittoBrokerDetails.vue'
+import EMQXBrokerDetails from '@renderer/components/tap-topics/broker-details-panels/EMQXBrokerDetails.vue'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { computed } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
 
 const clientKey = computed(() => mqttTopicsStore.selectedConnection)
 
-const formatNumber = (value: string) => {
-  if (value === 'Unknown') return value
-
-  return parseInt(value).toLocaleString()
-}
-
-const messages_received = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(
-    clientKey.value,
-    '$SYS/broker/messages/received'
-  )
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const messages_sent = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/messages/sent')
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const connected_clients = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(
-    clientKey.value,
-    '$SYS/broker/clients/connected'
-  )
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const disconnected_clients = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(
-    clientKey.value,
-    '$SYS/broker/clients/disconnected'
-  )
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const maximum_clients = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/clients/maximum')
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const total_clients = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/clients/total')
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const subscriptions_count = computed(() => {
-  const topic = mqttTopicsStore.getTopicLastMessage(
-    clientKey.value,
-    '$SYS/broker/subscriptions/count'
-  )
-
-  if (!topic) return 'Unknown'
-
-  return formatNumber(topic.message)
-})
-
-const uptime = computed(
-  () =>
-    mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/uptime')?.message || 'Unknown'
+const brokers = computed(
+  () => mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/brokers')?.message
 )
 
 const version = computed(
-  () =>
-    mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/version')?.message ||
-    'Unknown'
+  () => mqttTopicsStore.getTopicLastMessage(clientKey.value, '$SYS/broker/version')?.message
 )
+
+const brokerType = computed(() => {
+  if (brokers.value?.includes('emqx')) return 'EMQX'
+  if (version.value?.includes('mosquitto')) return 'Mosquitto'
+
+  return 'Unknown'
+})
 </script>
 
 <template>
   <div class="broker-details-panel">
-    <h2 class="tw-mb-4 tw-text-xl text-weight-bold">Broker Details</h2>
-    <div>
-      Messages Received <span class="color-details">{{ messages_received }}</span>
-    </div>
-    <div>
-      Messages Sent <span class="color-details">{{ messages_sent }}</span>
-    </div>
-    <q-separator />
-    <div>
-      Connected Clients <span class="color-details">{{ connected_clients }}</span>
-    </div>
-    <div>
-      Disconnected Clients <span class="color-details">{{ disconnected_clients }}</span>
-    </div>
-    <div>
-      Maximum Clients <span class="color-details">{{ maximum_clients }}</span>
-    </div>
-    <div>
-      Total Clients <span class="color-details">{{ total_clients }}</span>
-    </div>
-    <q-separator />
-    <div>
-      Subscriptions Count <span class="color-details">{{ subscriptions_count }}</span>
-    </div>
-    <q-separator />
-    <div>
-      Uptime <span class="color-details">{{ uptime }}</span>
-    </div>
-    <div>
-      Broker Version <span class="color-details">{{ version }}</span>
+    <h2 class="text-weight-bold tw-mb-4 tw-text-xl">Broker Details</h2>
+    <mosquitto-broker-details v-if="brokerType === 'Mosquitto'" />
+    <e-m-q-x-broker-details v-else-if="brokerType === 'EMQX'" />
+    <div v-else class="tw-grid tw-gap-2">
+      <p class="tw-italic">Unknown Broker</p>
+      <p>
+        You are either missing permissions on the $SYS/# topics or the broker is not supported by
+        MQ3T yet.
+      </p>
+      <p>
+        Feel free to open an issue on
+        <a
+          href="https://github.com/ChxGuillaume/MQ3T/issues"
+          class="tw-text-accent"
+          target="_blank"
+        >
+          MQ3T Github Repository
+        </a>
+        with the relevant topics for this feature and broker.
+      </p>
     </div>
   </div>
 </template>
 
 <style scoped lang="less">
 .broker-details-panel {
-  @apply tw-p-4 tw-flex tw-flex-col tw-gap-2;
+  @apply tw-flex tw-flex-col tw-gap-2 tw-overflow-auto tw-p-4;
 }
 
 .body--light {
