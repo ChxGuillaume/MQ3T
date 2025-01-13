@@ -21,20 +21,4 @@ const brokers = computed(() => {
   </div>
 </template>
 
-<style scoped lang="less">
-.broker-details-panel {
-  @apply tw-flex tw-flex-col tw-gap-2 tw-p-4;
-}
-
-.body--light {
-  .broker-details-panel {
-    @apply tw-bg-white tw-text-black;
-  }
-}
-
-.body--dark {
-  .broker-details-panel {
-    @apply tw-bg-neutral-900 tw-text-white;
-  }
-}
-</style>
+<style scoped lang="less"></style>
