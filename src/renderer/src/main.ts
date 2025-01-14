@@ -6,7 +6,7 @@ import './assets/js/init-monaco-editor'
 import App from './App.vue'
 
 import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
-import iconSet from 'quasar/icon-set/fontawesome-v6'
+import '@quasar/extras/material-icons/material-icons.css'
 
 import '@vue-flow/core/dist/style.css'
 import './assets/css/action-chain.scss'
@@ -36,8 +36,7 @@ Notify.setDefaults({
 
 app.use(pinia)
 app.use(Quasar, {
-  plugins: { Notify },
-  iconSet
+  plugins: { Notify }
 })
 
 app.mount('#app')

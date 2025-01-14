@@ -59,6 +59,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     getSubTopicsMessagesCount: (state) => (clientKey: string, topic: string) => {
       return state.subTopicsMessagesCount[clientKey]?.[topic] || 0
     },
+    getTopicMessages:
+      (state) =>
+      (clientKey: string, topic: string): MqttMessage[] => {
+        return state.topicsMessages[clientKey]?.[topic] || []
+      },
     getSelectedTopicMessages(): MqttMessage[] {
       const connectionTopics = this.topicsMessages[this.selectedConnection]
 

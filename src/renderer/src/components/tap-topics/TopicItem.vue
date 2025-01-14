@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
+import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useActionsCacheStore } from '../../store/actions-cache'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
@@ -195,6 +196,15 @@ watch(
             @unfavorite="handleUnfavorite"
             @favorite="handleFavorite"
             @erase="handleEraseTopic"
+            @export:raw="
+              () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            "
+            @export:json="
+              () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            "
+            @export:csv="
+              () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            "
           />
         </topic-card>
       </q-intersection>
@@ -240,6 +250,15 @@ watch(
           @unfavorite="handleUnfavorite"
           @favorite="handleFavorite"
           @erase="handleEraseTopic"
+          @export:raw="
+            () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+          "
+          @export:json="
+            () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+          "
+          @export:csv="
+            () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+          "
         />
       </topic-card>
     </q-intersection>
