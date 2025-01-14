@@ -178,7 +178,7 @@ const handleChainActionsExport = (groupId: string) => {
     chainActions: chainActionsStore.getGroupChainActions(actionsStore.selectedConnection, groupId)
   } as ExportChainActionsFile
 
-  ElectronApi.exportData('mq3t-chain-actions.json', copyObject(data), [
+  ElectronApi.exportData('mq3t-chain-actions.json', JSON.stringify(copyObject(data)), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
@@ -190,7 +190,7 @@ const handleActionsExport = (groupId: string) => {
     actions: actionsStore.getSelectedConnectionGroupActions(groupId)
   } as ExportActionsFile
 
-  ElectronApi.exportData('mq3t-actions.json', copyObject(data), [
+  ElectronApi.exportData('mq3t-actions.json', JSON.stringify(copyObject(data)), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
@@ -224,7 +224,7 @@ const handleGroupExport = (groupId: string) => {
     chainActions: chainActions
   } as ExportGroupsFile
 
-  ElectronApi.exportData('mq3t-group.json', copyObject(data), [
+  ElectronApi.exportData('mq3t-group.json', JSON.stringify(copyObject(data)), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }
@@ -267,7 +267,7 @@ const handleConnectionExport = () => {
     chainActions: allChainActions
   } as ExportGroupsFile
 
-  ElectronApi.exportData('mq3t-groups-actions.json', copyObject(data), [
+  ElectronApi.exportData('mq3t-groups-actions.json', JSON.stringify(copyObject(data)), [
     { name: 'JSON', extensions: ['json'] }
   ])
 }

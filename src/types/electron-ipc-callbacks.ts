@@ -5,10 +5,8 @@ import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
 import {
   ConnectionsActionsFile,
-  ConnectionsActionsGroups,
   ConnectionsChainActions,
-  ExportActionsFile,
-  ExportGroupsFile
+  ConnectionsActionsGroups
 } from './actions'
 
 export type AppVersionCallback = (event: never, value: string) => void
@@ -55,11 +53,7 @@ export type ElectronIpc = {
 
   importData: (fileFilter?: FileFilter[]) => void
   handleImportData: (callback: (event: never, value: string) => void) => void
-  exportData: (
-    fileName: string,
-    data: ExportActionsFile | ExportGroupsFile,
-    fileFilter?: FileFilter[]
-  ) => void
+  exportData: (fileName: string, data: string | Buffer, fileFilter?: FileFilter[]) => void
   openUrl: (url: string) => void
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void

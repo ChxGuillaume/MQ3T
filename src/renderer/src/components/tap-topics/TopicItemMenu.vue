@@ -10,7 +10,10 @@ const emit = defineEmits([
   'copyTopicKey',
   'erase',
   'favorite',
-  'unfavorite'
+  'unfavorite',
+  'export:raw',
+  'export:json',
+  'export:csv'
 ])
 
 const handleFavorite = () => {
@@ -20,8 +23,8 @@ const handleFavorite = () => {
 </script>
 
 <template>
-  <q-menu anchor="center end" self="center left" context-menu>
-    <q-list class="tw-min-w-[150px]">
+  <q-menu anchor="bottom left" self="top left" context-menu>
+    <q-list class="tw-min-w-[150px]" dense>
       <q-item
         :disable="hasLastMessage"
         class="tw-text-yellow-500"
@@ -36,6 +39,47 @@ const handleFavorite = () => {
             {{ favorite ? 'Unfavorite' : 'Favorite' }}
           </div>
         </q-item-section>
+      </q-item>
+
+      <q-item class="tw-text-accent" clickable>
+        <q-item-section>
+          <div>
+            <q-icon name="fa-solid fa-file-arrow-down" class="tw-mr-2" />
+            Export
+          </div>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="keyboard_arrow_right" color="accent" />
+        </q-item-section>
+
+        <q-menu anchor="top end" self="top start">
+          <q-list dense>
+            <q-item clickable v-ripple @click="$emit('export:raw')">
+              <q-item-section>
+                <div>
+                  <q-icon name="reorder" class="tw-mr-2" />
+                  RAW
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="$emit('export:json')">
+              <q-item-section>
+                <div>
+                  <q-icon name="data_object" class="tw-mr-2" />
+                  JSON
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="$emit('export:csv')">
+              <q-item-section>
+                <div>
+                  <q-icon name="fa-solid fa-file-csv" class="tw-mr-2" />
+                  CSV
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
       </q-item>
 
       <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopic')">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMqttTopicsStore, MqttMessage } from '../../store/mqtt-topics'
+import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useSettingsStore } from '../../store/settings-store'
 import { computed, nextTick, ref, watch } from 'vue'
 import CopyButton from '../buttons/CopyButton.vue'
@@ -85,22 +86,77 @@ watch(
 </script>
 
 <template>
-  <div class="tw-px-4 tw-pt-2 tw-flex justify-between">
-    <div class="tw-flex items-center tw-gap-2">
+  <div class="justify-between tw-flex tw-px-4 tw-pt-2">
+    <div class="items-center tw-flex tw-gap-2">
       History
       <q-chip size="sm" color="primary" text-color="white">
         {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages
       </q-chip>
     </div>
-    <q-pagination
-      v-if="settingsStore.messagesPagination"
-      v-model="currentPage"
-      size="xs"
-      :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
-      input
-    />
+    <div class="tw-flex tw-items-center tw-gap-1">
+      <q-btn color="accent" round flat size="sm">
+        <q-icon name="fa-solid fa-file-arrow-down" size="14px" />
+        <q-tooltip
+          class="tw-bg-accent tw-text-black"
+          :offset="[5, 0]"
+          anchor="center left"
+          self="center right"
+        >
+          Export messages
+        </q-tooltip>
+
+        <q-menu :offset="[0, 5]">
+          <q-list dense class="tw-w-28">
+            <q-item
+              clickable
+              v-ripple
+              @click="exportMessages('raw', mqttTopicsStore.getSelectedTopicMessages)"
+            >
+              <q-item-section>
+                <div>
+                  <q-icon name="reorder" class="tw-mr-2" />
+                  RAW
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-ripple
+              @click="exportMessages('json', mqttTopicsStore.getSelectedTopicMessages)"
+            >
+              <q-item-section>
+                <div>
+                  <q-icon name="data_object" class="tw-mr-2" />
+                  JSON
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-ripple
+              @click="exportMessages('csv', mqttTopicsStore.getSelectedTopicMessages)"
+            >
+              <q-item-section>
+                <div>
+                  <q-icon name="fa-solid fa-file-csv" class="tw-mr-2" />
+                  CSV
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+      <q-pagination
+        v-if="settingsStore.messagesPagination"
+        v-model="currentPage"
+        color="accent"
+        size="xs"
+        :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
+        input
+      />
+    </div>
   </div>
-  <div class="tw-p-3 tw-flex tw-flex-col tw-gap-2 tw-overflow-hidden">
+  <div class="tw-flex tw-flex-col tw-gap-2 tw-overflow-hidden tw-p-3">
     <q-intersection
       v-for="message in slicedMessages"
       :key="message.uid"
@@ -109,7 +165,7 @@ watch(
     >
       <q-card
         flat
-        class="tw-p-2 tw-cursor-pointer tw-select-none tw-bg-primary tw-transition-all"
+        class="tw-cursor-pointer tw-select-none tw-bg-primary tw-p-2 tw-transition-all"
         :class="{
           'card-secondary-background': selectedMessage?.uid !== message.uid,
           'tw-bg-primary tw-text-white': selectedMessage?.uid === message.uid
@@ -118,7 +174,7 @@ watch(
       >
         <div class="tw-mb-1 tw-flex tw-justify-between">
           <div>
-            <div class="tw-h-fit tw-flex tw-items-center tw-gap-1 color-details">
+            <div class="color-details tw-flex tw-h-fit tw-items-center tw-gap-1">
               {{ settingsStore.formatDateTime(message.createdAt) }}
               <span v-if="message.createdDiff" class="tw-text-xs tw-opacity-70">
                 ({{ formatDuration(message.createdDiff) }})
@@ -138,7 +194,7 @@ watch(
             />
           </div>
         </div>
-        <div class="tw-w-full tw-max-w-full tw-break-all tw-overflow-hidden">
+        <div class="tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
           {{ formatMessage(message.message) }}
         </div>
       </q-card>
