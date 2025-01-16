@@ -14,7 +14,7 @@ yamlData.buildVersion = distYamlData?.buildVersion || yamlData?.buildVersion || 
 let newBuildVersion = yamlData.buildVersion + 1
 
 if (process.env.GITHUB_RUN_NUMBER) {
-  newBuildVersion = parseInt(process.env.GITHUB_RUN_NUMBER)
+  newBuildVersion = parseInt(process.env.GITHUB_RUN_NUMBER) + 21 // 21 being the offset of builds due to the previous build system
 
   console.log('  • Setting build version to', newBuildVersion)
 } else {
