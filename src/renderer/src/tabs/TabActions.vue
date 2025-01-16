@@ -493,6 +493,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
                     <action-card
                       :key="action.id"
                       :action="action"
+                      :connection-id="selectedConnection"
                       :disable-disconnected="selectedConnectionStatus !== 'connected'"
                       :disable-wildcard="action.topic.includes('#') || action.topic.includes('+')"
                       @edit="
@@ -502,7 +503,6 @@ const chainActionEdit = ref<ChainAction | undefined>()
                         }
                       "
                       @delete="actionsStore.deleteAction(action.id)"
-                      @send="actionsStore.sendAction(actionsStore.selectedConnection, action)"
                       @copy="
                         () => {
                           moveActionCurrentGroupId = selectedActionGroup
@@ -710,6 +710,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
 
   <action-dialog
     v-model:opened="actionDialogOpened"
+    variable-completion
     :edit-mode="!!editAction"
     :action="editAction"
     @create:action="actionsStore.addAction($event)"

@@ -20,6 +20,7 @@ const props = defineProps<{
   value: string
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
   hideTopBorder?: boolean
+  hideGlyphs?: boolean
 }>()
 
 const glyphMarginClass = 'code-preview-glyph'
@@ -56,6 +57,8 @@ const decodePathFromClass = (index: string): string | undefined =>
   glyphsData.value[parseInt(index)]?.path
 
 const addGlyphs = (formatedValue: string) => {
+  if (props.hideGlyphs) return
+
   glyphsData.value = parseJsonForGlyphs(formatedValue)
 
   codeEditor?.createDecorationsCollection(
@@ -120,7 +123,7 @@ onMounted(() => {
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6
     },
-    glyphMargin: true
+    glyphMargin: !props.hideGlyphs
   })
 
   if (props.language === 'json') addGlyphs(formatedValue)
@@ -204,7 +207,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
   <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
     <div
       ref="myGraph"
-      v-if="language === 'json'"
+      v-if="!hideGlyphs && language === 'json'"
       v-show="showGraph || forceShowGraph"
       class="tw-fixed tw-w-fit"
       :style="{ left: `${x}px`, top: `${ySafe}px` }"
@@ -222,7 +225,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
         }"
       >
         <template #bottom>
-          <div class="tw-mt-3 tw-text-center color-details">Click to add widget</div>
+          <div class="color-details tw-mt-3 tw-text-center">Click to add widget</div>
         </template>
       </line-chart-card>
     </div>
@@ -231,7 +234,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 
 <style lang="less">
 .code-preview-glyph {
-  @apply tw-transition-colors tw-rounded-full;
+  @apply tw-rounded-full tw-transition-colors;
   font-size: 10px;
 }
 
@@ -248,7 +251,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 }
 
 .code-preview-glyph:hover {
-  @apply tw-bg-secondary tw-cursor-pointer tw-text-black;
+  @apply tw-cursor-pointer tw-bg-secondary tw-text-black;
 }
 </style>
 

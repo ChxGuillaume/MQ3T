@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import ActionVariablesDialog from '@renderer/components/tab-actions/dialogs/ActionVariablesDialog.vue'
+import { getPayloadVariablesCount, actionsVariables } from '@renderer/assets/js/actions-variables'
 import ActionCardContextMenu from './ActionCardContextMenu.vue'
+import { useActionsStore } from '@renderer/store/actions'
 import { Action } from '../../../../types/actions'
+import { computed, ref } from 'vue'
+import { v4 as uuidV4 } from 'uuid'
 import { useQuasar } from 'quasar'
 
 const props = defineProps<{
   action: Action
+  connectionId: string
   disableDisconnected?: boolean
   disableWildcard?: boolean
   noGrab?: boolean
@@ -13,9 +19,17 @@ const props = defineProps<{
   editOnly?: boolean
 }>()
 
-defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+
+const actionsStore = useActionsStore()
 
 const $q = useQuasar()
+
+const variablesDialogOpened = ref(false)
+
+const variablesCount = computed(() => {
+  return getPayloadVariablesCount(props.action.payload)
+})
 
 const handleCopyTopic = () => {
   navigator.clipboard.writeText(props.action.topic)
@@ -35,6 +49,26 @@ const handleCopyPayload = () => {
     type: 'positive',
     timeout: 1000
   })
+}
+
+const send = () => {
+  if (props.disableDisconnected) return
+
+  if (variablesCount.value) {
+    variablesDialogOpened.value = true
+    return
+  }
+
+  emit('send')
+
+  const actionCopy = { ...props.action }
+
+  let uuid = uuidV4()
+  if (props.action.payloadFormat === 'json') uuid = JSON.stringify(uuid)
+
+  actionCopy.payload = actionCopy.payload.replace(actionsVariables.uuidV4.regex, uuid)
+
+  actionsStore.sendAction(props.connectionId, actionCopy)
 }
 </script>
 
@@ -76,6 +110,15 @@ const handleCopyPayload = () => {
     <div class="tw-mt-4 tw-flex tw-justify-between">
       <div class="tw-flex tw-gap-4">
         <q-icon
+          v-if="variablesCount"
+          name="fa-solid fa-code"
+          class="color-details tw-mt-2"
+          size="xs"
+        >
+          <q-tooltip class="tw-text-sm">{{ variablesCount }} variables</q-tooltip>
+        </q-icon>
+
+        <q-icon
           v-if="action.description"
           name="fa-solid fa-info-circle"
           class="color-details tw-mt-2"
@@ -106,11 +149,7 @@ const handleCopyPayload = () => {
           <q-tooltip class="tw-text-sm" v-text="action.payload" />
         </q-icon>
       </div>
-      <q-btn
-        color="primary"
-        :disable="disableDisconnected || disableWildcard"
-        @click="$emit('send')"
-      >
+      <q-btn color="primary" :disable="disableDisconnected || disableWildcard" @click="send">
         <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
         <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-sm tw-text-white">
@@ -132,6 +171,11 @@ const handleCopyPayload = () => {
       @copy="$emit('copy')"
       @move="$emit('move')"
       @delete="$emit('delete')"
+    />
+    <action-variables-dialog
+      v-model:opened="variablesDialogOpened"
+      :connection-id="connectionId"
+      :action="action"
     />
   </q-card>
 </template>
