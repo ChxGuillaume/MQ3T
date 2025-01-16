@@ -41,7 +41,7 @@ const handleFavorite = () => {
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-accent" clickable>
+      <q-item :disable="hasLastMessage" class="tw-text-accent" clickable>
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-file-arrow-down" class="tw-mr-2" />
