@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ActionVariablesDialog from '@renderer/components/tab-actions/dialogs/ActionVariablesDialog.vue'
 import { getPayloadVariablesCount, actionsVariables } from '@renderer/assets/js/actions-variables'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import ActionCardContextMenu from './ActionCardContextMenu.vue'
 import { useActionsStore } from '@renderer/store/actions'
 import { Action } from '../../../../types/actions'
@@ -21,6 +22,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
+const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
 
 const $q = useQuasar()
@@ -29,6 +31,11 @@ const variablesDialogOpened = ref(false)
 
 const variablesCount = computed(() => {
   return getPayloadVariablesCount(props.action.payload)
+})
+
+const publishTopic = computed({
+  get: () => mqttTopicsStore.selectedPublishTopic,
+  set: (value) => mqttTopicsStore.setSelectedPublishTopic(value)
 })
 
 const handleCopyTopic = () => {
@@ -68,7 +75,7 @@ const send = () => {
 
   actionCopy.payload = actionCopy.payload.replace(actionsVariables.uuidV4.regex, uuid)
 
-  actionsStore.sendAction(props.connectionId, actionCopy)
+  actionsStore.sendAction(props.connectionId, actionCopy, publishTopic.value)
 }
 </script>
 

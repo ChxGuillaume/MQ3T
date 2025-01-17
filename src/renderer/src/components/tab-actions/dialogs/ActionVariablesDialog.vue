@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { actionsVariables, getPayloadVariablesGrouped } from '@renderer/assets/js/actions-variables'
 import CodePreview from '@renderer/components/tap-topics/CodePreview.vue'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import SplitterIcon from '@renderer/components/SplitterIcon.vue'
 import { useActionsStore } from '@renderer/store/actions'
 import { Action } from '../../../../../types/actions'
@@ -8,6 +9,7 @@ import { computed, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
+const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
 
 const formRef = ref<QForm | null>(null)
@@ -28,6 +30,11 @@ const emit = defineEmits<{
 }>()
 
 const form = ref({})
+
+const publishTopic = computed({
+  get: () => mqttTopicsStore.selectedPublishTopic,
+  set: (value) => mqttTopicsStore.setSelectedPublishTopic(value)
+})
 
 const clearForm = () => {
   form.value = {}
@@ -50,7 +57,7 @@ const handleSend = async () => {
 
   const actionCopy = { ...props.action, payload: transformedPayload.value }
 
-  actionsStore.sendAction(props.connectionId, actionCopy)
+  actionsStore.sendAction(props.connectionId, actionCopy, publishTopic.value)
 
   handleCloseForm()
 }
