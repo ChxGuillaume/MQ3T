@@ -35,7 +35,7 @@ const columns = [
   { name: 'actions', align: 'right', label: '', field: 'actions' }
 ] as QTableProps['columns']
 
-const form = ref<MqttConnection>({
+const form = ref<Required<MqttConnection>>({
   clientKey: `connection-${uuidV4()}`,
   name: '',
   protocol: 'mqtt',
@@ -53,6 +53,13 @@ const form = ref<MqttConnection>({
 
   connectTimeout: 30,
   reconnectPeriod: 1,
+  clean: true,
+
+  properties: {
+    requestResponseInformation: false,
+    requestProblemInformation: false,
+    userProperties: []
+  },
 
   lastWill: {
     topic: '',
@@ -85,6 +92,13 @@ const clearForm = () => {
 
   form.value.connectTimeout = 30
   form.value.reconnectPeriod = 1
+  form.value.clean = true
+
+  form.value.properties = {
+    requestResponseInformation: false,
+    requestProblemInformation: false,
+    userProperties: []
+  }
 
   form.value.lastWill = {
     topic: '',
@@ -220,7 +234,7 @@ watch(
   <q-dialog ref="dialogRef" :model-value="dialogOpened" @hide="handleCloseForm">
     <q-card flat class="dialog-card">
       <q-splitter :model-value="20" disable horizontal>
-        <template v-slot:before>
+        <template #before>
           <q-tabs v-model="settingsCategoryTab" inline-label dense class="text-accent">
             <q-tab name="general" icon="fa-solid fa-list" label="General" />
             <q-tab name="subscriptions" icon="fa-solid fa-message" label="Subscriptions" />
@@ -229,7 +243,7 @@ watch(
           </q-tabs>
         </template>
 
-        <template v-slot:after>
+        <template #after>
           <q-tab-panels
             v-model="settingsCategoryTab"
             animated
@@ -239,7 +253,7 @@ watch(
             transition-next="jump-left"
           >
             <q-tab-panel name="general" class="tw-overflow-x-hidden">
-              <q-form ref="generalSettingsFormRef" class="tw-h-96 tw-flex tw-flex-col tw-gap-4">
+              <q-form ref="generalSettingsFormRef" class="tw-flex tw-h-96 tw-flex-col tw-gap-4">
                 <div>
                   <q-input v-model="form.name" filled label="Name" :rules="rules.name" />
                 </div>
@@ -295,7 +309,7 @@ watch(
                     :rules="rules.clientId"
                   />
                 </div>
-                <div class="tw-grid sm:tw-grid-cols-2 tw-gap-4">
+                <div class="tw-grid tw-gap-4 sm:tw-grid-cols-2">
                   <q-input v-model="form.username" filled label="Username" />
                   <q-input
                     v-model="form.password"
@@ -318,7 +332,7 @@ watch(
 
             <q-tab-panel name="subscriptions">
               <q-card flat class="tw-h-96">
-                <q-card flat class="tw-rounded-xl card-secondary-background">
+                <q-card flat class="card-secondary-background tw-rounded-xl">
                   <q-table
                     class="tw-bg-transparent"
                     :rows="form.subscribedTopics"
@@ -339,7 +353,7 @@ watch(
                               <q-card>
                                 <q-form
                                   ref="addSubscriptionTopicFormRef"
-                                  class="tw-p-2 tw-flex tw-gap-2"
+                                  class="tw-flex tw-gap-2 tw-p-2"
                                 >
                                   <q-input
                                     v-model="addTopicForm.topic"
@@ -348,7 +362,7 @@ watch(
                                     dense
                                     hide-bottom-space
                                     label="Topic"
-                                    class="tw-w-[250px] hide-error-message-slot"
+                                    class="hide-error-message-slot tw-w-[250px]"
                                     :rules="addSubscriptionTopicRules.topic"
                                     @keydown.enter="handleAddTopic"
                                   />
@@ -359,7 +373,7 @@ watch(
                                     dense
                                     hide-bottom-space
                                     label="QoS"
-                                    class="tw-w-[100px] hide-error-message-slot"
+                                    class="hide-error-message-slot tw-w-[100px]"
                                     :rules="addSubscriptionTopicRules.qos"
                                   />
                                   <q-btn
@@ -441,6 +455,13 @@ watch(
                   v-model:protocol-version="form.protocolVersion"
                   v-model:reconnect-period="form.reconnectPeriod"
                   v-model:connect-timeout="form.connectTimeout"
+                  v-model:clean-session="form.clean"
+                  v-model:session-expiry-interval="form.properties.sessionExpiryInterval"
+                  v-model:receive-maximum="form.properties.receiveMaximum"
+                  v-model:maximum-packet-size="form.properties.maximumPacketSize"
+                  v-model:request-response-information="form.properties.requestResponseInformation"
+                  v-model:request-problem-information="form.properties.requestProblemInformation"
+                  v-model:user-properties="form.properties.userProperties"
                   class="tw-h-96"
                 />
               </q-form>
@@ -468,9 +489,9 @@ watch(
                 </div>
                 <div class="tw-mt-4 tw-h-[300px]">
                   <code-editor
+                    ref="codeEditorRef"
                     v-model:language="codeEditorLanguage"
                     v-model="form.lastWill.payload"
-                    ref="codeEditorRef"
                     class="tw-h-[300px]"
                     font-size="14"
                   />

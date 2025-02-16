@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import UserPropertiesTable from '@renderer/components/tab-settings/UserPropertiesTable.vue'
+import { UserProperties } from '../../../../types/mqtt-connection'
 import { computed } from 'vue'
 
-const props = defineProps<{
-  protocolVersion?: number
-  connectTimeout?: number
-  reconnectPeriod?: number
-}>()
+const protocolVersion = defineModel('protocolVersion', { type: Number })
+const connectTimeout = defineModel('connectTimeout', { type: Number })
+const reconnectPeriod = defineModel('reconnectPeriod', { type: Number })
+const cleanSession = defineModel('cleanSession', { type: Boolean })
 
-defineEmits(['update:protocolVersion', 'update:connectTimeout', 'update:reconnectPeriod'])
+const sessionExpiryInterval = defineModel<number | undefined>('sessionExpiryInterval')
+const receiveMaximum = defineModel<number | undefined>('receiveMaximum')
+const maximumPacketSize = defineModel<number | undefined>('maximumPacketSize')
+const requestResponseInformation = defineModel('requestResponseInformation', { type: Boolean })
+const requestProblemInformation = defineModel('requestProblemInformation', { type: Boolean })
+
+const userProperties = defineModel<UserProperties>('userProperties')
 
 const mqttProtocolVersions = [
   { label: 'MQTT 5', value: 5 },
@@ -23,50 +30,93 @@ const advancedSettingsRules = {
   reconnectPeriod: [
     (v: number) => !!v || 'Reconnect period is required',
     (v: number) => v >= 0 || 'Reconnect period must be greater than or equal to 0'
+  ],
+  optionalNumber: [
+    (v?: number) => typeof v !== 'number' || v >= 0 || 'Value must be greater than or equal to 0'
   ]
 }
 
 const selectedProtocolVersion = computed(() => {
-  return mqttProtocolVersions.find((o) => o.value === props.protocolVersion)?.label
+  return mqttProtocolVersions.find((o) => o.value === protocolVersion.value)?.label
 })
 </script>
 
 <template>
-  <q-card flat>
-    <div class="tw-flex tw-gap-4">
+  <q-card flat class="tw-grid tw-auto-rows-min tw-gap-2">
+    <div class="tw-grid tw-grid-cols-4 tw-gap-4">
       <q-select
-        :model-value="protocolVersion"
+        v-model="protocolVersion"
         :options="mqttProtocolVersions"
-        class="tw-min-w-[200px] tw-flex-grow"
         filled
         label="Protocol version"
         emit-value
-        @update:model-value="$emit('update:protocolVersion', $event)"
       >
         <template #selected-item>
           {{ selectedProtocolVersion }}
         </template>
       </q-select>
       <q-input
-        :model-value.number="connectTimeout"
-        class="tw-flex-grow"
+        v-model.number="connectTimeout"
         filled
         label="Connect timeout"
         type="number"
         min="1"
         :rules="advancedSettingsRules.connectTimeout"
-        @update:model-value="$emit('update:connectTimeout', $event)"
       />
       <q-input
-        :model-value.number="reconnectPeriod"
-        class="tw-flex-grow"
+        v-model.number="reconnectPeriod"
         filled
         label="Reconnect period"
         type="number"
         min="0"
         :rules="advancedSettingsRules.reconnectPeriod"
-        @update:model-value="$emit('update:reconnectPeriod', $event)"
       />
+      <q-toggle v-model="cleanSession" class="tw-pb-5" label="Clean session" color="primary" />
+    </div>
+    <div v-if="protocolVersion === 5" class="tw-grid tw-grid-cols-3 tw-gap-4">
+      <q-input
+        v-model.number="sessionExpiryInterval"
+        class="tw-flex-grow"
+        filled
+        label="Session Expiry Interval"
+        type="number"
+        min="0"
+        suffix="s"
+        :rules="advancedSettingsRules.optionalNumber"
+      />
+      <q-input
+        v-model.number="receiveMaximum"
+        class="tw-flex-grow"
+        filled
+        label="Receive Maximum"
+        type="number"
+        min="0"
+        :rules="advancedSettingsRules.optionalNumber"
+      />
+      <q-input
+        v-model.number="maximumPacketSize"
+        class="tw-flex-grow"
+        filled
+        label="Maximum Packet Size"
+        type="number"
+        min="0"
+        :rules="advancedSettingsRules.optionalNumber"
+      />
+    </div>
+    <div v-if="protocolVersion === 5" class="tw-grid tw-grid-cols-2 tw-gap-2">
+      <q-toggle
+        v-model="requestResponseInformation"
+        label="Request Response Information"
+        color="primary"
+      />
+      <q-toggle
+        v-model="requestProblemInformation"
+        label="Request Problem Information"
+        color="primary"
+      />
+    </div>
+    <div v-if="protocolVersion === 5" class="tw-mt-4 tw-grid tw-gap-2">
+      <user-properties-table v-model:user-properties="userProperties" />
     </div>
   </q-card>
 </template>

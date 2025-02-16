@@ -12,7 +12,21 @@ export class MqttClient {
       username: connection.username,
       protocolVersion: connection.protocolVersion,
       connectTimeout: (connection.connectTimeout || 30) * 1000,
-      reconnectPeriod: (connection.reconnectPeriod || 1) * 1000
+      reconnectPeriod: (connection.reconnectPeriod || 1) * 1000,
+      clean: connection.clean
+    }
+
+    if (connection.protocolVersion === 5 && connection.properties) {
+      connectionOptions.properties = {
+        sessionExpiryInterval: connection.properties.sessionExpiryInterval,
+        receiveMaximum: connection.properties.receiveMaximum,
+        maximumPacketSize: connection.properties.maximumPacketSize,
+        requestResponseInformation: connection.properties.requestResponseInformation,
+        requestProblemInformation: connection.properties.requestProblemInformation,
+        userProperties: Object.fromEntries(
+          connection.properties.userProperties.map(({ key, value }) => [key, value])
+        )
+      }
     }
 
     if (connection.lastWill && connection.lastWill.topic) {
