@@ -5,6 +5,8 @@ export type MqttTopicSubscription = {
   qos: 0 | 1 | 2
 }
 
+export type UserProperties = { key: string; value: string }[]
+
 export type MqttConnection = {
   clientKey: string
   name: string
@@ -20,6 +22,18 @@ export type MqttConnection = {
 
   connectTimeout?: number
   reconnectPeriod?: number
+  clean?: boolean
+
+  properties?: {
+    sessionExpiryInterval?: number
+    receiveMaximum?: number
+    maximumPacketSize?: number
+
+    requestResponseInformation: boolean
+    requestProblemInformation: boolean
+
+    userProperties: UserProperties
+  }
 
   lastWill?: {
     topic: string
