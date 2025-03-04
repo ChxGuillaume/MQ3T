@@ -82,6 +82,7 @@ const selectedProtocolVersion = computed(() => {
         type="number"
         min="0"
         suffix="s"
+        :placeholder="!cleanSession ? 'Never Expire' : undefined"
         :rules="advancedSettingsRules.optionalNumber"
       />
       <q-input

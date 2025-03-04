@@ -1,6 +1,12 @@
 import { IClientPublishOptions, OnMessageCallback } from 'mqtt/src/lib/client'
 import { MqttConnection } from '../types/mqtt-connection'
-import mqtt from 'mqtt'
+import mqtt, { IClientOptions } from 'mqtt'
+
+const valueOrUndefined = <T>(value: T | undefined) => {
+  if (!value) return undefined
+
+  return value
+}
 
 export class MqttClient {
   private client: mqtt.MqttClient
@@ -17,16 +23,28 @@ export class MqttClient {
     }
 
     if (connection.protocolVersion === 5 && connection.properties) {
-      connectionOptions.properties = {
-        sessionExpiryInterval: connection.properties.sessionExpiryInterval,
-        receiveMaximum: connection.properties.receiveMaximum,
-        maximumPacketSize: connection.properties.maximumPacketSize,
+      const properties: IClientOptions['properties'] = {
         requestResponseInformation: connection.properties.requestResponseInformation,
-        requestProblemInformation: connection.properties.requestProblemInformation,
-        userProperties: Object.fromEntries(
+        requestProblemInformation: connection.properties.requestProblemInformation
+      }
+
+      const sessionExpiryInterval = valueOrUndefined(connection.properties.sessionExpiryInterval)
+      const receiveMaximum = valueOrUndefined(connection.properties.receiveMaximum)
+      const maximumPacketSize = valueOrUndefined(connection.properties.maximumPacketSize)
+
+      if (sessionExpiryInterval) properties.sessionExpiryInterval = sessionExpiryInterval
+      else if (!connection.clean) properties.sessionExpiryInterval = 4_294_967_295
+
+      if (receiveMaximum) properties.receiveMaximum = receiveMaximum
+      if (maximumPacketSize) properties.maximumPacketSize = maximumPacketSize
+
+      if (connection.properties.userProperties.length) {
+        properties.userProperties = Object.fromEntries(
           connection.properties.userProperties.map(({ key, value }) => [key, value])
         )
       }
+
+      connectionOptions.properties = properties
     }
 
     if (connection.lastWill && connection.lastWill.topic) {
