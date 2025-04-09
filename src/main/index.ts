@@ -21,8 +21,12 @@ const configFilePath = {
   actionsGroups: path.join(configFolder, 'actions-groups.json')
 }
 
-const HAS_AUTO_UPDATE =
-  !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
+const IS_MAS = process.mas
+const IS_WINDOWS_STORE = process.windowsStore
+const IS_SNAP = process.env.SNAP
+const IS_FLATPAK_ID = process.env.FLATPAK_ID
+
+const HAS_AUTO_UPDATE = !IS_MAS && !IS_WINDOWS_STORE && !IS_SNAP && !IS_FLATPAK_ID
 
 fs.mkdirSync(configFolder, { recursive: true })
 
@@ -113,7 +117,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (process.platform !== 'darwin' && !IS_MAS) {
     app.quit()
   }
 })
