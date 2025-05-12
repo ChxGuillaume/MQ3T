@@ -48,6 +48,13 @@ jobs:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: npm run package:linux:snap
 
+      - name: Publish to Snap Store
+        continue-on-error: true
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          snapcraft upload --release stable dist/**/*.snap
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
