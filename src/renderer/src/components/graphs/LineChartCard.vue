@@ -121,11 +121,11 @@ const defaultDataPathText = '<value>'
 </script>
 
 <template>
-  <q-card class="graph-card tw-p-2 tw-border" flat :class="[dataGraph.size]">
-    <q-card-section v-if="showTitle" class="tw-p-2 tw-cursor-grab drag-handle">
+  <q-card class="graph-card tw-border tw-p-2" flat :class="[dataGraph.size]">
+    <q-card-section v-if="showTitle" class="drag-handle tw-cursor-grab tw-p-2">
       <div class="tw-h-7 tw-text-xl">{{ dataGraph.dataPath || defaultDataPathText }}</div>
       <div
-        class="tw-max-w-full tw-text-sm color-details tw-overflow-hidden tw-overflow-ellipsis tw-line-clamp-1"
+        class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-sm"
         :title="dataGraph.topic"
         v-text="dataGraph.topic"
       />
@@ -139,7 +139,7 @@ const defaultDataPathText = '<value>'
 
     <q-btn
       v-if="showContextMenu"
-      class="tw-absolute tw-top-1 tw-right-1 tw-text-neutral-500"
+      class="tw-absolute tw-right-1 tw-top-1 tw-text-neutral-500"
       round
       flat
       size="sm"
@@ -168,19 +168,19 @@ const defaultDataPathText = '<value>'
 </template>
 
 <style scoped lang="less">
-.graph-card.small {
+.main-window .graph-card.small {
   @apply tw-col-span-1;
 }
 
-.graph-card.medium {
+.main-window .graph-card.medium {
   @apply tw-col-span-1 xl:tw-col-span-2;
 }
 
-.graph-card.large {
+.main-window .graph-card.large {
   @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
 }
 
 .chart {
-  @apply tw-w-full tw-h-full;
+  @apply tw-h-full tw-w-full;
 }
 </style>

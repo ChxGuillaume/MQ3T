@@ -31,13 +31,13 @@ const HAS_AUTO_UPDATE = !IS_MAS && !IS_WINDOWS_STORE && !IS_SNAP && !IS_FLATPAK_
 fs.mkdirSync(configFolder, { recursive: true })
 
 let mainWindow: BrowserWindow | null = null
+let graphWindow: BrowserWindow | null = null
 function createWindow(): void {
   let icon = iconIco
 
   if (process.platform === 'darwin') icon = iconIcns
 
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
+  const windowConfig = {
     width: 1300,
     minWidth: 800,
     height: 800,
@@ -49,7 +49,10 @@ function createWindow(): void {
       preload: path.join(__dirname, '../preload/index.js'),
       sandbox: false
     }
-  })
+  }
+
+  mainWindow = new BrowserWindow(windowConfig)
+  graphWindow = new BrowserWindow(windowConfig)
 
   mainWindow.removeMenu()
 
@@ -65,6 +68,10 @@ function createWindow(): void {
     mainWindow?.show()
   })
 
+  graphWindow.on('ready-to-show', () => {
+    graphWindow?.show()
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url).then()
 
@@ -74,11 +81,21 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).then(() => {
+    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`).then(() => {
       initAutoUpdater()
     })
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then(() => {
+      initAutoUpdater()
+    })
+  }
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    graphWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/graph.html`).then(() => {
+      initAutoUpdater()
+    })
+  } else {
+    graphWindow.loadFile(path.join(__dirname, '../renderer/graph.html')).then(() => {
       initAutoUpdater()
     })
   }
@@ -101,7 +118,7 @@ app.whenReady().then(() => {
   })
 
   installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
-    .then((name) => console.log(`Added Extension:  ${name}`))
+    .then((extension) => console.log(`Added Extension: ${extension.name}`))
     .catch((err) => console.log('An error occurred: ', err))
 
   createWindow()
@@ -307,6 +324,14 @@ const initIpcMain = () => {
 
   ipcMain.on('save-actions-groups', (_, actionsGroups) => {
     fs.writeFileSync(configFilePath.actionsGroups, JSON.stringify(actionsGroups))
+  })
+
+  ipcMain.on('show-graph-window', () => graphWindow?.show())
+  ipcMain.on('hide-graph-window', () => graphWindow?.hide())
+
+  ipcMain.on('graph-window-event', (_, event) => {
+    console.log(event)
+    graphWindow?.webContents.send('graph-window-event-2', event)
   })
 }
 

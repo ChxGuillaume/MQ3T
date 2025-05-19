@@ -236,6 +236,9 @@ onUnmounted(() => {
   <import-actions />
   <import-chain-actions />
   <import-actions-groups />
+
+  <q-btn @click="ElectronApi.showGraphWindow">Show</q-btn>
+  <q-btn @click="ElectronApi.hideGraphWindow">Hide</q-btn>
 </template>
 
 <style lang="less">

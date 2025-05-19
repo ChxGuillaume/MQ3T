@@ -38,6 +38,14 @@ export default defineConfig({
           return `${base}/resources/monaco-editor`
         }
       })
-    ]
+    ],
+    build: {
+      rollupOptions: {
+        input: {
+          main_window: resolve('src/renderer/index.html'),
+          graph_window: resolve('src/renderer/graph.html')
+        }
+      }
+    }
   }
 })

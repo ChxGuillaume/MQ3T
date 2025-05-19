@@ -44,10 +44,17 @@ const api: ElectronIpc = {
   handleUpdateError: (callback) => ipcRenderer.on('updating-error', callback as any),
   handleUpdateDownloadProgress: (callback) =>
     ipcRenderer.on('update-download-progress', callback as any),
-  handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any)
+  handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any),
+
+  showGraphWindow: () => ipcRenderer.send('show-graph-window'),
+  hideGraphWindow: () => ipcRenderer.send('hide-graph-window'),
+
+  sendGraphData: (value) => ipcRenderer.send('graph-window-event', value),
+  handleGraphData: (callback) => ipcRenderer.on('graph-window-event-2', callback as any)
 }
 
-const hasAutoUpdate = !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
+const hasAutoUpdate =
+  !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
 
 if (process.contextIsolated) {
   try {

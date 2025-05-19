@@ -8,6 +8,7 @@ import {
   ConnectionsChainActions,
   ConnectionsActionsGroups
 } from './actions'
+import { DataGraph } from '../renderer/src/store/data-graphs'
 
 export type AppVersionCallback = (event: never, value: string) => void
 
@@ -71,4 +72,12 @@ export type ElectronIpc = {
   handleUpdateError: (callback: (event: never, value: Error) => void) => void
   handleUpdateDownloadProgress: (callback: (event: never, value: ProgressInfo) => void) => void
   handleUpdateDownloaded: (callback: (event: never, value: UpdateDownloadedEvent) => void) => void
+
+  showGraphWindow: () => void
+  hideGraphWindow: () => void
+
+  sendGraphData: (value: { event: string; data: DataGraph[] }) => void
+  handleGraphData: (
+    callback: (event: never, value: { event: string; data: DataGraph[] }) => void
+  ) => void
 }
