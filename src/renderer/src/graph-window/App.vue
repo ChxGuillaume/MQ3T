@@ -36,15 +36,7 @@ onMounted(() => {
       break
   }
 
-  ElectronApi.handleGraphData((_, value) => {
-    console.log('graph data', value)
-
-    if (value.event === 'add-data-graph') {
-      dataGraphStore.setDataGraphs(value.data)
-    } else {
-      values.value.push(value)
-    }
-  })
+  dataGraphStore.initStore()
 })
 </script>
 

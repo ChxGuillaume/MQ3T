@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { GridComponent, TitleComponent, TooltipComponent } from 'echarts/components'
-import { DataGraph, useDataGraphsStore } from '../../store/data-graphs'
+import { useDataGraphsStore } from '../../store/data-graphs'
+import { DataGraph } from '../../../../types/data-graph'
 import { getDataFromPath } from '../../assets/js/parse-json-for-glyphs'
 import LineChartContextMenu from './LineChartContextMenu.vue'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'

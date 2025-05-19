@@ -1,9 +1,10 @@
 import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
-import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import iconIcns from '../../build/logo/mac512pts.icns?asset'
 import iconIco from '../../build/logo/win512pts.ico?asset'
 import installExtension from 'electron-devtools-installer'
+import { registerDataGraphHandlers } from './data-graphs'
 import { autoUpdater } from 'electron-updater'
 import { MqttClient } from './mqtt-client'
 import FileFilter = Electron.FileFilter
@@ -57,6 +58,9 @@ function createWindow(): void {
   mainWindow.removeMenu()
 
   initIpcMain()
+
+  // Register data graph handlers
+  registerDataGraphHandlers(mainWindow, graphWindow)
 
   mainWindow.on('close', () => {
     for (const client of mqttClients.values()) {
@@ -328,11 +332,6 @@ const initIpcMain = () => {
 
   ipcMain.on('show-graph-window', () => graphWindow?.show())
   ipcMain.on('hide-graph-window', () => graphWindow?.hide())
-
-  ipcMain.on('graph-window-event', (_, event) => {
-    console.log(event)
-    graphWindow?.webContents.send('graph-window-event-2', event)
-  })
 }
 
 const initAutoUpdater = () => {

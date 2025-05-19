@@ -32,9 +32,15 @@ const api: ElectronIpc = {
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
   saveChainActions: (chainActions) => ipcRenderer.send('save-chain-actions', chainActions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
+  saveDataGraphs: (graphs) => ipcRenderer.send('save-data-graphs', graphs),
+  updateDataGraph: (params) => ipcRenderer.send('update-data-graph', params),
+  getDataGraphsSync: () => ipcRenderer.sendSync('get-data-graphs-sync'),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),
   handleLoadChainActions: (callback) => ipcRenderer.on('load-chain-actions', callback as any),
   handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any),
+  handleDataGraphsUpdate: (callback) => ipcRenderer.on('load-data-graphs', callback as any),
+  handleDataGraphPartialUpdate: (callback) =>
+    ipcRenderer.on('update-data-graph-partial', callback as any),
 
   debug: (callback) => ipcRenderer.on('debug', callback as any),
 
@@ -47,10 +53,7 @@ const api: ElectronIpc = {
   handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any),
 
   showGraphWindow: () => ipcRenderer.send('show-graph-window'),
-  hideGraphWindow: () => ipcRenderer.send('hide-graph-window'),
-
-  sendGraphData: (value) => ipcRenderer.send('graph-window-event', value),
-  handleGraphData: (callback) => ipcRenderer.on('graph-window-event-2', callback as any)
+  hideGraphWindow: () => ipcRenderer.send('hide-graph-window')
 }
 
 const hasAutoUpdate =

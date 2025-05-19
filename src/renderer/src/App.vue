@@ -15,12 +15,14 @@ import TabActions from './tabs/TabActions.vue'
 import TabTopics from './tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
 import ImportChainActions from '@renderer/components/ImportChainActions.vue'
+import { useDataGraphsStore } from './store/data-graphs'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
+const dataGraphsStore = useDataGraphsStore()
 
 const currentTab = computed({
   get: () => appStore.currentTab,
@@ -167,6 +169,9 @@ onMounted(() => {
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
   })
+
+  // Initialize data graphs store
+  dataGraphsStore.initStore()
 
   window.addEventListener('keyup', handleKeyUp)
 })

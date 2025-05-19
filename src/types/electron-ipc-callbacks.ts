@@ -8,7 +8,7 @@ import {
   ConnectionsChainActions,
   ConnectionsActionsGroups
 } from './actions'
-import { DataGraph } from '../renderer/src/store/data-graphs'
+import { DataGraph } from './data-graph'
 
 export type AppVersionCallback = (event: never, value: string) => void
 
@@ -51,6 +51,9 @@ export type ElectronIpc = {
   saveActions: (actions: ConnectionsActionsFile) => void
   saveChainActions: (chainActions: ConnectionsChainActions) => void
   saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
+  saveDataGraphs: (graphs: DataGraph[]) => void
+  updateDataGraph: (params: { id: string; updates: Partial<DataGraph> }) => void
+  getDataGraphsSync: () => DataGraph[]
 
   importData: (fileFilter?: FileFilter[]) => void
   handleImportData: (callback: (event: never, value: string) => void) => void
@@ -62,6 +65,10 @@ export type ElectronIpc = {
   handleLoadChainActions: (callback: (event: never, value: ConnectionsChainActions) => void) => void
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
+  ) => void
+  handleDataGraphsUpdate: (callback: (event: never, value: DataGraph[]) => void) => void
+  handleDataGraphPartialUpdate: (
+    callback: (event: never, value: { id: string; updates: Partial<DataGraph> }) => void
   ) => void
 
   debug: (callback: (event: never, ...args: never[]) => void) => void
@@ -75,9 +82,4 @@ export type ElectronIpc = {
 
   showGraphWindow: () => void
   hideGraphWindow: () => void
-
-  sendGraphData: (value: { event: string; data: DataGraph[] }) => void
-  handleGraphData: (
-    callback: (event: never, value: { event: string; data: DataGraph[] }) => void
-  ) => void
 }
