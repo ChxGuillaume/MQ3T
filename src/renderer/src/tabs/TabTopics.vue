@@ -19,6 +19,7 @@ import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { scroll } from 'quasar'
+import { ElectronApi } from '@renderer/assets/js/electron-api'
 
 const { setVerticalScrollPosition } = scroll
 
@@ -384,6 +385,8 @@ const showTabsText = computed(() => {
         </template>
 
         <template #after>
+          <q-btn @click="ElectronApi.showGraphWindow">Show</q-btn>
+          <q-btn @click="ElectronApi.hideGraphWindow">Hide</q-btn>
           <graph-list />
         </template>
       </q-splitter>

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { GridComponent, TitleComponent, TooltipComponent } from 'echarts/components'
-import { useDataGraphsStore } from '../../store/data-graphs'
-import { DataGraph } from '../../../../types/data-graph'
+import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { getDataFromPath } from '../../assets/js/parse-json-for-glyphs'
 import LineChartContextMenu from './LineChartContextMenu.vue'
-import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useDataGraphsStore } from '../../store/data-graphs'
+import { DataGraph } from '../../../../types/data-graph'
 import formatNumber from '../../assets/js/format-number'
 import { useAppStore } from '../../store/app-store'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import colors from 'tailwindcss/colors'
+import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { use } from 'echarts/core'
 import moment from 'moment/moment'
@@ -22,6 +23,7 @@ const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
 
+const route = useRoute()
 const $q = useQuasar()
 
 const props = defineProps<{
@@ -119,7 +121,7 @@ const options = computed(() => {
 })
 
 const showGraph = computed(() => {
-  return appStore.currentTab === 'topics'
+  return appStore.currentTab === 'topics' || route.path === '/graph'
 })
 
 const defaultDataPathText = '<value>'
@@ -172,17 +174,31 @@ const defaultDataPathText = '<value>'
   </q-card>
 </template>
 
-<style scoped lang="less">
-.main-window .graph-card.small {
-  @apply tw-col-span-1;
-}
+<style lang="less">
+.graph-card {
+  .main-view &.small {
+    @apply tw-col-span-1;
+  }
 
-.main-window .graph-card.medium {
-  @apply tw-col-span-1 xl:tw-col-span-2;
-}
+  .main-view &.medium {
+    @apply tw-col-span-1 xl:tw-col-span-2;
+  }
 
-.main-window .graph-card.large {
-  @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+  .main-view &.large {
+    @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+  }
+
+  .graph-view &.small {
+    @apply tw-col-span-1;
+  }
+
+  .graph-view &.medium {
+    @apply tw-col-span-1 xl:tw-col-span-2;
+  }
+
+  .graph-view &.large {
+    @apply tw-col-span-1 xl:tw-col-span-3 2xl:tw-col-span-5;
+  }
 }
 
 .chart {

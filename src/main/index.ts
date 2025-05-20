@@ -84,25 +84,18 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`).then(() => {
-      initAutoUpdater()
-    })
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then(() => {
-      initAutoUpdater()
-    })
+  const loadWindow = async (window: BrowserWindow, routePath = '/') => {
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      await window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html#${routePath}`)
+    } else {
+      await window.loadFile(path.join(__dirname, `../renderer/index.html#${routePath}`))
+    }
   }
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    graphWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/graph.html`).then(() => {
-      initAutoUpdater()
-    })
-  } else {
-    graphWindow.loadFile(path.join(__dirname, '../renderer/graph.html')).then(() => {
-      initAutoUpdater()
-    })
-  }
+  void loadWindow(mainWindow)
+  void loadWindow(graphWindow, '/graph')
+
+  initAutoUpdater()
 }
 
 app.commandLine.appendSwitch('disable-features', 'WidgetLayering')

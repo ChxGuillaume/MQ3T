@@ -1,27 +1,10 @@
+@import "./scrollbar";
+
 body, #app {
   height: 100vh;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-
 .body--light {
-  /* Track */
-  ::-webkit-scrollbar-track {
-    @apply tw-bg-neutral-200;
-  }
-
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    @apply tw-bg-neutral-400 tw-transition-colors;
-  }
-
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    @apply tw-bg-neutral-500;
-  }
-
   .card-secondary-background {
     background: #f5f5f5;
   }
@@ -36,21 +19,6 @@ body, #app {
 }
 
 .body--dark {
-  /* Track */
-  ::-webkit-scrollbar-track {
-    @apply tw-bg-neutral-800;
-  }
-
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    @apply tw-bg-neutral-700 tw-transition-colors;
-  }
-
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    @apply tw-bg-neutral-600;
-  }
-
   .card-secondary-background {
     background: #262626;
   }

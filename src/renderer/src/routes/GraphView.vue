@@ -45,9 +45,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="tw-flex tw-h-full tw-flex-col tw-content-between">
+  <div class="graph-view tw-flex tw-h-full tw-flex-col tw-content-between">
     <graph-list />
   </div>
 </template>
 
-<style lang="less"></style>
+<style lang="less">
+@import '../assets/css/scrollbar';
+</style>
