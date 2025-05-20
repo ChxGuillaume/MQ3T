@@ -20,9 +20,9 @@ import { useDataGraphsStore } from './store/data-graphs'
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
+const dataGraphsStore = useDataGraphsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
-const dataGraphsStore = useDataGraphsStore()
 
 const currentTab = computed({
   get: () => appStore.currentTab,
@@ -147,11 +147,8 @@ onMounted(() => {
     }
   })
 
-  ElectronApi.handleMqttMessage((_, value) => {
-    mqttTopicsStore.addMessage(value.clientKey, value.topic, value.message, {
-      qos: value.packet.qos,
-      retained: value.packet.retain
-    })
+  ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
+    mqttTopicsStore.addMessage(clientKey, topic, message, packet)
   })
 
   ElectronApi.handleLoadMqttConnections((_, connections) => {

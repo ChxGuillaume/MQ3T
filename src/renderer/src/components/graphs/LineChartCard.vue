@@ -4,7 +4,7 @@ import { useDataGraphsStore } from '../../store/data-graphs'
 import { DataGraph } from '../../../../types/data-graph'
 import { getDataFromPath } from '../../assets/js/parse-json-for-glyphs'
 import LineChartContextMenu from './LineChartContextMenu.vue'
-import { useMqttTopicsStore } from '../../store/mqtt-topics'
+import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import formatNumber from '../../assets/js/format-number'
 import { useAppStore } from '../../store/app-store'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -37,22 +37,26 @@ defineEmits<{
 const girdColor = computed(() => ($q.dark.isActive ? colors.neutral[700] : colors.neutral[200]))
 
 const messagesForGraph = computed(() => {
-  const clientKey = props.dataGraph.clientKey
-  const topic = props.dataGraph.topic
-  const dataPath = props.dataGraph.dataPath
+  const { clientKey, topic, dataPath } = props.dataGraph
+
+  console.log(clientKey, topic, dataPath)
 
   if (!clientKey || !topic) return []
 
-  const messages = mqttTopicsStore.topicsMessages[clientKey][topic] || []
+  const messages = mqttTopicsStore.topicsMessages[clientKey]?.[topic] ?? []
 
-  return messages
-    .filter((m) => m.dataType === 'json')
-    .map((m) => ({
-      value: getDataFromPath(JSON.parse(m.message), dataPath),
-      date: m.createdAt
-    }))
-    .filter((d) => d.value !== null)
+  return transformMessages(messages, dataPath)
 })
+
+const transformMessages = (messages: MqttMessage[], dataPath: string) => {
+  return messages
+    .filter((message): message is MqttMessage & { dataType: 'json' } => message.dataType === 'json')
+    .map((message) => ({
+      value: getDataFromPath(JSON.parse(message.message), dataPath),
+      date: message.createdAt
+    }))
+    .filter((data) => data.value !== null)
+}
 
 const options = computed(() => {
   const sortedData = messagesForGraph.value

@@ -196,13 +196,16 @@ const createConnection = async (connection: MqttConnection) => {
   })
 
   clientMqtt.onMessage((topic, payload, packet) => {
-    sendMessageToRenderer('mqtt-message', {
+    const message = {
       clientKey,
       topic,
       payload,
       packet,
       message: payload.toString()
-    })
+    }
+
+    sendMessageToRenderer('mqtt-message', message)
+    graphWindow?.webContents.send('mqtt-message', message)
   })
 
   clientMqtt.onDisconnect(() => {

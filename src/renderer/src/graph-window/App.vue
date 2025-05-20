@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { useDataGraphsStore } from '@renderer/store/data-graphs'
 import GraphList from '../components/tap-topics/GraphList.vue'
 import { ElectronApi } from '../assets/js/electron-api'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useDataGraphsStore } from '@renderer/store/data-graphs'
 
 const $q = useQuasar()
 
+const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphStore = useDataGraphsStore()
 
 watch(
@@ -18,8 +20,6 @@ watch(
     else document.documentElement.classList.remove(classDark)
   }
 )
-
-const values = ref<any[]>([])
 
 onMounted(() => {
   const storedTheme = localStorage.getItem('darkMode')
@@ -37,14 +37,15 @@ onMounted(() => {
   }
 
   dataGraphStore.initStore()
+
+  ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
+    mqttTopicsStore.addMessage(clientKey, topic, message, packet)
+  })
 })
 </script>
 
 <template>
   <div class="tw-flex tw-h-full tw-flex-col tw-content-between">
-    <div class="tw-flex-grow">
-      {{ values }}
-    </div>
     <graph-list />
   </div>
 </template>
