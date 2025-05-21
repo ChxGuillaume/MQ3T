@@ -41,8 +41,6 @@ const girdColor = computed(() => ($q.dark.isActive ? colors.neutral[700] : color
 const messagesForGraph = computed(() => {
   const { clientKey, topic, dataPath } = props.dataGraph
 
-  console.log(clientKey, topic, dataPath)
-
   if (!clientKey || !topic) return []
 
   const messages = mqttTopicsStore.topicsMessages[clientKey]?.[topic] ?? []
