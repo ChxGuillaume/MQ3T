@@ -6,6 +6,9 @@ export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1920px'
+      },
       colors: {
         primary: '#650164',
         secondary: '#75E67C',

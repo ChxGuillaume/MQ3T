@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { GridComponent, TitleComponent, TooltipComponent } from 'echarts/components'
-import { DataGraph, useDataGraphsStore } from '../../store/data-graphs'
+import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { getDataFromPath } from '../../assets/js/parse-json-for-glyphs'
 import LineChartContextMenu from './LineChartContextMenu.vue'
-import { useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useDataGraphsStore } from '../../store/data-graphs'
+import { DataGraph } from '../../../../types/data-graph'
 import formatNumber from '../../assets/js/format-number'
 import { useAppStore } from '../../store/app-store'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import colors from 'tailwindcss/colors'
+import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { use } from 'echarts/core'
 import moment from 'moment/moment'
@@ -21,6 +23,7 @@ const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
 
+const route = useRoute()
 const $q = useQuasar()
 
 const props = defineProps<{
@@ -36,22 +39,24 @@ defineEmits<{
 const girdColor = computed(() => ($q.dark.isActive ? colors.neutral[700] : colors.neutral[200]))
 
 const messagesForGraph = computed(() => {
-  const clientKey = props.dataGraph.clientKey
-  const topic = props.dataGraph.topic
-  const dataPath = props.dataGraph.dataPath
+  const { clientKey, topic, dataPath } = props.dataGraph
 
   if (!clientKey || !topic) return []
 
-  const messages = mqttTopicsStore.topicsMessages[clientKey][topic] || []
+  const messages = mqttTopicsStore.topicsMessages[clientKey]?.[topic] ?? []
 
-  return messages
-    .filter((m) => m.dataType === 'json')
-    .map((m) => ({
-      value: getDataFromPath(JSON.parse(m.message), dataPath),
-      date: m.createdAt
-    }))
-    .filter((d) => d.value !== null)
+  return transformMessages(messages, dataPath)
 })
+
+const transformMessages = (messages: MqttMessage[], dataPath: string) => {
+  return messages
+    .filter((message): message is MqttMessage & { dataType: 'json' } => message.dataType === 'json')
+    .map((message) => ({
+      value: getDataFromPath(JSON.parse(message.message), dataPath),
+      date: message.createdAt
+    }))
+    .filter((data) => data.value !== null)
+}
 
 const options = computed(() => {
   const sortedData = messagesForGraph.value
@@ -114,18 +119,18 @@ const options = computed(() => {
 })
 
 const showGraph = computed(() => {
-  return appStore.currentTab === 'topics'
+  return appStore.currentTab === 'topics' || route.path === '/graph'
 })
 
 const defaultDataPathText = '<value>'
 </script>
 
 <template>
-  <q-card class="graph-card tw-p-2 tw-border" flat :class="[dataGraph.size]">
-    <q-card-section v-if="showTitle" class="tw-p-2 tw-cursor-grab drag-handle">
+  <q-card class="graph-card tw-border tw-p-2" flat :class="[dataGraph.size]">
+    <q-card-section v-if="showTitle" class="drag-handle tw-cursor-grab tw-p-2">
       <div class="tw-h-7 tw-text-xl">{{ dataGraph.dataPath || defaultDataPathText }}</div>
       <div
-        class="tw-max-w-full tw-text-sm color-details tw-overflow-hidden tw-overflow-ellipsis tw-line-clamp-1"
+        class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-sm"
         :title="dataGraph.topic"
         v-text="dataGraph.topic"
       />
@@ -139,7 +144,7 @@ const defaultDataPathText = '<value>'
 
     <q-btn
       v-if="showContextMenu"
-      class="tw-absolute tw-top-1 tw-right-1 tw-text-neutral-500"
+      class="tw-absolute tw-right-1 tw-top-1 tw-text-neutral-500"
       round
       flat
       size="sm"
@@ -167,20 +172,34 @@ const defaultDataPathText = '<value>'
   </q-card>
 </template>
 
-<style scoped lang="less">
-.graph-card.small {
-  @apply tw-col-span-1;
-}
+<style lang="less">
+.graph-card {
+  .main-view &.small {
+    @apply tw-col-span-1;
+  }
 
-.graph-card.medium {
-  @apply tw-col-span-1 xl:tw-col-span-2;
-}
+  .main-view &.medium {
+    @apply tw-col-span-1 xl:tw-col-span-2;
+  }
 
-.graph-card.large {
-  @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+  .main-view &.large {
+    @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+  }
+
+  .graph-view &.small {
+    @apply tw-col-span-1;
+  }
+
+  .graph-view &.medium {
+    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-2;
+  }
+
+  .graph-view &.large {
+    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-3 2xl:tw-col-span-5;
+  }
 }
 
 .chart {
-  @apply tw-w-full tw-h-full;
+  @apply tw-h-full tw-w-full;
 }
 </style>

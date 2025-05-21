@@ -2,6 +2,7 @@ import { Notify, Quasar } from 'quasar'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
+import { router } from '@renderer/router'
 import './assets/js/init-monaco-editor'
 import App from './App.vue'
 
@@ -38,5 +39,7 @@ app.use(pinia)
 app.use(Quasar, {
   plugins: { Notify }
 })
+
+app.use(router)
 
 app.mount('#app')
