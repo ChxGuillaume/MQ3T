@@ -32,7 +32,7 @@ const graphs = computed({
 
 <style scoped lang="less">
 .graph-list {
-  @apply tw-grid tw-gap-2 tw-p-2;
+  @apply tw-grid tw-gap-2;
 
   .main-view & {
     @apply tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3;

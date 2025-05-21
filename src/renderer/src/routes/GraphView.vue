@@ -45,7 +45,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="graph-view tw-flex tw-h-full tw-flex-col tw-content-between">
+  <div class="graph-view tw-flex tw-h-full tw-flex-col tw-content-between tw-p-2">
     <graph-list />
   </div>
 </template>

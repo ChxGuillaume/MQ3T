@@ -80,6 +80,9 @@ export type ElectronIpc = {
   handleUpdateDownloadProgress: (callback: (event: never, value: ProgressInfo) => void) => void
   handleUpdateDownloaded: (callback: (event: never, value: UpdateDownloadedEvent) => void) => void
 
+  getGraphWindowShown: () => boolean
+  handleGraphWindowShown: (callback: (event: never, value: boolean) => void) => void
+
   showGraphWindow: () => void
   hideGraphWindow: () => void
 }

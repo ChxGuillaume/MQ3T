@@ -52,6 +52,10 @@ const api: ElectronIpc = {
     ipcRenderer.on('update-download-progress', callback as any),
   handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any),
 
+  getGraphWindowShown: () => ipcRenderer.sendSync('get-graph-window-shown'),
+  handleGraphWindowShown: (callback) =>
+    ipcRenderer.on('update-graph-window-shown', callback as any),
+
   showGraphWindow: () => ipcRenderer.send('show-graph-window'),
   hideGraphWindow: () => ipcRenderer.send('hide-graph-window')
 }

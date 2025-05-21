@@ -1,9 +1,10 @@
 import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
+import { getGraphWindow, initGraphWindowHandlers } from './windowGraph'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
-import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initDataGraphHandlers } from './stores/dataGraph'
+import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
@@ -28,7 +29,6 @@ const IS_MAS = process.mas
 fs.mkdirSync(configFolder, { recursive: true })
 
 let mainWindow: BrowserWindow | null
-let graphWindow: BrowserWindow | null
 
 app.commandLine.appendSwitch('disable-features', 'WidgetLayering')
 
@@ -51,7 +51,6 @@ app.whenReady().then(() => {
     .catch((err) => console.log('An error occurred: ', err))
 
   mainWindow = createWindow()
-  graphWindow = createWindow('/graph')
 
   mainWindow?.on('close', () => {
     for (const client of mqttClients.values()) {
@@ -66,6 +65,7 @@ app.whenReady().then(() => {
   })
 
   initAutoUpdater(mainWindow)
+  initGraphWindowHandlers(mainWindow)
   initDataGraphHandlers()
 })
 
@@ -140,7 +140,7 @@ const createConnection = async (connection: MqttConnection) => {
     }
 
     sendMessageToRenderer('mqtt-message', message)
-    graphWindow?.webContents.send('mqtt-message', message)
+    getGraphWindow()?.webContents.send('mqtt-message', message)
   })
 
   clientMqtt.onDisconnect(() => {
@@ -267,9 +267,6 @@ const initIpcMain = () => {
   ipcMain.on('save-actions-groups', (_, actionsGroups) => {
     fs.writeFileSync(configFilePath.actionsGroups, JSON.stringify(actionsGroups))
   })
-
-  ipcMain.on('show-graph-window', () => graphWindow?.show())
-  ipcMain.on('hide-graph-window', () => graphWindow?.hide())
 }
 
 initIpcMain()

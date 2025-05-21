@@ -6,6 +6,7 @@ import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
+import { ElectronApi } from '@renderer/assets/js/electron-api'
 import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
@@ -17,9 +18,8 @@ import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
-import { ElectronApi } from '@renderer/assets/js/electron-api'
 
 const { setVerticalScrollPosition } = scroll
 
@@ -38,10 +38,19 @@ const selectedConnection = ref('')
 
 const topicTabRecord = ref<Record<string, string>>({})
 
+const graphWindowShown = ref(ElectronApi.getGraphWindowShown())
+
+const graphListVisible = computed(() => {
+  if (graphWindowShown.value) return false
+
+  return !!dataGraphsStore.dataGraph.length
+})
+
 const graphSplitterData = ref(40)
 const graphSplitter = computed({
   get: () => {
-    if (!dataGraphsStore.dataGraph.length) return 0
+    console.log(graphListVisible.value)
+    if (!graphListVisible.value) return 0
     return graphSplitterData.value
   },
   set: (value) => {
@@ -298,6 +307,10 @@ const tabIconSize = computed(() => {
 const showTabsText = computed(() => {
   return visualizationSplitter.value > 480
 })
+
+onMounted(() => {
+  ElectronApi.handleGraphWindowShown((_, shown) => (graphWindowShown.value = shown))
+})
 </script>
 
 <template>
@@ -316,7 +329,7 @@ const showTabsText = computed(() => {
         :limits="[0, 90]"
         horizontal
         reverse
-        :disable="!dataGraphsStore.dataGraph.length"
+        :disable="!graphListVisible"
       >
         <template #before>
           <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
@@ -378,16 +391,17 @@ const showTabsText = computed(() => {
         </template>
 
         <template #separator>
-          <splitter-icon
-            v-if="dataGraphsStore.dataGraph.length"
-            @click:double="graphSplitter = 40"
-          />
+          <splitter-icon v-if="graphListVisible" @click:double="graphSplitter = 40" />
         </template>
 
         <template #after>
-          <q-btn @click="ElectronApi.showGraphWindow">Show</q-btn>
-          <q-btn @click="ElectronApi.hideGraphWindow">Hide</q-btn>
-          <graph-list />
+          <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
+            <graph-list />
+            <q-btn class="tw-px-5" @click="ElectronApi.showGraphWindow" dense>
+              <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
+              Show in external window
+            </q-btn>
+          </div>
         </template>
       </q-splitter>
     </template>
