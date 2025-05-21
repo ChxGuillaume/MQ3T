@@ -18,7 +18,7 @@ import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
 
 const { setVerticalScrollPosition } = scroll
