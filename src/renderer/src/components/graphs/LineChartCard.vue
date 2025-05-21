@@ -191,11 +191,11 @@ const defaultDataPathText = '<value>'
   }
 
   .graph-view &.medium {
-    @apply tw-col-span-1 xl:tw-col-span-2;
+    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-2;
   }
 
   .graph-view &.large {
-    @apply tw-col-span-1 xl:tw-col-span-3 2xl:tw-col-span-5;
+    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-3 2xl:tw-col-span-5;
   }
 }
 

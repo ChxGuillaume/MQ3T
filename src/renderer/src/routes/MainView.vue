@@ -167,7 +167,6 @@ onMounted(() => {
     actionsStore.setActionsGroups(actionGroups)
   })
 
-  // Initialize data graphs store
   dataGraphsStore.initStore()
 
   window.addEventListener('keyup', handleKeyUp)

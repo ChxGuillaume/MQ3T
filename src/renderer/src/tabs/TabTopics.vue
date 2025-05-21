@@ -49,7 +49,6 @@ const graphListVisible = computed(() => {
 const graphSplitterData = ref(40)
 const graphSplitter = computed({
   get: () => {
-    console.log(graphListVisible.value)
     if (!graphListVisible.value) return 0
     return graphSplitterData.value
   },

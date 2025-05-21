@@ -6,16 +6,12 @@ import { is } from '@electron-toolkit/utils'
 import path from 'path'
 
 export const createWindow = (routePath = '/') => {
-  let icon = iconIco
-
-  if (process.platform === 'darwin') icon = iconIcns
-
   const windowConfig = {
     width: 1300,
     minWidth: 800,
     height: 800,
     minHeight: 600,
-    icon,
+    icon: process.platform === 'darwin' ? iconIcns : iconIco,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
