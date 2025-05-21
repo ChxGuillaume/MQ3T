@@ -219,7 +219,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       // Removing old messages when the limit is reached
       const amountMessagesToRemove =
         this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages + 1
-      console.log(settingsStore.maxMessages)
 
       if (amountMessagesToRemove > 1) {
         this.topicsMessages[clientKey][topic].sort(
