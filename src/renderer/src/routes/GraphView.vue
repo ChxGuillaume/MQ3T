@@ -37,10 +37,13 @@ onMounted(() => {
   }
 
   dataGraphStore.initStore()
+  mqttTopicsStore.initStore()
 
   ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
     mqttTopicsStore.addMessage(clientKey, topic, message, packet)
   })
+
+  ElectronApi.requestMqttMessages()
 })
 </script>
 

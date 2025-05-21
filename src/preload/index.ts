@@ -57,7 +57,12 @@ const api: ElectronIpc = {
     ipcRenderer.on('update-graph-window-shown', callback as any),
 
   showGraphWindow: () => ipcRenderer.send('show-graph-window'),
-  hideGraphWindow: () => ipcRenderer.send('hide-graph-window')
+  hideGraphWindow: () => ipcRenderer.send('hide-graph-window'),
+
+  transferMqttMessages: (messages) => ipcRenderer.send('transfer-mqtt-messages', messages),
+  requestMqttMessages: () => ipcRenderer.send('request-mqtt-messages'),
+  handleTransferMqttMessages: (callback) => ipcRenderer.on('load-mqtt-messages', callback as any),
+  handleRequestMqttMessages: (callback) => ipcRenderer.on('request-mqtt-messages', callback as any)
 }
 
 const hasAutoUpdate =

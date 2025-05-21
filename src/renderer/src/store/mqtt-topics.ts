@@ -1,8 +1,10 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { useSettingsStore } from './settings-store'
 import { codeType } from '../assets/js/format-code'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
+import _ from 'lodash'
 
 export type MqttMessage = {
   uid: string
@@ -25,9 +27,11 @@ export type MqttTopicStructure = {
 //   }
 // }
 
+export type TopicMessages = Record<string, Record<string, MqttMessage[]>>
+
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
-    topicsMessages: {} as Record<string, Record<string, MqttMessage[]>>,
+    topicsMessages: {} as TopicMessages,
     topicsLastMessage: {} as Record<string, Record<string, MqttMessage>>,
     subTopicsTopicsCount: {} as Record<string, Record<string, number>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
@@ -168,6 +172,16 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       }
   },
   actions: {
+    initStore() {
+      ElectronApi.handleTransferMqttMessages((__, messages) => {
+        // Dates arrive as string, need to be transformed to
+        this.topicsMessages = _.mapValues(messages, (clientTopics) =>
+          _.mapValues(clientTopics, (msgs) =>
+            _.map(msgs, (msg) => ({ ...msg, createdAt: new Date(msg.createdAt) }))
+          )
+        )
+      })
+    },
     addMessage(
       clientKey: string,
       topic: string,

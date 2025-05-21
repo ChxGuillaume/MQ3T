@@ -8,8 +8,11 @@ const getWindowShown = () => {
   return graphWindow?.isVisible() || false
 }
 
-const sendMessage = (channel: string, data: any) => {
+const sendMessageToMain = (channel: string, data?: any) => {
   mainWindow?.webContents.send(channel, data)
+}
+
+const sendMessageToGraph = (channel: string, data?: any) => {
   graphWindow?.webContents.send(channel, data)
 }
 
@@ -19,7 +22,7 @@ export const createGraphWindow = () => {
   graphWindow.on('closed', () => {
     graphWindow = null
 
-    sendMessage('update-graph-window-shown', false)
+    sendMessageToMain('update-graph-window-shown', false)
   })
 }
 
@@ -36,8 +39,16 @@ export const initGraphWindowHandlers = (window: BrowserWindow) => {
     if (graphWindow) graphWindow.show()
     else createGraphWindow()
 
-    sendMessage('update-graph-window-shown', true)
+    sendMessageToMain('update-graph-window-shown', true)
   })
 
   ipcMain.on('hide-graph-window', () => graphWindow?.hide())
+
+  ipcMain.on('transfer-mqtt-messages', (_, messages) => {
+    sendMessageToGraph('load-mqtt-messages', messages)
+  })
+
+  ipcMain.on('request-mqtt-messages', () => {
+    sendMessageToMain('request-mqtt-messages')
+  })
 }

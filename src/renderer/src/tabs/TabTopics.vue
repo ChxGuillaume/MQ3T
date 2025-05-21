@@ -18,7 +18,7 @@ import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { scroll } from 'quasar'
 
 const { setVerticalScrollPosition } = scroll
@@ -310,6 +310,9 @@ const showTabsText = computed(() => {
 
 onMounted(() => {
   ElectronApi.handleGraphWindowShown((_, shown) => (graphWindowShown.value = shown))
+  ElectronApi.handleRequestMqttMessages(() => {
+    ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
+  })
 })
 </script>
 
@@ -397,7 +400,7 @@ onMounted(() => {
         <template #after>
           <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
             <graph-list />
-            <q-btn class="tw-px-5" @click="ElectronApi.showGraphWindow" dense>
+            <q-btn class="tw-px-5" @click="ElectronApi.showGraphWindow" dense flat>
               <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
               Show in external window
             </q-btn>

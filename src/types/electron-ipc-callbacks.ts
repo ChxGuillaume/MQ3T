@@ -1,6 +1,8 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { MqttConnection, MqttConnectionStatus } from './mqtt-connection'
+import { TopicMessages } from '../renderer/src/store/mqtt-topics'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
+import { DataGraph } from './data-graph'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
 import {
@@ -8,7 +10,6 @@ import {
   ConnectionsChainActions,
   ConnectionsActionsGroups
 } from './actions'
-import { DataGraph } from './data-graph'
 
 export type AppVersionCallback = (event: never, value: string) => void
 
@@ -85,4 +86,9 @@ export type ElectronIpc = {
 
   showGraphWindow: () => void
   hideGraphWindow: () => void
+
+  transferMqttMessages: (messages: TopicMessages) => void
+  requestMqttMessages: () => void
+  handleTransferMqttMessages: (callback: (event: never, value: TopicMessages) => void) => void
+  handleRequestMqttMessages: (callback: (event: never, value: never) => void) => void
 }
