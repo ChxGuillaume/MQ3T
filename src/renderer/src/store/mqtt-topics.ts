@@ -29,6 +29,14 @@ export type MqttTopicStructure = {
 
 export type TopicMessages = Record<string, Record<string, MqttMessage[]>>
 
+const filterBySearchTerms = (text: string, searchTerms: string): boolean => {
+  return searchTerms
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .some((keyword) => text.toLowerCase().includes(keyword))
+}
+
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
     topicsMessages: {} as TopicMessages,
@@ -140,7 +148,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     getFilteredTopicsList: (state) => (clientKey: string) => {
       return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
-        return topic.includes(state.topicSearch)
+        return filterBySearchTerms(topic, state.topicSearch)
       })
     },
     getFilteredTopicsStructure:
@@ -154,7 +162,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           const filteredTopicStructure: MqttTopicStructure = {}
 
           for (const topicKey in topicStructure) {
-            if (topicKey.toLowerCase().includes(state.topicSearch.toLowerCase())) {
+            if (filterBySearchTerms(topicKey, state.topicSearch)) {
               filteredTopicStructure[topicKey] = topicStructure[topicKey]
             } else {
               const subTopicStructure = filterTopicStructure(topicStructure[topicKey] || {})
