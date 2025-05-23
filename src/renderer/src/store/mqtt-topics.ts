@@ -140,7 +140,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     getFilteredTopicsList: (state) => (clientKey: string) => {
       return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
-        return topic.includes(state.topicSearch)
+        return state.topicSearch.split(' ').some((keyword) => topic.includes(keyword))
       })
     },
     getFilteredTopicsStructure:
@@ -154,7 +154,12 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           const filteredTopicStructure: MqttTopicStructure = {}
 
           for (const topicKey in topicStructure) {
-            if (topicKey.toLowerCase().includes(state.topicSearch.toLowerCase())) {
+            if (
+              state.topicSearch
+                .toLowerCase()
+                .split(' ')
+                .some((keyword) => topicKey.toLowerCase().includes(keyword))
+            ) {
               filteredTopicStructure[topicKey] = topicStructure[topicKey]
             } else {
               const subTopicStructure = filterTopicStructure(topicStructure[topicKey] || {})
