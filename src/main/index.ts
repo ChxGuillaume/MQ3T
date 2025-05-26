@@ -9,10 +9,12 @@ import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
 import { MqttClient } from './mqtt-client'
-import FileFilter = Electron.FileFilter
 import * as path from 'path'
 import * as dns from 'dns'
 import * as fs from 'fs'
+import './express/main'
+import { b } from './express/main'
+import FileFilter = Electron.FileFilter
 
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, MqttConnectionStatus> = new Map()
@@ -75,7 +77,14 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin' || IS_MAS) {
     app.quit()
+    console.log('Unpublish all services from bonjour')
+    b.unpublishAll()
   }
+})
+
+app.on('before-quit', () => {
+  console.log('Unpublish all services from bonjour 2')
+  b.unpublishAll()
 })
 
 // In this file you can include the rest of your app"s specific main process
