@@ -32,6 +32,11 @@ export type ElectronIpc = {
   handleMqttMessage: (callback: MqttMessageCallback) => void
   handleMqttStatus: (callback: MqttStatusCallback) => void
 
+  handleRegistrationTriggered: (callback: (event: never, pin: string) => void) => void
+  handleRegistrationCompleted: (callback: (event: never) => void) => void
+  handleRegistrationCanceled: (callback: (event: never) => void) => void
+  cancelRegistration: () => Promise<Response>
+
   connectMqtt: (connection: MqttConnection) => void
   disconnectMqtt: (clientKey: string) => void
 

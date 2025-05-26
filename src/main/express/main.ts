@@ -75,15 +75,7 @@ const startServer = async () => {
     txt: getDeviceInfos()
   })
 
-  console.log(
-    'Bonjour service published: ',
-    name,
-    ' on port ',
-    port,
-    ' with txt: ',
-    getDeviceInfos(),
-    ''
-  )
+  console.log(`Bonjour service published: ${name} on port ${port} with txt:`, getDeviceInfos())
 }
 
 void startServer()

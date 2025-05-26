@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss'
 
 export default {
   prefix: 'tw-',
-  darkMode: 'selector',
+  darkMode: ['class', '[class~="body--dark"]'], // enables dark mode when .body--dark is present
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {

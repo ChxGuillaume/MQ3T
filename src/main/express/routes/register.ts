@@ -1,12 +1,21 @@
 import { Express } from 'express'
+import { EventEmitter } from 'events'
 
 let registrationPin: string | null = null
 
+// Create an event emitter for registration events
+export const registerEvents = new EventEmitter()
+
 export const initRegisterRoutes = (app: Express) => {
   app.post('/register', (req, res) => {
-    console.log('Registering...', req.body, registrationPin)
+    const isValid = req.body.pin === registrationPin
 
-    res.json(req.body.pin === registrationPin)
+    if (isValid) {
+      registerEvents.emit('registration-completed')
+      registrationPin = null
+    }
+
+    res.json(isValid)
   })
 
   app.post('/register/trigger', (_, res) => {
@@ -14,8 +23,17 @@ export const initRegisterRoutes = (app: Express) => {
       .toString()
       .padStart(4, '0')
 
-    console.log('Registering request received, sending response...', registrationPin)
+    registerEvents.emit('registration-triggered', registrationPin)
 
     res.json(registrationPin)
+  })
+
+  app.post('/register/cancel', (_, res) => {
+    if (registrationPin) {
+      registrationPin = null
+      registerEvents.emit('registration-canceled')
+    }
+
+    res.json({ success: true })
   })
 }

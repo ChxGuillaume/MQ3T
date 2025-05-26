@@ -8,6 +8,11 @@ const api: ElectronIpc = {
   handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
   handleMqttStatus: (callback) => ipcRenderer.on('mqtt-status', callback as any),
 
+  handleRegistrationTriggered: (callback) => ipcRenderer.on('registration-triggered', callback as any),
+  handleRegistrationCompleted: (callback) => ipcRenderer.on('registration-completed', callback as any),
+  handleRegistrationCanceled: (callback) => ipcRenderer.on('registration-canceled', callback as any),
+  cancelRegistration: () => fetch('/register/cancel', { method: 'POST' }),
+
   connectMqtt: (connection) => ipcRenderer.send('connect-mqtt', connection),
   disconnectMqtt: (clientKey) => ipcRenderer.send('disconnect-mqtt', clientKey),
 

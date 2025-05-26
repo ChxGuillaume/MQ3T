@@ -14,7 +14,32 @@ import * as dns from 'dns'
 import * as fs from 'fs'
 import './express/main'
 import { b } from './express/main'
+import { registerEvents } from './express/routes/register'
 import FileFilter = Electron.FileFilter
+
+// Listen for registration triggered event and forward to renderer
+registerEvents.on('registration-triggered', (pin: string) => {
+  if (!mainWindow) return
+
+  // Send the event to the renderer process
+  mainWindow.webContents.send('registration-triggered', pin)
+})
+
+// Listen for registration completion
+registerEvents.on('registration-completed', () => {
+  if (mainWindow) {
+    // Send the event to the renderer process
+    mainWindow.webContents.send('registration-completed')
+  }
+})
+
+// Listen for registration cancellation
+registerEvents.on('registration-canceled', () => {
+  if (mainWindow) {
+    // Send the event to the renderer process
+    mainWindow.webContents.send('registration-canceled')
+  }
+})
 
 const mqttClients: Map<string, MqttClient> = new Map()
 const mqttClientsState: Map<string, MqttConnectionStatus> = new Map()

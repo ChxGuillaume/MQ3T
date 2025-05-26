@@ -16,6 +16,7 @@ import TabTopics from '../tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
 import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
+import RegistrationDialog from '../components/RegistrationDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -34,6 +35,10 @@ const currentTab = computed({
 const $q = useQuasar()
 
 const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
+
+// Registration dialog state
+const registrationDialogOpened = ref(false)
+const registrationPin = ref('')
 
 const handleKeyUp = (event: KeyboardEvent) => {
   if (event.ctrlKey) {
@@ -87,6 +92,36 @@ onMounted(() => {
 
   ElectronApi.debug((_, value, ...args) => {
     console.warn(value, args)
+  })
+
+  // Handle registration events
+  ElectronApi.handleRegistrationTriggered((_, pin) => {
+    registrationPin.value = pin
+    registrationDialogOpened.value = true
+  })
+
+  ElectronApi.handleRegistrationCompleted(() => {
+    // Close the registration dialog
+    registrationDialogOpened.value = false
+
+    // Show notification for registration completion
+    $q.notify({
+      message: 'Registration Complete',
+      caption: 'Registration has been successfully completed',
+      type: 'positive'
+    })
+  })
+
+  ElectronApi.handleRegistrationCanceled(() => {
+    // Close the registration dialog
+    registrationDialogOpened.value = false
+
+    // Show notification for registration cancellation
+    $q.notify({
+      message: 'Registration Canceled',
+      caption: 'Registration has been canceled',
+      type: 'info'
+    })
   })
 
   ElectronApi.handleMqttError((event, value) => {
@@ -237,6 +272,7 @@ onUnmounted(() => {
   <import-actions />
   <import-chain-actions />
   <import-actions-groups />
+  <registration-dialog v-model:opened="registrationDialogOpened" :pin="registrationPin" />
 </template>
 
 <style lang="less">
