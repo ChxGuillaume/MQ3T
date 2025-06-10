@@ -4,41 +4,35 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
+import { registerEvents } from './express/routes/register'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
 import { MqttClient } from './mqtt-client'
+import FileFilter = Electron.FileFilter
+import { b } from './express/main'
 import * as path from 'path'
 import * as dns from 'dns'
 import * as fs from 'fs'
 import './express/main'
-import { b } from './express/main'
-import { registerEvents } from './express/routes/register'
-import FileFilter = Electron.FileFilter
 
-// Listen for registration triggered event and forward to renderer
 registerEvents.on('registration-triggered', (pin: string) => {
   if (!mainWindow) return
 
-  // Send the event to the renderer process
   mainWindow.webContents.send('registration-triggered', pin)
 })
 
-// Listen for registration completion
 registerEvents.on('registration-completed', () => {
-  if (mainWindow) {
-    // Send the event to the renderer process
-    mainWindow.webContents.send('registration-completed')
-  }
+  if (!mainWindow) return
+
+  mainWindow.webContents.send('registration-completed')
 })
 
-// Listen for registration cancellation
 registerEvents.on('registration-canceled', () => {
-  if (mainWindow) {
-    // Send the event to the renderer process
-    mainWindow.webContents.send('registration-canceled')
-  }
+  if (!mainWindow) return
+
+  mainWindow.webContents.send('registration-canceled')
 })
 
 const mqttClients: Map<string, MqttClient> = new Map()

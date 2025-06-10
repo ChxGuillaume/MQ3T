@@ -1,18 +1,20 @@
 import { getComputerDetails, getComputerOs } from '../utils/getComputerDetails'
 import { getCertificate } from '../utils/generateCertificate'
-import { machineIdSync } from 'node-machine-id'
+import { initRegisterRoutes } from './routes/register'
+import { bonjourName } from '../constants/bonjourName'
 import bodyParser from 'body-parser'
 import * as https from 'node:https'
-import crypto from 'node:crypto'
+import * as http from 'node:http'
 import bonjour from 'bonjour'
 import express from 'express'
 import { app } from 'electron'
-import { initRegisterRoutes } from './routes/register'
 
 const expressApp = express()
 const startPort = 55000
 const maxPort = 55100
-let port = startPort
+
+let httpsPort = startPort
+let httpPort = startPort
 
 expressApp.use(bodyParser.json())
 
@@ -29,8 +31,10 @@ const getDeviceInfos = () => {
     os: getComputerOs(),
     version: app.getVersion(),
     platform: process.platform,
+    bonjourName,
     computerName: getComputerDetails() || 'Unknown',
-    certificateFingerprint: certificate.fingerprint
+    certificateFingerprint: certificate.fingerprint,
+    certificateFingerprintSha256: `sha256/${certificate.fingerprint}`
   }
 }
 
@@ -40,13 +44,15 @@ expressApp.get('/', (_, res) => {
 
 initRegisterRoutes(expressApp)
 
-const tryListen = (port: number): Promise<number> => {
+const tryListen = (port: number, isHttps = false): Promise<number> => {
   return new Promise((resolve, reject) => {
-    const server = https
-      .createServer(options, expressApp)
+    const server = isHttps ? https.createServer(options, expressApp) : http.createServer(expressApp)
+
+    server
       .listen(port)
       .on('listening', () => {
-        console.log('Express server listening on port ' + port)
+        console.log(`Express ${isHttps ? 'HTTPS' : 'HTTP'} server listening on port ${port}`)
+
         resolve(port)
       })
       .on('error', (err) => {
@@ -57,25 +63,29 @@ const tryListen = (port: number): Promise<number> => {
 }
 
 const startServer = async () => {
-  while (port <= maxPort) {
-    try {
-      await tryListen(port)
-      break
-    } catch (err) {
-      port++
+  const findAvailablePort = async (startingPort: number, isHttps = false): Promise<number> => {
+    for (let port = startingPort; port <= maxPort; port++) {
+      try {
+        await tryListen(port, isHttps)
+
+        return port
+      } catch (err) {}
     }
+
+    throw new Error(`No available ports found between ${startingPort} and ${maxPort}`)
   }
 
-  const name = `MQ3T-${crypto.createHash('sha224').update(machineIdSync(true)).digest('hex')}`
+  httpPort = await findAvailablePort(httpPort)
+  httpsPort = await findAvailablePort(httpPort + 1, true)
 
   b.publish({
-    name,
+    name: bonjourName,
     type: 'https',
-    port,
+    port: httpsPort,
     txt: getDeviceInfos()
   })
 
-  console.log(`Bonjour service published: ${name} on port ${port} with txt:`, getDeviceInfos())
+  console.log(`Bonjour service published on port ${httpsPort}`)
 }
 
 void startServer()

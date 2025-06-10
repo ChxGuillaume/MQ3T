@@ -81,14 +81,12 @@ const generateCertificate = () => {
   const pubKeyObject = crypto.createPublicKey(certPem)
   const der = pubKeyObject.export({ type: 'spki', format: 'der' })
   const hash = crypto.createHash('sha256').update(der).digest()
-  const base64 = hash.toString('base64')
-
-  console.log(base64)
+  const fingerprint = hash.toString('base64')
 
   return {
     certPem,
     keyPem,
-    fingerprint: `sha256/${base64}`
+    fingerprint
   }
 }
 
