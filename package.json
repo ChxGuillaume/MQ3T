@@ -48,6 +48,7 @@
     "electron-updater": "^6.6.2",
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "joi": "^17.13.3",
     "lodash": "^4.17.21",
     "lowdb": "^7.0.1",
     "moment": "^2.30.1",

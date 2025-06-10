@@ -5,7 +5,6 @@ import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
 import { initMqttConnectionsHandlers } from './stores/mqttConnections'
 import { disconnectAllClients, initMqttClientsHandlers } from './stores/mqttClients'
-import { registerEvents } from './express/routes/register'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
@@ -15,6 +14,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import './express/main'
 import FileFilter = Electron.FileFilter
+import { registerEvents } from './express/controllers/auth.controller'
 
 registerEvents.on('registration-triggered', (pin: string) => {
   if (!mainWindow) return

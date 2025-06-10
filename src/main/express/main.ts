@@ -1,14 +1,12 @@
-import { getComputerDetails, getComputerOs } from '../utils/getComputerDetails'
+import { getDeviceInfo } from './controllers/system.controller'
 import { getCertificate } from '../utils/generateCertificate'
-import { initRegisterRoutes } from './routes/register'
-import { initMqttRoutes } from './routes/mqtt'
+import { configureRoutes } from './config/route.config'
 import { bonjourName } from '../constants/bonjourName'
 import bodyParser from 'body-parser'
 import * as https from 'node:https'
 import * as http from 'node:http'
 import bonjour from 'bonjour'
 import express from 'express'
-import { app } from 'electron'
 
 const expressApp = express()
 const startPort = 55000
@@ -27,24 +25,7 @@ const options = {
   cert: certificate.certPem
 }
 
-const getDeviceInfos = () => {
-  return {
-    os: getComputerOs(),
-    version: app.getVersion(),
-    platform: process.platform,
-    bonjourName,
-    computerName: getComputerDetails() || 'Unknown',
-    certificateFingerprint: certificate.fingerprint,
-    certificateFingerprintSha256: `sha256/${certificate.fingerprint}`
-  }
-}
-
-expressApp.get('/', (_, res) => {
-  res.json(getDeviceInfos())
-})
-
-initRegisterRoutes(expressApp)
-initMqttRoutes(expressApp)
+configureRoutes(expressApp)
 
 const tryListen = (port: number, isHttps = false): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -84,7 +65,7 @@ const startServer = async () => {
     name: bonjourName,
     type: 'https',
     port: httpsPort,
-    txt: getDeviceInfos()
+    txt: getDeviceInfo()
   })
 
   console.log(`Bonjour service published on port ${httpsPort}`)

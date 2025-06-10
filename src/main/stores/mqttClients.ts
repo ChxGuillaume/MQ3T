@@ -134,7 +134,6 @@ export const unregisterMqttClientsHandler = (window: BrowserWindow) => {
 export const initMqttClientsHandlers = () => {
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
     createConnection(connection).then()
-    console.log(connection)
   })
 
   ipcMain.on('disconnect-mqtt', (_, clientKey: string) => {
