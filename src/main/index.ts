@@ -1,21 +1,20 @@
-import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
-import { getGraphWindow, initGraphWindowHandlers } from './windowGraph'
+import { initGraphWindowHandlers } from './windowGraph'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
+import { initMqttConnectionsHandlers } from './stores/mqttConnections'
+import { disconnectAllClients, initMqttClientsHandlers } from './stores/mqttClients'
 import { registerEvents } from './express/routes/register'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
-import { MqttClient } from './mqtt-client'
-import FileFilter = Electron.FileFilter
 import { b } from './express/main'
 import * as path from 'path'
-import * as dns from 'dns'
 import * as fs from 'fs'
 import './express/main'
+import FileFilter = Electron.FileFilter
 
 registerEvents.on('registration-triggered', (pin: string) => {
   if (!mainWindow) return
@@ -35,11 +34,8 @@ registerEvents.on('registration-canceled', () => {
   mainWindow.webContents.send('registration-canceled')
 })
 
-const mqttClients: Map<string, MqttClient> = new Map()
-const mqttClientsState: Map<string, MqttConnectionStatus> = new Map()
 const configFolder = path.join(app.getPath('userData'), 'config')
 const configFilePath = {
-  mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
   actions: path.join(configFolder, 'actions.json'),
   chainActions: path.join(configFolder, 'chain-actions.json'),
   actionsGroups: path.join(configFolder, 'actions-groups.json')
@@ -74,9 +70,8 @@ app.whenReady().then(() => {
   mainWindow = createWindow()
 
   mainWindow?.on('close', () => {
-    for (const client of mqttClients.values()) {
-      client.disconnect()
-    }
+    // Disconnect all MQTT clients when the window is closed
+    disconnectAllClients()
   })
 
   app.on('activate', function () {
@@ -88,6 +83,8 @@ app.whenReady().then(() => {
   initAutoUpdater(mainWindow)
   initGraphWindowHandlers(mainWindow)
   initDataGraphHandlers()
+  initMqttConnectionsHandlers()
+  initMqttClientsHandlers()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -115,72 +112,6 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
   mainWindow.webContents.send(channel, ...args)
 }
 
-const createConnection = async (connection: MqttConnection) => {
-  const clientKey = connection.clientKey
-
-  if (mqttClientsState.get(clientKey) === 'connecting') return
-
-  mqttClientsState.set(clientKey, 'connecting')
-
-  sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
-
-  if (connection.hostname.includes('.local')) {
-    try {
-      const resolvedIp = await new Promise((resolve, reject) => {
-        dns.lookup(connection.hostname, { family: 4 }, (err, address) => {
-          if (err) reject(err)
-          else resolve(address)
-        })
-      })
-
-      connection.hostname = resolvedIp as string
-    } catch (e) {
-      sendMessageToRenderer('mqtt-error', { clientKey, error: e })
-      return
-    }
-  }
-
-  const clientMqtt = new MqttClient(connection)
-
-  mqttClients.set(clientKey, clientMqtt)
-
-  clientMqtt.onError((error) => {
-    sendMessageToRenderer('mqtt-error', { clientKey, error })
-  })
-
-  clientMqtt.onConnect(() => {
-    mqttClientsState.set(clientKey, 'connected')
-    sendMessageToRenderer('mqtt-status', { clientKey, status: 'connected' })
-  })
-
-  clientMqtt.onReconnect(() => {
-    mqttClientsState.set(clientKey, 'reconnecting')
-    sendMessageToRenderer('mqtt-status', { clientKey, status: 'reconnecting' })
-  })
-
-  clientMqtt.onMessage((topic, payload, packet) => {
-    const message = {
-      clientKey,
-      topic,
-      payload,
-      packet,
-      message: payload.toString()
-    }
-
-    sendMessageToRenderer('mqtt-message', message)
-    getGraphWindow()?.webContents.send('mqtt-message', message)
-  })
-
-  clientMqtt.onDisconnect(() => {
-    // mqttClientsState.set(clientKey, 'disconnected')
-    // sendMessageToRenderer('mqtt-status', { clientKey, status: 'disconnected' })
-  })
-
-  connection.subscribedTopics.forEach((topic) => {
-    clientMqtt.subscribe(topic.topic, { qos: topic.qos, rap: true })
-  })
-}
-
 const readJsonFile = (filePath: string) => {
   if (fs.existsSync(filePath)) {
     try {
@@ -203,19 +134,10 @@ const readActionsFile = () => {
 
 const initIpcMain = () => {
   ipcMain.on('init-renderer', (event) => {
-    mqttClients.forEach((_, clientKey) => {
-      event.reply('mqtt-status', {
-        clientKey,
-        status: mqttClientsState.get(clientKey) || 'disconnected'
-      })
-    })
-
-    const connections = readJsonFile(configFilePath.mqttConnections)
     const actions = readActionsFile()
     const chainActions = readJsonFile(configFilePath.chainActions)
     const actionsGroups = readJsonFile(configFilePath.actionsGroups)
 
-    if (connections) event.reply('load-mqtt-connections', connections)
     if (actions) event.reply('load-actions', actions)
     if (chainActions) event.reply('load-chain-actions', chainActions)
     if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
@@ -262,26 +184,6 @@ const initIpcMain = () => {
 
   ipcMain.on('quit-and-install-update', () => {
     autoUpdater.quitAndInstall(true, true)
-  })
-
-  ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
-    createConnection(connection).then()
-  })
-
-  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
-    mqttClients.get(clientKey)?.disconnect()
-    mqttClients.delete(clientKey)
-
-    mqttClientsState.set(clientKey, 'disconnected')
-    event.reply('mqtt-status', { clientKey, status: 'disconnected' })
-  })
-
-  ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
-    mqttClients.get(clientKey)?.publish(topic, message, options)
-  })
-
-  ipcMain.on('save-mqtt-connections', (_, connections: MqttConnection[]) => {
-    fs.writeFileSync(configFilePath.mqttConnections, JSON.stringify(connections))
   })
 
   ipcMain.on('save-actions', (_, actions) => {

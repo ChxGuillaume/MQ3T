@@ -1,6 +1,7 @@
 import { getComputerDetails, getComputerOs } from '../utils/getComputerDetails'
 import { getCertificate } from '../utils/generateCertificate'
 import { initRegisterRoutes } from './routes/register'
+import { initMqttRoutes } from './routes/mqtt'
 import { bonjourName } from '../constants/bonjourName'
 import bodyParser from 'body-parser'
 import * as https from 'node:https'
@@ -43,6 +44,7 @@ expressApp.get('/', (_, res) => {
 })
 
 initRegisterRoutes(expressApp)
+initMqttRoutes(expressApp)
 
 const tryListen = (port: number, isHttps = false): Promise<number> => {
   return new Promise((resolve, reject) => {
