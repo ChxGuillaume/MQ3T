@@ -1,11 +1,10 @@
-import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
 import {
+  ConnectionsActionsFileV2,
   ConnectionsActionsGroups,
-  ConnectionsActionsFile,
   ConnectionsActions,
   ActionGroup,
   Action
@@ -84,21 +83,15 @@ export const useActionsStore = defineStore('actions', {
       }
   },
   actions: {
-    setActions(actions: ConnectionsActionsFile) {
+    setActions(actions: ConnectionsActionsFileV2) {
       const actionsCacheStore = useActionsCacheStore()
 
-      if (actions.type === 'v1') {
-        actions = convertActionsFileV1toV2(actions)
-      }
+      this.actions = actions.actions
 
-      if (actions.type === 'v2') {
-        this.actions = actions.actions
-
-        for (const [connectionId, groups] of Object.entries(actions.actions)) {
-          for (const [_, actionsArray] of Object.entries(groups)) {
-            for (const action of actionsArray) {
-              actionsCacheStore.addTopic(connectionId, action.topic)
-            }
+      for (const [connectionId, groups] of Object.entries(actions.actions)) {
+        for (const [_, actionsArray] of Object.entries(groups)) {
+          for (const action of actionsArray) {
+            actionsCacheStore.addTopic(connectionId, action.topic)
           }
         }
       }

@@ -4,12 +4,11 @@ import { getGraphWindow } from '../windowGraph'
 import { MqttClient } from '../mqtt-client'
 import * as dns from 'dns'
 
-// Store state
-const mqttClients: Map<string, MqttClient> = new Map()
-const mqttClientsState: Map<string, MqttConnectionStatus> = new Map()
+const clients: Map<string, MqttClient> = new Map()
+const clientsState: Map<string, MqttConnectionStatus> = new Map()
 const registeredWindows = new Set<BrowserWindow>()
+const clientsTopics: Map<string, Map<string, string>> = new Map()
 
-// Helper function to send messages to all registered windows
 const sendMessageToRenderer = (channel: string, ...args: any[]) => {
   for (const window of registeredWindows) {
     if (!window.isDestroyed()) {
@@ -18,13 +17,12 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
   }
 }
 
-// Create a new MQTT connection
 const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
-  if (mqttClientsState.get(clientKey) === 'connecting') return
+  if (clientsState.get(clientKey) === 'connecting') return
 
-  mqttClientsState.set(clientKey, 'connecting')
+  clientsState.set(clientKey, 'connecting')
 
   sendMessageToRenderer('mqtt-status', { clientKey, status: 'connecting' })
 
@@ -46,23 +44,26 @@ const createConnection = async (connection: MqttConnection) => {
 
   const clientMqtt = new MqttClient(connection)
 
-  mqttClients.set(clientKey, clientMqtt)
+  clients.set(clientKey, clientMqtt)
 
   clientMqtt.onError((error) => {
     sendMessageToRenderer('mqtt-error', { clientKey, error })
   })
 
   clientMqtt.onConnect(() => {
-    mqttClientsState.set(clientKey, 'connected')
+    clientsState.set(clientKey, 'connected')
     sendMessageToRenderer('mqtt-status', { clientKey, status: 'connected' })
   })
 
   clientMqtt.onReconnect(() => {
-    mqttClientsState.set(clientKey, 'reconnecting')
+    clientsState.set(clientKey, 'reconnecting')
     sendMessageToRenderer('mqtt-status', { clientKey, status: 'reconnecting' })
   })
 
   clientMqtt.onMessage((topic, payload, packet) => {
+    if (!clientsTopics.has(clientKey)) clientsTopics.set(clientKey, new Map())
+    clientsTopics.get(clientKey)?.set(topic, payload.toString())
+
     const message = {
       clientKey,
       topic,
@@ -75,62 +76,53 @@ const createConnection = async (connection: MqttConnection) => {
     getGraphWindow()?.webContents.send('mqtt-message', message)
   })
 
-  clientMqtt.onDisconnect(() => {
-    // mqttClientsState.set(clientKey, 'disconnected')
-    // sendMessageToRenderer('mqtt-status', { clientKey, status: 'disconnected' })
-  })
+  clientMqtt.onDisconnect(() => {})
 
   connection.subscribedTopics.forEach((topic) => {
     clientMqtt.subscribe(topic.topic, { qos: topic.qos, rap: true })
   })
 }
 
-// Disconnect a client
 const disconnectClient = (clientKey: string) => {
-  mqttClients.get(clientKey)?.disconnect()
-  mqttClients.delete(clientKey)
+  clients.get(clientKey)?.disconnect()
+  clients.delete(clientKey)
 
-  mqttClientsState.set(clientKey, 'disconnected')
+  clientsState.set(clientKey, 'disconnected')
   sendMessageToRenderer('mqtt-status', { clientKey, status: 'disconnected' })
 }
 
-// Disconnect all clients
 export const disconnectAllClients = () => {
-  for (const client of mqttClients.values()) {
+  for (const client of clients.values()) {
     client.disconnect()
   }
 
-  mqttClients.clear()
+  clients.clear()
 
-  for (const clientKey of mqttClientsState.keys()) {
-    mqttClientsState.set(clientKey, 'disconnected')
+  for (const clientKey of clientsState.keys()) {
+    clientsState.set(clientKey, 'disconnected')
     sendMessageToRenderer('mqtt-status', { clientKey, status: 'disconnected' })
   }
 }
 
-// Register a window to receive updates
 export const registerMqttClientsHandler = (window: BrowserWindow) => {
   if (registeredWindows.has(window)) return
 
   registeredWindows.add(window)
 
-  // Send current status to the newly registered window
   if (!window.isDestroyed()) {
-    mqttClients.forEach((_, clientKey) => {
+    clients.forEach((_, clientKey) => {
       window.webContents.send('mqtt-status', {
         clientKey,
-        status: mqttClientsState.get(clientKey) || 'disconnected'
+        status: clientsState.get(clientKey) || 'disconnected'
       })
     })
   }
 }
 
-// Unregister a window
 export const unregisterMqttClientsHandler = (window: BrowserWindow) => {
   registeredWindows.delete(window)
 }
 
-// Initialize IPC handlers
 export const initMqttClientsHandlers = () => {
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
     createConnection(connection).then()
@@ -141,36 +133,35 @@ export const initMqttClientsHandlers = () => {
   })
 
   ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
-    mqttClients.get(clientKey)?.publish(topic, message, options)
+    clients.get(clientKey)?.publish(topic, message, options)
   })
 
-  // When a renderer process initializes, send it the current status of all clients
   ipcMain.on('init-renderer', (event) => {
-    mqttClients.forEach((_, clientKey) => {
+    clients.forEach((_, clientKey) => {
       event.reply('mqtt-status', {
         clientKey,
-        status: mqttClientsState.get(clientKey) || 'disconnected'
+        status: clientsState.get(clientKey) || 'disconnected'
       })
     })
   })
 }
 
-// Get a specific MQTT client
 export const getMqttClient = (clientKey: string): MqttClient | undefined => {
-  return mqttClients.get(clientKey)
+  return clients.get(clientKey)
 }
 
-// Get the status of a specific MQTT client
 export const getMqttClientStatus = (clientKey: string): MqttConnectionStatus | undefined => {
-  return mqttClientsState.get(clientKey)
+  return clientsState.get(clientKey)
 }
 
-// Get all MQTT clients
 export const getAllMqttClients = (): Map<string, MqttClient> => {
-  return mqttClients
+  return clients
 }
 
-// Get all MQTT client statuses
 export const getAllMqttClientStatuses = (): Map<string, MqttConnectionStatus> => {
-  return mqttClientsState
+  return clientsState
+}
+
+export const getAllMqttClientTopics = (clientKey: string): string[] => {
+  return Array.from(clientsTopics.get(clientKey)?.keys() || [])
 }

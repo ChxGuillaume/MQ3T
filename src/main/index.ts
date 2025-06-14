@@ -5,6 +5,9 @@ import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
 import { initMqttConnectionsHandlers } from './stores/mqttConnections'
 import { disconnectAllClients, initMqttClientsHandlers } from './stores/mqttClients'
+import { initActionsHandlers, registerActionsHandler } from './stores/actions'
+import { initChainActionsHandlers, registerChainActionsHandler } from './stores/chainActions'
+import { initActionsGroupsHandlers, registerActionsGroupsHandler } from './stores/actionsGroups'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
@@ -34,16 +37,7 @@ registerEvents.on('registration-canceled', () => {
   mainWindow.webContents.send('registration-canceled')
 })
 
-const configFolder = path.join(app.getPath('userData'), 'config')
-const configFilePath = {
-  actions: path.join(configFolder, 'actions.json'),
-  chainActions: path.join(configFolder, 'chain-actions.json'),
-  actionsGroups: path.join(configFolder, 'actions-groups.json')
-}
-
 const IS_MAS = process.mas
-
-fs.mkdirSync(configFolder, { recursive: true })
 
 let mainWindow: BrowserWindow | null
 
@@ -85,6 +79,14 @@ app.whenReady().then(() => {
   initDataGraphHandlers()
   initMqttConnectionsHandlers()
   initMqttClientsHandlers()
+  initActionsHandlers()
+  initChainActionsHandlers()
+  initActionsGroupsHandlers()
+
+  // Register the main window with the new stores
+  registerActionsHandler(mainWindow)
+  registerChainActionsHandler(mainWindow)
+  registerActionsGroupsHandler(mainWindow)
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -122,26 +124,9 @@ const readJsonFile = (filePath: string) => {
   }
 }
 
-const readActionsFile = () => {
-  const data = readJsonFile(configFilePath.actions)
-
-  if (!data) return undefined
-
-  if (!data.type) {
-    return { type: 'v1', actions: data }
-  } else return data
-}
 
 const initIpcMain = () => {
   ipcMain.on('init-renderer', (event) => {
-    const actions = readActionsFile()
-    const chainActions = readJsonFile(configFilePath.chainActions)
-    const actionsGroups = readJsonFile(configFilePath.actionsGroups)
-
-    if (actions) event.reply('load-actions', actions)
-    if (chainActions) event.reply('load-chain-actions', chainActions)
-    if (actionsGroups) event.reply('load-actions-groups', actionsGroups)
-
     event.reply('app-version', app.getVersion())
   })
 
@@ -186,17 +171,6 @@ const initIpcMain = () => {
     autoUpdater.quitAndInstall(true, true)
   })
 
-  ipcMain.on('save-actions', (_, actions) => {
-    fs.writeFileSync(configFilePath.actions, JSON.stringify(actions))
-  })
-
-  ipcMain.on('save-chain-actions', (_, chainActions) => {
-    fs.writeFileSync(configFilePath.chainActions, JSON.stringify(chainActions))
-  })
-
-  ipcMain.on('save-actions-groups', (_, actionsGroups) => {
-    fs.writeFileSync(configFilePath.actionsGroups, JSON.stringify(actionsGroups))
-  })
 }
 
 initIpcMain()

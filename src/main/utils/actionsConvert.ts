@@ -1,8 +1,4 @@
-import {
-  Action,
-  ConnectionsActionsFileV1,
-  ConnectionsActionsFileV2
-} from '../../../../types/actions'
+import { Action, ConnectionsActionsFileV1, ConnectionsActionsFileV2 } from '../../types/actions'
 
 export const convertActionsFileV1toV2 = (
   file: ConnectionsActionsFileV1
