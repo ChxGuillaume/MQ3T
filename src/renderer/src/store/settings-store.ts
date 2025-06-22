@@ -1,3 +1,4 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 import moment from 'moment'
 
@@ -16,6 +17,7 @@ type SettingsStore = {
   defaultDataFormat: DefaultDataFormat
   autoOpenPublishActions: boolean
   chainActionsTrackpadMode: boolean
+  companionServerEnabled: boolean
 }
 
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
@@ -43,7 +45,8 @@ export const useSettingsStore = defineStore('settings', {
     messagesPagination: getFromStorage('messagesPagination', true),
     defaultDataFormat: getFromStorage<DefaultDataFormat>('defaultDataFormat', 'raw'),
     autoOpenPublishActions: getFromStorage('autoOpenPublishActions', true),
-    chainActionsTrackpadMode: getFromStorage('chainActionsTrackpadMode', false)
+    chainActionsTrackpadMode: getFromStorage('chainActionsTrackpadMode', false),
+    companionServerEnabled: getFromStorage('companionServerEnabled', false)
   }),
   getters: {
     dateTimeFormat(): string {
@@ -103,6 +106,13 @@ export const useSettingsStore = defineStore('settings', {
     setChainActionsTrackpadMode(value: boolean) {
       this.chainActionsTrackpadMode = value
       localStorage.setItem('chainActionsTrackpadMode', value.toString())
+    },
+    setCompanionServerEnabled(value: boolean) {
+      this.companionServerEnabled = value
+      localStorage.setItem('companionServerEnabled', value.toString())
+
+      if (value) ElectronApi.startCompanionAppServer()
+      else ElectronApi.stopCompanionAppServer()
     }
   }
 })

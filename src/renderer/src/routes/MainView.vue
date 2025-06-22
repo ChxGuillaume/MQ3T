@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
+import RegistrationDialog from '../components/RegistrationDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useSettingsStore } from '@renderer/store/settings-store'
 import ImportActions from '../components/ImportActions.vue'
+import { useDataGraphsStore } from '../store/data-graphs'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
@@ -14,14 +18,12 @@ import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import { useDataGraphsStore } from '../store/data-graphs'
-import RegistrationDialog from '../components/RegistrationDialog.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
+const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
 
@@ -201,6 +203,8 @@ onMounted(() => {
   ElectronApi.handleLoadActionsGroups((_, actionGroups) => {
     actionsStore.setActionsGroups(actionGroups)
   })
+
+  if (settingsStore.companionServerEnabled) ElectronApi.startCompanionAppServer()
 
   dataGraphsStore.initStore()
 

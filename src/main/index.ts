@@ -1,23 +1,23 @@
-import { initGraphWindowHandlers } from './windowGraph'
+import { initActionsGroupsHandlers, registerActionsGroupsHandler } from './stores/actionsGroups'
+import { initChainActionsHandlers, registerChainActionsHandler } from './stores/chainActions'
+import { disconnectAllClients, initMqttClientsHandlers } from './stores/mqttClients'
+import { initActionsHandlers, registerActionsHandler } from './stores/actions'
+import { initCompanionAppServerHandlers, stopServer } from './express/main'
+import { initMqttConnectionsHandlers } from './stores/mqttConnections'
+import { registerEvents } from './express/controllers/auth.controller'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
-import { initMqttConnectionsHandlers } from './stores/mqttConnections'
-import { disconnectAllClients, initMqttClientsHandlers } from './stores/mqttClients'
-import { initActionsHandlers, registerActionsHandler } from './stores/actions'
-import { initChainActionsHandlers, registerChainActionsHandler } from './stores/chainActions'
-import { initActionsGroupsHandlers, registerActionsGroupsHandler } from './stores/actionsGroups'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
+import { initGraphWindowHandlers } from './windowGraph'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
-import { b } from './express/main'
 import * as path from 'path'
 import * as fs from 'fs'
 import './express/main'
 import FileFilter = Electron.FileFilter
-import { registerEvents } from './express/controllers/auth.controller'
 
 registerEvents.on('registration-triggered', (pin: string) => {
   if (!mainWindow) return
@@ -76,6 +76,7 @@ app.whenReady().then(() => {
 
   initAutoUpdater(mainWindow)
   initGraphWindowHandlers(mainWindow)
+  initCompanionAppServerHandlers()
   initDataGraphHandlers()
   initMqttConnectionsHandlers()
   initMqttClientsHandlers()
@@ -95,14 +96,12 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin' || IS_MAS) {
     app.quit()
-    console.log('Unpublish all services from bonjour')
-    b.unpublishAll()
+    void stopServer()
   }
 })
 
 app.on('before-quit', () => {
-  console.log('Unpublish all services from bonjour 2')
-  b.unpublishAll()
+  void stopServer()
 })
 
 // In this file you can include the rest of your app"s specific main process
@@ -113,17 +112,6 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
 
   mainWindow.webContents.send(channel, ...args)
 }
-
-const readJsonFile = (filePath: string) => {
-  if (fs.existsSync(filePath)) {
-    try {
-      return JSON.parse(fs.readFileSync(filePath).toString())
-    } catch (e) {
-      return undefined
-    }
-  }
-}
-
 
 const initIpcMain = () => {
   ipcMain.on('init-renderer', (event) => {
@@ -170,7 +158,6 @@ const initIpcMain = () => {
   ipcMain.on('quit-and-install-update', () => {
     autoUpdater.quitAndInstall(true, true)
   })
-
 }
 
 initIpcMain()

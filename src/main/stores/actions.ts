@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import { convertActionsFileV1toV2 } from '../utils/actionsConvert'
 import { ConnectionsActionsFile, ConnectionsActionsFileV2 } from '../../types/actions'
 
-let actions: ConnectionsActionsFile | undefined
+let actions: ConnectionsActionsFileV2 | undefined
 
 export const getActions = (): ConnectionsActionsFile | undefined => {
   return actions

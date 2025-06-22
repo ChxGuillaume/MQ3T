@@ -8,9 +8,12 @@ const api: ElectronIpc = {
   handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
   handleMqttStatus: (callback) => ipcRenderer.on('mqtt-status', callback as any),
 
-  handleRegistrationTriggered: (callback) => ipcRenderer.on('registration-triggered', callback as any),
-  handleRegistrationCompleted: (callback) => ipcRenderer.on('registration-completed', callback as any),
-  handleRegistrationCanceled: (callback) => ipcRenderer.on('registration-canceled', callback as any),
+  handleRegistrationTriggered: (callback) =>
+    ipcRenderer.on('registration-triggered', callback as any),
+  handleRegistrationCompleted: (callback) =>
+    ipcRenderer.on('registration-completed', callback as any),
+  handleRegistrationCanceled: (callback) =>
+    ipcRenderer.on('registration-canceled', callback as any),
   cancelRegistration: () => fetch('/register/cancel', { method: 'POST' }),
 
   connectMqtt: (connection) => ipcRenderer.send('connect-mqtt', connection),
@@ -67,7 +70,10 @@ const api: ElectronIpc = {
   transferMqttMessages: (messages) => ipcRenderer.send('transfer-mqtt-messages', messages),
   requestMqttMessages: () => ipcRenderer.send('request-mqtt-messages'),
   handleTransferMqttMessages: (callback) => ipcRenderer.on('load-mqtt-messages', callback as any),
-  handleRequestMqttMessages: (callback) => ipcRenderer.on('request-mqtt-messages', callback as any)
+  handleRequestMqttMessages: (callback) => ipcRenderer.on('request-mqtt-messages', callback as any),
+
+  startCompanionAppServer: () => ipcRenderer.send('start-companion-app-server'),
+  stopCompanionAppServer: () => ipcRenderer.send('stop-companion-app-server')
 }
 
 const hasAutoUpdate =

@@ -144,6 +144,11 @@ const autoOpenPublishActionsSetting = computed({
   set: (val) => settingsStore.setAutoOpenPublishActions(val)
 })
 
+const companionServerEnabledSetting = computed({
+  get: () => settingsStore.companionServerEnabled,
+  set: (val) => settingsStore.setCompanionServerEnabled(val)
+})
+
 const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
 
@@ -153,7 +158,7 @@ const hasAutoUpdate = window.hasAutoUpdate
 
 <template>
   <div class="settings">
-    <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
+    <div class="tw-mb-6 tw-flex tw-items-center tw-justify-between">
       <h1 class="tw-text-xl tw-font-bold">Settings</h1>
       <q-btn
         v-if="hasAutoUpdate"
@@ -304,9 +309,32 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-card>
         </div>
       </div>
+      <div class="settings-group">
+        <h2 class="settings-group-title">Companion App</h2>
+        <hr class="settings-group-separator" />
+        <div class="settings-group-item-container">
+          <q-card class="card-toggle" square flat>
+            <q-toggle
+              v-model="companionServerEnabledSetting"
+              class="tw-w-full"
+              label="Enable Server"
+            >
+            </q-toggle>
+            <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+              <q-tooltip>
+                Enabling this will make your MQ3T session visible on your network so you can use the
+                Companion App. <br /><br />
+                Note: on your first interaction you'll have to authenticate with a 4 digit code that
+                will be shown on your desktop app <br />
+                so that you and only you can interact with your MQTT connections/actions
+              </q-tooltip>
+            </q-icon>
+          </q-card>
+        </div>
+      </div>
     </div>
 
-    <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
+    <div class="color-details tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-select-none tw-gap-2">
       <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
         <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
         Change Logs
@@ -332,11 +360,11 @@ const hasAutoUpdate = window.hasAutoUpdate
 }
 
 .settings-group .settings-group-separator {
-  @apply tw-border-0 tw-h-px tw-bg-neutral-700;
+  @apply tw-h-px tw-border-0 tw-bg-neutral-700;
 }
 
 .settings-group .settings-group-item-container {
-  @apply tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4;
+  @apply tw-grid tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5;
 }
 
 .card-toggle {
