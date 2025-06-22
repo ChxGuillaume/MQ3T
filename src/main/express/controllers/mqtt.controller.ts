@@ -1,9 +1,15 @@
-import { getAllMqttClientStatuses, getAllMqttClientTopics } from '../../stores/mqttClients'
+import {
+  getAllMqttClientStatuses,
+  getAllMqttClientTopics,
+  mqttClientPublishMessage
+} from '../../stores/mqttClients'
 import { getMqttConnections } from '../../stores/mqttConnections'
 import { getActions } from '../../stores/actions'
 import { getActionsGroups } from '../../stores/actionsGroups'
 import { Request, Response } from 'express'
 import { ActionGroup } from '../../../types/actions'
+import { ActionValidator } from '../validators/action.validator'
+import { IClientPublishOptions } from 'mqtt/src/lib/client'
 
 export const getMqttConnectionsWithStatus = (_: Request, res: Response) => {
   const connections = getMqttConnections()
@@ -52,4 +58,16 @@ export const getMqttConnectionTopics = (request: Request, res: Response) => {
   res.json({
     topics: match ? wildcardMatchesTopics(match, topics) : topics
   })
+}
+
+export const publishMqttMessage = (req: Request, res: Response) => {
+  const connectionKey = req.params['connectionKey']
+  const { payload, qos, retain, topic } = req.body as ActionValidator
+
+  mqttClientPublishMessage(connectionKey, topic, payload, {
+    qos: <IClientPublishOptions['qos']>qos,
+    retain
+  })
+
+  res.json({ success: true })
 }

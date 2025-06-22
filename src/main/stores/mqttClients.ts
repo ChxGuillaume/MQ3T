@@ -3,6 +3,7 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { getGraphWindow } from '../windowGraph'
 import { MqttClient } from '../mqtt-client'
 import * as dns from 'dns'
+import { IClientPublishOptions } from 'mqtt/src/lib/client'
 
 const clients: Map<string, MqttClient> = new Map()
 const clientsState: Map<string, MqttConnectionStatus> = new Map()
@@ -123,6 +124,15 @@ export const unregisterMqttClientsHandler = (window: BrowserWindow) => {
   registeredWindows.delete(window)
 }
 
+export const mqttClientPublishMessage = (
+  clientKey: string,
+  topic: string,
+  message: string,
+  options: IClientPublishOptions = { qos: 0, retain: false }
+) => {
+  clients.get(clientKey)?.publish(topic, message, options)
+}
+
 export const initMqttClientsHandlers = () => {
   ipcMain.on('connect-mqtt', (_, connection: MqttConnection) => {
     createConnection(connection).then()
@@ -133,7 +143,7 @@ export const initMqttClientsHandlers = () => {
   })
 
   ipcMain.on('send-mqtt-message', (_, { clientKey, topic, message, options }) => {
-    clients.get(clientKey)?.publish(topic, message, options)
+    mqttClientPublishMessage(clientKey, topic, message, options)
   })
 
   ipcMain.on('init-renderer', (event) => {
