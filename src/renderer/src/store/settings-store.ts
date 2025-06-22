@@ -18,23 +18,32 @@ type SettingsStore = {
   chainActionsTrackpadMode: boolean
 }
 
+const getFromStorage = <T>(key: string, defaultValue: T): T => {
+  const value = localStorage.getItem(key)
+
+  if (value === null) return defaultValue
+  if (typeof defaultValue === 'boolean') return (value === 'true') as T
+  if (typeof defaultValue === 'number') return parseInt(value) as T
+
+  return value as T
+}
+
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsStore => ({
-    showActivity: (localStorage.getItem('showActivity') || 'true') === 'true',
-    showActivityAnimationSpeed: parseInt(
-      localStorage.getItem('showActivityAnimationSpeed') || '1000'
+    showActivity: getFromStorage('showActivity', true),
+    showActivityAnimationSpeed: getFromStorage('showActivityAnimationSpeed', 1000),
+    showActivityAnimationType: getFromStorage<ActivityAnimationType>(
+      'showActivityAnimationType',
+      'laser'
     ),
-    showActivityAnimationType:
-      (localStorage.getItem('showActivityAnimationType') as ActivityAnimationType) || 'laser',
-    dateFormat: localStorage.getItem('dateFormat') || 'YYYY/MM/DD',
-    timeFormat: localStorage.getItem('timeFormat') || 'HH:mm:ss',
-    maxMessages: parseInt(localStorage.getItem('maxMessages') || '100'),
-    smartTopicGroupClose: (localStorage.getItem('smartTopicGroupClose') || 'true') === 'true',
-    messagesPagination: (localStorage.getItem('messagesPagination') || 'true') === 'true',
-    defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw',
-    autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true',
-    chainActionsTrackpadMode:
-      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true'
+    dateFormat: getFromStorage('dateFormat', 'YYYY/MM/DD'),
+    timeFormat: getFromStorage('timeFormat', 'HH:mm:ss'),
+    maxMessages: getFromStorage('maxMessages', 100),
+    smartTopicGroupClose: getFromStorage('smartTopicGroupClose', true),
+    messagesPagination: getFromStorage('messagesPagination', true),
+    defaultDataFormat: getFromStorage<DefaultDataFormat>('defaultDataFormat', 'raw'),
+    autoOpenPublishActions: getFromStorage('autoOpenPublishActions', true),
+    chainActionsTrackpadMode: getFromStorage('chainActionsTrackpadMode', false)
   }),
   getters: {
     dateTimeFormat(): string {
