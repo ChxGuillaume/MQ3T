@@ -1,9 +1,11 @@
 import { registerDataGraphHandler } from './stores/dataGraph'
+import { registerMqttConnectionsHandler } from './stores/mqttConnections'
 import iconIcns from '../../build/logo/mac512pts.icns?asset'
 import iconIco from '../../build/logo/win512pts.ico?asset'
 import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import path from 'path'
+import { registerMqttClientsHandler } from './stores/mqttClients'
 
 export const createWindow = (routePath = '/') => {
   const windowConfig = {
@@ -25,6 +27,8 @@ export const createWindow = (routePath = '/') => {
   window.removeMenu()
 
   registerDataGraphHandler(window)
+  registerMqttClientsHandler(window)
+  registerMqttConnectionsHandler(window)
 
   window.on('ready-to-show', () => {
     window?.show()

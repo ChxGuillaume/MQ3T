@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
+import RegistrationDialog from '../components/RegistrationDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useSettingsStore } from '@renderer/store/settings-store'
 import ImportActions from '../components/ImportActions.vue'
+import { useDataGraphsStore } from '../store/data-graphs'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
@@ -14,13 +18,12 @@ import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import { useDataGraphsStore } from '../store/data-graphs'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
+const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
 
@@ -34,6 +37,10 @@ const currentTab = computed({
 const $q = useQuasar()
 
 const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
+
+// Registration dialog state
+const registrationDialogOpened = ref(false)
+const registrationPin = ref('')
 
 const handleKeyUp = (event: KeyboardEvent) => {
   if (event.ctrlKey) {
@@ -87,6 +94,36 @@ onMounted(() => {
 
   ElectronApi.debug((_, value, ...args) => {
     console.warn(value, args)
+  })
+
+  // Handle registration events
+  ElectronApi.handleRegistrationTriggered((_, pin) => {
+    registrationPin.value = pin
+    registrationDialogOpened.value = true
+  })
+
+  ElectronApi.handleRegistrationCompleted(() => {
+    // Close the registration dialog
+    registrationDialogOpened.value = false
+
+    // Show notification for registration completion
+    $q.notify({
+      message: 'Registration Complete',
+      caption: 'Registration has been successfully completed',
+      type: 'positive'
+    })
+  })
+
+  ElectronApi.handleRegistrationCanceled(() => {
+    // Close the registration dialog
+    registrationDialogOpened.value = false
+
+    // Show notification for registration cancellation
+    $q.notify({
+      message: 'Registration Canceled',
+      caption: 'Registration has been canceled',
+      type: 'info'
+    })
   })
 
   ElectronApi.handleMqttError((event, value) => {
@@ -167,6 +204,8 @@ onMounted(() => {
     actionsStore.setActionsGroups(actionGroups)
   })
 
+  if (settingsStore.companionServerEnabled) ElectronApi.startCompanionAppServer()
+
   dataGraphsStore.initStore()
 
   window.addEventListener('keyup', handleKeyUp)
@@ -237,6 +276,7 @@ onUnmounted(() => {
   <import-actions />
   <import-chain-actions />
   <import-actions-groups />
+  <registration-dialog v-model:opened="registrationDialogOpened" :pin="registrationPin" />
 </template>
 
 <style lang="less">

@@ -45,9 +45,7 @@ export const slicedWildcardMatchesTopics = (wildcard: string, topics: string[]):
 }
 
 export const wildcardMatchesTopics = (wildcard: string, topics: string[]): string[] => {
-  return topics.filter((topic) => {
-    let regexTopic = wildcard.replace(/\+/g, '.+?').replace(/\//g, '\\/')
+  let regexTopic = wildcard.replace(/\+/g, '.+?').replace(/\//g, '\\/')
 
-    return new RegExp(regexTopic).test(topic)
-  })
+  return topics.filter((topic) => new RegExp(regexTopic).test(topic))
 }

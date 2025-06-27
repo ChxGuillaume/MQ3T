@@ -6,9 +6,10 @@ import { DataGraph } from './data-graph'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
 import {
-  ConnectionsActionsFile,
+  ConnectionsActionsGroups,
   ConnectionsChainActions,
-  ConnectionsActionsGroups
+  ConnectionsActionsFile,
+  ConnectionsActionsFileV2
 } from './actions'
 
 export type AppVersionCallback = (event: never, value: string) => void
@@ -31,6 +32,11 @@ export type ElectronIpc = {
   handleMqttError: (callback: MqttErrorCallback) => void
   handleMqttMessage: (callback: MqttMessageCallback) => void
   handleMqttStatus: (callback: MqttStatusCallback) => void
+
+  handleRegistrationTriggered: (callback: (event: never, pin: string) => void) => void
+  handleRegistrationCompleted: (callback: (event: never) => void) => void
+  handleRegistrationCanceled: (callback: (event: never) => void) => void
+  cancelRegistration: () => Promise<Response>
 
   connectMqtt: (connection: MqttConnection) => void
   disconnectMqtt: (clientKey: string) => void
@@ -62,7 +68,7 @@ export type ElectronIpc = {
   openUrl: (url: string) => void
 
   handleLoadMqttConnections: (callback: MqttLoadConnectionsCallback) => void
-  handleLoadActions: (callback: (event: never, value: ConnectionsActionsFile) => void) => void
+  handleLoadActions: (callback: (event: never, value: ConnectionsActionsFileV2) => void) => void
   handleLoadChainActions: (callback: (event: never, value: ConnectionsChainActions) => void) => void
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
@@ -91,4 +97,7 @@ export type ElectronIpc = {
   requestMqttMessages: () => void
   handleTransferMqttMessages: (callback: (event: never, value: TopicMessages) => void) => void
   handleRequestMqttMessages: (callback: (event: never, value: never) => void) => void
+
+  startCompanionAppServer: () => void
+  stopCompanionAppServer: () => void
 }
