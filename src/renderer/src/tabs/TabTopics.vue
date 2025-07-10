@@ -11,6 +11,7 @@ import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
+import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
@@ -313,6 +314,8 @@ onMounted(() => {
     ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
   })
 })
+
+const displayMode = ref('tree')
 </script>
 
 <template>
@@ -335,15 +338,18 @@ onMounted(() => {
       >
         <template #before>
           <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-            <div class="">
+            <div class="tw-flex">
               <q-input
                 v-model="topicSearch"
+                class="tw-flex-grow"
                 filled
                 label="Search Topic..."
                 dense
                 square
                 debounce="100"
               />
+              <q-separator vertical />
+              <display-mode-select v-model="displayMode" />
             </div>
             <q-separator />
             <div class="tw-overflow-auto" @keyup="handleKeyUp" @keydown="handleKeyDown">
@@ -372,7 +378,7 @@ onMounted(() => {
                     <connection-context-menu :connection="value" />
                   </topic-card>
                   <template v-if="!expandConnection[value.clientKey]">
-                    <TopicItem
+                    <topic-item
                       v-for="[pathKey, structure] in Object.entries(
                         mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
                       ).sort((a, b) => a[0].localeCompare(b[0]))"
