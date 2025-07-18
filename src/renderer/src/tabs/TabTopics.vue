@@ -15,12 +15,13 @@ import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
-import { useMqttTopicsStore } from '../store/mqtt-topics'
+import { MqttTopicStructure, useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
+import TopicLine from '@renderer/components/tap-topics/TopicLine.vue'
 
 const { setVerticalScrollPosition } = scroll
 
@@ -316,6 +317,28 @@ onMounted(() => {
 })
 
 const displayMode = ref('tree')
+
+const getFlatTopicStructure = (structure: MqttTopicStructure) => {
+  const topics: string[] = []
+
+  const traverseStructure = (node: MqttTopicStructure | null, path: string) => {
+    if (!node) return
+
+    if (Object.keys(node).length === 0) {
+      topics.push(path)
+      return
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      const newPath = path ? `${path}/${key}` : key
+      traverseStructure(value, newPath)
+    }
+  }
+
+  traverseStructure(structure, '')
+
+  return topics.sort(sortTopics)
+}
 </script>
 
 <template>
@@ -377,7 +400,19 @@ const displayMode = ref('tree')
                     </span>
                     <connection-context-menu :connection="value" />
                   </topic-card>
-                  <template v-if="!expandConnection[value.clientKey]">
+                  <template v-if="!expandConnection[value.clientKey] && displayMode === 'line'">
+                    <div class="tw-flex tw-flex-col tw-gap-1">
+                      <topic-line
+                        v-for="topic in getFlatTopicStructure(
+                          mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
+                        )"
+                        :topic="topic"
+                        :client-key="value.clientKey"
+                        @topic:click="handleTopicClick(value.clientKey, $event)"
+                      />
+                    </div>
+                  </template>
+                  <template v-if="!expandConnection[value.clientKey] && displayMode === 'tree'">
                     <topic-item
                       v-for="[pathKey, structure] in Object.entries(
                         mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)

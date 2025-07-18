@@ -190,6 +190,7 @@ watch(
             v-text="`= ${topicLastMessage?.message}`"
           />
           <topic-item-menu
+            has-topic-keys
             :has-last-message="!topicLastMessage?.message"
             :favorite="favoritedTopics"
             @copy-last-message="handleCopyLastMessage"
@@ -244,6 +245,7 @@ watch(
           v-text="`= ${topicLastMessage?.message}`"
         />
         <topic-item-menu
+          has-topic-keys
           :has-last-message="!topicLastMessage?.message"
           :favorite="favoritedTopics"
           @copy-last-message="handleCopyLastMessage"
