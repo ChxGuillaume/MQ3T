@@ -134,11 +134,13 @@ const topicLastMessage = computed(() => {
 })
 
 const subTopicsTopicsCount = computed(() => {
-  return mqttTopicsStore.getSubTopicsTopicsCount(props.clientKey, props.topicPath)
+  return mqttTopicsStore.getSubTopicsTopicsCount(props.clientKey, props.topicPath).toLocaleString()
 })
 
 const subTopicsMessagesCount = computed(() => {
-  return mqttTopicsStore.getSubTopicsMessagesCount(props.clientKey, props.topicPath)
+  return mqttTopicsStore
+    .getSubTopicsMessagesCount(props.clientKey, props.topicPath)
+    .toLocaleString()
 })
 
 watch(
