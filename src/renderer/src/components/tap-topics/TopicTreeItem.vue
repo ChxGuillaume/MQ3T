@@ -168,7 +168,7 @@ watch(
       </q-intersection>
     </div>
     <template v-if="expandedTopicsSection">
-      <topic-item
+      <topic-tree-item
         v-for="[key, value] in sortedTopicStructure"
         :key="key"
         class="tw-mt-1"

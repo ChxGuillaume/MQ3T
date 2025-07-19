@@ -7,7 +7,7 @@ import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
-import TopicItem from '../components/tap-topics/TopicItem.vue'
+import TopicTreeItem from '../components/tap-topics/TopicTreeItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
@@ -21,7 +21,7 @@ import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
-import TopicLine from '@renderer/components/tap-topics/TopicLine.vue'
+import TopicLineItem from '@renderer/components/tap-topics/TopicLineItem.vue'
 
 const { setVerticalScrollPosition } = scroll
 
@@ -402,7 +402,7 @@ const getFlatTopicStructure = (structure: MqttTopicStructure) => {
                   </topic-card>
                   <template v-if="!expandConnection[value.clientKey] && displayMode === 'line'">
                     <div class="tw-flex tw-flex-col tw-gap-1">
-                      <topic-line
+                      <topic-line-item
                         v-for="topic in getFlatTopicStructure(
                           mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
                         )"
@@ -413,7 +413,7 @@ const getFlatTopicStructure = (structure: MqttTopicStructure) => {
                     </div>
                   </template>
                   <template v-if="!expandConnection[value.clientKey] && displayMode === 'tree'">
-                    <topic-item
+                    <topic-tree-item
                       v-for="[pathKey, structure] in Object.entries(
                         mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
                       ).sort((a, b) => a[0].localeCompare(b[0]))"
