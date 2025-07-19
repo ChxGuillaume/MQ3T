@@ -3,13 +3,9 @@ import { exportMessages } from '@renderer/assets/js/export-messages'
 import TopicCard, { ITopicCard } from '@renderer/components/tap-topics/TopicCard.vue'
 import TopicItemMenu from '@renderer/components/tap-topics/TopicItemMenu.vue'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
-import { computed, ref, watch } from 'vue'
-import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
-import { useActionsCacheStore } from '@renderer/store/actions-cache'
+import { ref, watch } from 'vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
-import { useQuasar } from 'quasar'
-
-const $q = useQuasar()
+import { useTopicActions } from '@renderer/composables/useTopicActions'
 
 type Props = {
   clientKey: string
@@ -19,73 +15,28 @@ type Props = {
 const props = defineProps<Props>()
 const emits = defineEmits(['topic:click'])
 
-const favoriteTopicsStore = useFavoriteTopicsStore()
-const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
 const topicCardRef = ref<ITopicCard | null>(null)
 
-const hasActions = computed(() => {
-  return actionsCacheStore.hasAction(props.clientKey, props.topic)
-})
-
-const favoritedTopics = computed(() => {
-  return favoriteTopicsStore.isFavoriteTopic(props.clientKey, props.topic)
-})
-
-const isSelectedConnection = computed(() => {
-  return mqttTopicsStore.selectedConnection === props.clientKey
-})
-
-const isSelectedTopic = computed(() => {
-  return isSelectedConnection.value && mqttTopicsStore.selectedTopic === props.topic
+const {
+  hasActions,
+  favoritedTopics,
+  isSelectedTopic,
+  topicLastMessage,
+  handleCopyLastMessage,
+  handleEraseTopic,
+  handleFavorite,
+  handleUnfavorite,
+  handleCopyTopic
+} = useTopicActions({
+  clientKey: props.clientKey,
+  topic: props.topic
 })
 
 const handleTopicClick = () => {
   emits('topic:click', props.topic)
-}
-
-const clientKey = 'test'
-
-const topicLastMessage = computed(() => {
-  return mqttTopicsStore.getTopicLastMessage(props.clientKey, props.topic)
-})
-
-const handleCopyLastMessage = () => {
-  if (topicLastMessage.value?.message) {
-    navigator.clipboard.writeText(topicLastMessage.value.message)
-
-    $q.notify({
-      message: 'Last message copied to clipboard',
-      icon: 'fa-solid fa-clipboard',
-      color: 'positive',
-      timeout: 1000
-    })
-  }
-}
-
-const handleEraseTopic = () => {
-  mqttTopicsStore.clearTopicsAndSubTopicsMessages(props.clientKey, props.topic)
-}
-
-const handleFavorite = () => {
-  favoriteTopicsStore.addFavoriteTopic(props.clientKey, props.topic)
-}
-
-const handleUnfavorite = () => {
-  favoriteTopicsStore.removeFavoriteTopic(props.clientKey, props.topic)
-}
-
-const handleCopyTopic = () => {
-  navigator.clipboard.writeText(props.topic)
-
-  $q.notify({
-    message: 'Topic copied to clipboard',
-    icon: 'fa-solid fa-clipboard',
-    color: 'positive',
-    timeout: 1000
-  })
 }
 
 watch(

@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
-import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
 import { exportMessages } from '@renderer/assets/js/export-messages'
-import { useActionsCacheStore } from '../../store/actions-cache'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
 import TopicItemMenu from './TopicItemMenu.vue'
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useTopicActions } from '@renderer/composables/useTopicActions'
 
 const $q = useQuasar()
-
-const favoriteTopicsStore = useFavoriteTopicsStore()
-const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
@@ -27,17 +23,24 @@ const props = defineProps<{
   topicIndex: number
 }>()
 
+const {
+  hasActions,
+  favoritedTopics,
+  isSelectedTopic,
+  topicLastMessage,
+  handleCopyLastMessage,
+  handleEraseTopic,
+  handleFavorite,
+  handleUnfavorite,
+  handleCopyTopic
+} = useTopicActions({
+  clientKey: props.clientKey,
+  topic: props.topicPath
+})
+
 const expandedTopicsSection = computed({
   get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.topicPath),
   set: (value) => mqttTopicsStore.setTopicGroupOpened(props.clientKey, props.topicPath, value)
-})
-
-const hasActions = computed(() => {
-  return actionsCacheStore.hasAction(props.clientKey, props.topicPath)
-})
-
-const favoritedTopics = computed(() => {
-  return favoriteTopicsStore.isFavoriteTopic(props.clientKey, props.topicPath)
 })
 
 const emits = defineEmits(['topic:click'])
@@ -58,17 +61,6 @@ const handleTopicClick = () => {
   emits('topic:click', props.topicPath)
 }
 
-const handleCopyTopic = () => {
-  navigator.clipboard.writeText(props.topicPath)
-
-  $q.notify({
-    message: 'Topic copied to clipboard',
-    icon: 'fa-solid fa-clipboard',
-    color: 'positive',
-    timeout: 1000
-  })
-}
-
 const handleCopyTopicKey = () => {
   navigator.clipboard.writeText(props.topicKey)
 
@@ -80,41 +72,8 @@ const handleCopyTopicKey = () => {
   })
 }
 
-const handleCopyLastMessage = () => {
-  if (topicLastMessage.value?.message) {
-    navigator.clipboard.writeText(topicLastMessage.value.message)
-
-    $q.notify({
-      message: 'Last message copied to clipboard',
-      icon: 'fa-solid fa-clipboard',
-      color: 'positive',
-      timeout: 1000
-    })
-  }
-}
-
-const handleEraseTopic = () => {
-  mqttTopicsStore.clearTopicsAndSubTopicsMessages(props.clientKey, props.topicPath)
-}
-
-const handleFavorite = () => {
-  favoriteTopicsStore.addFavoriteTopic(props.clientKey, props.topicPath)
-}
-
-const handleUnfavorite = () => {
-  favoriteTopicsStore.removeFavoriteTopic(props.clientKey, props.topicPath)
-}
-
 const isLastTopicPart = computed(() => {
   return Object.keys(props.topicStructure || {}).length === 0
-})
-
-const isSelectedConnection = computed(() => {
-  return mqttTopicsStore.selectedConnection === props.clientKey
-})
-
-const isSelectedTopic = computed(() => {
-  return isSelectedConnection.value && mqttTopicsStore.selectedTopic === props.topicPath
 })
 
 const sortedTopicStructure = computed(() => {
@@ -127,10 +86,6 @@ const sortedTopicStructure = computed(() => {
     else if (isNaN(parsedB)) return -1
     else return parsedA - parsedB
   })
-})
-
-const topicLastMessage = computed(() => {
-  return mqttTopicsStore.getTopicLastMessage(props.clientKey, props.topicPath)
 })
 
 const subTopicsTopicsCount = computed(() => {

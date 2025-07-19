@@ -41,6 +41,7 @@ const selectedOption = computed(() => {
 <template>
   <q-select
     v-model="model"
+    hide-dropdown-icon
     :options="options"
     :dense="dense"
     :square="square"
@@ -51,8 +52,7 @@ const selectedOption = computed(() => {
   >
     <template #selected>
       <div class="tw-flex tw-items-center" v-if="selectedOption">
-        <q-icon :name="selectedOption.icon" size="xs" class="tw-mr-2" />
-        <span>{{ selectedOption.label }}</span>
+        <q-icon :name="selectedOption.icon" size="xs" />
       </div>
     </template>
     <template #option="{ itemProps, opt }">

@@ -372,7 +372,7 @@ const getFlatTopicStructure = (structure: MqttTopicStructure) => {
                 debounce="100"
               />
               <q-separator vertical />
-              <display-mode-select v-model="displayMode" />
+              <display-mode-select v-model="displayMode" class="tw-min-w-4" />
             </div>
             <q-separator />
             <div class="tw-overflow-auto" @keyup="handleKeyUp" @keydown="handleKeyDown">
