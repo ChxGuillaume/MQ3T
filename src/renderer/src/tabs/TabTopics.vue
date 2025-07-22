@@ -15,7 +15,7 @@ import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
-import { MqttTopicStructure, useMqttTopicsStore } from '../store/mqtt-topics'
+import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
@@ -317,28 +317,6 @@ onMounted(() => {
 })
 
 const displayMode = ref('tree')
-
-const getFlatTopicStructure = (structure: MqttTopicStructure) => {
-  const topics: string[] = []
-
-  const traverseStructure = (node: MqttTopicStructure | null, path: string) => {
-    if (!node) return
-
-    if (Object.keys(node).length === 0) {
-      topics.push(path)
-      return
-    }
-
-    for (const [key, value] of Object.entries(node)) {
-      const newPath = path ? `${path}/${key}` : key
-      traverseStructure(value, newPath)
-    }
-  }
-
-  traverseStructure(structure, '')
-
-  return topics.sort(sortTopics)
-}
 </script>
 
 <template>
@@ -403,9 +381,9 @@ const getFlatTopicStructure = (structure: MqttTopicStructure) => {
                   <template v-if="!expandConnection[value.clientKey] && displayMode === 'line'">
                     <div class="tw-flex tw-flex-col tw-gap-1">
                       <topic-line-item
-                        v-for="topic in getFlatTopicStructure(
-                          mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
-                        )"
+                        v-for="topic in (
+                          Object.keys(mqttTopicsStore.topicsMessages[value.clientKey]) || []
+                        ).sort(sortTopics)"
                         :topic="topic"
                         :client-key="value.clientKey"
                         @topic:click="handleTopicClick(value.clientKey, $event)"
