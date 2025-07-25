@@ -2,16 +2,16 @@
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
 import TabChainActions from '@renderer/components/tap-topics/TabChainActions.vue'
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
+import TopicItemList from '@renderer/components/tap-topics/TopicItemList.vue'
 import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
+import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
-import TopicTreeItem from '../components/tap-topics/TopicTreeItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
-import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
@@ -21,7 +21,6 @@ import { useDataGraphsStore } from '../store/data-graphs'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
-import TopicLineItem from '@renderer/components/tap-topics/TopicLineItem.vue'
 
 const { setVerticalScrollPosition } = scroll
 
@@ -316,7 +315,7 @@ onMounted(() => {
   })
 })
 
-const displayMode = ref('tree')
+const displayMode = ref<'line' | 'tree'>('tree')
 </script>
 
 <template>
@@ -378,32 +377,12 @@ const displayMode = ref('tree')
                     </span>
                     <connection-context-menu :connection="value" />
                   </topic-card>
-                  <template v-if="!expandConnection[value.clientKey] && displayMode === 'line'">
-                    <div class="tw-flex tw-flex-col tw-gap-1">
-                      <topic-line-item
-                        v-for="topic in (
-                          Object.keys(mqttTopicsStore.topicsMessages[value.clientKey]) || []
-                        ).sort(sortTopics)"
-                        :topic="topic"
-                        :client-key="value.clientKey"
-                        @topic:click="handleTopicClick(value.clientKey, $event)"
-                      />
-                    </div>
-                  </template>
-                  <template v-if="!expandConnection[value.clientKey] && displayMode === 'tree'">
-                    <topic-tree-item
-                      v-for="[pathKey, structure] in Object.entries(
-                        mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
-                      ).sort((a, b) => a[0].localeCompare(b[0]))"
-                      :key="pathKey"
-                      :client-key="value.clientKey"
-                      :topic-key="pathKey"
-                      :topic-path="pathKey"
-                      :topic-index="1"
-                      :topic-structure="structure"
-                      @topic:click="handleTopicClick(value.clientKey, $event)"
-                    />
-                  </template>
+                  <topic-item-list
+                    :client-key="value.clientKey"
+                    :display-mode="displayMode"
+                    :expand-connection="expandConnection"
+                    @topic:click="handleTopicClick"
+                  />
                 </div>
                 <q-separator />
               </q-virtual-scroll>
