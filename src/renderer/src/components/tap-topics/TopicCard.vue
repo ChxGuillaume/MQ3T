@@ -88,7 +88,7 @@ defineExpose({ animate })
 <template>
   <q-card
     flat
-    class="topic-item-card card-secondary-background tw-pr-3 tw-select-none"
+    class="topic-item-card card-secondary-background tw-select-none tw-pr-3"
     :class="[
       { active },
       { opened },
@@ -120,7 +120,7 @@ defineExpose({ animate })
 }
 
 .topic-item-card {
-  @apply tw-py-1 tw-line-clamp-1 tw-break-all tw-cursor-pointer tw-text-neutral-500;
+  @apply tw-flex tw-cursor-pointer tw-items-center tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
 }
 
 .topic-item-card.not-scrubbing {
