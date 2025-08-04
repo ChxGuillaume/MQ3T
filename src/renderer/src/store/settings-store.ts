@@ -16,6 +16,7 @@ type SettingsStore = {
   defaultDataFormat: DefaultDataFormat
   autoOpenPublishActions: boolean
   chainActionsTrackpadMode: boolean
+  selectedMessageCompare: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -34,7 +35,8 @@ export const useSettingsStore = defineStore('settings', {
     defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw',
     autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true',
     chainActionsTrackpadMode:
-      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true'
+      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true',
+    selectedMessageCompare: (localStorage.getItem('lastMessageCompare') || 'true') === 'true'
   }),
   getters: {
     dateTimeFormat(): string {
@@ -94,6 +96,10 @@ export const useSettingsStore = defineStore('settings', {
     setChainActionsTrackpadMode(value: boolean) {
       this.chainActionsTrackpadMode = value
       localStorage.setItem('chainActionsTrackpadMode', value.toString())
+    },
+    setSelectedMessageCompare(value: boolean) {
+      this.selectedMessageCompare = value
+      localStorage.setItem('lastMessageCompare', value.toString())
     }
   }
 })

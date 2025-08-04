@@ -6,7 +6,7 @@ import { is } from '@electron-toolkit/utils'
 import path from 'path'
 
 export const createWindow = (routePath = '/') => {
-  const windowConfig = {
+  const windowConfig: Electron.BrowserWindowConstructorOptions = {
     width: 1300,
     minWidth: 800,
     height: 800,

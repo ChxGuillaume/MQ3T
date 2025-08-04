@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CodeDiffPreview from '@renderer/components/tap-topics/CodeDiffPreview.vue'
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { useSettingsStore } from '../../store/settings-store'
@@ -104,13 +105,13 @@ watch(
 </script>
 
 <template>
-  <div class="tw-p-4 tw-flex tw-flex-col tw-gap-1">
+  <div class="tw-flex tw-flex-col tw-gap-1 tw-p-4">
     <div class="tw-flex tw-gap-2">
       <h2 class="tw-text-xl tw-font-bold">Topic</h2>
       <copy-button notification-message="Topic copied to clipboard" @click="copySelectedTopic" />
       <erase-button @click="handleEraseTopic" />
     </div>
-    <div class="tw-flex tw-items-center tw-min-h-[28px]">
+    <div class="tw-flex tw-min-h-[28px] tw-items-center">
       <span v-if="!breadcrumbs.length">No Topic Selected</span>
       <q-breadcrumbs v-else gutter="none">
         <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
@@ -137,7 +138,7 @@ watch(
   <q-separator />
   <div class="tw-overflow-auto">
     <div v-if="selectedTopicLastMessage">
-      <div class="tw-p-4 tw-flex justify-between">
+      <div class="justify-between tw-flex tw-p-4">
         <div>
           QoS: {{ selectedTopicLastMessage?.qos || 0 }}
           <copy-button
@@ -158,7 +159,7 @@ watch(
             @click="handleClearRetained"
           />
         </div>
-        <div class="tw-flex tw-flex-col items-end">
+        <div class="items-end tw-flex tw-flex-col">
           <div>
             {{
               selectedTopicLastMessage?.createdAt &&
@@ -195,8 +196,15 @@ watch(
           >
             <template v-if="selectedMessage" v-slot:before>
               <code-preview
-                v-if="selectedMessage"
+                v-if="selectedMessage && !settingsStore.selectedMessageCompare"
                 :value="selectedMessage?.message || ''"
+                :language="selectedMessage?.dataType"
+                hide-top-border
+              />
+              <code-diff-preview
+                v-else-if="selectedMessage && settingsStore.selectedMessageCompare"
+                :value="selectedMessage?.message || ''"
+                :modified-value="mqttTopicsStore.getSelectedTopicLastMessage?.message || ''"
                 :language="selectedMessage?.dataType"
                 hide-top-border
               />
@@ -218,7 +226,7 @@ watch(
     </div>
     <div
       v-else
-      class="tw-h-full tw-flex tw-justify-center tw-items-center tw-text-2xl tw-font-bold"
+      class="tw-flex tw-h-full tw-items-center tw-justify-center tw-text-2xl tw-font-bold"
     >
       No Messages
     </div>

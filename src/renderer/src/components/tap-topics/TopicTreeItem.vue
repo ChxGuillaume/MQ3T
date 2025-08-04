@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
+import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
+import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
 import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
@@ -120,7 +122,10 @@ watch(
 <template>
   <div v-if="!isLastTopicPart" :id="`topic-item-${topicPath}`">
     <div class="tw-flex">
-      <q-intersection :id="`topic-item-${clientKey}:${topicPath}-intersection`" class="tw-h-[29px]">
+      <q-intersection
+        :id="`topic-item-${clientKey}:${topicPath}-intersection`"
+        class="tw-h-[29px] tw-max-w-full"
+      >
         <topic-card
           ref="topicGroupTopicCardRef"
           expandable
@@ -139,10 +144,11 @@ watch(
             class="tw-ml-1 tw-text-xs"
             v-text="`(${subTopicsTopicsCount} topics ${subTopicsMessagesCount} messages)`"
           />
-          <span
-            v-if="topicLastMessage?.message"
-            class="tw-ml-1 tw-text-xs"
-            v-text="`= ${topicLastMessage?.message}`"
+          <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+          <code-highlight
+            v-if="topicLastMessage?.message && topicLastMessage.dataType"
+            :code="topicLastMessage?.message"
+            :language="topicLastMessage.dataType"
           />
           <topic-item-menu
             has-topic-keys
@@ -182,7 +188,10 @@ watch(
     </template>
   </div>
   <div v-else class="tw-flex" :id="`topic-item-${topicPath}`">
-    <q-intersection :id="`topic-item-${clientKey}:${topicPath}-intersection`" class="tw-h-[29px]">
+    <q-intersection
+      :id="`topic-item-${clientKey}:${topicPath}-intersection`"
+      class="tw-h-[29px] tw-max-w-full"
+    >
       <topic-card
         ref="topicCardRef"
         :has-actions="hasActions"
@@ -194,10 +203,11 @@ watch(
         <span class="topic-item-key" :class="{ empty: !topicKey }">
           {{ topicKey ? topicKey : '<\empty>' }}
         </span>
-        <span
+        <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+        <code-highlight
           v-if="topicLastMessage?.message"
-          class="tw-ml-1 tw-text-xs"
-          v-text="`= ${topicLastMessage?.message}`"
+          :code="topicLastMessage?.message"
+          :language="topicLastMessage.dataType"
         />
         <topic-item-menu
           has-topic-keys
