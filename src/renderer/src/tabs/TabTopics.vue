@@ -148,7 +148,8 @@ const allTopics = computed(() => {
     .sort(sortTopics)
 })
 
-const topicToSelect = (index: number, direction: 'up' | 'down'): string | null => {
+const topicToSelect = (direction: 'up' | 'down', recursiveIndex?: number): string | null => {
+  const index = recursiveIndex || allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
   const nextIndex = direction === 'up' ? index - 1 : index + 1
   const topic = allTopics.value[nextIndex]
 
@@ -164,7 +165,7 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
   })
 
   if (typeof isNotOpened !== 'string') return topic
-  return topicToSelect(nextIndex, direction)
+  return topicToSelect(direction, nextIndex)
 }
 
 const handleKeyUp = (event: KeyboardEvent) => {
@@ -189,11 +190,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleUpKeyDown = () => {
   const clientKey = mqttTopicsStore.selectedConnection
-  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
-  const previousTopic = topicToSelect(selectedTopicIndex, 'up')
+  const previousTopic = topicToSelect('up')
 
   if (previousTopic) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, previousTopic)
+    handleSelectTopic(clientKey, previousTopic)
     handleScrollPreviousTopic(clientKey, previousTopic)
   }
 
@@ -210,11 +210,10 @@ const handleUpKeyUp = () => {
 
 const handleDownKeyDown = () => {
   const clientKey = mqttTopicsStore.selectedConnection
-  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
-  const nextTopic = topicToSelect(selectedTopicIndex, 'down')
+  const nextTopic = topicToSelect('down')
 
   if (nextTopic) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
+    handleSelectTopic(clientKey, nextTopic)
     handleScrollNextTopic(clientKey, nextTopic)
   }
 
@@ -256,7 +255,7 @@ const handleRightKey = () => {
 
   if (isGroup && !isOpened) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
   else {
-    const nextTopic = topicToSelect(allTopics.value.indexOf(topic), 'down')
+    const nextTopic = topicToSelect('down')
 
     if (nextTopic) {
       handleSelectTopic(clientKey, nextTopic)
