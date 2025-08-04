@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
-import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
+import { useTopicActions } from '@renderer/composables/useTopicActions'
 import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
 import TopicItemMenu from './TopicItemMenu.vue'
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useTopicActions } from '@renderer/composables/useTopicActions'
 
 const $q = useQuasar()
 const mqttTopicsStore = useMqttTopicsStore()

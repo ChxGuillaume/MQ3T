@@ -6,6 +6,7 @@ import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { ref, watch } from 'vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
 import { useTopicActions } from '@renderer/composables/useTopicActions'
+import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
 
 type Props = {
   clientKey: string
@@ -64,10 +65,11 @@ watch(
       <span class="topic-item-key" :class="{ empty: !topic }">
         {{ topic ? topic : '<\empty>' }}
       </span>
-      <span
-        v-if="topicLastMessage?.message"
-        class="tw-ml-1 tw-text-xs"
-        v-text="`= ${topicLastMessage?.message}`"
+      <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+      <code-highlight
+        v-if="topicLastMessage?.message && topicLastMessage.dataType"
+        :code="topicLastMessage?.message"
+        :language="topicLastMessage.dataType"
       />
       <topic-item-menu
         :has-last-message="!topicLastMessage?.message"
