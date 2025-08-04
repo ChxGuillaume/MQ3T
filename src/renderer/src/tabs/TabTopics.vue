@@ -178,6 +178,8 @@ const handleKeyUp = (event: KeyboardEvent) => {
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  if (displayMode.value !== 'tree') return
+
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
     event.preventDefault()
   }
