@@ -2,12 +2,13 @@
 import ConnectionContextMenu from '../components/tap-topics/ConnectionContextMenu.vue'
 import TabChainActions from '@renderer/components/tap-topics/TabChainActions.vue'
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
+import TopicItemList from '@renderer/components/tap-topics/TopicItemList.vue'
 import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import ConnectionStatusChip from '../components/ConnectionStatusChip.vue'
+import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
-import TopicItem from '../components/tap-topics/TopicItem.vue'
 import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
@@ -147,7 +148,8 @@ const allTopics = computed(() => {
     .sort(sortTopics)
 })
 
-const topicToSelect = (index: number, direction: 'up' | 'down'): string | null => {
+const topicToSelect = (direction: 'up' | 'down', recursiveIndex?: number): string | null => {
+  const index = recursiveIndex || allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
   const nextIndex = direction === 'up' ? index - 1 : index + 1
   const topic = allTopics.value[nextIndex]
 
@@ -163,7 +165,7 @@ const topicToSelect = (index: number, direction: 'up' | 'down'): string | null =
   })
 
   if (typeof isNotOpened !== 'string') return topic
-  return topicToSelect(nextIndex, direction)
+  return topicToSelect(direction, nextIndex)
 }
 
 const handleKeyUp = (event: KeyboardEvent) => {
@@ -176,6 +178,8 @@ const handleKeyUp = (event: KeyboardEvent) => {
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  if (displayMode.value !== 'tree') return
+
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
     event.preventDefault()
   }
@@ -188,11 +192,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleUpKeyDown = () => {
   const clientKey = mqttTopicsStore.selectedConnection
-  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
-  const previousTopic = topicToSelect(selectedTopicIndex, 'up')
+  const previousTopic = topicToSelect('up')
 
   if (previousTopic) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, previousTopic)
+    handleSelectTopic(clientKey, previousTopic)
     handleScrollPreviousTopic(clientKey, previousTopic)
   }
 
@@ -209,11 +212,10 @@ const handleUpKeyUp = () => {
 
 const handleDownKeyDown = () => {
   const clientKey = mqttTopicsStore.selectedConnection
-  const selectedTopicIndex = allTopics.value.indexOf(mqttTopicsStore.selectedTopic)
-  const nextTopic = topicToSelect(selectedTopicIndex, 'down')
+  const nextTopic = topicToSelect('down')
 
   if (nextTopic) {
-    handleSelectTopic(mqttTopicsStore.selectedConnection, nextTopic)
+    handleSelectTopic(clientKey, nextTopic)
     handleScrollNextTopic(clientKey, nextTopic)
   }
 
@@ -255,7 +257,7 @@ const handleRightKey = () => {
 
   if (isGroup && !isOpened) mqttTopicsStore.setTopicGroupOpened(clientKey, topic, true)
   else {
-    const nextTopic = topicToSelect(allTopics.value.indexOf(topic), 'down')
+    const nextTopic = topicToSelect('down')
 
     if (nextTopic) {
       handleSelectTopic(clientKey, nextTopic)
@@ -313,6 +315,8 @@ onMounted(() => {
     ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
   })
 })
+
+const displayMode = ref<'line' | 'tree'>('tree')
 </script>
 
 <template>
@@ -335,15 +339,18 @@ onMounted(() => {
       >
         <template #before>
           <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-            <div class="">
+            <div class="tw-flex">
               <q-input
                 v-model="topicSearch"
+                class="tw-flex-grow"
                 filled
                 label="Search Topic..."
                 dense
                 square
                 debounce="100"
               />
+              <q-separator vertical />
+              <display-mode-select v-model="displayMode" class="tw-min-w-4" />
             </div>
             <q-separator />
             <div class="tw-overflow-auto" @keyup="handleKeyUp" @keydown="handleKeyDown">
@@ -371,20 +378,12 @@ onMounted(() => {
                     </span>
                     <connection-context-menu :connection="value" />
                   </topic-card>
-                  <template v-if="!expandConnection[value.clientKey]">
-                    <TopicItem
-                      v-for="[pathKey, structure] in Object.entries(
-                        mqttTopicsStore.getFilteredTopicsStructure(value.clientKey)
-                      ).sort((a, b) => a[0].localeCompare(b[0]))"
-                      :key="pathKey"
-                      :client-key="value.clientKey"
-                      :topic-key="pathKey"
-                      :topic-path="pathKey"
-                      :topic-index="1"
-                      :topic-structure="structure"
-                      @topic:click="handleTopicClick(value.clientKey, $event)"
-                    />
-                  </template>
+                  <topic-item-list
+                    :client-key="value.clientKey"
+                    :display-mode="displayMode"
+                    :expand-connection="expandConnection"
+                    @topic:click="handleTopicClick"
+                  />
                 </div>
                 <q-separator />
               </q-virtual-scroll>

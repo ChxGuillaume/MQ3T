@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   hasLastMessage?: boolean
+  hasTopicKeys?: boolean
   favorite?: boolean
 }>()
 
@@ -91,7 +92,13 @@ const handleFavorite = () => {
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopicKey')">
+      <q-item
+        v-if="hasTopicKeys"
+        class="tw-text-secondary"
+        clickable
+        v-close-popup
+        @click="$emit('copyTopicKey')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-copy" class="tw-mr-2" />

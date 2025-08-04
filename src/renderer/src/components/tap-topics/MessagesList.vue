@@ -147,7 +147,7 @@ watch(
             />
           </div>
         </div>
-        <div class="tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
+        <div class="tw-line-clamp-4 tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
           {{ formatMessage(message.message) }}
         </div>
       </q-card>

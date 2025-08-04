@@ -236,3 +236,4 @@ fabric.properties
 
 /resources/monaco-editor/
 *.dist.yml
+**/.DS_Store
