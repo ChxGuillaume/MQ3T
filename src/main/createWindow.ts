@@ -17,7 +17,11 @@ export const createWindow = (routePath = '/') => {
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       sandbox: false
-    }
+    },
+
+    titleBarStyle: 'hidden',
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+    trafficLightPosition: { x: 12, y: 12 }
   }
 
   const window = new BrowserWindow(windowConfig)

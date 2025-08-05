@@ -344,6 +344,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
                 v-model="topicSearch"
                 class="tw-flex-grow"
                 filled
+                name="topicSearch"
                 label="Search Topic..."
                 dense
                 square
@@ -358,7 +359,13 @@ const displayMode = ref<'line' | 'tree'>('tree')
                 id="topicsVirtualScroll"
                 v-slot="{ item: [_, value] }"
                 class="tw-h-full tw-max-h-full"
-                :items="Object.entries(mqttConnectionsStore.getConnectionsWithStatus)"
+                :items="
+                  Object.entries(
+                    mqttConnectionsStore.getConnectionsWithStatus.filter(
+                      (c) => c.clientKey === mqttTopicsStore.selectedConnection
+                    )
+                  )
+                "
               >
                 <div class="tw-flex tw-flex-col tw-gap-1 tw-p-3" :key="value.clientKey">
                   <topic-card

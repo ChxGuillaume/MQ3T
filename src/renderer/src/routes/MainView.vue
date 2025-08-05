@@ -16,6 +16,7 @@ import TabTopics from '../tabs/TabTopics.vue'
 import { useQuasar } from 'quasar'
 import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
+import AppBar from '../components/AppBar.vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -61,6 +62,15 @@ watch(
 
     if (value) document.documentElement.classList.add(classDark)
     else document.documentElement.classList.remove(classDark)
+  }
+)
+
+watch(
+  () => appStore.currentTab,
+  (value) => {
+    if (value !== 'topics') {
+      mqttTopicsStore.selectedConnection = ''
+    }
   }
 )
 
@@ -178,59 +188,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="main-view tw-flex tw-h-full tw-content-between">
-    <div class="nav-bar-left">
-      <q-tabs
-        v-model="currentTab"
-        vertical
-        :class="{ 'text-primary': !$q.dark.isActive }"
-        active-bg-color="primary"
-        active-color="white"
-        indicator-color="transparent"
-      >
-        <div class="tw-flex tw-h-full tw-flex-col tw-justify-between">
-          <div>
-            <q-tab name="topics" icon="fa-solid fa-code" label="Topics" />
-            <q-tab name="actions" icon="fa-solid fa-play" label="Actions" />
-            <q-tab
-              name="automations"
-              icon="fa-solid fa-wand-sparkles"
-              label="Automations"
-              disable
-            />
-          </div>
-          <div>
-            <q-tab name="settings" icon="fa-solid fa-sliders" label="Settings" />
-            <q-tab name="connections" icon="fa-solid fa-link" label="Connections" />
-          </div>
-        </div>
-      </q-tabs>
-    </div>
-    <div class="tw-flex-grow" style="max-width: calc(100vw - 120px)">
-      <q-tab-panels
-        v-model="currentTab"
-        class="tw-h-full tw-bg-transparent"
-        animated
-        vertical
-        keep-alive
-        transition-prev="jump-up"
-        transition-next="jump-down"
-      >
-        <q-tab-panel class="tw-p-0" name="topics">
-          <TabTopics />
-        </q-tab-panel>
-        <q-tab-panel class="tw-p-0" name="actions">
-          <TabActions />
-        </q-tab-panel>
-        <q-tab-panel name="automations">Automations</q-tab-panel>
+  <div class="main-view tw-grid tw-h-full tw-grid-rows-[auto_1fr]">
+    <app-bar v-model="currentTab" />
+    <div class="tw-flex tw-content-between tw-overflow-auto">
+      <div class="tw-flex-grow">
+        <q-tab-panels
+          v-model="currentTab"
+          class="tw-h-full tw-bg-transparent"
+          animated
+          vertical
+          keep-alive
+          transition-prev="jump-up"
+          transition-next="jump-down"
+        >
+          <q-tab-panel class="tw-p-0" name="topics">
+            <TabTopics />
+          </q-tab-panel>
+          <q-tab-panel class="tw-p-0" name="actions">
+            <TabActions />
+          </q-tab-panel>
+          <q-tab-panel name="automations">Automations</q-tab-panel>
 
-        <q-tab-panel name="settings">
-          <TabSettings />
-        </q-tab-panel>
-        <q-tab-panel class="tw-p-0" name="connections">
-          <TabConnections />
-        </q-tab-panel>
-      </q-tab-panels>
+          <q-tab-panel name="settings">
+            <TabSettings />
+          </q-tab-panel>
+          <q-tab-panel class="tw-p-0" name="connections">
+            <TabConnections />
+          </q-tab-panel>
+        </q-tab-panels>
+      </div>
     </div>
   </div>
   <update-alerts />
