@@ -4,6 +4,7 @@ import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import ConnectionStatusBadge from './ConnectionStatusBadge.vue'
 import { useAppStore } from '@renderer/store/app-store'
+import { AppPlatform } from '@renderer/assets/js/electron-api'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
@@ -54,24 +55,26 @@ const menuOpened = ref(false)
 
 <template>
   <q-bar
-    class="tw-grid tw-h-10 tw-grid-cols-[auto_auto_1fr_auto] tw-gap-0 tw-bg-white dark:tw-bg-[#121212]"
+    class="app-bar tw-grid tw-h-10 tw-gap-0 tw-overflow-hidden tw-bg-white tw-px-0 dark:tw-bg-[#121212]"
+    :class="[AppPlatform]"
   >
-    <div class="grabbable tw-w-16" />
+    <div class="grabbable" />
     <div
       class="home-btn"
       :class="{
         'tw-bg-black/10 dark:tw-bg-white/10': currentTab !== 'topics'
       }"
+      @click.left="currentTab = 'connections'"
     >
-      <q-menu v-model="menuOpened">
+      <q-menu v-model="menuOpened" context-menu>
         <q-list dense>
           <q-item
             v-for="item in menuItems"
             :key="item.id"
+            v-close-popup="!item.disabled"
             :clickable="!item.disabled"
             :disable="item.disabled"
             class="tw-flex tw-items-center tw-gap-4"
-            v-close-popup="!item.disabled"
             @click="!item.disabled && (currentTab = item.tabName)"
           >
             <q-icon :name="item.icon" size="xs" />
@@ -90,7 +93,7 @@ const menuOpened = ref(false)
       />
     </div>
     <div
-      class="tw-ml-0 tw-grid tw-h-full tw-auto-cols-[minmax(100px,_150px)] tw-grid-flow-col tw-grid-rows-1 tw-overflow-hidden"
+      class="tw-ml-0 tw-grid tw-h-full tw-auto-cols-[minmax(100px,_150px)] tw-grid-flow-col tw-grid-rows-1"
     >
       <div
         v-for="connection in connectedConnections"
@@ -112,6 +115,7 @@ const menuOpened = ref(false)
       >
         <p
           class="text-weight-medium tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-xs"
+          :title="connection.name"
         >
           {{ connection.name }}
         </p>
@@ -121,7 +125,7 @@ const menuOpened = ref(false)
         />
       </div>
     </div>
-    <div class="grabbable tw-min-w-12" />
+    <div class="grabbable" />
   </q-bar>
 </template>
 
@@ -130,6 +134,21 @@ const menuOpened = ref(false)
   @apply tw-h-full;
 
   -webkit-app-region: drag;
+}
+
+.app-bar {
+  &.darwin {
+    grid-template-columns: 4rem 40px minmax(min-content, max-content) 3rem;
+  }
+
+  &.linux {
+    // TODO: Adjust for Linux if needed
+    grid-template-columns: 0 40px minmax(min-content, max-content) minmax(180px, auto);
+  }
+
+  &.win32 {
+    grid-template-columns: 0 40px minmax(min-content, max-content) minmax(180px, auto);
+  }
 }
 
 .home-btn {

@@ -152,15 +152,15 @@ watch(
   <q-list class="tw-h-full tw-max-h-[calc(100%-41px)] tw-overflow-hidden">
     <q-expansion-item
       :model-value="publishType === 'manual'"
-      @show="togglePublishType('manual')"
-      @hide="togglePublishType('action')"
       group="publish_type"
       default-opened
       dense
       class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
       header-class="tw-text-secondary"
+      @show="togglePublishType('manual')"
+      @hide="togglePublishType('action')"
     >
-      <template v-slot:header>
+      <template #header>
         <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
           <q-icon name="fa-solid fa-pen" size="xs" />
           <span>Manual Publish</span>
@@ -168,20 +168,20 @@ watch(
       </template>
       <q-card class="tw-min-h-[calc(100vh-154px)]">
         <q-splitter v-model="codeEditorSplitter" horizontal :limits="codeEditorLimits" unit="px">
-          <template v-slot:before>
+          <template #before>
             <code-editor
+              ref="codeEditorRef"
               v-model:language="publishDataType"
               v-model="codeEditorData"
-              ref="codeEditorRef"
               hide-warning
             />
           </template>
 
-          <template v-slot:separator>
+          <template #separator>
             <splitter-icon @click:double="codeEditorSplitter = 250" />
           </template>
 
-          <template v-slot:after>
+          <template #after>
             <div class="tw-flex tw-items-center tw-justify-between tw-p-3">
               <div class="tw-flex">
                 <q-select
@@ -266,14 +266,14 @@ watch(
     <q-expansion-item
       :model-value="publishType === 'action'"
       :disable="sortedActions.length === 0"
-      @show="togglePublishType('action')"
-      @hide="togglePublishType('manual')"
       group="publish_type"
       dense
       class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
       header-class="tw-text-accent"
+      @show="togglePublishType('action')"
+      @hide="togglePublishType('manual')"
     >
-      <template v-slot:header>
+      <template #header>
         <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
           <q-icon name="fa-solid fa-play" size="xs" />
           <span>Actions</span>
@@ -289,7 +289,6 @@ watch(
           hide-topic
           edit-only
           no-grab
-          class="tw-bg-neutral-800"
           @send="handleSendAction"
           @edit="
             () => {

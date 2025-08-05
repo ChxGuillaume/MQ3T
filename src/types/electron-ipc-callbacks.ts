@@ -28,6 +28,8 @@ export type MqttStatusCallback = (
 export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void
 
 export type ElectronIpc = {
+  darkMode: (value: boolean) => void
+
   handleMqttError: (callback: MqttErrorCallback) => void
   handleMqttMessage: (callback: MqttMessageCallback) => void
   handleMqttStatus: (callback: MqttStatusCallback) => void

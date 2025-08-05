@@ -45,7 +45,7 @@ const connectionStatus = computed(() => {
 
 <template>
   <q-menu touch-position context-menu>
-    <q-list dense style="min-width: 220px" bordered>
+    <q-list dense style="min-width: 220px">
       <template v-if="connectionStatus === 'disconnected'">
         <q-item
           v-close-popup
@@ -104,8 +104,8 @@ const connectionStatus = computed(() => {
       </template>
       <q-separator />
       <q-item
-        clickable
         v-close-popup
+        clickable
         @click="mqttTopicsStore.clearConnectionMessages(connection.clientKey)"
       >
         <q-item-section class="tw-flex">

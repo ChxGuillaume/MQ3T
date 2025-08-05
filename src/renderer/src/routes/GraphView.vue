@@ -48,11 +48,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <q-bar
-    class="grabbable tw-grid tw-h-10 tw-grid-cols-[auto_auto_1fr_auto] tw-gap-0 tw-bg-white dark:tw-bg-[#121212]"
-  />
-  <div class="graph-view tw-flex tw-h-full tw-flex-col tw-content-between tw-p-2">
-    <graph-list />
+  <div class="graph-view tw-grid tw-h-full tw-grid-rows-[40px_1fr] tw-flex-col tw-overflow-hidden">
+    <q-bar
+      class="grabbable tw-grid tw-h-10 tw-grid-cols-[auto_auto_1fr_auto] tw-gap-0 tw-bg-white dark:tw-bg-[#121212]"
+    />
+    <div class="tw-h-full tw-overflow-y-auto tw-overflow-x-hidden tw-p-2">
+      <graph-list />
+    </div>
   </div>
 </template>
 
