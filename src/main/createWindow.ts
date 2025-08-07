@@ -29,12 +29,14 @@ export const createWindow = (routePath = '/') => {
 
   const window = new BrowserWindow(windowConfig)
 
-  window.setTitleBarOverlay(DARK_MODE)
+  if (process.platform !== 'darwin') {
+    window.setTitleBarOverlay(DARK_MODE)
 
-  ipcMain.on('dark-mode', (_, value) => {
-    if (value) window.setTitleBarOverlay(DARK_MODE)
-    else window.setTitleBarOverlay(LIGHT_MODE)
-  })
+    ipcMain.on('dark-mode', (_, value) => {
+      if (value) window.setTitleBarOverlay(DARK_MODE)
+      else window.setTitleBarOverlay(LIGHT_MODE)
+    })
+  }
 
   window.removeMenu()
 

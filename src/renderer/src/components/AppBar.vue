@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import ConnectionStatusBadge from './ConnectionStatusBadge.vue'
-import { useAppStore } from '@renderer/store/app-store'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
+import { useAppStore } from '@renderer/store/app-store'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
@@ -138,7 +138,7 @@ const menuOpened = ref(false)
 
 .app-bar {
   &.darwin {
-    grid-template-columns: 4rem 40px minmax(min-content, max-content) 3rem;
+    grid-template-columns: 5rem 40px minmax(min-content, max-content) minmax(3rem, auto);
   }
 
   &.linux {

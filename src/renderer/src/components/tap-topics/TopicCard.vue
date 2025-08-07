@@ -120,7 +120,7 @@ defineExpose({ animate })
 }
 
 .topic-item-card {
-  @apply tw-flex tw-cursor-pointer tw-items-center tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
+  @apply tw-flex tw-cursor-pointer tw-items-center tw-overflow-hidden tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
 }
 
 .topic-item-card.not-scrubbing {
@@ -136,11 +136,11 @@ defineExpose({ animate })
 
 @keyframes slideIn {
   from {
-    //transform: translateX(-100%);
+    //transform: translateX(-250px);
     left: -250px;
   }
   to {
-    //transform: translateX(100%);
+    //transform: translateX(100% + 250px);
     left: calc(100% + 250px);
   }
 }
