@@ -3,7 +3,7 @@ import { exportMessages } from '@renderer/assets/js/export-messages'
 import TopicCard, { ITopicCard } from '@renderer/components/tap-topics/TopicCard.vue'
 import TopicItemMenu from '@renderer/components/tap-topics/TopicItemMenu.vue'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
-import { ref, watch } from 'vue'
+import { ref, watch, toRef } from 'vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
 import { useTopicActions } from '@renderer/composables/useTopicActions'
 import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
@@ -32,8 +32,8 @@ const {
   handleUnfavorite,
   handleCopyTopic
 } = useTopicActions({
-  clientKey: props.clientKey,
-  topic: props.topic
+  clientKey: toRef(props, 'clientKey'),
+  topic: toRef(props, 'topic')
 })
 
 const handleTopicClick = () => {

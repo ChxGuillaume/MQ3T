@@ -15,7 +15,6 @@ import GraphList from '../components/tap-topics/GraphList.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { useMqttUrl } from '@renderer/composables/useMqttUrl'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
-import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
@@ -29,7 +28,6 @@ const mqttConnectionsStore = useMqttConnectionsStore()
 const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
-const settingsStore = useSettingsStore()
 const appStore = useAppStore()
 
 const { formatMqttUrl } = useMqttUrl()
@@ -37,8 +35,6 @@ const { formatMqttUrl } = useMqttUrl()
 const visualizationSplitter = ref(400)
 
 const scrubbingTimeout = ref<NodeJS.Timeout | undefined>(undefined)
-const expandConnection = ref<{ [key: string]: boolean }>({})
-const selectedConnection = ref('')
 
 const topicTabRecord = ref<Record<string, string>>({})
 
@@ -114,8 +110,6 @@ const handleSelectTopic = (clientKey: string, topic: string) => {
   if (mqttTopicsStore.selectedConnection === clientKey && mqttTopicsStore.selectedTopic === topic)
     return
 
-  selectedConnection.value = ''
-
   mqttTopicsStore.setSelectedTopic(clientKey, topic)
 }
 
@@ -123,21 +117,6 @@ const topicSearch = computed({
   get: () => mqttTopicsStore.topicSearch,
   set: (value) => mqttTopicsStore.setTopicSearch(value)
 })
-
-const handleExpandConnection = (clientKey: string) => {
-  if (settingsStore.smartTopicGroupClose) {
-    if (!expandConnection.value[clientKey] && selectedConnection.value === clientKey) {
-      expandConnection.value[clientKey] = !expandConnection.value[clientKey]
-    } else if (expandConnection.value[clientKey]) {
-      expandConnection.value[clientKey] = !expandConnection.value[clientKey]
-    }
-  } else {
-    expandConnection.value[clientKey] = !expandConnection.value[clientKey]
-  }
-
-  mqttTopicsStore.setSelectedTopic(clientKey, '')
-  selectedConnection.value = clientKey
-}
 
 const handleMessagePublished = (topic: string) => {
   topicTabRecord.value[topic] = 'publish'
@@ -172,12 +151,15 @@ const topicToSelect = (direction: 'up' | 'down', recursiveIndex?: number): strin
 }
 
 const handleKeyUp = (event: KeyboardEvent) => {
-  if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+  if (['ArrowUp', 'ArrowDown', 'Escape'].includes(event.key)) {
     event.preventDefault()
   }
 
   if (event.key === 'ArrowUp') handleUpKeyUp()
   else if (event.key === 'ArrowDown') handleDownKeyUp()
+  else if (event.key === 'Escape') {
+    mqttTopicsStore.selectedTopic = ''
+  }
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -326,215 +308,208 @@ const selectedConnectionObj = computed(() => {
     (connection) => connection.clientKey === mqttTopicsStore.selectedConnection
   )
 })
+
+const focusTopicsScroll = (e: MouseEvent) => {
+  ;(e.currentTarget as HTMLElement | null)?.focus()
+}
 </script>
 
 <template>
-  <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
-    <p
-      v-if="selectedConnectionObj"
-      class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
-      :title="formatMqttUrl(selectedConnectionObj)"
-    >
-      {{ formatMqttUrl(selectedConnectionObj) }}
-    </p>
-  </div>
-  <q-splitter
-    v-model="visualizationSplitter"
-    class="tw-h-full tw-max-h-full"
-    :limits="[400, 700]"
-    emit-immediately
-    unit="px"
-    reverse
-  >
-    <template #before>
-      <q-splitter
-        v-model="graphSplitter"
-        class="overflow-hidden"
-        :limits="[0, 90]"
-        horizontal
-        reverse
-        :disable="!graphListVisible"
+  <div class="tw-grid tw-h-full tw-max-h-full tw-grid-rows-[auto_1fr]">
+    <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
+      <p
+        v-if="selectedConnectionObj"
+        class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
+        :title="formatMqttUrl(selectedConnectionObj)"
       >
-        <template #before>
-          <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-            <div class="tw-flex tw-overflow-hidden tw-p-2">
-              <q-input
-                v-model="topicSearch"
-                class="tw-flex-grow"
-                filled
-                name="topicSearch"
-                label="Search Topic..."
-                dense
-                square
-                color="accent"
-                debounce="100"
-              />
-              <q-separator vertical />
-              <display-mode-select v-model="displayMode" class="tw-min-w-4" />
-            </div>
-            <q-separator />
-            <div class="tw-overflow-auto" @keyup="handleKeyUp" @keydown="handleKeyDown">
-              <q-virtual-scroll
+        {{ formatMqttUrl(selectedConnectionObj) }}
+      </p>
+    </div>
+    <q-splitter
+      v-model="visualizationSplitter"
+      class="tw-overflow-hidden"
+      :limits="[400, 700]"
+      emit-immediately
+      unit="px"
+      reverse
+    >
+      <template #before>
+        <q-splitter
+          v-model="graphSplitter"
+          class="overflow-hidden"
+          :limits="[0, 90]"
+          horizontal
+          reverse
+          :disable="!graphListVisible"
+        >
+          <template #before>
+            <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
+              <div class="tw-flex tw-overflow-hidden tw-p-2">
+                <q-input
+                  v-model="topicSearch"
+                  class="tw-flex-grow"
+                  filled
+                  name="topicSearch"
+                  label="Search Topic..."
+                  dense
+                  square
+                  color="accent"
+                  debounce="100"
+                />
+                <q-separator vertical />
+                <display-mode-select v-model="displayMode" class="tw-min-w-4" />
+              </div>
+              <q-separator />
+              <div
                 id="topicsVirtualScroll"
-                v-slot="{ item: [_, value] }"
-                class="tw-h-full tw-max-h-full"
-                :items="
-                  Object.entries(
-                    mqttConnectionsStore.getConnectionsWithStatus.filter(
-                      (c) => c.clientKey === mqttTopicsStore.selectedConnection
-                    )
-                  )
-                "
+                class="tw-overflow-auto"
+                tabindex="0"
+                @keyup="handleKeyUp"
+                @keydown="handleKeyDown"
+                @click="focusTopicsScroll"
               >
-                <div :key="value.clientKey" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
-                  <topic-card
-                    expandable
-                    :active="selectedConnection === value.clientKey"
-                    :opened="!expandConnection[value.clientKey]"
-                    @open:toggle="handleExpandConnection(value.clientKey)"
-                  >
-                    <span class="connection-card-title">{{ value.name }}</span>
+                <div v-if="selectedConnectionObj" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
+                  <topic-card>
+                    <span class="connection-card-title">{{ selectedConnectionObj.name }}</span>
                     <span class="tw-ml-1">
                       <connection-status-chip
                         :connection-status="
-                          mqttConnectionsStore.getConnectionStatus(value.clientKey)
+                          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey)
                         "
                         size="xs"
                       />
                     </span>
-                    <connection-context-menu :connection="value" />
+                    <connection-context-menu :connection="selectedConnectionObj" />
                   </topic-card>
                   <topic-item-list
-                    :client-key="value.clientKey"
+                    :client-key="mqttTopicsStore.selectedConnection"
                     :display-mode="displayMode"
-                    :expand-connection="expandConnection"
                     @topic:click="handleTopicClick"
                   />
                 </div>
-                <q-separator />
-              </q-virtual-scroll>
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <template #separator>
-          <splitter-icon v-if="graphListVisible" @click:double="graphSplitter = 40" />
-        </template>
+          <template #separator>
+            <splitter-icon v-if="graphListVisible" @click:double="graphSplitter = 40" />
+          </template>
 
-        <template #after>
-          <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
-            <graph-list />
-            <q-btn class="tw-px-5" dense flat @click="ElectronApi.showGraphWindow">
-              <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
-              Show in external window
-            </q-btn>
-          </div>
-        </template>
-      </q-splitter>
-    </template>
+          <template #after>
+            <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
+              <graph-list />
+              <q-btn class="tw-px-5" dense flat @click="ElectronApi.showGraphWindow">
+                <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
+                Show in external window
+              </q-btn>
+            </div>
+          </template>
+        </q-splitter>
+      </template>
 
-    <template #separator>
-      <splitter-icon vertical @click:double="visualizationSplitter = 400" />
-    </template>
+      <template #separator>
+        <splitter-icon vertical @click:double="visualizationSplitter = 400" />
+      </template>
 
-    <template #after>
-      <q-card
-        class="tw-relative tw-grid tw-h-full tw-overflow-hidden"
-        style="grid-template-rows: 1fr auto auto"
-        square
-        flat
-      >
-        <q-tab-panels
-          v-model="topicTab"
-          animated
-          keep-alive
-          transition-prev="slide-down"
-          transition-next="slide-up"
+      <template #after>
+        <q-card
+          class="tw-relative tw-grid tw-h-full tw-overflow-hidden"
+          style="grid-template-rows: 1fr auto auto"
+          square
+          flat
         >
-          <q-tab-panel
-            name="values"
-            class="tw-grid tw-p-0"
-            style="grid-template-rows: auto auto 1fr"
+          <q-tab-panels
+            v-model="topicTab"
+            animated
+            keep-alive
+            transition-prev="slide-down"
+            transition-next="slide-up"
           >
-            <tab-values />
-          </q-tab-panel>
+            <q-tab-panel
+              name="values"
+              class="tw-grid tw-p-0"
+              style="grid-template-rows: auto auto 1fr"
+            >
+              <tab-values />
+            </q-tab-panel>
 
-          <q-tab-panel name="publish" class="tw-p-0">
-            <tab-publish @click:publish="handleMessagePublished" />
-          </q-tab-panel>
+            <q-tab-panel name="publish" class="tw-p-0">
+              <tab-publish @click:publish="handleMessagePublished" />
+            </q-tab-panel>
 
-          <q-tab-panel name="stats" class="tw-flex tw-items-center tw-justify-center">
-            <div class="text-h6">Stats In Work</div>
-          </q-tab-panel>
+            <q-tab-panel name="stats" class="tw-flex tw-items-center tw-justify-center">
+              <div class="text-h6">Stats In Work</div>
+            </q-tab-panel>
 
-          <q-tab-panel name="favorites" class="tw-p-0">
-            <tab-favorites />
-          </q-tab-panel>
+            <q-tab-panel name="favorites" class="tw-p-0">
+              <tab-favorites />
+            </q-tab-panel>
 
-          <q-tab-panel name="chain-actions" class="tw-p-0">
-            <tab-chain-actions />
-          </q-tab-panel>
-        </q-tab-panels>
+            <q-tab-panel name="chain-actions" class="tw-p-0">
+              <tab-chain-actions />
+            </q-tab-panel>
+          </q-tab-panels>
 
-        <q-separator />
+          <q-separator />
 
-        <q-tabs
-          v-model="topicTab"
-          inline-label
-          active-color="white"
-          active-bg-color="primary"
-          indicator-color="transparent"
-        >
-          <q-tab name="values">
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-              <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" :size="tabIconSize" />
-              <div v-if="showTabsText">Values</div>
-              <q-tooltip v-else>Values</q-tooltip>
-            </div>
-          </q-tab>
-          <q-tab name="publish">
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-              <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" :size="tabIconSize" />
-              <div v-if="showTabsText">Publish</div>
-              <q-tooltip v-else>Publish</q-tooltip>
-            </div>
-          </q-tab>
-          <q-tab v-if="false" name="stats">
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-              <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" :size="tabIconSize" />
-              <div v-if="showTabsText">Stats</div>
-              <q-tooltip v-else>Stats</q-tooltip>
-            </div>
-          </q-tab>
-          <q-tab name="favorites">
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-              <q-icon name="fa-solid fa-star" class="tw-mr-2" :size="tabIconSize" />
-              <div v-if="showTabsText">Favorites</div>
-              <q-tooltip v-else>Favorites</q-tooltip>
-            </div>
-          </q-tab>
-          <q-tab name="chain-actions">
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-              <q-icon name="fa-solid fa-diagram-project" class="tw-mr-2" :size="tabIconSize" />
-              <div v-if="showTabsText">Chain Actions</div>
-              <q-tooltip v-else>Chain Actions</q-tooltip>
-            </div>
-          </q-tab>
-        </q-tabs>
+          <q-tabs
+            v-model="topicTab"
+            inline-label
+            active-color="white"
+            active-bg-color="primary"
+            indicator-color="transparent"
+          >
+            <q-tab name="values">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+                <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" :size="tabIconSize" />
+                <div v-if="showTabsText">Values</div>
+                <q-tooltip v-else>Values</q-tooltip>
+              </div>
+            </q-tab>
+            <q-tab name="publish">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+                <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" :size="tabIconSize" />
+                <div v-if="showTabsText">Publish</div>
+                <q-tooltip v-else>Publish</q-tooltip>
+              </div>
+            </q-tab>
+            <q-tab v-if="false" name="stats">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+                <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" :size="tabIconSize" />
+                <div v-if="showTabsText">Stats</div>
+                <q-tooltip v-else>Stats</q-tooltip>
+              </div>
+            </q-tab>
+            <q-tab name="favorites">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+                <q-icon name="fa-solid fa-star" class="tw-mr-2" :size="tabIconSize" />
+                <div v-if="showTabsText">Favorites</div>
+                <q-tooltip v-else>Favorites</q-tooltip>
+              </div>
+            </q-tab>
+            <q-tab name="chain-actions">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
+                <q-icon name="fa-solid fa-diagram-project" class="tw-mr-2" :size="tabIconSize" />
+                <div v-if="showTabsText">Chain Actions</div>
+                <q-tooltip v-else>Chain Actions</q-tooltip>
+              </div>
+            </q-tab>
+          </q-tabs>
 
-        <transition
-          appear
-          enter-active-class="animated fadeInRight"
-          leave-active-class="animated fadeOutRight"
-        >
-          <broker-details-panel
-            v-if="selectedConnection !== '' && mqttTopicsStore.selectedTopic === ''"
-            class="broker-details-panel"
-          />
-        </transition>
-      </q-card>
-    </template>
-  </q-splitter>
+          <transition
+            appear
+            enter-active-class="animated fadeInRight"
+            leave-active-class="animated fadeOutRight"
+          >
+            <broker-details-panel
+              v-if="mqttTopicsStore.selectedTopic === ''"
+              class="broker-details-panel"
+            />
+          </transition>
+        </q-card>
+      </template>
+    </q-splitter>
+  </div>
 </template>
 
 <style scoped lang="less">
@@ -556,5 +531,10 @@ const selectedConnectionObj = computed(() => {
   .connection-card-title {
     @apply tw-text-white;
   }
+}
+
+#topicsVirtualScroll:focus,
+#topicsVirtualScroll:focus-visible {
+  outline: none;
 }
 </style>

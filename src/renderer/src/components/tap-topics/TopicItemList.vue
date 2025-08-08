@@ -14,7 +14,6 @@ const mqttTopicsStore = useMqttTopicsStore()
 type Props = {
   clientKey: string
   displayMode: 'line' | 'tree'
-  expandConnection: { [key: string]: boolean }
 }
 
 const props = defineProps<Props>()
@@ -67,12 +66,12 @@ watchDebounced(
   (newTopics) => {
     debouncedTreeTopics.value = newTopics
   },
-  { debounce: 50, deep: true }
+  { debounce: 0, deep: true }
 )
 </script>
 
 <template>
-  <template v-if="!expandConnection[clientKey] && displayMode === 'line'">
+  <template v-if="displayMode === 'line'">
     <div class="tw-flex tw-flex-col tw-gap-1">
       <topic-line-item
         v-for="topic in debouncedLineTopics"
@@ -83,7 +82,7 @@ watchDebounced(
       />
     </div>
   </template>
-  <template v-if="!expandConnection[clientKey] && displayMode === 'tree'">
+  <template v-else>
     <topic-tree-item
       v-for="[pathKey, structure] in debouncedTreeTopics"
       :key="pathKey"

@@ -6,7 +6,7 @@ import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useSettingsStore } from '../../store/settings-store'
 import TopicCard, { ITopicCard } from './TopicCard.vue'
 import TopicItemMenu from './TopicItemMenu.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, toRef } from 'vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
@@ -35,8 +35,8 @@ const {
   handleUnfavorite,
   handleCopyTopic
 } = useTopicActions({
-  clientKey: props.clientKey,
-  topic: props.topicPath
+  clientKey: toRef(props, 'clientKey'),
+  topic: toRef(props, 'topicPath')
 })
 
 const expandedTopicsSection = computed({
@@ -119,7 +119,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="!isLastTopicPart" :id="`topic-item-${topicPath}`">
+  <div v-if="!isLastTopicPart" :id="`topic-item-${clientKey}:${topicPath}`">
     <div class="tw-flex">
       <q-intersection
         :id="`topic-item-${clientKey}:${topicPath}-intersection`"
@@ -143,7 +143,7 @@ watch(
             class="tw-ml-1 tw-text-xs"
             v-text="`(${subTopicsTopicsCount} topics ${subTopicsMessagesCount} messages)`"
           />
-          <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+          <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
           <code-highlight
             v-if="topicLastMessage?.message && topicLastMessage.dataType"
             :code="topicLastMessage?.message"
@@ -186,7 +186,7 @@ watch(
       />
     </template>
   </div>
-  <div v-else class="tw-flex" :id="`topic-item-${topicPath}`">
+  <div v-else :id="`topic-item-${topicPath}`" class="tw-flex">
     <q-intersection
       :id="`topic-item-${clientKey}:${topicPath}-intersection`"
       class="tw-h-[29px] tw-max-w-full"
@@ -202,7 +202,7 @@ watch(
         <span class="topic-item-key" :class="{ empty: !topicKey }">
           {{ topicKey ? topicKey : '<\empty>' }}
         </span>
-        <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+        <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
         <code-highlight
           v-if="topicLastMessage?.message"
           :code="topicLastMessage?.message"
