@@ -369,18 +369,18 @@ const focusTopicsScroll = (e: MouseEvent) => {
                 @click="focusTopicsScroll"
               >
                 <div v-if="selectedConnectionObj" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
-                  <topic-card>
-                    <span class="connection-card-title">{{ selectedConnectionObj.name }}</span>
-                    <span class="tw-ml-1">
-                      <connection-status-chip
-                        :connection-status="
-                          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey)
-                        "
-                        size="xs"
-                      />
-                    </span>
-                    <connection-context-menu :connection="selectedConnectionObj" />
-                  </topic-card>
+                  <!--                  <topic-card>-->
+                  <!--                    <span class="connection-card-title">{{ selectedConnectionObj.name }}</span>-->
+                  <!--                    <span class="tw-ml-1">-->
+                  <!--                      <connection-status-chip-->
+                  <!--                        :connection-status="-->
+                  <!--                          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey)-->
+                  <!--                        "-->
+                  <!--                        size="xs"-->
+                  <!--                      />-->
+                  <!--                    </span>-->
+                  <!--                    <connection-context-menu :connection="selectedConnectionObj" />-->
+                  <!--                  </topic-card>-->
                   <topic-item-list
                     :client-key="mqttTopicsStore.selectedConnection"
                     :display-mode="displayMode"

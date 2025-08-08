@@ -61,7 +61,7 @@ const handleCloseConnection = (clientKey: string) => {
   setTimeout(() => {
     appStore.setCurrentTab('connections')
     mqttConnectionsStore.hideConnection(clientKey)
-  }, 50)
+  }, 1)
 }
 </script>
 
@@ -139,7 +139,7 @@ const handleCloseConnection = (clientKey: string) => {
         <q-icon
           class="connection-tab-close-icon"
           name="fa-solid fa-close"
-          @click="handleCloseConnection(connection.clientKey)"
+          @click.prevent.stop="handleCloseConnection(connection.clientKey)"
         />
 
         <connection-context-menu :connection="connection" />

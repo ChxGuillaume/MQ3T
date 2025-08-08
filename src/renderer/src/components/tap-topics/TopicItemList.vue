@@ -88,9 +88,8 @@ watchDebounced(
       :key="pathKey"
       :client-key="clientKey"
       :topic-key="pathKey"
-      :topic-path="pathKey"
-      :topic-index="1"
-      :topic-structure="structure"
+      :path="pathKey"
+      :structure="structure"
       @topic:click="emit('topic:click', clientKey, $event)"
     />
   </template>

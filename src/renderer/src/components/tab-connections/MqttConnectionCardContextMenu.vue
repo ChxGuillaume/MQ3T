@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { QMenu } from 'quasar'
 
+const opened = defineModel('opened', { type: Boolean, default: false })
+
 withDefaults(
   defineProps<{
     contextMenu?: boolean
@@ -18,7 +20,7 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
 </script>
 
 <template>
-  <q-menu :anchor="anchor" :self="self" :context-menu="contextMenu">
+  <q-menu v-model="opened" :anchor="anchor" :self="self" :context-menu="contextMenu">
     <q-list class="tw-min-w-[150px]">
       <q-item v-close-popup class="tw-text-blue-500" clickable @click="$emit('edit')">
         <q-item-section>

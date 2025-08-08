@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import MqttConnectionCardContextMenu from './MqttConnectionCardContextMenu.vue'
-import { MqttConnection } from '../../../../types/mqtt-connection'
-import { useMqttUrl } from '../../composables/useMqttUrl'
-import { computed } from 'vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
-import { useAppStore } from '@renderer/store/app-store'
+import { MqttConnection } from '../../../../types/mqtt-connection'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { useMqttUrl } from '../../composables/useMqttUrl'
+import { useAppStore } from '@renderer/store/app-store'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const appStore = useAppStore()
+
 const { formatMqttUrl } = useMqttUrl()
 
 const props = defineProps<{ connection: MqttConnection }>()
 
 defineEmits(['edit', 'connect', 'disconnect', 'delete'])
+
+const menuOpened = ref(false)
 
 const connectionStatus = computed(() => {
   return mqttConnectionsStore.getConnectionStatus(props.connection.clientKey)
@@ -40,12 +43,19 @@ const connectionStatus = computed(() => {
       >
         {{ connection.name }}
       </p>
-      <q-btn icon="fa-solid fa-ellipsis-vertical" flat round size="sm">
-        <mqtt-connection-card-context-menu
-          @edit="$emit('edit', connection)"
-          @delete="$emit('delete', connection)"
-        />
+      <q-btn
+        icon="fa-solid fa-ellipsis-vertical"
+        flat
+        round
+        size="sm"
+        @click.stop="menuOpened = !menuOpened"
+      >
       </q-btn>
+      <mqtt-connection-card-context-menu
+        v-model:opened="menuOpened"
+        @edit="$emit('edit', connection)"
+        @delete="$emit('delete', connection)"
+      />
     </div>
     <p
       class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
