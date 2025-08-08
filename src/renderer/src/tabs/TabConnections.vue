@@ -38,8 +38,18 @@ onMounted(() => {
 })
 
 const connections = computed({
-  get: () => mqttConnectionsStore.connections,
-  set: (value) => mqttConnectionsStore.setConnections(value, true)
+  get: () => {
+    return [
+      ...mqttConnectionsStore.connections.map((connection) => ({ type: 'connection', connection })),
+      { type: 'add-connection' }
+    ]
+  },
+  set: (value) => {
+    mqttConnectionsStore.setConnections(
+      value.filter((item) => item.type === 'connection').map((item) => item.connection),
+      true
+    )
+  }
 })
 
 const dragOptions = computed(() => {
@@ -52,30 +62,33 @@ const dragOptions = computed(() => {
 </script>
 
 <template>
+  <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
+    Connections
+  </div>
   <div class="connections">
-    <div class="tw-mb-3 tw-flex tw-justify-between tw-items-center">
-      <h1 class="tw-text-xl tw-font-bold">Connections</h1>
-      <q-btn color="primary" @click="addConnectionDialogOpened = true">
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
-        Add Connection
-      </q-btn>
-    </div>
-
     <draggable
       v-model="connections"
       v-bind="dragOptions"
       handle=".drag-handle"
-      class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
+      class="tw-grid tw-grid-cols-1 tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5"
       item-key="clientKey"
     >
       <template #item="{ element }">
         <mqtt-connection-card
-          :connection="element"
+          v-if="element.type === 'connection'"
+          :connection="element.connection"
           @edit="handleEdit"
           @connect="handleConnect"
           @disconnect="handleDisconnect"
           @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
         />
+        <div
+          v-else-if="element.type === 'add-connection'"
+          class="tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-transition-colors dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+          @click="addConnectionDialogOpened = true"
+        >
+          <q-icon name="fa-solid fa-plus" size="xl" />
+        </div>
       </template>
     </draggable>
   </div>
@@ -95,6 +108,6 @@ const dragOptions = computed(() => {
 
 <style scoped lang="less">
 .connections {
-  @apply tw-p-4;
+  @apply tw-flex tw-flex-col tw-gap-4 tw-p-4;
 }
 </style>

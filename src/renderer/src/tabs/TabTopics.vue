@@ -13,6 +13,7 @@ import TopicCard from '../components/tap-topics/TopicCard.vue'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
+import { useMqttUrl } from '@renderer/composables/useMqttUrl'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useSettingsStore } from '../store/settings-store'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
@@ -30,6 +31,8 @@ const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
+
+const { formatMqttUrl } = useMqttUrl()
 
 const visualizationSplitter = ref(400)
 
@@ -317,9 +320,24 @@ onMounted(() => {
 })
 
 const displayMode = ref<'line' | 'tree'>('tree')
+
+const selectedConnectionObj = computed(() => {
+  return mqttConnectionsStore.connections.find(
+    (connection) => connection.clientKey === mqttTopicsStore.selectedConnection
+  )
+})
 </script>
 
 <template>
+  <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
+    <p
+      v-if="selectedConnectionObj"
+      class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
+      :title="formatMqttUrl(selectedConnectionObj)"
+    >
+      {{ formatMqttUrl(selectedConnectionObj) }}
+    </p>
+  </div>
   <q-splitter
     v-model="visualizationSplitter"
     class="tw-h-full tw-max-h-full"
@@ -339,7 +357,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
       >
         <template #before>
           <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-            <div class="tw-flex">
+            <div class="tw-flex tw-overflow-hidden tw-p-2">
               <q-input
                 v-model="topicSearch"
                 class="tw-flex-grow"
@@ -348,6 +366,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
                 label="Search Topic..."
                 dense
                 square
+                color="accent"
                 debounce="100"
               />
               <q-separator vertical />
@@ -367,7 +386,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
                   )
                 "
               >
-                <div class="tw-flex tw-flex-col tw-gap-1 tw-p-3" :key="value.clientKey">
+                <div :key="value.clientKey" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
                   <topic-card
                     expandable
                     :active="selectedConnection === value.clientKey"
@@ -405,7 +424,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
         <template #after>
           <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
             <graph-list />
-            <q-btn class="tw-px-5" @click="ElectronApi.showGraphWindow" dense flat>
+            <q-btn class="tw-px-5" dense flat @click="ElectronApi.showGraphWindow">
               <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
               Show in external window
             </q-btn>
@@ -414,7 +433,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
       </q-splitter>
     </template>
 
-    <template v-slot:separator>
+    <template #separator>
       <splitter-icon vertical @click:double="visualizationSplitter = 400" />
     </template>
 
@@ -480,7 +499,7 @@ const displayMode = ref<'line' | 'tree'>('tree')
               <q-tooltip v-else>Publish</q-tooltip>
             </div>
           </q-tab>
-          <q-tab name="stats" v-if="false">
+          <q-tab v-if="false" name="stats">
             <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
               <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" :size="tabIconSize" />
               <div v-if="showTabsText">Stats</div>

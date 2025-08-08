@@ -20,7 +20,7 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
 <template>
   <q-menu :anchor="anchor" :self="self" :context-menu="contextMenu">
     <q-list class="tw-min-w-[150px]">
-      <q-item class="tw-text-blue-500" clickable v-close-popup @click="$emit('edit')">
+      <q-item v-close-popup class="tw-text-blue-500" clickable @click="$emit('edit')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-edit" class="tw-mr-2" />
@@ -29,7 +29,7 @@ defineEmits(['edit', 'delete', 'copy', 'move'])
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-red-500" clickable v-close-popup @click="$emit('delete')">
+      <q-item v-close-popup class="tw-text-red-500" clickable @click="$emit('delete')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-trash" class="tw-mr-2" />

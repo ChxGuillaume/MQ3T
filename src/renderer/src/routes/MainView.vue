@@ -192,15 +192,7 @@ onUnmounted(() => {
     <app-bar v-model="currentTab" />
     <div class="tw-flex tw-content-between tw-overflow-auto">
       <div class="tw-flex-grow">
-        <q-tab-panels
-          v-model="currentTab"
-          class="tw-h-full tw-bg-transparent"
-          animated
-          vertical
-          keep-alive
-          transition-prev="jump-up"
-          transition-next="jump-down"
-        >
+        <q-tab-panels v-model="currentTab" class="tw-h-full tw-bg-transparent" vertical keep-alive>
           <q-tab-panel class="tw-p-0" name="topics">
             <TabTopics />
           </q-tab-panel>

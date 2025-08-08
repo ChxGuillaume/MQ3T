@@ -1,34 +1,41 @@
 <script setup lang="ts">
 import MqttConnectionCardContextMenu from './MqttConnectionCardContextMenu.vue'
-import { useMqttConnectionsStore } from '../../store/mqtt-connections'
 import { MqttConnection } from '../../../../types/mqtt-connection'
-import ConnectionStatusChip from '../ConnectionStatusChip.vue'
+import { useMqttUrl } from '../../composables/useMqttUrl'
 import { computed } from 'vue'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
+import { useAppStore } from '@renderer/store/app-store'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const mqttTopicsStore = useMqttTopicsStore()
+const appStore = useAppStore()
+const { formatMqttUrl } = useMqttUrl()
 
-const props = defineProps<{
-  connection: MqttConnection
-}>()
+const props = defineProps<{ connection: MqttConnection }>()
 
 defineEmits(['edit', 'connect', 'disconnect', 'delete'])
 
 const connectionStatus = computed(() => {
   return mqttConnectionsStore.getConnectionStatus(props.connection.clientKey)
 })
-
-const formatMqttUrl = (connection: MqttConnection) => {
-  const path = ['mqtt', 'mqtts'].includes(connection.protocol) ? '' : connection.path || ''
-
-  return `${connection.protocol}://${connection.hostname}:${connection.port}${path}`
-}
 </script>
 
 <template>
-  <q-card flat class="tw-p-4 mqtt-connection-card">
+  <div
+    class="mqtt-connection-card tw-cursor-pointer tw-rounded tw-p-4 dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+    @click="
+      () => {
+        if (connectionStatus === 'disconnected') $emit('connect', connection)
+
+        appStore.setCurrentTab('topics')
+        mqttTopicsStore.selectedConnection = connection.clientKey
+      }
+    "
+  >
     <div class="tw-flex tw-justify-between">
       <p
-        class="tw-w-full tw-text-lg tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-break-all tw-cursor-grab drag-handle"
+        class="drag-handle tw-line-clamp-1 tw-w-full tw-cursor-grab tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-lg"
         :title="connection.name"
       >
         {{ connection.name }}
@@ -41,21 +48,11 @@ const formatMqttUrl = (connection: MqttConnection) => {
       </q-btn>
     </div>
     <p
-      class="tw-text-sm tw-text-neutral-500 tw-text-ellipsis tw-overflow-hidden tw-line-clamp-1 tw-break-all"
+      class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
       :title="formatMqttUrl(connection)"
     >
       {{ formatMqttUrl(connection) }}
     </p>
-    <div class="tw-mt-4 tw-flex tw-justify-between tw-items-center tw-gap-2">
-      <connection-status-chip :connection-status="connectionStatus" size="sm" />
-      <q-btn
-        v-if="connectionStatus === 'disconnected'"
-        color="primary"
-        label="Connect"
-        @click="$emit('connect', connection)"
-      />
-      <q-btn v-else color="primary" label="Disconnect" @click="$emit('disconnect', connection)" />
-    </div>
 
     <mqtt-connection-card-context-menu
       context-menu
@@ -64,7 +61,7 @@ const formatMqttUrl = (connection: MqttConnection) => {
       @edit="$emit('edit', connection)"
       @delete="$emit('delete', connection)"
     />
-  </q-card>
+  </div>
 </template>
 
 <style scoped lang="less">
