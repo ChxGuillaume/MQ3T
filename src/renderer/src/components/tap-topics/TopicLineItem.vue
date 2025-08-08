@@ -65,7 +65,7 @@ watch(
       <span class="topic-item-key" :class="{ empty: !topic }">
         {{ topic ? topic : '<\empty>' }}
       </span>
-      <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+      <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
       <code-highlight
         v-if="topicLastMessage?.message && topicLastMessage.dataType"
         :code="topicLastMessage?.message"
