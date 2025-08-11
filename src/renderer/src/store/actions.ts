@@ -15,7 +15,10 @@ export const useActionsStore = defineStore('actions', {
   state: () => ({
     actions: {} as ConnectionsActions,
     actionsGroups: {} as ConnectionsActionsGroups,
+
+    // TODO: Redesign/Refactor causes this to be useless in practice, but implementation forces to keep it, refactor later
     selectedConnection: '',
+
     selectedActionGroup: 'default'
   }),
   getters: {

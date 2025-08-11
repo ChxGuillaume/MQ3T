@@ -152,9 +152,14 @@ const hasAutoUpdate = window.hasAutoUpdate
 </script>
 
 <template>
+  <div
+    class="text-weight-medium tw-flex tw-justify-center tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+  >
+    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Settings</div>
+  </div>
+
   <div class="settings">
-    <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
-      <h1 class="tw-text-xl tw-font-bold">Settings</h1>
+    <div class="tw-mb-6 tw-flex tw-items-center tw-justify-end">
       <q-btn
         v-if="hasAutoUpdate"
         color="primary"
@@ -177,7 +182,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Dark Mode"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ darkModeOptions.find((o) => o.value === darkMode)?.label }}
             </template>
           </q-select>
@@ -189,7 +194,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Date Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ dateFormatOptions.find((o) => o.value === dateFormatSetting)?.label }}
             </template>
           </q-select>
@@ -201,7 +206,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Time Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
             </template>
           </q-select>
@@ -221,7 +226,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Activity Animation Speed"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 showActivityAnimationSpeedOptions.find(
                   (o) => o.value === showActivityAnimationSpeedSetting
@@ -236,7 +241,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Activity Animation Style"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 showActivityAnimationTypeOptions.find(
                   (o) => o.value === showActivityAnimationTypeSetting
@@ -283,7 +288,7 @@ const hasAutoUpdate = window.hasAutoUpdate
             label="Default Data Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label
               }}
@@ -306,7 +311,7 @@ const hasAutoUpdate = window.hasAutoUpdate
       </div>
     </div>
 
-    <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
+    <div class="color-details tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-select-none tw-gap-2">
       <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
         <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
         Change Logs
@@ -323,6 +328,10 @@ const hasAutoUpdate = window.hasAutoUpdate
 </template>
 
 <style scoped lang="less">
+.settings {
+  @apply tw-p-4;
+}
+
 .settings-group {
   @apply tw-flex tw-flex-col tw-gap-2;
 }
@@ -332,11 +341,11 @@ const hasAutoUpdate = window.hasAutoUpdate
 }
 
 .settings-group .settings-group-separator {
-  @apply tw-border-0 tw-h-px tw-bg-neutral-700;
+  @apply tw-h-px tw-border-0 tw-bg-neutral-700;
 }
 
 .settings-group .settings-group-item-container {
-  @apply tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4;
+  @apply tw-grid tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5;
 }
 
 .card-toggle {

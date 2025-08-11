@@ -15,28 +15,6 @@ const connectedConnections = computed(() => {
   return mqttConnectionsStore.getConnectionsWithStatus
 })
 
-interface MenuItemType {
-  id: string
-  label: string
-  icon: string
-  disabled?: boolean
-  tabName: string
-}
-
-const menuItems = ref<MenuItemType[]>([
-  { id: '1', label: 'Topics', icon: 'fa-solid fa-code', tabName: 'topics' },
-  { id: '2', label: 'Actions', icon: 'fa-solid fa-play', tabName: 'actions' },
-  {
-    id: '3',
-    label: 'Automations',
-    icon: 'fa-solid fa-wand-sparkles',
-    disabled: true,
-    tabName: 'automations'
-  },
-  { id: '4', label: 'Settings', icon: 'fa-solid fa-sliders', tabName: 'settings' },
-  { id: '5', label: 'Connections', icon: 'fa-solid fa-link', tabName: 'connections' }
-])
-
 const props = defineProps<{
   modelValue: string
 }>()
@@ -63,6 +41,15 @@ const handleCloseConnection = (clientKey: string) => {
     mqttConnectionsStore.hideConnection(clientKey)
   }, 1)
 }
+
+const goToConnectionsTab = () => {
+  mqttTopicsStore.selectedConnection = ''
+  currentTab.value = 'connections'
+}
+
+const isTopicsTab = computed(() => {
+  return ['topics', 'actions'].includes(currentTab.value) && !menuOpened.value
+})
 </script>
 
 <template>
@@ -74,34 +61,15 @@ const handleCloseConnection = (clientKey: string) => {
     <div
       class="home-btn"
       :class="{
-        'tw-bg-neutral-200 dark:tw-bg-neutral-800': currentTab !== 'topics'
+        'tw-bg-neutral-200 dark:tw-bg-neutral-800': !isTopicsTab
       }"
-      @click.left="currentTab = 'connections'"
+      @click.left="goToConnectionsTab"
     >
-      <q-menu v-model="menuOpened" context-menu>
-        <q-list dense>
-          <q-item
-            v-for="item in menuItems"
-            :key="item.id"
-            v-close-popup="!item.disabled"
-            :clickable="!item.disabled"
-            :disable="item.disabled"
-            class="tw-flex tw-items-center tw-gap-4"
-            @click="!item.disabled && (currentTab = item.tabName)"
-          >
-            <q-icon :name="item.icon" size="xs" />
-            <q-item-section>{{ item.label }}</q-item-section>
-          </q-item>
-        </q-list>
-      </q-menu>
       <q-icon
-        :name="appStore.currentTab !== 'topics' ? 'mdi-v7 mdi-home' : 'mdi-v7 mdi-home-outline'"
+        :name="!isTopicsTab ? 'mdi-v7 mdi-home' : 'mdi-v7 mdi-home-outline'"
         size="20px"
         class="home-icon"
-        :class="{
-          other: appStore.currentTab !== 'topics' || menuOpened,
-          topics: appStore.currentTab === 'topics'
-        }"
+        :class="{ other: !isTopicsTab, topics: isTopicsTab }"
       />
     </div>
     <div

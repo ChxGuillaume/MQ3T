@@ -3,6 +3,7 @@ import MqttConnectionDialog from '../components/tab-connections/MqttConnectionDi
 import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { MqttConnection } from '../../../types/mqtt-connection'
+import { useAppStore } from '@renderer/store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -11,6 +12,7 @@ type ConnectionListItem =
   | { type: 'add-connection' }
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const appStore = useAppStore()
 
 const editConnectionDialogOpened = ref(false)
 const addConnectionDialogOpened = ref(false)
@@ -65,8 +67,23 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
 </script>
 
 <template>
-  <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
-    Connections
+  <div
+    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+  >
+    <div class="tw-w-[81px]" />
+
+    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Actions</div>
+
+    <div class="tw-w-[81px] tw-text-right">
+      <q-btn
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="appStore.setCurrentTab('settings')"
+      >
+        <q-icon name="fa-solid fa-cog" size="10px" />
+      </q-btn>
+    </div>
   </div>
   <div class="connections">
     <draggable

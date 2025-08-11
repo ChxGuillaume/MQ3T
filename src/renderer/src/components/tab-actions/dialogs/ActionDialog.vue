@@ -268,8 +268,8 @@ watch(
             </div>
             <div class="tw-mt-4 tw-h-[300px]">
               <code-editor
-                ref="codeEditorRef"
                 v-if="showEditor"
+                ref="codeEditorRef"
                 v-model:language="editorLanguage"
                 v-model="form.payload"
                 :variable-completion="variableCompletion"
@@ -296,7 +296,11 @@ watch(
         <div class="tw-h-full tw-w-[280px]">
           <q-card-section class="tw-flex tw-h-full tw-flex-col tw-gap-4 tw-overflow-auto">
             <h2 class="tw-text-xl">Enums</h2>
-            <div v-for="enum_name in enumVariableNames" class="tw-flex tw-flex-col tw-gap-2">
+            <div
+              v-for="enum_name in enumVariableNames"
+              :key="enum_name.name"
+              class="tw-flex tw-flex-col tw-gap-2"
+            >
               <div class="tw-flex tw-w-full tw-items-center tw-justify-between">
                 <div
                   class="tw-flex tw-items-center"
@@ -330,8 +334,8 @@ watch(
                   <q-menu anchor="bottom right" self="top right" :offset="[0, 5]">
                     <q-list>
                       <q-item
-                        clickable
                         v-close-popup
+                        clickable
                         @click="addEnumOption(enum_name.name, 'string')"
                       >
                         <q-item-section>
@@ -342,8 +346,8 @@ watch(
                         </q-item-section>
                       </q-item>
                       <q-item
-                        clickable
                         v-close-popup
+                        clickable
                         @click="addEnumOption(enum_name.name, 'number')"
                       >
                         <q-item-section>
@@ -357,7 +361,7 @@ watch(
                   </q-menu>
                 </q-btn>
               </div>
-              <div v-for="(_, index) in form.enumOptions[enum_name.name]">
+              <div v-for="(_, index) in form.enumOptions[enum_name.name]" :key="index">
                 <q-input
                   v-if="enumOptionsCache[enum_name.name][index] === 'string'"
                   v-model="form.enumOptions[enum_name.name][index]"
@@ -367,7 +371,7 @@ watch(
                   dense
                   :rules="[(v: string) => !!v || 'Option is required']"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       flat
                       dense
@@ -391,7 +395,7 @@ watch(
                     (v: number | string) => typeof v === 'number' || 'Invalid number'
                   ]"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       flat
                       dense

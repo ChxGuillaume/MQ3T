@@ -3,6 +3,7 @@ import TabChainActions from '@renderer/components/tap-topics/TabChainActions.vue
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
 import TopicItemList from '@renderer/components/tap-topics/TopicItemList.vue'
 import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
+import TabTopicsHeader from '../components/tap-topics/TabTopicsHeader.vue'
 import DisplayModeSelect from '../components/DisplayModeSelect.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import TabPublish from '../components/tap-topics/TabPublish.vue'
@@ -10,11 +11,10 @@ import { ElectronApi } from '@renderer/assets/js/electron-api'
 import TabValues from '../components/tap-topics/TabValues.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
 import { useActionsCacheStore } from '../store/actions-cache'
-import { useMqttUrl } from '@renderer/composables/useMqttUrl'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
-import SplitterIcon from '../components/SplitterIcon.vue'
 import { useDataGraphsStore } from '../store/data-graphs'
+import SplitterIcon from '../components/SplitterIcon.vue'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import { scroll } from 'quasar'
@@ -26,8 +26,6 @@ const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
-
-const { formatMqttUrl } = useMqttUrl()
 
 const visualizationSplitter = ref(400)
 
@@ -313,55 +311,7 @@ const focusTopicsScroll = (e: MouseEvent) => {
 
 <template>
   <div class="tw-grid tw-h-full tw-max-h-full tw-grid-rows-[auto_1fr]">
-    <div
-      class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
-    >
-      <div />
-      <p
-        v-if="selectedConnectionObj"
-        class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
-        :title="formatMqttUrl(selectedConnectionObj)"
-      >
-        {{ formatMqttUrl(selectedConnectionObj) }}
-      </p>
-
-      <q-btn
-        v-if="
-          selectedConnectionObj &&
-          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) === 'connected'
-        "
-        size="xs"
-        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
-        flat
-        @click="mqttConnectionsStore.disconnectClient(selectedConnectionObj.clientKey)"
-      >
-        <q-icon name="fa-solid fa-link-slash" size="10px" />
-        <q-tooltip
-          :delay="500"
-          anchor="center left"
-          self="center right"
-          transition-show="jump-left"
-          transition-hide="jump-right"
-        >
-          Disconnect
-        </q-tooltip>
-      </q-btn>
-      <q-btn
-        v-else-if="
-          selectedConnectionObj &&
-          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) !== 'connected'
-        "
-        size="xs"
-        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
-        flat
-        @click="mqttConnectionsStore.connectClient(selectedConnectionObj.clientKey)"
-      >
-        <div class="tw-flex tw-place-items-center tw-gap-2">
-          <q-icon name="fa-solid fa-play" size="10px" />
-          <span class="tw-text-[0.65rem] tw-leading-none">Connect</span>
-        </div>
-      </q-btn>
-    </div>
+    <tab-topics-header />
     <q-splitter
       v-model="visualizationSplitter"
       class="tw-overflow-hidden"

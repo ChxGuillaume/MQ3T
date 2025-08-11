@@ -63,15 +63,6 @@ watch(
   }
 )
 
-watch(
-  () => appStore.currentTab,
-  (value) => {
-    if (value !== 'topics') {
-      mqttTopicsStore.selectedConnection = ''
-    }
-  }
-)
-
 onMounted(() => {
   const storedTheme = localStorage.getItem('darkMode')
 
@@ -140,6 +131,17 @@ onMounted(() => {
   window.addEventListener('keyup', handleKeyUp)
 })
 
+// TODO: This is kept as a counter mesure due to the refactoring of the application,
+//  this should be removed in the future
+watch(
+  () => mqttTopicsStore.selectedConnection,
+  (clientKey) => {
+    if (!clientKey) return
+
+    actionsStore.selectedConnection = clientKey
+  }
+)
+
 onUnmounted(() => {
   window.removeEventListener('keyup', handleKeyUp)
 })
@@ -152,18 +154,16 @@ onUnmounted(() => {
       <div class="tw-flex-grow">
         <q-tab-panels v-model="currentTab" class="tw-h-full tw-bg-transparent" vertical keep-alive>
           <q-tab-panel class="tw-p-0" name="topics">
-            <TabTopics />
+            <tab-topics />
           </q-tab-panel>
           <q-tab-panel class="tw-p-0" name="actions">
-            <TabActions />
+            <tab-actions />
           </q-tab-panel>
-          <q-tab-panel name="automations">Automations</q-tab-panel>
-
-          <q-tab-panel name="settings">
-            <TabSettings />
+          <q-tab-panel class="tw-p-0" name="settings">
+            <tab-settings />
           </q-tab-panel>
           <q-tab-panel class="tw-p-0" name="connections">
-            <TabConnections />
+            <tab-connections />
           </q-tab-panel>
         </q-tab-panels>
       </div>
