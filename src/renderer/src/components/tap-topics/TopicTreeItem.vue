@@ -155,7 +155,7 @@ watch(
           />
           <topic-item-menu
             has-topic-keys
-            :has-last-message="!topicLastMessage?.message"
+            :has-last-message="!!topicLastMessage?.message"
             :favorite="favoritedTopics"
             @copy-last-message="handleCopyLastMessage"
             @copy-topic-key="handleCopyTopicKey"
@@ -215,7 +215,7 @@ watch(
         />
         <topic-item-menu
           has-topic-keys
-          :has-last-message="!topicLastMessage?.message"
+          :has-last-message="!!topicLastMessage?.message"
           :favorite="favoritedTopics"
           @copy-last-message="handleCopyLastMessage"
           @copy-topic-key="handleCopyTopicKey"

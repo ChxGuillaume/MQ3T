@@ -72,7 +72,7 @@ watch(
         :language="topicLastMessage.dataType"
       />
       <topic-item-menu
-        :has-last-message="!topicLastMessage?.message"
+        :has-last-message="!!topicLastMessage?.message"
         :favorite="favoritedTopics"
         @copy-last-message="handleCopyLastMessage"
         @copy-topic="handleCopyTopic"
