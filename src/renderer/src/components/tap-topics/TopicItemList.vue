@@ -2,7 +2,7 @@
 import TopicTreeItem from '@renderer/components/tap-topics/TopicTreeItem.vue'
 import TopicLineItem from '@renderer/components/tap-topics/TopicLineItem.vue'
 import { useActionsCacheStore } from '@renderer/store/actions-cache'
-import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { MqttTopicStructure, useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { watchDebounced } from '@vueuse/core'
 import { computed, ref } from 'vue'
@@ -32,7 +32,7 @@ const getTopicsForLineMode = () => {
     .value()
 }
 
-type TreeEntry = [string, any]
+type TreeEntry = [string, MqttTopicStructure | null]
 const debouncedTreeTopics = ref<TreeEntry[]>([])
 
 const getTopicsForTreeMode = () => {
@@ -75,7 +75,7 @@ watchDebounced(
     <div class="tw-flex tw-flex-col tw-gap-1">
       <topic-line-item
         v-for="topic in debouncedLineTopics"
-        :key="topic"
+        :key="`${clientKey}:${topic}`"
         :topic="topic"
         :client-key="clientKey"
         @topic:click="emit('topic:click', clientKey, $event)"
@@ -85,7 +85,7 @@ watchDebounced(
   <template v-else>
     <topic-tree-item
       v-for="[pathKey, structure] in debouncedTreeTopics"
-      :key="pathKey"
+      :key="`${clientKey}:${pathKey}`"
       :client-key="clientKey"
       :topic-key="pathKey"
       :path="pathKey"

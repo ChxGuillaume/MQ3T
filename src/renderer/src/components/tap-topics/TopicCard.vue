@@ -82,7 +82,7 @@ const animate = () => {
   }
 }
 
-defineExpose({ animate })
+defineExpose<{ animate: () => void }>({ animate })
 </script>
 
 <template>

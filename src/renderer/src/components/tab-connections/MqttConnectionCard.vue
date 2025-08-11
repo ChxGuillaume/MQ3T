@@ -50,12 +50,13 @@ const connectionStatus = computed(() => {
         size="sm"
         @click.stop="menuOpened = !menuOpened"
       >
+        <mqtt-connection-card-context-menu
+          v-model:opened="menuOpened"
+          no-parent-behavior
+          @edit="$emit('edit', connection)"
+          @delete="$emit('delete', connection)"
+        />
       </q-btn>
-      <mqtt-connection-card-context-menu
-        v-model:opened="menuOpened"
-        @edit="$emit('edit', connection)"
-        @delete="$emit('delete', connection)"
-      />
     </div>
     <p
       class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
