@@ -201,7 +201,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
 
-      let topicExists = this.topicsMessages[clientKey][topic]
+      const topicExists = this.topicsMessages[clientKey][topic]
 
       if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
       if (!this.topicsLastMessage[clientKey]) this.topicsLastMessage[clientKey] = {}
@@ -282,16 +282,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       let currentTopicStructure = this.topicsStructure[clientKey]
       const topicParts = topic.split('/')
-      let currentTopicPath = ''
 
       for (const topicPart of topicParts) {
-        currentTopicPath += `${topicPart}`
-
         if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
 
         currentTopicStructure = currentTopicStructure[topicPart] || {}
-
-        currentTopicPath += `/`
       }
     },
     addPublishMessage(

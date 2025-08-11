@@ -3,7 +3,7 @@ import ConnectionContextMenu from '@renderer/components/tap-topics/ConnectionCon
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import ConnectionStatusBadge from './ConnectionStatusBadge.vue'
-import { AppPlatform, ElectronApi } from '@renderer/assets/js/electron-api'
+import { AppPlatform } from '@renderer/assets/js/electron-api'
 import { useAppStore } from '@renderer/store/app-store'
 import { computed, ref } from 'vue'
 
@@ -53,7 +53,7 @@ const currentTab = computed({
 const menuOpened = ref(false)
 
 const handleCloseConnection = (clientKey: string) => {
-  ElectronApi.disconnectMqtt(clientKey)
+  mqttConnectionsStore.disconnectClient(clientKey)
 
   mqttTopicsStore.selectedConnection = ''
   mqttTopicsStore.selectedTopic = ''

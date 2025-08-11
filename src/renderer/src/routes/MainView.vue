@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
+import { useDataGraphsStore } from '../store/data-graphs'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import TabConnections from '../tabs/TabConnections.vue'
@@ -13,10 +15,8 @@ import TabSettings from '../tabs/TabSettings.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
-import { useQuasar } from 'quasar'
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import { useDataGraphsStore } from '../store/data-graphs'
 import AppBar from '../components/AppBar.vue'
+import { useQuasar } from 'quasar'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -33,8 +33,6 @@ const currentTab = computed({
 })
 
 const $q = useQuasar()
-
-const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
 
 const handleKeyUp = (event: KeyboardEvent) => {
   if (event.ctrlKey) {
@@ -115,46 +113,6 @@ onMounted(() => {
 
   ElectronApi.handleMqttStatus((_, value) => {
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
-
-    const connection = mqttConnectionsStore.getConnection(value.clientKey)
-
-    if (!connection) return
-
-    if (value.status === 'connected') {
-      const notify = connectingNotify[value.clientKey]
-
-      const notificationData = {
-        message: `[${connection.name}]`,
-        caption: 'Connected',
-        type: 'positive',
-        icon: 'fa-solid fa-plug-circle-plus'
-      }
-
-      if (notify) notify(notificationData)
-      else $q.notify(notificationData)
-
-      delete connectingNotify[value.clientKey]
-    } else if (value.status === 'connecting') {
-      connectingNotify[value.clientKey] = $q.notify({
-        message: `[${connection.name}]`,
-        caption: 'Connecting...',
-        type: 'ongoing'
-      })
-    } else if (value.status === 'disconnected') {
-      const notify = connectingNotify[value.clientKey]
-
-      const notificationData = {
-        message: `[${connection.name}]`,
-        caption: 'Disconnected',
-        type: 'warning',
-        icon: 'fa-solid fa-plug-circle-minus'
-      }
-
-      if (notify) notify(notificationData)
-      else $q.notify(notificationData)
-
-      delete connectingNotify[value.clientKey]
-    }
   })
 
   ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {

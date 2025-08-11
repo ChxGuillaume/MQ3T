@@ -313,7 +313,10 @@ const focusTopicsScroll = (e: MouseEvent) => {
 
 <template>
   <div class="tw-grid tw-h-full tw-max-h-full tw-grid-rows-[auto_1fr]">
-    <div class="text-weight-medium tw-bg-neutral-200 tw-p-2 tw-text-center dark:tw-bg-neutral-800">
+    <div
+      class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+    >
+      <div />
       <p
         v-if="selectedConnectionObj"
         class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
@@ -321,6 +324,43 @@ const focusTopicsScroll = (e: MouseEvent) => {
       >
         {{ formatMqttUrl(selectedConnectionObj) }}
       </p>
+
+      <q-btn
+        v-if="
+          selectedConnectionObj &&
+          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) === 'connected'
+        "
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="mqttConnectionsStore.disconnectClient(selectedConnectionObj.clientKey)"
+      >
+        <q-icon name="fa-solid fa-link-slash" size="10px" />
+        <q-tooltip
+          :delay="500"
+          anchor="center left"
+          self="center right"
+          transition-show="jump-left"
+          transition-hide="jump-right"
+        >
+          Disconnect
+        </q-tooltip>
+      </q-btn>
+      <q-btn
+        v-else-if="
+          selectedConnectionObj &&
+          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) !== 'connected'
+        "
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="mqttConnectionsStore.connectClient(selectedConnectionObj.clientKey)"
+      >
+        <div class="tw-flex tw-place-items-center tw-gap-2">
+          <q-icon name="fa-solid fa-play" size="10px" />
+          <span class="tw-text-[0.65rem] tw-leading-none">Connect</span>
+        </div>
+      </q-btn>
     </div>
     <q-splitter
       v-model="visualizationSplitter"
@@ -366,18 +406,6 @@ const focusTopicsScroll = (e: MouseEvent) => {
                 @click="focusTopicsScroll"
               >
                 <div v-if="selectedConnectionObj" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
-                  <!--                  <topic-card>-->
-                  <!--                    <span class="connection-card-title">{{ selectedConnectionObj.name }}</span>-->
-                  <!--                    <span class="tw-ml-1">-->
-                  <!--                      <connection-status-chip-->
-                  <!--                        :connection-status="-->
-                  <!--                          mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey)-->
-                  <!--                        "-->
-                  <!--                        size="xs"-->
-                  <!--                      />-->
-                  <!--                    </span>-->
-                  <!--                    <connection-context-menu :connection="selectedConnectionObj" />-->
-                  <!--                  </topic-card>-->
                   <topic-item-list
                     :client-key="mqttTopicsStore.selectedConnection"
                     :display-mode="displayMode"

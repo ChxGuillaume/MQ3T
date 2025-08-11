@@ -2,14 +2,15 @@
 import MqttConnectionDialog from '../components/tab-connections/MqttConnectionDialog.vue'
 import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
-const mqttConnectionsStore = useMqttConnectionsStore()
+type ConnectionListItem =
+  | { type: 'connection'; connection: MqttConnection }
+  | { type: 'add-connection' }
 
-const electronApi = window.api as ElectronIpc
+const mqttConnectionsStore = useMqttConnectionsStore()
 
 const editConnectionDialogOpened = ref(false)
 const addConnectionDialogOpened = ref(false)
@@ -22,13 +23,11 @@ const handleEdit = (connection: MqttConnection) => {
 }
 
 const handleConnect = (connection: MqttConnection) => {
-  const clonedConnection = JSON.parse(JSON.stringify(connection))
-
-  electronApi.connectMqtt(Object.assign({}, clonedConnection))
+  mqttConnectionsStore.connectClient(connection.clientKey)
 }
 
 const handleDisconnect = (connection: MqttConnection) => {
-  electronApi.disconnectMqtt(connection.clientKey)
+  mqttConnectionsStore.disconnectClient(connection.clientKey)
 }
 
 onMounted(() => {
@@ -37,22 +36,26 @@ onMounted(() => {
   }, 200)
 })
 
-const connections = computed({
-  get: () => {
+const connections = computed<ConnectionListItem[]>({
+  get: (): ConnectionListItem[] => {
     return [
-      ...mqttConnectionsStore.connections.map((connection) => ({ type: 'connection', connection })),
-      { type: 'add-connection' }
+      ...mqttConnectionsStore.connections.map((connection) => ({
+        type: 'connection' as const,
+        connection
+      })),
+      { type: 'add-connection' as const }
     ]
   },
-  set: (value) => {
-    mqttConnectionsStore.setConnections(
-      value.filter((item) => item.type === 'connection').map((item) => item.connection),
-      true
+  set: (value: ConnectionListItem[]) => {
+    const connections = value.flatMap((item) =>
+      item.type === 'connection' ? [item.connection] : []
     )
+
+    mqttConnectionsStore.setConnections(connections, true)
   }
 })
 
-const dragOptions = computed(() => {
+const dragOptions = computed<{ animation: number; group: string; ghostClass: string }>(() => {
   return {
     animation: 200,
     group: 'mqtt-connections',
