@@ -35,6 +35,10 @@ const api: ElectronIpc = {
   saveChainActions: (chainActions) => ipcRenderer.send('save-chain-actions', chainActions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
   saveDataGraphs: (graphs) => ipcRenderer.send('save-data-graphs', graphs),
+
+  saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
+  getSettingsSync: () => ipcRenderer.sendSync('get-settings-sync'),
+
   updateDataGraph: (params) => ipcRenderer.send('update-data-graph', params),
   getDataGraphsSync: () => ipcRenderer.sendSync('get-data-graphs-sync'),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),

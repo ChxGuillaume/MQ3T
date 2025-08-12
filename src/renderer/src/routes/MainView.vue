@@ -7,6 +7,7 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
+import { useSettingsStore } from '../store/settings-store'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import TabConnections from '../tabs/TabConnections.vue'
@@ -22,6 +23,7 @@ const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
+const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
 
@@ -127,6 +129,7 @@ onMounted(() => {
   })
 
   dataGraphsStore.initStore()
+  settingsStore.initStore()
 
   window.addEventListener('keyup', handleKeyUp)
 })

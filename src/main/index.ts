@@ -5,6 +5,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
+import { initSettingsHandlers } from './stores/settings'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
@@ -21,7 +22,8 @@ const configFilePath = {
   mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
   actions: path.join(configFolder, 'actions.json'),
   chainActions: path.join(configFolder, 'chain-actions.json'),
-  actionsGroups: path.join(configFolder, 'actions-groups.json')
+  actionsGroups: path.join(configFolder, 'actions-groups.json'),
+  settings: path.join(configFolder, 'settings.json')
 }
 
 const IS_MAS = process.mas
@@ -67,6 +69,7 @@ app.whenReady().then(() => {
   initAutoUpdater(mainWindow)
   initGraphWindowHandlers(mainWindow)
   initDataGraphHandlers()
+  initSettingsHandlers()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

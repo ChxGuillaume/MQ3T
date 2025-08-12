@@ -27,6 +27,10 @@ export type MqttStatusCallback = (
 
 export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void
 
+export type Settings = {
+  participateToReleaseCandidates?: boolean
+}
+
 export type ElectronIpc = {
   darkMode: (value: boolean) => void
 
@@ -57,6 +61,9 @@ export type ElectronIpc = {
   saveDataGraphs: (graphs: DataGraph[]) => void
   updateDataGraph: (params: { id: string; updates: Partial<DataGraph> }) => void
   getDataGraphsSync: () => DataGraph[]
+
+  saveSettings: (settings: Settings) => void
+  getSettingsSync: () => Settings
 
   importData: (fileFilter?: FileFilter[]) => void
   handleImportData: (callback: (event: never, value: string) => void) => void

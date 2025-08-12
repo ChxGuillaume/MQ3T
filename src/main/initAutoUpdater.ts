@@ -1,4 +1,5 @@
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
+import { getSettings } from './stores/settings'
 import { autoUpdater } from 'electron-updater'
 import { is } from '@electron-toolkit/utils'
 import { BrowserWindow } from 'electron'
@@ -18,6 +19,7 @@ export const initAutoUpdater = (window: BrowserWindow) => {
   }
 
   autoUpdater.autoDownload = false
+  autoUpdater.allowPrerelease = getSettings().participateToReleaseCandidates || false
 
   autoUpdater.on('checking-for-update', () => {
     sendMessageToRenderer('checking-for-update')

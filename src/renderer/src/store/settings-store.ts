@@ -1,3 +1,4 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 import moment from 'moment'
 
@@ -58,7 +59,11 @@ export const useSettingsStore = defineStore('settings', {
   },
   actions: {
     initStore() {
-      /* empty */
+      const settings = ElectronApi.getSettingsSync()
+
+      if (typeof settings?.participateToReleaseCandidates === 'boolean') {
+        this.participateToReleaseCandidates = settings.participateToReleaseCandidates
+      }
     },
     setShowActivity(value: boolean) {
       this.showActivity = value
@@ -110,6 +115,7 @@ export const useSettingsStore = defineStore('settings', {
     },
     setParticipateToReleaseCandidates(value: boolean) {
       this.participateToReleaseCandidates = value
+      ElectronApi.saveSettings({ participateToReleaseCandidates: value })
     }
   }
 })
