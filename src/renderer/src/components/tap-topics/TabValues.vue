@@ -175,18 +175,18 @@ watch(
         </div>
       </div>
       <q-splitter v-model="codePreviewSplitter" horizontal :limits="codePreviewLimits" unit="px">
-        <template v-slot:before>
+        <template #before>
           <code-preview
             :value="mqttTopicsStore.getSelectedTopicLastMessage?.message || ''"
             :language="mqttTopicsStore.getSelectedTopicLastMessage?.dataType"
           />
         </template>
 
-        <template v-slot:separator>
+        <template #separator>
           <splitter-icon @click:double="codePreviewSplitter = 200" />
         </template>
 
-        <template v-slot:after>
+        <template #after>
           <q-splitter
             v-model="selectedMessageCodePreviewSplitter"
             :limits="selectedCodePreviewLimits"
@@ -194,7 +194,7 @@ watch(
             horizontal
             unit="px"
           >
-            <template v-if="selectedMessage" v-slot:before>
+            <template v-if="selectedMessage" #before>
               <code-preview
                 v-if="selectedMessage && !settingsStore.selectedMessageCompare"
                 :value="selectedMessage?.message || ''"
@@ -210,14 +210,14 @@ watch(
               />
             </template>
 
-            <template v-slot:separator>
+            <template #separator>
               <splitter-icon
                 v-if="selectedMessage"
                 @click:double="selectedMessageCodePreviewSplitter = 200"
               />
             </template>
 
-            <template v-slot:after>
+            <template #after>
               <messages-list v-model:selected-message="selectedMessage" />
             </template>
           </q-splitter>

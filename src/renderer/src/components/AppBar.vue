@@ -66,8 +66,8 @@ const isTopicsTab = computed(() => {
       @click.left="goToConnectionsTab"
     >
       <q-icon
-        :name="!isTopicsTab ? 'mdi-v7 mdi-home' : 'mdi-v7 mdi-home-outline'"
-        size="20px"
+        name="fa-solid fa-house"
+        size="14px"
         class="home-icon"
         :class="{ other: !isTopicsTab, topics: isTopicsTab }"
       />

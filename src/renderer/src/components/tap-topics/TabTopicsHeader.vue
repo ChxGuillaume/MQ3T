@@ -29,9 +29,9 @@ const selectedConnectionObj = computed(() => {
         flat
         @click="appStore.setCurrentTab('actions')"
       >
-        <div class="tw-flex tw-place-items-center tw-gap-2">
-          <q-icon name="fa-solid fa-play" size="10px" />
-          <span class="tw-text-[0.65rem] tw-leading-[0]">Actions</span>
+        <div class="tw-flex tw-h-[10px] tw-place-items-center tw-gap-2">
+          <q-icon name="fa-solid fa-play" size="10px" class="tw-text-accent" />
+          <span class="tw-text-[0.65rem]">Actions</span>
         </div>
       </q-btn>
     </div>

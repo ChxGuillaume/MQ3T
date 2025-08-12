@@ -2,6 +2,7 @@ import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { useSettingsStore } from './settings-store'
 import { codeType } from '../assets/js/format-code'
+import { IPublishPacket } from 'mqtt'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 import _ from 'lodash'
@@ -19,13 +20,6 @@ export type MqttMessage = {
 export type MqttTopicStructure = {
   [key: string]: MqttTopicStructure | null
 }
-
-// type MqttTopicsStructureV2 = {
-//   fromAction: boolean
-//   structure: {
-//     [key: string]: MqttTopicsStructureV2
-//   }
-// }
 
 export type TopicMessages = Record<string, Record<string, MqttMessage[]>>
 
@@ -190,12 +184,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         )
       })
     },
-    addMessage(
-      clientKey: string,
-      topic: string,
-      message: string,
-      extras: { qos: MqttMessage['qos']; retained?: boolean }
-    ) {
+    addMessage(clientKey: string, topic: string, message: string, packet: IPublishPacket) {
       const actionsCacheStore = useActionsCacheStore()
       const settingsStore = useSettingsStore()
 
@@ -214,9 +203,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       const mqttMessage = {
         uid: uuidV4(),
         message,
-        qos: extras.qos,
+        qos: packet.qos,
         dataType: codeType(message),
-        retained: extras.retained || false,
+        retained: packet.retain || false,
         createdAt: new Date()
       } as MqttMessage
 
