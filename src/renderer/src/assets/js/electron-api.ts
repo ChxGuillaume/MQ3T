@@ -5,3 +5,6 @@ export const ElectronApi = window?.api as ElectronIpc
 
 // @ts-ignore (define in dts)
 export const AppPlatform = window?.platform as 'win32' | 'linux' | 'darwin'
+
+// @ts-ignore (define in dts)
+export const HasAutoUpdate = window?.hasAutoUpdate

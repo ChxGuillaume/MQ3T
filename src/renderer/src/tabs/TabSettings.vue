@@ -2,7 +2,6 @@
 import ChangeLogsModal from '../components/ChangeLogsModal.vue'
 import LicensesModal from '../components/AppDetailsModal.vue'
 import { useSettingsStore } from '../store/settings-store'
-import { ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
@@ -146,9 +145,6 @@ const autoOpenPublishActionsSetting = computed({
 
 const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
-
-// @ts-ignore (define in dts)
-const hasAutoUpdate = window.hasAutoUpdate
 </script>
 
 <template>
@@ -159,17 +155,6 @@ const hasAutoUpdate = window.hasAutoUpdate
   </div>
 
   <div class="settings">
-    <div class="tw-mb-6 tw-flex tw-items-center tw-justify-end">
-      <q-btn
-        v-if="hasAutoUpdate"
-        color="primary"
-        :disable="appStore.workingOnUpdate"
-        @click="ElectronApi.checkForUpdates"
-      >
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-sync" />
-        Check for Update
-      </q-btn>
-    </div>
     <div class="tw-flex tw-flex-col tw-gap-6">
       <div class="settings-group">
         <h2 class="settings-group-title">App</h2>
@@ -177,6 +162,7 @@ const hasAutoUpdate = window.hasAutoUpdate
         <div class="settings-group-item-container">
           <q-select
             v-model="darkMode"
+            name="dark-mode"
             filled
             :options="darkModeOptions"
             label="Dark Mode"
@@ -188,6 +174,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-select
             v-model="dateFormatSetting"
+            name="date-format-setting"
             filled
             class="tw-text-white"
             :options="dateFormatOptions"
@@ -200,6 +187,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-select
             v-model="timeFormatSetting"
+            name="time-format-setting"
             filled
             class="tw-text-white"
             :options="timeFormatOptions"
@@ -217,10 +205,16 @@ const hasAutoUpdate = window.hasAutoUpdate
         <hr class="settings-group-separator" />
         <div class="settings-group-item-container">
           <q-card class="card-toggle" square flat>
-            <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
+            <q-toggle
+              v-model="showActivitySetting"
+              name="show-activity-setting"
+              label="Show Activity"
+              class="tw-w-full"
+            />
           </q-card>
           <q-select
             v-model="showActivityAnimationSpeedSetting"
+            name="show-activity-animation-speed-setting"
             filled
             :options="showActivityAnimationSpeedOptions"
             label="Activity Animation Speed"
@@ -236,6 +230,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-select
             v-model="showActivityAnimationTypeSetting"
+            name="show-activity-animation-type-setting"
             filled
             :options="showActivityAnimationTypeOptions"
             label="Activity Animation Style"
@@ -251,6 +246,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-input
             v-model="maxMessagesSetting"
+            name="max-messages-setting"
             filled
             label="Messages History per Topic"
             type="number"
@@ -258,6 +254,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="smartTopicGroupCloseSetting"
+              name="smart-topic-group-close-setting"
               class="tw-w-full"
               label="Smart Topic Group"
             />
@@ -270,6 +267,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="messagesPaginationSetting"
+              name="messages-pagination-setting"
               label="Messages Pagination"
               class="tw-w-full"
             />
@@ -282,6 +280,7 @@ const hasAutoUpdate = window.hasAutoUpdate
         <div class="settings-group-item-container">
           <q-select
             v-model="defaultDataFormatSetting"
+            name="default-data-format-setting"
             filled
             class="tw-text-white"
             :options="defaultDataFormatOptions"
@@ -297,6 +296,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="autoOpenPublishActionsSetting"
+              name="auto-open-publish-actions-setting"
               class="tw-w-full"
               label="Auto Open Actions Pan"
             >

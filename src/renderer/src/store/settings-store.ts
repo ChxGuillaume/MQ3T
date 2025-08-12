@@ -17,6 +17,8 @@ type SettingsStore = {
   autoOpenPublishActions: boolean
   chainActionsTrackpadMode: boolean
   selectedMessageCompare: boolean
+
+  participateToReleaseCandidates: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -36,7 +38,9 @@ export const useSettingsStore = defineStore('settings', {
     autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true',
     chainActionsTrackpadMode:
       (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true',
-    selectedMessageCompare: (localStorage.getItem('lastMessageCompare') || 'true') === 'true'
+    selectedMessageCompare: (localStorage.getItem('lastMessageCompare') || 'true') === 'true',
+
+    participateToReleaseCandidates: false
   }),
   getters: {
     dateTimeFormat(): string {
@@ -53,6 +57,9 @@ export const useSettingsStore = defineStore('settings', {
     }
   },
   actions: {
+    initStore() {
+      /* empty */
+    },
     setShowActivity(value: boolean) {
       this.showActivity = value
       localStorage.setItem('showActivity', value.toString())
@@ -100,6 +107,9 @@ export const useSettingsStore = defineStore('settings', {
     setSelectedMessageCompare(value: boolean) {
       this.selectedMessageCompare = value
       localStorage.setItem('lastMessageCompare', value.toString())
+    },
+    setParticipateToReleaseCandidates(value: boolean) {
+      this.participateToReleaseCandidates = value
     }
   }
 })

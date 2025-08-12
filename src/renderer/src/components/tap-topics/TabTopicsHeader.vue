@@ -77,7 +77,7 @@ const selectedConnectionObj = computed(() => {
         @click="mqttConnectionsStore.connectClient(selectedConnectionObj.clientKey)"
       >
         <div class="tw-flex tw-place-items-center tw-gap-2">
-          <q-icon name="fa-solid fa-play" size="10px" />
+          <q-icon name="fa-solid fa-plug" size="10px" />
           <span class="tw-text-[0.65rem] tw-leading-[0]">Connect</span>
         </div>
       </q-btn>
