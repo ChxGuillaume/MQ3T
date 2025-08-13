@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSettingsStore } from '../../store/settings-store'
-import { useAppStore } from '../../store/app-store'
 import { computed, ref, onBeforeUnmount } from 'vue'
+import { useAppStore } from '../../store/app-store'
 import { useQuasar } from 'quasar'
 import debounce from 'lodash/debounce'
 

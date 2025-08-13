@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { MqttTopicStructure, useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import TopicTreeItem from '@renderer/components/tap-topics/TopicTreeItem.vue'
 import TopicLineItem from '@renderer/components/tap-topics/TopicLineItem.vue'
 import { useActionsCacheStore } from '@renderer/store/actions-cache'
-import { MqttTopicStructure, useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { watchDebounced } from '@vueuse/core'
 import { computed, ref } from 'vue'
@@ -24,7 +24,7 @@ const emit = defineEmits<{ 'topic:click': [clientKey: string, event: string] }>(
 const debouncedLineTopics = ref<string[]>([])
 
 const topicStructure = computed<TreeEntry[]>(() => {
-  return Object.entries(mqttTopicsStore.getFilteredTopicsStructure(props.clientKey)).sort((a, b) =>
+  return _.entries(mqttTopicsStore.getFilteredTopicsStructure(props.clientKey)).sort((a, b) =>
     a[0].localeCompare(b[0])
   )
 })

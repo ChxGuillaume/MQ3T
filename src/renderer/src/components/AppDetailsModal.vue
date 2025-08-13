@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ElectronApi, HasAutoUpdate } from '../assets/js/electron-api'
+import { useSettingsStore } from '@renderer/store/settings-store'
 import { useAppStore } from '@renderer/store/app-store'
 import Versions from './Versions.vue'
 import { computed, ref } from 'vue'
 
 import licensesJson from '../assets/licenses.json'
 import logo from '../assets/img/logo.png'
-import { useSettingsStore } from '@renderer/store/settings-store'
 
 interface Licenses {
   [library: string]: {

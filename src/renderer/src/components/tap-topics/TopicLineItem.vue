@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { exportMessages } from '@renderer/assets/js/export-messages'
 import TopicCard, { ITopicCard } from '@renderer/components/tap-topics/TopicCard.vue'
 import TopicItemMenu from '@renderer/components/tap-topics/TopicItemMenu.vue'
+import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
+import { useTopicActions } from '@renderer/composables/useTopicActions'
+import { exportMessages } from '@renderer/assets/js/export-messages'
+import { useSettingsStore } from '@renderer/store/settings-store'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { ref, watch, toRef } from 'vue'
-import { useSettingsStore } from '@renderer/store/settings-store'
-import { useTopicActions } from '@renderer/composables/useTopicActions'
-import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
 
 type Props = {
   clientKey: string
