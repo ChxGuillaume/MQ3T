@@ -17,7 +17,6 @@ type Props = {
 }
 
 const props = defineProps<Props>()
-
 const emit = defineEmits<{ 'topic:click': [clientKey: string, event: string] }>()
 
 const debouncedLineTopics = ref<string[]>([])
@@ -66,7 +65,7 @@ watchDebounced(
   (newTopics) => {
     debouncedTreeTopics.value = newTopics
   },
-  { debounce: 0, deep: true }
+  { debounce: 0, maxWait: 100, deep: true }
 )
 </script>
 

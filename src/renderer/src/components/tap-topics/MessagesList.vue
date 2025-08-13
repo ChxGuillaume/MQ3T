@@ -8,13 +8,8 @@ import CopyButton from '../buttons/CopyButton.vue'
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
-const props = defineProps<{
-  selectedMessage?: MqttMessage
-}>()
-
-const emit = defineEmits<{
-  'update:selectedMessage': [uid?: MqttMessage]
-}>()
+const props = defineProps<{ selectedMessage?: MqttMessage }>()
+const emit = defineEmits<{ 'update:selectedMessage': [uid?: MqttMessage] }>()
 
 const currentPage = ref(1)
 const intersectionTransition = ref('slide-up')

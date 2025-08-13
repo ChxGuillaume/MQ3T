@@ -24,13 +24,8 @@ const licenses = licensesJson as Licenses
 
 delete licenses[Object.keys(licenses).find((key) => key.startsWith('mq3t')) || '']
 
-const props = defineProps<{
-  opened: boolean
-}>()
-
-const emit = defineEmits<{
-  'update:opened': [boolean]
-}>()
+const props = defineProps<{ opened: boolean }>()
+const emit = defineEmits<{ 'update:opened': [boolean] }>()
 
 const licensesScrolled = ref(false)
 
@@ -91,12 +86,20 @@ const parseLibraryName = (library: string) => library.split('@').slice(0, -1).jo
             Check for Update
 
             <q-popup-proxy context-menu>
-              <q-card class="tw-pr-4">
+              <q-card class="tw-flex tw-items-center tw-gap-2 tw-pr-4">
                 <q-toggle
                   v-model="participateToReleaseCandidates"
                   name="release-candidate"
                   label="Release Candidate"
                 />
+
+                <q-icon name="fa-solid fa-circle-info" size="12px">
+                  <q-tooltip class="tw-max-w-[280px]">
+                    When enabled, you will receive update notifications for pre-release versions
+                    (Release Candidates) before the final stable release. Recommended for early
+                    testers; these builds may contain minor issues.
+                  </q-tooltip>
+                </q-icon>
               </q-card>
             </q-popup-proxy>
           </q-btn>
