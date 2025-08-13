@@ -16,10 +16,18 @@ type Props = {
   displayMode: 'line' | 'tree'
 }
 
+type TreeEntry = [string, MqttTopicStructure | null]
+
 const props = defineProps<Props>()
 const emit = defineEmits<{ 'topic:click': [clientKey: string, event: string] }>()
 
 const debouncedLineTopics = ref<string[]>([])
+
+const topicStructure = computed<TreeEntry[]>(() => {
+  return Object.entries(mqttTopicsStore.getFilteredTopicsStructure(props.clientKey)).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  )
+})
 
 const getTopicsForLineMode = () => {
   return _([
@@ -31,21 +39,7 @@ const getTopicsForLineMode = () => {
     .value()
 }
 
-type TreeEntry = [string, MqttTopicStructure | null]
-const debouncedTreeTopics = ref<TreeEntry[]>([])
-
-const getTopicsForTreeMode = () => {
-  return Object.entries(mqttTopicsStore.getFilteredTopicsStructure(props.clientKey)).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  )
-}
-
 debouncedLineTopics.value = getTopicsForLineMode()
-debouncedTreeTopics.value = getTopicsForTreeMode()
-
-const sourceTreeTopics = computed(() => {
-  return getTopicsForTreeMode()
-})
 
 watchDebounced(
   () => {
@@ -58,14 +52,6 @@ watchDebounced(
     debouncedLineTopics.value = getTopicsForLineMode()
   },
   { debounce: 100, maxWait: 500, deep: true }
-)
-
-watchDebounced(
-  sourceTreeTopics,
-  (newTopics) => {
-    debouncedTreeTopics.value = newTopics
-  },
-  { debounce: 0, maxWait: 100, deep: true }
 )
 </script>
 
@@ -83,7 +69,7 @@ watchDebounced(
   </template>
   <template v-else>
     <topic-tree-item
-      v-for="[pathKey, structure] in debouncedTreeTopics"
+      v-for="[pathKey, structure] in topicStructure"
       :key="`${clientKey}:${pathKey}`"
       :client-key="clientKey"
       :topic-key="pathKey"

@@ -149,9 +149,25 @@ const showVersionModal = ref(false)
 
 <template>
   <div
-    class="text-weight-medium tw-flex tw-justify-center tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
   >
+    <div class="tw-w-24">
+      <q-btn
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="appStore.setCurrentTab('connections')"
+      >
+        <div class="tw-flex tw-place-items-center tw-gap-2">
+          <q-icon name="fa-solid fa-arrow-left" size="10px" />
+          <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
+        </div>
+      </q-btn>
+    </div>
+
     <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Settings</div>
+
+    <div class="tw-w-24" />
   </div>
 
   <div class="settings">
