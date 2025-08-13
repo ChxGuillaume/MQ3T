@@ -3,7 +3,7 @@ import type { Config } from 'tailwindcss'
 export default {
   prefix: 'tw-',
   darkMode: ['class', '[class~="body--dark"]'],
-  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  content: ['./src/renderer/index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
       screens: {
