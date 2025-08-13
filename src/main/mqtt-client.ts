@@ -10,6 +10,7 @@ const valueOrUndefined = <T>(value: T | undefined) => {
 
 export class MqttClient {
   private client: mqtt.MqttClient
+  private latencyCallbacks: Array<(latency: number) => void> = []
 
   constructor(connection: MqttConnection) {
     const connectionOptions: mqtt.IClientOptions = {
@@ -62,6 +63,25 @@ export class MqttClient {
       `${connection.protocol}://${connection.hostname}:${connection.port}${path}`,
       connectionOptions
     )
+
+    let pingStartTime: number
+
+    setInterval(() => {
+      pingStartTime = Date.now()
+      this.client.sendPing()
+    }, 1000 * 5)
+
+    this.client.on('packetreceive', (packet) => {
+      if (packet.cmd !== 'pingresp') return
+
+      for (const cb of this.latencyCallbacks) {
+        try {
+          cb(Date.now() - pingStartTime)
+        } catch {
+          /* empty */
+        }
+      }
+    })
   }
 
   public onError(callback: (error: Error) => void) {
@@ -74,6 +94,10 @@ export class MqttClient {
 
   public onReconnect(callback: () => void) {
     this.client.on('reconnect', callback)
+  }
+
+  public onLatency(callback: (latency: number) => void) {
+    this.latencyCallbacks.push(callback)
   }
 
   public onMessage(callback: OnMessageCallback) {

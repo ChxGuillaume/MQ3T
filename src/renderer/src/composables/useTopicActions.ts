@@ -2,11 +2,13 @@ import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useFavoriteTopicsStore } from '../store/favorite-topics'
 import { useActionsCacheStore } from '../store/actions-cache'
 import { useQuasar } from 'quasar'
-import { computed } from 'vue'
+import { Ref, computed, isRef } from 'vue'
+
+type MaybeRef<T> = T | Ref<T>
 
 interface UseTopicActionsProps {
-  clientKey: string
-  topic: string
+  clientKey: MaybeRef<string>
+  topic: MaybeRef<string>
 }
 
 export function useTopicActions({ clientKey, topic }: UseTopicActionsProps) {
@@ -15,24 +17,28 @@ export function useTopicActions({ clientKey, topic }: UseTopicActionsProps) {
   const actionsCacheStore = useActionsCacheStore()
   const mqttTopicsStore = useMqttTopicsStore()
 
+  // Normalize inputs to computed refs so they stay in sync when changing
+  const clientKeyRef = computed(() => (isRef(clientKey) ? clientKey.value : clientKey))
+  const topicRef = computed(() => (isRef(topic) ? topic.value : topic))
+
   const hasActions = computed(() => {
-    return actionsCacheStore.hasAction(clientKey, topic)
+    return actionsCacheStore.hasAction(clientKeyRef.value, topicRef.value)
   })
 
   const favoritedTopics = computed(() => {
-    return favoriteTopicsStore.isFavoriteTopic(clientKey, topic)
+    return favoriteTopicsStore.isFavoriteTopic(clientKeyRef.value, topicRef.value)
   })
 
   const isSelectedConnection = computed(() => {
-    return mqttTopicsStore.selectedConnection === clientKey
+    return mqttTopicsStore.selectedConnection === clientKeyRef.value
   })
 
   const isSelectedTopic = computed(() => {
-    return isSelectedConnection.value && mqttTopicsStore.selectedTopic === topic
+    return isSelectedConnection.value && mqttTopicsStore.selectedTopic === topicRef.value
   })
 
   const topicLastMessage = computed(() => {
-    return mqttTopicsStore.getTopicLastMessage(clientKey, topic)
+    return mqttTopicsStore.getTopicLastMessage(clientKeyRef.value, topicRef.value)
   })
 
   const handleCopyLastMessage = () => {
@@ -49,19 +55,19 @@ export function useTopicActions({ clientKey, topic }: UseTopicActionsProps) {
   }
 
   const handleEraseTopic = () => {
-    mqttTopicsStore.clearTopicsAndSubTopicsMessages(clientKey, topic)
+    mqttTopicsStore.clearTopicsAndSubTopicsMessages(clientKeyRef.value, topicRef.value)
   }
 
   const handleFavorite = () => {
-    favoriteTopicsStore.addFavoriteTopic(clientKey, topic)
+    favoriteTopicsStore.addFavoriteTopic(clientKeyRef.value, topicRef.value)
   }
 
   const handleUnfavorite = () => {
-    favoriteTopicsStore.removeFavoriteTopic(clientKey, topic)
+    favoriteTopicsStore.removeFavoriteTopic(clientKeyRef.value, topicRef.value)
   }
 
   const handleCopyTopic = () => {
-    navigator.clipboard.writeText(topic)
+    navigator.clipboard.writeText(topicRef.value)
 
     $q.notify({
       message: 'Topic copied to clipboard',

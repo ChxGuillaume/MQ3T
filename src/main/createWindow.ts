@@ -1,9 +1,12 @@
 import { registerDataGraphHandler } from './stores/dataGraph'
 import iconIcns from '../../build/logo/mac512pts.icns?asset'
 import iconIco from '../../build/logo/win512pts.ico?asset'
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, ipcMain, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import path from 'path'
+
+const DARK_MODE = { height: 40, color: '#121212', symbolColor: '#E675E4' }
+const LIGHT_MODE = { height: 40, color: '#FFFFFF', symbolColor: '#650164' }
 
 export const createWindow = (routePath = '/') => {
   const windowConfig: Electron.BrowserWindowConstructorOptions = {
@@ -17,10 +20,23 @@ export const createWindow = (routePath = '/') => {
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       sandbox: false
-    }
+    },
+
+    titleBarStyle: 'hidden',
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+    trafficLightPosition: { x: 12, y: 12 }
   }
 
   const window = new BrowserWindow(windowConfig)
+
+  if (process.platform !== 'darwin') {
+    window.setTitleBarOverlay(DARK_MODE)
+
+    ipcMain.on('dark-mode', (_, value) => {
+      if (value) window.setTitleBarOverlay(DARK_MODE)
+      else window.setTitleBarOverlay(LIGHT_MODE)
+    })
+  }
 
   window.removeMenu()
 

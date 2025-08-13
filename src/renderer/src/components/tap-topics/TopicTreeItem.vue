@@ -1,28 +1,28 @@
 <script setup lang="ts">
 import { MqttTopicStructure, useMqttTopicsStore } from '../../store/mqtt-topics'
 import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
+import { ITopicCard } from '@renderer/components/tap-topics/TopicCard.vue'
 import { useTopicActions } from '@renderer/composables/useTopicActions'
 import { exportMessages } from '@renderer/assets/js/export-messages'
 import { useSettingsStore } from '../../store/settings-store'
-import TopicCard, { ITopicCard } from './TopicCard.vue'
+import { computed, ref, watch, toRef } from 'vue'
 import TopicItemMenu from './TopicItemMenu.vue'
-import { computed, ref, watch } from 'vue'
+import TopicCard from './TopicCard.vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
-const topicGroupTopicCardRef = ref<ITopicCard | null>(null)
-const topicCardRef = ref<ITopicCard | null>(null)
-
-const props = defineProps<{
+type Props = {
   clientKey: string
   topicKey: string
-  topicStructure: MqttTopicStructure | null
-  topicPath: string
-  topicIndex: number
-}>()
+  structure: MqttTopicStructure | null
+  path: string
+  index?: number
+}
+
+const props = withDefaults(defineProps<Props>(), { index: 0 })
 
 const {
   hasActions,
@@ -35,13 +35,18 @@ const {
   handleUnfavorite,
   handleCopyTopic
 } = useTopicActions({
-  clientKey: props.clientKey,
-  topic: props.topicPath
+  clientKey: toRef(props, 'clientKey'),
+  topic: toRef(props, 'path')
 })
 
+const topicGroupTopicCardRef = ref<ITopicCard | null>(null)
+const topicCardRef = ref<ITopicCard | null>(null)
+
+const itemVisible = ref(false)
+
 const expandedTopicsSection = computed({
-  get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.topicPath),
-  set: (value) => mqttTopicsStore.setTopicGroupOpened(props.clientKey, props.topicPath, value)
+  get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.path),
+  set: (value) => mqttTopicsStore.setTopicGroupOpened(props.clientKey, props.path, value)
 })
 
 const emits = defineEmits(['topic:click'])
@@ -59,7 +64,7 @@ const handleTopicClick = () => {
     expandedTopicsSection.value = !expandedTopicsSection.value
   }
 
-  emits('topic:click', props.topicPath)
+  emits('topic:click', props.path)
 }
 
 const handleCopyTopicKey = () => {
@@ -74,11 +79,11 @@ const handleCopyTopicKey = () => {
 }
 
 const isLastTopicPart = computed(() => {
-  return Object.keys(props.topicStructure || {}).length === 0
+  return Object.keys(props.structure || {}).length === 0
 })
 
 const sortedTopicStructure = computed(() => {
-  return Object.entries(props.topicStructure || {}).sort((a, b) => {
+  return Object.entries(props.structure || {}).sort((a, b) => {
     const parsedA = Number(a[0])
     const parsedB = Number(b[0])
 
@@ -90,19 +95,19 @@ const sortedTopicStructure = computed(() => {
 })
 
 const subTopicsTopicsCount = computed(() => {
-  return mqttTopicsStore.getSubTopicsTopicsCount(props.clientKey, props.topicPath).toLocaleString()
+  return mqttTopicsStore.getSubTopicsTopicsCount(props.clientKey, props.path).toLocaleString()
 })
 
 const subTopicsMessagesCount = computed(() => {
-  return mqttTopicsStore
-    .getSubTopicsMessagesCount(props.clientKey, props.topicPath)
-    .toLocaleString()
+  return mqttTopicsStore.getSubTopicsMessagesCount(props.clientKey, props.path).toLocaleString()
 })
 
 watch(
   () => topicLastMessage.value,
   () => {
+    if (!itemVisible.value) return
     if (!settingsStore.showActivity) return
+
     topicCardRef.value?.animate()
     topicGroupTopicCardRef.value?.animate()
   }
@@ -111,19 +116,22 @@ watch(
 watch(
   () => subTopicsMessagesCount.value,
   () => {
+    if (!itemVisible.value) return
     if (!settingsStore.showActivity) return
     if (expandedTopicsSection.value) return
+
     topicGroupTopicCardRef.value?.animate()
   }
 )
 </script>
 
 <template>
-  <div v-if="!isLastTopicPart" :id="`topic-item-${topicPath}`">
+  <div v-if="!isLastTopicPart" :id="`topic-item-${clientKey}:${path}`">
     <div class="tw-flex">
       <q-intersection
-        :id="`topic-item-${clientKey}:${topicPath}-intersection`"
+        :id="`topic-item-${clientKey}:${path}-intersection`"
         class="tw-h-[29px] tw-max-w-full"
+        @visibility="itemVisible = $event"
       >
         <topic-card
           ref="topicGroupTopicCardRef"
@@ -132,7 +140,8 @@ watch(
           :favorite="favoritedTopics"
           :active="isSelectedTopic"
           :opened="expandedTopicsSection"
-          :style="{ 'margin-left': `${topicIndex * 20}px` }"
+          class="topic-card-indent"
+          :style="{ '--indent-level': index }"
           @open:toggle="handleTopicClick"
         >
           <span class="topic-item-key" :class="{ empty: !topicKey }">
@@ -143,7 +152,7 @@ watch(
             class="tw-ml-1 tw-text-xs"
             v-text="`(${subTopicsTopicsCount} topics ${subTopicsMessagesCount} messages)`"
           />
-          <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+          <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
           <code-highlight
             v-if="topicLastMessage?.message && topicLastMessage.dataType"
             :code="topicLastMessage?.message"
@@ -151,7 +160,7 @@ watch(
           />
           <topic-item-menu
             has-topic-keys
-            :has-last-message="!topicLastMessage?.message"
+            :has-last-message="!!topicLastMessage?.message"
             :favorite="favoritedTopics"
             @copy-last-message="handleCopyLastMessage"
             @copy-topic-key="handleCopyTopicKey"
@@ -160,13 +169,13 @@ watch(
             @favorite="handleFavorite"
             @erase="handleEraseTopic"
             @export:raw="
-              () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+              () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, path))
             "
             @export:json="
-              () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+              () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, path))
             "
             @export:csv="
-              () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+              () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, path))
             "
           />
         </topic-card>
@@ -179,30 +188,32 @@ watch(
         class="tw-mt-1"
         :client-key="clientKey"
         :topic-key="key"
-        :topic-path="`${topicPath}/${key}`"
-        :topic-index="topicIndex + 1"
-        :topic-structure="value"
+        :path="`${path}/${key}`"
+        :index="index + 1"
+        :structure="value"
         @topic:click="$emit('topic:click', $event)"
       />
     </template>
   </div>
-  <div v-else class="tw-flex" :id="`topic-item-${topicPath}`">
+  <div v-else :id="`topic-item-${path}`" class="tw-flex">
     <q-intersection
-      :id="`topic-item-${clientKey}:${topicPath}-intersection`"
+      :id="`topic-item-${clientKey}:${path}-intersection`"
       class="tw-h-[29px] tw-max-w-full"
+      @visibility="itemVisible = $event"
     >
       <topic-card
         ref="topicCardRef"
         :has-actions="hasActions"
         :favorite="favoritedTopics"
         :active="isSelectedTopic"
-        :style="{ 'margin-left': `${topicIndex * 20}px` }"
+        class="topic-card-indent"
+        :style="{ '--indent-level': index }"
         @open:toggle="handleTopicClick"
       >
         <span class="topic-item-key" :class="{ empty: !topicKey }">
           {{ topicKey ? topicKey : '<\empty>' }}
         </span>
-        <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+        <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
         <code-highlight
           v-if="topicLastMessage?.message"
           :code="topicLastMessage?.message"
@@ -210,7 +221,7 @@ watch(
         />
         <topic-item-menu
           has-topic-keys
-          :has-last-message="!topicLastMessage?.message"
+          :has-last-message="!!topicLastMessage?.message"
           :favorite="favoritedTopics"
           @copy-last-message="handleCopyLastMessage"
           @copy-topic-key="handleCopyTopicKey"
@@ -219,13 +230,13 @@ watch(
           @favorite="handleFavorite"
           @erase="handleEraseTopic"
           @export:raw="
-            () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            () => exportMessages('raw', mqttTopicsStore.getTopicMessages(clientKey, path))
           "
           @export:json="
-            () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            () => exportMessages('json', mqttTopicsStore.getTopicMessages(clientKey, path))
           "
           @export:csv="
-            () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, topicPath))
+            () => exportMessages('csv', mqttTopicsStore.getTopicMessages(clientKey, path))
           "
         />
       </topic-card>
@@ -252,5 +263,9 @@ watch(
   .topic-item-key.empty {
     @apply tw-text-neutral-500;
   }
+}
+
+.topic-card-indent {
+  margin-left: calc(var(--indent-level, 0) * 20px);
 }
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useSettingsStore } from '../../store/settings-store'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { useAppStore } from '../../store/app-store'
-import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
+import debounce from 'lodash/debounce'
 
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
@@ -74,15 +75,18 @@ const handleLaser = () => {
   }, animationDuration.value)
 }
 
-const animate = () => {
-  if (settingsStore.showActivityAnimationType === 'topic-heat') {
-    handleTopicHeat()
-  } else if (settingsStore.showActivityAnimationType === 'laser') {
-    handleLaser()
-  }
+const rawAnimate = () => {
+  const type = settingsStore.showActivityAnimationType
+
+  if (type === 'topic-heat') handleTopicHeat()
+  else if (type === 'laser') handleLaser()
 }
 
-defineExpose({ animate })
+const animate = debounce(rawAnimate, 100, { leading: true, trailing: true, maxWait: 100 })
+
+onBeforeUnmount(() => animate.cancel())
+
+defineExpose<{ animate: () => void }>({ animate })
 </script>
 
 <template>
@@ -120,7 +124,7 @@ defineExpose({ animate })
 }
 
 .topic-item-card {
-  @apply tw-flex tw-cursor-pointer tw-items-center tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
+  @apply tw-flex tw-cursor-pointer tw-items-center tw-overflow-hidden tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
 }
 
 .topic-item-card.not-scrubbing {
@@ -136,11 +140,11 @@ defineExpose({ animate })
 
 @keyframes slideIn {
   from {
-    //transform: translateX(-100%);
+    //transform: translateX(-250px);
     left: -250px;
   }
   to {
-    //transform: translateX(100%);
+    //transform: translateX(100% + 250px);
     left: calc(100% + 250px);
   }
 }

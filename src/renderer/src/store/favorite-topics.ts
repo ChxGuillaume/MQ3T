@@ -13,7 +13,14 @@ export const useFavoriteTopicsStore = defineStore('favorite-topics', {
   getters: {
     isFavoriteTopic: (state) => (clientId: string, topic: string) => {
       return state.favoriteTopics.has(clientId) && state.favoriteTopics.get(clientId)?.has(topic)
-    }
+    },
+    getClientFavoriteTopics:
+      (state) =>
+      (clientId: string): string[] => {
+        const topics = state.favoriteTopics.get(clientId)
+
+        return topics ? Array.from(topics.keys()) : []
+      }
   },
   actions: {
     addFavoriteTopic(clientId: string, topic: string) {

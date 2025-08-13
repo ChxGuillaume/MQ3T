@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
+import { useDataGraphsStore } from '../store/data-graphs'
+import { useSettingsStore } from '../store/settings-store'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import TabConnections from '../tabs/TabConnections.vue'
@@ -13,14 +16,14 @@ import TabSettings from '../tabs/TabSettings.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
+import AppBar from '../components/AppBar.vue'
 import { useQuasar } from 'quasar'
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import { useDataGraphsStore } from '../store/data-graphs'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
+const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
 
@@ -32,8 +35,6 @@ const currentTab = computed({
 })
 
 const $q = useQuasar()
-
-const connectingNotify = ref<Record<string, ReturnType<typeof $q.notify>>>({})
 
 const handleKeyUp = (event: KeyboardEvent) => {
   if (event.ctrlKey) {
@@ -105,46 +106,6 @@ onMounted(() => {
 
   ElectronApi.handleMqttStatus((_, value) => {
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
-
-    const connection = mqttConnectionsStore.getConnection(value.clientKey)
-
-    if (!connection) return
-
-    if (value.status === 'connected') {
-      const notify = connectingNotify[value.clientKey]
-
-      const notificationData = {
-        message: `[${connection.name}]`,
-        caption: 'Connected',
-        type: 'positive',
-        icon: 'fa-solid fa-plug-circle-plus'
-      }
-
-      if (notify) notify(notificationData)
-      else $q.notify(notificationData)
-
-      delete connectingNotify[value.clientKey]
-    } else if (value.status === 'connecting') {
-      connectingNotify[value.clientKey] = $q.notify({
-        message: `[${connection.name}]`,
-        caption: 'Connecting...',
-        type: 'ongoing'
-      })
-    } else if (value.status === 'disconnected') {
-      const notify = connectingNotify[value.clientKey]
-
-      const notificationData = {
-        message: `[${connection.name}]`,
-        caption: 'Disconnected',
-        type: 'warning',
-        icon: 'fa-solid fa-plug-circle-minus'
-      }
-
-      if (notify) notify(notificationData)
-      else $q.notify(notificationData)
-
-      delete connectingNotify[value.clientKey]
-    }
   })
 
   ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
@@ -168,9 +129,21 @@ onMounted(() => {
   })
 
   dataGraphsStore.initStore()
+  settingsStore.initStore()
 
   window.addEventListener('keyup', handleKeyUp)
 })
+
+// TODO: This is kept as a counter mesure due to the refactoring of the application,
+//  this should be removed in the future
+watch(
+  () => mqttTopicsStore.selectedConnection,
+  (clientKey) => {
+    if (!clientKey) return
+
+    actionsStore.selectedConnection = clientKey
+  }
+)
 
 onUnmounted(() => {
   window.removeEventListener('keyup', handleKeyUp)
@@ -178,59 +151,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="main-view tw-flex tw-h-full tw-content-between">
-    <div class="nav-bar-left">
-      <q-tabs
-        v-model="currentTab"
-        vertical
-        :class="{ 'text-primary': !$q.dark.isActive }"
-        active-bg-color="primary"
-        active-color="white"
-        indicator-color="transparent"
-      >
-        <div class="tw-flex tw-h-full tw-flex-col tw-justify-between">
-          <div>
-            <q-tab name="topics" icon="fa-solid fa-code" label="Topics" />
-            <q-tab name="actions" icon="fa-solid fa-play" label="Actions" />
-            <q-tab
-              name="automations"
-              icon="fa-solid fa-wand-sparkles"
-              label="Automations"
-              disable
-            />
-          </div>
-          <div>
-            <q-tab name="settings" icon="fa-solid fa-sliders" label="Settings" />
-            <q-tab name="connections" icon="fa-solid fa-link" label="Connections" />
-          </div>
-        </div>
-      </q-tabs>
-    </div>
-    <div class="tw-flex-grow" style="max-width: calc(100vw - 120px)">
-      <q-tab-panels
-        v-model="currentTab"
-        class="tw-h-full tw-bg-transparent"
-        animated
-        vertical
-        keep-alive
-        transition-prev="jump-up"
-        transition-next="jump-down"
-      >
-        <q-tab-panel class="tw-p-0" name="topics">
-          <TabTopics />
-        </q-tab-panel>
-        <q-tab-panel class="tw-p-0" name="actions">
-          <TabActions />
-        </q-tab-panel>
-        <q-tab-panel name="automations">Automations</q-tab-panel>
-
-        <q-tab-panel name="settings">
-          <TabSettings />
-        </q-tab-panel>
-        <q-tab-panel class="tw-p-0" name="connections">
-          <TabConnections />
-        </q-tab-panel>
-      </q-tab-panels>
+  <div class="main-view tw-grid tw-h-full tw-grid-rows-[auto_1fr]">
+    <app-bar v-model="currentTab" />
+    <div class="tw-flex tw-content-between tw-overflow-auto">
+      <div class="tw-flex-grow">
+        <q-tab-panels v-model="currentTab" class="tw-h-full tw-bg-transparent" vertical keep-alive>
+          <q-tab-panel class="tw-p-0" name="topics">
+            <tab-topics />
+          </q-tab-panel>
+          <q-tab-panel class="tw-p-0" name="actions">
+            <tab-actions />
+          </q-tab-panel>
+          <q-tab-panel class="tw-p-0" name="settings">
+            <tab-settings />
+          </q-tab-panel>
+          <q-tab-panel class="tw-p-0" name="connections">
+            <tab-connections />
+          </q-tab-panel>
+        </q-tab-panels>
+      </div>
     </div>
   </div>
   <update-alerts />

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { exportMessages } from '@renderer/assets/js/export-messages'
 import TopicCard, { ITopicCard } from '@renderer/components/tap-topics/TopicCard.vue'
 import TopicItemMenu from '@renderer/components/tap-topics/TopicItemMenu.vue'
-import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
-import { ref, watch } from 'vue'
-import { useSettingsStore } from '@renderer/store/settings-store'
-import { useTopicActions } from '@renderer/composables/useTopicActions'
 import CodeHighlight from '@renderer/components/tap-topics/CodeHighlight.vue'
+import { useTopicActions } from '@renderer/composables/useTopicActions'
+import { exportMessages } from '@renderer/assets/js/export-messages'
+import { useSettingsStore } from '@renderer/store/settings-store'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { ref, watch, toRef } from 'vue'
 
 type Props = {
   clientKey: string
@@ -32,8 +32,8 @@ const {
   handleUnfavorite,
   handleCopyTopic
 } = useTopicActions({
-  clientKey: props.clientKey,
-  topic: props.topic
+  clientKey: toRef(props, 'clientKey'),
+  topic: toRef(props, 'topic')
 })
 
 const handleTopicClick = () => {
@@ -65,14 +65,14 @@ watch(
       <span class="topic-item-key" :class="{ empty: !topic }">
         {{ topic ? topic : '<\empty>' }}
       </span>
-      <span class="tw-ml-1" v-if="topicLastMessage?.message">=</span>
+      <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
       <code-highlight
         v-if="topicLastMessage?.message && topicLastMessage.dataType"
         :code="topicLastMessage?.message"
         :language="topicLastMessage.dataType"
       />
       <topic-item-menu
-        :has-last-message="!topicLastMessage?.message"
+        :has-last-message="!!topicLastMessage?.message"
         :favorite="favoritedTopics"
         @copy-last-message="handleCopyLastMessage"
         @copy-topic="handleCopyTopic"
