@@ -14,9 +14,6 @@ const $q = useQuasar()
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
-const topicGroupTopicCardRef = ref<ITopicCard | null>(null)
-const topicCardRef = ref<ITopicCard | null>(null)
-
 type Props = {
   clientKey: string
   topicKey: string
@@ -25,9 +22,7 @@ type Props = {
   index?: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  index: 0
-})
+const props = withDefaults(defineProps<Props>(), { index: 0 })
 
 const {
   hasActions,
@@ -43,6 +38,11 @@ const {
   clientKey: toRef(props, 'clientKey'),
   topic: toRef(props, 'path')
 })
+
+const topicGroupTopicCardRef = ref<ITopicCard | null>(null)
+const topicCardRef = ref<ITopicCard | null>(null)
+
+const itemVisible = ref(false)
 
 const expandedTopicsSection = computed({
   get: () => mqttTopicsStore.getTopicGroupOpened(props.clientKey, props.path),
@@ -105,7 +105,9 @@ const subTopicsMessagesCount = computed(() => {
 watch(
   () => topicLastMessage.value,
   () => {
+    if (!itemVisible.value) return
     if (!settingsStore.showActivity) return
+
     topicCardRef.value?.animate()
     topicGroupTopicCardRef.value?.animate()
   }
@@ -114,8 +116,10 @@ watch(
 watch(
   () => subTopicsMessagesCount.value,
   () => {
+    if (!itemVisible.value) return
     if (!settingsStore.showActivity) return
     if (expandedTopicsSection.value) return
+
     topicGroupTopicCardRef.value?.animate()
   }
 )
@@ -127,6 +131,7 @@ watch(
       <q-intersection
         :id="`topic-item-${clientKey}:${path}-intersection`"
         class="tw-h-[29px] tw-max-w-full"
+        @visibility="itemVisible = $event"
       >
         <topic-card
           ref="topicGroupTopicCardRef"
@@ -194,6 +199,7 @@ watch(
     <q-intersection
       :id="`topic-item-${clientKey}:${path}-intersection`"
       class="tw-h-[29px] tw-max-w-full"
+      @visibility="itemVisible = $event"
     >
       <topic-card
         ref="topicCardRef"

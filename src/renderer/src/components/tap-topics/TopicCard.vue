@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useSettingsStore } from '../../store/settings-store'
 import { useAppStore } from '../../store/app-store'
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
+import debounce from 'lodash/debounce'
 
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
@@ -74,13 +75,16 @@ const handleLaser = () => {
   }, animationDuration.value)
 }
 
-const animate = () => {
-  if (settingsStore.showActivityAnimationType === 'topic-heat') {
-    handleTopicHeat()
-  } else if (settingsStore.showActivityAnimationType === 'laser') {
-    handleLaser()
-  }
+const rawAnimate = () => {
+  const type = settingsStore.showActivityAnimationType
+
+  if (type === 'topic-heat') handleTopicHeat()
+  else if (type === 'laser') handleLaser()
 }
+
+const animate = debounce(rawAnimate, 100, { leading: true, trailing: true, maxWait: 100 })
+
+onBeforeUnmount(() => animate.cancel())
 
 defineExpose<{ animate: () => void }>({ animate })
 </script>
