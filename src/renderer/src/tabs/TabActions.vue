@@ -448,21 +448,6 @@ const chainActionEdit = ref<ChainAction | undefined>()
                   leave-active-class="animated fadeOut"
                 >
                   <div
-                    v-if="!selectedConnection"
-                    class="tw-absolute tw-right-28 tw-top-4 tw-flex tw-gap-4"
-                  >
-                    <div class="tw-mt-3 tw-rotate-[-2deg] tw-text-center">
-                      <h2 class="tw-text-xl">No Connection selected yet!</h2>
-                      <h3 class="color-details tw-text-sm">Select one to start using Actions.</h3>
-                    </div>
-                  </div>
-                </transition>
-                <transition
-                  appear
-                  enter-active-class="animated fadeIn"
-                  leave-active-class="animated fadeOut"
-                >
-                  <div
                     v-if="selectedConnection && !actions.length && !chainActions.length"
                     class="tw-absolute tw-right-28 tw-top-4 tw-flex tw-gap-4"
                   >
@@ -483,7 +468,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
                   <q-icon
                     name="fa-solid fa-reply"
                     size="xl"
-                    class="create-action-arrow tw-rotate-[55deg] tw-text-primary"
+                    class="create-action-arrow tw-rotate-[145deg] tw-text-primary"
                   />
                 </div>
 
