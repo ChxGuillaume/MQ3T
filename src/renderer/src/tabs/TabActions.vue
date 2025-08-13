@@ -369,21 +369,59 @@ const chainActionEdit = ref<ChainAction | undefined>()
     <div
       class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
     >
-      <q-btn
-        size="xs"
-        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
-        flat
-        @click="appStore.setCurrentTab('topics')"
-      >
-        <div class="tw-flex tw-place-items-center tw-gap-2">
-          <q-icon name="fa-solid fa-arrow-left" size="10px" />
-          <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
-        </div>
-      </q-btn>
+      <div class="tw-w-[120px]">
+        <q-btn
+          size="xs"
+          class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+          flat
+          @click="appStore.setCurrentTab('topics')"
+        >
+          <div class="tw-flex tw-place-items-center tw-gap-2">
+            <q-icon name="fa-solid fa-arrow-left" size="10px" />
+            <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
+          </div>
+        </q-btn>
+      </div>
 
       <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Actions</div>
 
-      <div class="tw-w-[81px]" />
+      <div class="tw-flex tw-w-[120px] tw-justify-end">
+        <q-btn size="xs" class="tw-bg-primary tw-text-white" flat>
+          <div class="tw-flex tw-place-items-center tw-gap-2">
+            <q-icon name="fa-solid fa-plus" size="10px" />
+            <span class="tw-text-[0.65rem] tw-leading-[0]">Create</span>
+          </div>
+
+          <q-menu anchor="bottom right" self="top right" :offset="[0, 5]">
+            <q-list dense>
+              <q-item v-close-popup clickable @click="actionDialogOpened = true">
+                <q-item-section>
+                  <div>
+                    <q-icon class="tw-mr-2" name="fa-solid fa-paper-plane" />
+                    Action
+                  </div>
+                </q-item-section>
+              </q-item>
+              <q-item v-close-popup clickable @click="tab = 'chain-action'">
+                <q-item-section>
+                  <div>
+                    <q-icon class="tw-mr-2" name="fa-solid fa-diagram-project" />
+                    Chain Action
+                  </div>
+                </q-item-section>
+              </q-item>
+              <q-item v-close-popup clickable @click="actionGroupDialogOpened = true">
+                <q-item-section>
+                  <div>
+                    <q-icon class="tw-mr-2" name="fa-solid fa-layer-group" />
+                    Group
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </div>
     </div>
     <q-tab-panels
       v-model="tab"
@@ -403,36 +441,6 @@ const chainActionEdit = ref<ChainAction | undefined>()
         >
           <template #before>
             <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-              <div class="tw-flex tw-items-center tw-justify-end tw-p-4">
-                <q-btn-group>
-                  <q-btn color="primary" :disable="!selectedActionGroup || !selectedConnection">
-                    <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
-                    Create New
-
-                    <q-menu anchor="bottom right" self="top right">
-                      <q-list>
-                        <q-item v-close-popup clickable @click="actionDialogOpened = true">
-                          <q-item-section>
-                            <div>
-                              <q-icon class="tw-mr-2" name="fa-solid fa-paper-plane" />
-                              Action
-                            </div>
-                          </q-item-section>
-                        </q-item>
-                        <q-item v-close-popup clickable @click="tab = 'chain-action'">
-                          <q-item-section>
-                            <div>
-                              <q-icon class="tw-mr-2" name="fa-solid fa-diagram-project" />
-                              Chain Action
-                            </div>
-                          </q-item-section>
-                        </q-item>
-                      </q-list>
-                    </q-menu>
-                  </q-btn>
-                </q-btn-group>
-              </div>
-              <q-separator />
               <div class="tw-relative">
                 <transition
                   appear
@@ -598,24 +606,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
           </template>
 
           <template #after>
-            <q-card
-              class="tw-grid tw-h-full"
-              style="grid-template-rows: auto auto 1fr auto auto"
-              square
-              flat
-            >
-              <div class="tw-flex tw-items-center tw-justify-between tw-p-3">
-                <h2 class="tw-text-xl">Groups</h2>
-                <q-btn
-                  color="primary"
-                  :disable="!selectedConnection"
-                  @click="actionGroupDialogOpened = true"
-                >
-                  <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
-                  Add Group
-                </q-btn>
-              </div>
-              <q-separator />
+            <q-card class="tw-grid tw-h-full tw-grid-rows-[1fr_auto_auto]" square flat>
               <div class="tw-flex tw-flex-col tw-gap-2 tw-overflow-auto tw-p-3">
                 <draggable
                   v-model="groups"
