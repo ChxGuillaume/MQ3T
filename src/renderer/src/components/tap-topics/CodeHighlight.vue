@@ -38,9 +38,12 @@ watch(
       if (!codeTextRef.value) return
 
       codeTextRef.value.querySelectorAll('span.hljs-number').forEach((el) => {
-        const num = Number(el.textContent)
+        const text = el.textContent?.trim() ?? ''
 
-        if (!isNaN(num)) el.textContent = num.toLocaleString()
+        if (/^-?\d+(\.\d+)?$/.test(text)) {
+          const num = parseFloat(text)
+          el.textContent = num.toLocaleString(undefined, { maximumFractionDigits: 12 })
+        }
       })
     })
   },
