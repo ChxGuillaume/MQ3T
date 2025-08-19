@@ -4,8 +4,8 @@ import { formatCode } from '@renderer/assets/js/format-code'
 import json from 'highlight.js/lib/languages/json'
 import yaml from 'highlight.js/lib/languages/yaml'
 import xml from 'highlight.js/lib/languages/xml'
-import hljs from 'highlight.js/lib/core'
 import { ref, watch, nextTick } from 'vue'
+import hljs from 'highlight.js/lib/core'
 
 hljs.registerLanguage('json', json)
 hljs.registerLanguage('xml', xml)
