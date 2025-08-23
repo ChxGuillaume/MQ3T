@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   hasLastMessage?: boolean
+  hasTopicKeys?: boolean
   favorite?: boolean
 }>()
 
@@ -26,10 +27,10 @@ const handleFavorite = () => {
   <q-menu anchor="bottom left" self="top left" context-menu>
     <q-list class="tw-min-w-[150px]" dense>
       <q-item
-        :disable="hasLastMessage"
+        v-close-popup
+        :disable="!hasLastMessage"
         class="tw-text-yellow-500"
         clickable
-        v-close-popup
         @click="handleFavorite"
       >
         <q-item-section>
@@ -41,7 +42,7 @@ const handleFavorite = () => {
         </q-item-section>
       </q-item>
 
-      <q-item :disable="hasLastMessage" class="tw-text-accent" clickable>
+      <q-item :disable="!hasLastMessage" class="tw-text-accent" :clickable="hasLastMessage">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-file-arrow-down" class="tw-mr-2" />
@@ -52,9 +53,9 @@ const handleFavorite = () => {
           <q-icon name="keyboard_arrow_right" color="accent" />
         </q-item-section>
 
-        <q-menu anchor="top end" self="top start">
+        <q-menu v-if="hasLastMessage" anchor="top end" self="top start">
           <q-list dense>
-            <q-item clickable v-ripple @click="$emit('export:raw')">
+            <q-item v-ripple clickable @click="$emit('export:raw')">
               <q-item-section>
                 <div>
                   <q-icon name="reorder" class="tw-mr-2" />
@@ -62,7 +63,7 @@ const handleFavorite = () => {
                 </div>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="$emit('export:json')">
+            <q-item v-ripple clickable @click="$emit('export:json')">
               <q-item-section>
                 <div>
                   <q-icon name="data_object" class="tw-mr-2" />
@@ -70,7 +71,7 @@ const handleFavorite = () => {
                 </div>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="$emit('export:csv')">
+            <q-item v-ripple clickable @click="$emit('export:csv')">
               <q-item-section>
                 <div>
                   <q-icon name="fa-solid fa-file-csv" class="tw-mr-2" />
@@ -82,7 +83,7 @@ const handleFavorite = () => {
         </q-menu>
       </q-item>
 
-      <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopic')">
+      <q-item v-close-popup class="tw-text-secondary" clickable @click="$emit('copyTopic')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
@@ -91,7 +92,13 @@ const handleFavorite = () => {
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-secondary" clickable v-close-popup @click="$emit('copyTopicKey')">
+      <q-item
+        v-if="hasTopicKeys"
+        v-close-popup
+        class="tw-text-secondary"
+        clickable
+        @click="$emit('copyTopicKey')"
+      >
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
@@ -101,10 +108,10 @@ const handleFavorite = () => {
       </q-item>
 
       <q-item
-        :disable="hasLastMessage"
+        v-close-popup
+        :disable="!hasLastMessage"
         class="tw-text-secondary"
         clickable
-        v-close-popup
         @click="$emit('copyLastMessage')"
       >
         <q-item-section>
@@ -115,7 +122,7 @@ const handleFavorite = () => {
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-red-500" clickable v-close-popup @click="$emit('erase')">
+      <q-item v-close-popup class="tw-text-red-500" clickable @click="$emit('erase')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-eraser" class="tw-mr-2" />

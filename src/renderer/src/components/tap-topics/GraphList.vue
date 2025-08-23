@@ -21,7 +21,7 @@ const graphs = computed({
     v-model="graphs"
     v-bind="dragOptions"
     handle=".drag-handle"
-    class="tw-p-2 tw-grid tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3 tw-gap-2"
+    class="graph-list"
     item-key="clientKey"
   >
     <template #item="{ element }">
@@ -30,4 +30,16 @@ const graphs = computed({
   </draggable>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.graph-list {
+  @apply tw-grid tw-gap-2;
+
+  .main-view & {
+    @apply tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3;
+  }
+
+  .graph-view & {
+    @apply tw-grid-cols-2 xl:tw-grid-cols-3 3xl:tw-grid-cols-5;
+  }
+}
+</style>

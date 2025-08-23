@@ -4,6 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { ElectronIpc } from '../types/electron-ipc-callbacks'
 
 const api: ElectronIpc = {
+  darkMode: (value) => ipcRenderer.send('dark-mode', value),
+
   handleMqttError: (callback) => ipcRenderer.on('mqtt-error', callback as any),
   handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
   handleMqttStatus: (callback) => ipcRenderer.on('mqtt-status', callback as any),
@@ -32,9 +34,19 @@ const api: ElectronIpc = {
   saveActions: (actions) => ipcRenderer.send('save-actions', actions),
   saveChainActions: (chainActions) => ipcRenderer.send('save-chain-actions', chainActions),
   saveActionsGroups: (actionsGroups) => ipcRenderer.send('save-actions-groups', actionsGroups),
+  saveDataGraphs: (graphs) => ipcRenderer.send('save-data-graphs', graphs),
+
+  saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
+  getSettingsSync: () => ipcRenderer.sendSync('get-settings-sync'),
+
+  updateDataGraph: (params) => ipcRenderer.send('update-data-graph', params),
+  getDataGraphsSync: () => ipcRenderer.sendSync('get-data-graphs-sync'),
   handleLoadActions: (callback) => ipcRenderer.on('load-actions', callback as any),
   handleLoadChainActions: (callback) => ipcRenderer.on('load-chain-actions', callback as any),
   handleLoadActionsGroups: (callback) => ipcRenderer.on('load-actions-groups', callback as any),
+  handleDataGraphsUpdate: (callback) => ipcRenderer.on('load-data-graphs', callback as any),
+  handleDataGraphPartialUpdate: (callback) =>
+    ipcRenderer.on('update-data-graph-partial', callback as any),
 
   debug: (callback) => ipcRenderer.on('debug', callback as any),
 
@@ -44,10 +56,23 @@ const api: ElectronIpc = {
   handleUpdateError: (callback) => ipcRenderer.on('updating-error', callback as any),
   handleUpdateDownloadProgress: (callback) =>
     ipcRenderer.on('update-download-progress', callback as any),
-  handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any)
+  handleUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback as any),
+
+  getGraphWindowShown: () => ipcRenderer.sendSync('get-graph-window-shown'),
+  handleGraphWindowShown: (callback) =>
+    ipcRenderer.on('update-graph-window-shown', callback as any),
+
+  showGraphWindow: () => ipcRenderer.send('show-graph-window'),
+  hideGraphWindow: () => ipcRenderer.send('hide-graph-window'),
+
+  transferMqttMessages: (messages) => ipcRenderer.send('transfer-mqtt-messages', messages),
+  requestMqttMessages: () => ipcRenderer.send('request-mqtt-messages'),
+  handleTransferMqttMessages: (callback) => ipcRenderer.on('load-mqtt-messages', callback as any),
+  handleRequestMqttMessages: (callback) => ipcRenderer.on('request-mqtt-messages', callback as any)
 }
 
-const hasAutoUpdate = !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
+const hasAutoUpdate =
+  !process.mas && !process.windowsStore && !process.env.SNAP && !process.env.FLATPAK_ID
 
 if (process.contextIsolated) {
   try {

@@ -1,10 +1,14 @@
 import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
-import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import iconIcns from '../../build/logo/mac512pts.icns?asset'
-import iconIco from '../../build/logo/win512pts.ico?asset'
+import { getGraphWindow, initGraphWindowHandlers } from './windowGraph'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { electronApp, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
+import { initDataGraphHandlers } from './stores/dataGraph'
+import { HasAutoUpdate } from './constants/hasAutoUpdate'
+import { initSettingsHandlers } from './stores/settings'
+import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
+import { createWindow } from './createWindow'
 import { MqttClient } from './mqtt-client'
 import FileFilter = Electron.FileFilter
 import * as path from 'path'
@@ -18,71 +22,15 @@ const configFilePath = {
   mqttConnections: path.join(configFolder, 'mqtt-connections.json'),
   actions: path.join(configFolder, 'actions.json'),
   chainActions: path.join(configFolder, 'chain-actions.json'),
-  actionsGroups: path.join(configFolder, 'actions-groups.json')
+  actionsGroups: path.join(configFolder, 'actions-groups.json'),
+  settings: path.join(configFolder, 'settings.json')
 }
 
 const IS_MAS = process.mas
-const IS_WINDOWS_STORE = process.windowsStore
-const IS_SNAP = process.env.SNAP
-const IS_FLATPAK_ID = process.env.FLATPAK_ID
-
-const HAS_AUTO_UPDATE = !IS_MAS && !IS_WINDOWS_STORE && !IS_SNAP && !IS_FLATPAK_ID
 
 fs.mkdirSync(configFolder, { recursive: true })
 
-let mainWindow: BrowserWindow | null = null
-function createWindow(): void {
-  let icon = iconIco
-
-  if (process.platform === 'darwin') icon = iconIcns
-
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 1300,
-    minWidth: 800,
-    height: 800,
-    minHeight: 600,
-    icon,
-    show: false,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
-
-  mainWindow.removeMenu()
-
-  initIpcMain()
-
-  mainWindow.on('close', () => {
-    for (const client of mqttClients.values()) {
-      client.disconnect()
-    }
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow?.show()
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url).then()
-
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).then(() => {
-      initAutoUpdater()
-    })
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html')).then(() => {
-      initAutoUpdater()
-    })
-  }
-}
+let mainWindow: BrowserWindow | null
 
 app.commandLine.appendSwitch('disable-features', 'WidgetLayering')
 
@@ -101,16 +49,27 @@ app.whenReady().then(() => {
   })
 
   installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
-    .then((name) => console.log(`Added Extension:  ${name}`))
+    .then((extension) => console.log(`Added Extension: ${extension.name}`))
     .catch((err) => console.log('An error occurred: ', err))
 
-  createWindow()
+  mainWindow = createWindow()
+
+  mainWindow?.on('close', () => {
+    for (const client of mqttClients.values()) {
+      client.disconnect()
+    }
+  })
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow()
   })
+
+  initAutoUpdater(mainWindow)
+  initGraphWindowHandlers(mainWindow)
+  initDataGraphHandlers()
+  initSettingsHandlers()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -175,13 +134,16 @@ const createConnection = async (connection: MqttConnection) => {
   })
 
   clientMqtt.onMessage((topic, payload, packet) => {
-    sendMessageToRenderer('mqtt-message', {
+    const message = {
       clientKey,
       topic,
       payload,
       packet,
       message: payload.toString()
-    })
+    }
+
+    sendMessageToRenderer('mqtt-message', message)
+    getGraphWindow()?.webContents.send('mqtt-message', message)
   })
 
   clientMqtt.onDisconnect(() => {
@@ -270,7 +232,7 @@ const initIpcMain = () => {
   })
 
   ipcMain.on('check-for-updates', () => {
-    if (HAS_AUTO_UPDATE) autoUpdater.checkForUpdates()
+    if (HasAutoUpdate) autoUpdater.checkForUpdates()
   })
 
   ipcMain.on('quit-and-install-update', () => {
@@ -310,37 +272,4 @@ const initIpcMain = () => {
   })
 }
 
-const initAutoUpdater = () => {
-  if (is.dev && process.env['FORCE_DEV_UPDATE']) {
-    autoUpdater.forceDevUpdateConfig = true
-    autoUpdater.updateConfigPath = path.join(__dirname, '../..', 'dev-app-update.yml')
-  }
-
-  autoUpdater.autoDownload = false
-
-  autoUpdater.on('checking-for-update', () => {
-    sendMessageToRenderer('checking-for-update')
-  })
-
-  autoUpdater.on('update-available', (info) => {
-    sendMessageToRenderer('update-available', info)
-  })
-
-  autoUpdater.on('update-not-available', (info) => {
-    sendMessageToRenderer('update-not-available', info)
-  })
-
-  autoUpdater.on('error', (err) => {
-    sendMessageToRenderer('updating-error', err)
-  })
-
-  autoUpdater.on('download-progress', (progressObj) => {
-    sendMessageToRenderer('update-download-progress', progressObj)
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    sendMessageToRenderer('update-downloaded', info)
-  })
-
-  if (HAS_AUTO_UPDATE) autoUpdater.checkForUpdates()
-}
+initIpcMain()

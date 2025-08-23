@@ -1,6 +1,8 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { MqttConnection, MqttConnectionStatus } from './mqtt-connection'
+import { TopicMessages } from '../renderer/src/store/mqtt-topics'
 import { IClientPublishOptions } from 'mqtt/src/lib/client'
+import { DataGraph } from './data-graph'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
 import {
@@ -25,7 +27,13 @@ export type MqttStatusCallback = (
 
 export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void
 
+export type Settings = {
+  participateToReleaseCandidates?: boolean
+}
+
 export type ElectronIpc = {
+  darkMode: (value: boolean) => void
+
   handleMqttError: (callback: MqttErrorCallback) => void
   handleMqttMessage: (callback: MqttMessageCallback) => void
   handleMqttStatus: (callback: MqttStatusCallback) => void
@@ -50,6 +58,12 @@ export type ElectronIpc = {
   saveActions: (actions: ConnectionsActionsFile) => void
   saveChainActions: (chainActions: ConnectionsChainActions) => void
   saveActionsGroups: (actionsGroups: ConnectionsActionsGroups) => void
+  saveDataGraphs: (graphs: DataGraph[]) => void
+  updateDataGraph: (params: { id: string; updates: Partial<DataGraph> }) => void
+  getDataGraphsSync: () => DataGraph[]
+
+  saveSettings: (settings: Settings) => void
+  getSettingsSync: () => Settings
 
   importData: (fileFilter?: FileFilter[]) => void
   handleImportData: (callback: (event: never, value: string) => void) => void
@@ -62,6 +76,10 @@ export type ElectronIpc = {
   handleLoadActionsGroups: (
     callback: (event: never, value: ConnectionsActionsGroups) => void
   ) => void
+  handleDataGraphsUpdate: (callback: (event: never, value: DataGraph[]) => void) => void
+  handleDataGraphPartialUpdate: (
+    callback: (event: never, value: { id: string; updates: Partial<DataGraph> }) => void
+  ) => void
 
   debug: (callback: (event: never, ...args: never[]) => void) => void
 
@@ -71,4 +89,15 @@ export type ElectronIpc = {
   handleUpdateError: (callback: (event: never, value: Error) => void) => void
   handleUpdateDownloadProgress: (callback: (event: never, value: ProgressInfo) => void) => void
   handleUpdateDownloaded: (callback: (event: never, value: UpdateDownloadedEvent) => void) => void
+
+  getGraphWindowShown: () => boolean
+  handleGraphWindowShown: (callback: (event: never, value: boolean) => void) => void
+
+  showGraphWindow: () => void
+  hideGraphWindow: () => void
+
+  transferMqttMessages: (messages: TopicMessages) => void
+  requestMqttMessages: () => void
+  handleTransferMqttMessages: (callback: (event: never, value: TopicMessages) => void) => void
+  handleRequestMqttMessages: (callback: (event: never, value: never) => void) => void
 }

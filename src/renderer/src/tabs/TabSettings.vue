@@ -2,7 +2,6 @@
 import ChangeLogsModal from '../components/ChangeLogsModal.vue'
 import LicensesModal from '../components/AppDetailsModal.vue'
 import { useSettingsStore } from '../store/settings-store'
-import { ElectronApi } from '../assets/js/electron-api'
 import { useAppStore } from '../store/app-store'
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
@@ -146,25 +145,32 @@ const autoOpenPublishActionsSetting = computed({
 
 const showChangeLogsModal = ref(false)
 const showVersionModal = ref(false)
-
-// @ts-ignore (define in dts)
-const hasAutoUpdate = window.hasAutoUpdate
 </script>
 
 <template>
-  <div class="settings">
-    <div class="tw-mb-6 tw-flex tw-justify-between tw-items-center">
-      <h1 class="tw-text-xl tw-font-bold">Settings</h1>
+  <div
+    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+  >
+    <div class="tw-w-24">
       <q-btn
-        v-if="hasAutoUpdate"
-        color="primary"
-        :disable="appStore.workingOnUpdate"
-        @click="ElectronApi.checkForUpdates"
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="appStore.setCurrentTab('connections')"
       >
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-sync" />
-        Check for Update
+        <div class="tw-flex tw-place-items-center tw-gap-2">
+          <q-icon name="fa-solid fa-arrow-left" size="10px" />
+          <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
+        </div>
       </q-btn>
     </div>
+
+    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Settings</div>
+
+    <div class="tw-w-24" />
+  </div>
+
+  <div class="settings">
     <div class="tw-flex tw-flex-col tw-gap-6">
       <div class="settings-group">
         <h2 class="settings-group-title">App</h2>
@@ -172,36 +178,39 @@ const hasAutoUpdate = window.hasAutoUpdate
         <div class="settings-group-item-container">
           <q-select
             v-model="darkMode"
+            name="dark-mode"
             filled
             :options="darkModeOptions"
             label="Dark Mode"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ darkModeOptions.find((o) => o.value === darkMode)?.label }}
             </template>
           </q-select>
           <q-select
             v-model="dateFormatSetting"
+            name="date-format-setting"
             filled
             class="tw-text-white"
             :options="dateFormatOptions"
             label="Date Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ dateFormatOptions.find((o) => o.value === dateFormatSetting)?.label }}
             </template>
           </q-select>
           <q-select
             v-model="timeFormatSetting"
+            name="time-format-setting"
             filled
             class="tw-text-white"
             :options="timeFormatOptions"
             label="Time Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{ timeFormatOptions.find((o) => o.value === timeFormatSetting)?.label }}
             </template>
           </q-select>
@@ -212,16 +221,22 @@ const hasAutoUpdate = window.hasAutoUpdate
         <hr class="settings-group-separator" />
         <div class="settings-group-item-container">
           <q-card class="card-toggle" square flat>
-            <q-toggle v-model="showActivitySetting" label="Show Activity" class="tw-w-full" />
+            <q-toggle
+              v-model="showActivitySetting"
+              name="show-activity-setting"
+              label="Show Activity"
+              class="tw-w-full"
+            />
           </q-card>
           <q-select
             v-model="showActivityAnimationSpeedSetting"
+            name="show-activity-animation-speed-setting"
             filled
             :options="showActivityAnimationSpeedOptions"
             label="Activity Animation Speed"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 showActivityAnimationSpeedOptions.find(
                   (o) => o.value === showActivityAnimationSpeedSetting
@@ -231,12 +246,13 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-select
             v-model="showActivityAnimationTypeSetting"
+            name="show-activity-animation-type-setting"
             filled
             :options="showActivityAnimationTypeOptions"
             label="Activity Animation Style"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 showActivityAnimationTypeOptions.find(
                   (o) => o.value === showActivityAnimationTypeSetting
@@ -246,6 +262,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           </q-select>
           <q-input
             v-model="maxMessagesSetting"
+            name="max-messages-setting"
             filled
             label="Messages History per Topic"
             type="number"
@@ -253,6 +270,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="smartTopicGroupCloseSetting"
+              name="smart-topic-group-close-setting"
               class="tw-w-full"
               label="Smart Topic Group"
             />
@@ -265,6 +283,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="messagesPaginationSetting"
+              name="messages-pagination-setting"
               label="Messages Pagination"
               class="tw-w-full"
             />
@@ -277,13 +296,14 @@ const hasAutoUpdate = window.hasAutoUpdate
         <div class="settings-group-item-container">
           <q-select
             v-model="defaultDataFormatSetting"
+            name="default-data-format-setting"
             filled
             class="tw-text-white"
             :options="defaultDataFormatOptions"
             label="Default Data Format"
             emit-value
           >
-            <template v-slot:selected-item>
+            <template #selected-item>
               {{
                 defaultDataFormatOptions.find((o) => o.value === defaultDataFormatSetting)?.label
               }}
@@ -292,6 +312,7 @@ const hasAutoUpdate = window.hasAutoUpdate
           <q-card class="card-toggle" square flat>
             <q-toggle
               v-model="autoOpenPublishActionsSetting"
+              name="auto-open-publish-actions-setting"
               class="tw-w-full"
               label="Auto Open Actions Pan"
             >
@@ -306,7 +327,7 @@ const hasAutoUpdate = window.hasAutoUpdate
       </div>
     </div>
 
-    <div class="tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-gap-2 color-details tw-select-none">
+    <div class="color-details tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-select-none tw-gap-2">
       <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
         <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
         Change Logs
@@ -323,6 +344,10 @@ const hasAutoUpdate = window.hasAutoUpdate
 </template>
 
 <style scoped lang="less">
+.settings {
+  @apply tw-p-4;
+}
+
 .settings-group {
   @apply tw-flex tw-flex-col tw-gap-2;
 }
@@ -332,11 +357,11 @@ const hasAutoUpdate = window.hasAutoUpdate
 }
 
 .settings-group .settings-group-separator {
-  @apply tw-border-0 tw-h-px tw-bg-neutral-700;
+  @apply tw-h-px tw-border-0 tw-bg-neutral-700;
 }
 
 .settings-group .settings-group-item-container {
-  @apply tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4;
+  @apply tw-grid tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5;
 }
 
 .card-toggle {

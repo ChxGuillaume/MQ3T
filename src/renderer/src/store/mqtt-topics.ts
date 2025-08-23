@@ -1,8 +1,11 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { useSettingsStore } from './settings-store'
 import { codeType } from '../assets/js/format-code'
+import { IPublishPacket } from 'mqtt'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
+import _ from 'lodash'
 
 export type MqttMessage = {
   uid: string
@@ -18,16 +21,19 @@ export type MqttTopicStructure = {
   [key: string]: MqttTopicStructure | null
 }
 
-// type MqttTopicsStructureV2 = {
-//   fromAction: boolean
-//   structure: {
-//     [key: string]: MqttTopicsStructureV2
-//   }
-// }
+export type TopicMessages = Record<string, Record<string, MqttMessage[]>>
+
+const filterBySearchTerms = (text: string, searchTerms: string): boolean => {
+  return searchTerms
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .some((keyword) => text.toLowerCase().includes(keyword))
+}
 
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
-    topicsMessages: {} as Record<string, Record<string, MqttMessage[]>>,
+    topicsMessages: {} as TopicMessages,
     topicsLastMessage: {} as Record<string, Record<string, MqttMessage>>,
     subTopicsTopicsCount: {} as Record<string, Record<string, number>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
@@ -136,7 +142,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     getFilteredTopicsList: (state) => (clientKey: string) => {
       return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
-        return topic.includes(state.topicSearch)
+        return filterBySearchTerms(topic, state.topicSearch)
       })
     },
     getFilteredTopicsStructure:
@@ -150,7 +156,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           const filteredTopicStructure: MqttTopicStructure = {}
 
           for (const topicKey in topicStructure) {
-            if (topicKey.toLowerCase().includes(state.topicSearch.toLowerCase())) {
+            if (filterBySearchTerms(topicKey, state.topicSearch)) {
               filteredTopicStructure[topicKey] = topicStructure[topicKey]
             } else {
               const subTopicStructure = filterTopicStructure(topicStructure[topicKey] || {})
@@ -168,18 +174,23 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       }
   },
   actions: {
-    addMessage(
-      clientKey: string,
-      topic: string,
-      message: string,
-      extras: { qos: MqttMessage['qos']; retained?: boolean }
-    ) {
+    initStore() {
+      ElectronApi.handleTransferMqttMessages((__, messages) => {
+        // Dates arrive as string, need to be transformed to
+        this.topicsMessages = _.mapValues(messages, (clientTopics) =>
+          _.mapValues(clientTopics, (msgs) =>
+            _.map(msgs, (msg) => ({ ...msg, createdAt: new Date(msg.createdAt) }))
+          )
+        )
+      })
+    },
+    addMessage(clientKey: string, topic: string, message: string, packet: IPublishPacket) {
       const actionsCacheStore = useActionsCacheStore()
       const settingsStore = useSettingsStore()
 
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
 
-      let topicExists = this.topicsMessages[clientKey][topic]
+      const topicExists = this.topicsMessages[clientKey][topic]
 
       if (!this.topicsMessages[clientKey][topic]) this.topicsMessages[clientKey][topic] = []
       if (!this.topicsLastMessage[clientKey]) this.topicsLastMessage[clientKey] = {}
@@ -192,9 +203,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       const mqttMessage = {
         uid: uuidV4(),
         message,
-        qos: extras.qos,
+        qos: packet.qos,
         dataType: codeType(message),
-        retained: extras.retained || false,
+        retained: packet.retain || false,
         createdAt: new Date()
       } as MqttMessage
 
@@ -260,16 +271,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       let currentTopicStructure = this.topicsStructure[clientKey]
       const topicParts = topic.split('/')
-      let currentTopicPath = ''
 
       for (const topicPart of topicParts) {
-        currentTopicPath += `${topicPart}`
-
         if (!currentTopicStructure[topicPart]) currentTopicStructure[topicPart] = {}
 
         currentTopicStructure = currentTopicStructure[topicPart] || {}
-
-        currentTopicPath += `/`
       }
     },
     addPublishMessage(

@@ -2,14 +2,17 @@
 import MqttConnectionDialog from '../components/tab-connections/MqttConnectionDialog.vue'
 import MqttConnectionCard from '../components/tab-connections/MqttConnectionCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { ElectronIpc } from '../../../types/electron-ipc-callbacks'
 import { MqttConnection } from '../../../types/mqtt-connection'
+import { useAppStore } from '@renderer/store/app-store'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
-const mqttConnectionsStore = useMqttConnectionsStore()
+type ConnectionListItem =
+  | { type: 'connection'; connection: MqttConnection }
+  | { type: 'add-connection' }
 
-const electronApi = window.api as ElectronIpc
+const mqttConnectionsStore = useMqttConnectionsStore()
+const appStore = useAppStore()
 
 const editConnectionDialogOpened = ref(false)
 const addConnectionDialogOpened = ref(false)
@@ -22,13 +25,11 @@ const handleEdit = (connection: MqttConnection) => {
 }
 
 const handleConnect = (connection: MqttConnection) => {
-  const clonedConnection = JSON.parse(JSON.stringify(connection))
-
-  electronApi.connectMqtt(Object.assign({}, clonedConnection))
+  mqttConnectionsStore.connectClient(connection.clientKey)
 }
 
 const handleDisconnect = (connection: MqttConnection) => {
-  electronApi.disconnectMqtt(connection.clientKey)
+  mqttConnectionsStore.disconnectClient(connection.clientKey)
 }
 
 onMounted(() => {
@@ -37,12 +38,26 @@ onMounted(() => {
   }, 200)
 })
 
-const connections = computed({
-  get: () => mqttConnectionsStore.connections,
-  set: (value) => mqttConnectionsStore.setConnections(value, true)
+const connections = computed<ConnectionListItem[]>({
+  get: (): ConnectionListItem[] => {
+    return [
+      ...mqttConnectionsStore.connections.map((connection) => ({
+        type: 'connection' as const,
+        connection
+      })),
+      { type: 'add-connection' as const }
+    ]
+  },
+  set: (value: ConnectionListItem[]) => {
+    const connections = value.flatMap((item) =>
+      item.type === 'connection' ? [item.connection] : []
+    )
+
+    mqttConnectionsStore.setConnections(connections, true)
+  }
 })
 
-const dragOptions = computed(() => {
+const dragOptions = computed<{ animation: number; group: string; ghostClass: string }>(() => {
   return {
     animation: 200,
     group: 'mqtt-connections',
@@ -52,30 +67,48 @@ const dragOptions = computed(() => {
 </script>
 
 <template>
-  <div class="connections">
-    <div class="tw-mb-3 tw-flex tw-justify-between tw-items-center">
-      <h1 class="tw-text-xl tw-font-bold">Connections</h1>
-      <q-btn color="primary" @click="addConnectionDialogOpened = true">
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
-        Add Connection
+  <div
+    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+  >
+    <div class="tw-w-[81px]" />
+
+    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Actions</div>
+
+    <div class="tw-w-[81px] tw-text-right">
+      <q-btn
+        size="xs"
+        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        flat
+        @click="appStore.setCurrentTab('settings')"
+      >
+        <q-icon name="fa-solid fa-cog" size="10px" />
       </q-btn>
     </div>
-
+  </div>
+  <div class="connections">
     <draggable
       v-model="connections"
       v-bind="dragOptions"
       handle=".drag-handle"
-      class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5 tw-gap-4"
+      class="tw-grid tw-grid-cols-1 tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5"
       item-key="clientKey"
     >
       <template #item="{ element }">
         <mqtt-connection-card
-          :connection="element"
+          v-if="element.type === 'connection'"
+          :connection="element.connection"
           @edit="handleEdit"
           @connect="handleConnect"
           @disconnect="handleDisconnect"
           @delete="mqttConnectionsStore.removeConnection($event.clientKey)"
         />
+        <div
+          v-else-if="element.type === 'add-connection'"
+          class="tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-transition-colors dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+          @click="addConnectionDialogOpened = true"
+        >
+          <q-icon name="fa-solid fa-plus" size="xl" />
+        </div>
       </template>
     </draggable>
   </div>
@@ -95,6 +128,6 @@ const dragOptions = computed(() => {
 
 <style scoped lang="less">
 .connections {
-  @apply tw-p-4;
+  @apply tw-flex tw-flex-col tw-gap-4 tw-p-4;
 }
 </style>

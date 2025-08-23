@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 
+export type AppTab = 'connections' | 'topics' | 'settings' | 'actions'
+
 export const useAppStore = defineStore('app', {
   state: () => ({
     workingOnUpdate: false,
-    currentTab: 'connections',
+    currentTab: 'connections' as AppTab,
     appVersion: '',
     isScrubbingTopics: false
   }),
@@ -11,7 +13,7 @@ export const useAppStore = defineStore('app', {
     setWorkingOnUpdate(working: boolean) {
       this.workingOnUpdate = working
     },
-    setCurrentTab(tab: string) {
+    setCurrentTab(tab: AppTab) {
       this.currentTab = tab
     },
     setAppVersion(version: string) {

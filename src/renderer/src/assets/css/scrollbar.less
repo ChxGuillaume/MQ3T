@@ -1,0 +1,37 @@
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+.body--light {
+  ::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-track {
+    @apply tw-bg-neutral-200;
+  }
+
+  ::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-thumb {
+    @apply tw-bg-neutral-400 tw-transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover,
+  &::-webkit-scrollbar-thumb:hover {
+    @apply tw-bg-neutral-500;
+  }
+}
+
+.body--dark {
+  ::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-track {
+    @apply tw-bg-neutral-800;
+  }
+
+  ::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-thumb {
+    @apply tw-bg-neutral-700 tw-transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover,
+  &::-webkit-scrollbar-thumb:hover {
+    @apply tw-bg-neutral-600;
+  }
+}

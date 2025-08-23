@@ -1,3 +1,4 @@
+import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 import moment from 'moment'
 
@@ -16,6 +17,9 @@ type SettingsStore = {
   defaultDataFormat: DefaultDataFormat
   autoOpenPublishActions: boolean
   chainActionsTrackpadMode: boolean
+  selectedMessageCompare: boolean
+
+  participateToReleaseCandidates: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -34,7 +38,10 @@ export const useSettingsStore = defineStore('settings', {
     defaultDataFormat: (localStorage.getItem('defaultDataFormat') as DefaultDataFormat) || 'raw',
     autoOpenPublishActions: (localStorage.getItem('autoOpenPublishActions') || 'true') === 'true',
     chainActionsTrackpadMode:
-      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true'
+      (localStorage.getItem('chainActionsTrackpadMode') || 'false') === 'true',
+    selectedMessageCompare: (localStorage.getItem('lastMessageCompare') || 'true') === 'true',
+
+    participateToReleaseCandidates: false
   }),
   getters: {
     dateTimeFormat(): string {
@@ -51,6 +58,13 @@ export const useSettingsStore = defineStore('settings', {
     }
   },
   actions: {
+    initStore() {
+      const settings = ElectronApi.getSettingsSync()
+
+      if (typeof settings?.participateToReleaseCandidates === 'boolean') {
+        this.participateToReleaseCandidates = settings.participateToReleaseCandidates
+      }
+    },
     setShowActivity(value: boolean) {
       this.showActivity = value
       localStorage.setItem('showActivity', value.toString())
@@ -94,6 +108,14 @@ export const useSettingsStore = defineStore('settings', {
     setChainActionsTrackpadMode(value: boolean) {
       this.chainActionsTrackpadMode = value
       localStorage.setItem('chainActionsTrackpadMode', value.toString())
+    },
+    setSelectedMessageCompare(value: boolean) {
+      this.selectedMessageCompare = value
+      localStorage.setItem('lastMessageCompare', value.toString())
+    },
+    setParticipateToReleaseCandidates(value: boolean) {
+      this.participateToReleaseCandidates = value
+      ElectronApi.saveSettings({ participateToReleaseCandidates: value })
     }
   }
 })

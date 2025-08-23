@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useMqttTopicsStore, MqttMessage } from '../../store/mqtt-topics'
-import { exportMessages } from '@renderer/assets/js/export-messages'
+import MessagesListMenu from '@renderer/components/tap-topics/MessagesListMenu.vue'
+import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useSettingsStore } from '../../store/settings-store'
 import { computed, nextTick, ref, watch } from 'vue'
 import CopyButton from '../buttons/CopyButton.vue'
@@ -8,13 +8,8 @@ import CopyButton from '../buttons/CopyButton.vue'
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
-const props = defineProps<{
-  selectedMessage?: MqttMessage
-}>()
-
-const emit = defineEmits<{
-  'update:selectedMessage': [uid?: MqttMessage]
-}>()
+const props = defineProps<{ selectedMessage?: MqttMessage }>()
+const emit = defineEmits<{ 'update:selectedMessage': [uid?: MqttMessage] }>()
 
 const currentPage = ref(1)
 const intersectionTransition = ref('slide-up')
@@ -86,7 +81,7 @@ watch(
 </script>
 
 <template>
-  <div class="justify-between tw-flex tw-px-4 tw-pt-2">
+  <div class="justify-between tw-flex tw-min-h-12 tw-px-4 tw-pt-2">
     <div class="items-center tw-flex tw-gap-2">
       History
       <q-chip size="sm" color="primary" text-color="white">
@@ -94,58 +89,6 @@ watch(
       </q-chip>
     </div>
     <div class="tw-flex tw-items-center tw-gap-1">
-      <q-btn color="accent" round flat size="sm">
-        <q-icon name="fa-solid fa-file-arrow-down" size="14px" />
-        <q-tooltip
-          class="tw-bg-accent tw-text-black"
-          :offset="[5, 0]"
-          anchor="center left"
-          self="center right"
-        >
-          Export messages
-        </q-tooltip>
-
-        <q-menu :offset="[0, 5]">
-          <q-list dense class="tw-w-28">
-            <q-item
-              clickable
-              v-ripple
-              @click="exportMessages('raw', mqttTopicsStore.getSelectedTopicMessages)"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="reorder" class="tw-mr-2" />
-                  RAW
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-ripple
-              @click="exportMessages('json', mqttTopicsStore.getSelectedTopicMessages)"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="data_object" class="tw-mr-2" />
-                  JSON
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-ripple
-              @click="exportMessages('csv', mqttTopicsStore.getSelectedTopicMessages)"
-            >
-              <q-item-section>
-                <div>
-                  <q-icon name="fa-solid fa-file-csv" class="tw-mr-2" />
-                  CSV
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
-      </q-btn>
       <q-pagination
         v-if="settingsStore.messagesPagination"
         v-model="currentPage"
@@ -154,6 +97,11 @@ watch(
         :max="Math.ceil(mqttTopicsStore.getSelectedTopicMessages.length / 5)"
         input
       />
+
+      <q-btn round flat size="sm">
+        <q-icon name="fa-solid fa-ellipsis-vertical" size="14px" />
+        <messages-list-menu />
+      </q-btn>
     </div>
   </div>
   <div class="tw-flex tw-flex-col tw-gap-2 tw-overflow-hidden tw-p-3">
@@ -165,10 +113,10 @@ watch(
     >
       <q-card
         flat
-        class="tw-cursor-pointer tw-select-none tw-bg-primary tw-p-2 tw-transition-all"
+        class="card-secondary-background tw-cursor-pointer tw-select-none tw-p-2 tw-outline tw-outline-2 tw-transition-all"
         :class="{
-          'card-secondary-background': selectedMessage?.uid !== message.uid,
-          'tw-bg-primary tw-text-white': selectedMessage?.uid === message.uid
+          'tw-outline-transparent': selectedMessage?.uid !== message.uid,
+          'tw-outline-primary': selectedMessage?.uid === message.uid
         }"
         @click="handleMessageClick(message)"
       >
@@ -194,7 +142,7 @@ watch(
             />
           </div>
         </div>
-        <div class="tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
+        <div class="tw-line-clamp-4 tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
           {{ formatMessage(message.message) }}
         </div>
       </q-card>

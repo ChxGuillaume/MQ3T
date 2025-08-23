@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useMqttConnectionsStore } from '../../store/mqtt-connections'
-import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { MqttConnection } from '../../../../types/mqtt-connection'
-import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { computed } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -12,16 +11,12 @@ const props = defineProps<{
   connection: MqttConnection
 }>()
 
-const electronApi = window.api as ElectronIpc
-
 const handleConnect = (connection: MqttConnection) => {
-  const clonedConnection = JSON.parse(JSON.stringify(connection))
-
-  electronApi.connectMqtt(Object.assign({}, clonedConnection))
+  mqttConnectionsStore.connectClient(connection.clientKey)
 }
 
 const handleDisconnect = (connection: MqttConnection) => {
-  electronApi.disconnectMqtt(connection.clientKey)
+  mqttConnectionsStore.disconnectClient(connection.clientKey)
 }
 
 const handleReconnect = (connection: MqttConnection) => {
@@ -45,7 +40,7 @@ const connectionStatus = computed(() => {
 
 <template>
   <q-menu touch-position context-menu>
-    <q-list dense style="min-width: 220px" bordered>
+    <q-list dense style="min-width: 220px">
       <template v-if="connectionStatus === 'disconnected'">
         <q-item
           v-close-popup
@@ -104,8 +99,8 @@ const connectionStatus = computed(() => {
       </template>
       <q-separator />
       <q-item
-        clickable
         v-close-popup
+        clickable
         @click="mqttTopicsStore.clearConnectionMessages(connection.clientKey)"
       >
         <q-item-section class="tw-flex">

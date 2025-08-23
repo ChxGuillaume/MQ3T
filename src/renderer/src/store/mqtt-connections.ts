@@ -2,6 +2,8 @@ import { MqttConnection, MqttConnectionStatus } from '../../../types/mqtt-connec
 import { ElectronApi } from '../assets/js/electron-api'
 import { defineStore } from 'pinia'
 
+const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
+
 export const useMqttConnectionsStore = defineStore('mqtt-connections', {
   state: () => ({
     connections: [] as MqttConnection[],
@@ -59,7 +61,7 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       this.saveConnections()
     },
     removeConnection(clientKey: string) {
-      ElectronApi.disconnectMqtt(clientKey)
+      this.disconnectClient(clientKey)
 
       this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
 
@@ -73,6 +75,22 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     },
     hideConnection(clientKey: string) {
       delete this.connectionsStatus[clientKey]
+    },
+    connectClient(clientKey: string) {
+      const status = this.connectionsStatus[clientKey]
+
+      if (status !== undefined && status !== 'disconnected') return
+
+      const client = this.getConnection(clientKey)
+
+      if (!client) return
+
+      ElectronApi.connectMqtt(clone(client))
+    },
+    disconnectClient(clientKey: string) {
+      if (this.connectionsStatus[clientKey] !== 'connected') return
+
+      ElectronApi.disconnectMqtt(clientKey)
     }
   }
 })
