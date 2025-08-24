@@ -22,6 +22,7 @@ jobs:
       APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
       CSC_KEY_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      CSC_KEYCHAIN: app-signing
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
