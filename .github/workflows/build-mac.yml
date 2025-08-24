@@ -3,6 +3,12 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
 
 jobs:
   mac:
@@ -22,22 +28,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set version from tag
+      - name: Determine version variables
         env:
           GITHUB_REF: ${{ github.ref }}
-        run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version --allow-same-version
+          VERSION_INPUT: ${{ github.event.inputs.version }}
+        run: |
+          if [ -n "$VERSION_INPUT" ]; then
+            # Manual trigger with version input
+            VERSION="$VERSION_INPUT"
+          else
+            # Tag trigger
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          VERSION_WITHOUT_PRERELEASE=$(echo "$VERSION" | sed 's/-.*//')
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_WITHOUT_PRERELEASE=$VERSION_WITHOUT_PRERELEASE" >> $GITHUB_ENV
+
+          echo "Determined VERSION: $VERSION"
+          echo "Determined VERSION_WITHOUT_PRERELEASE: $VERSION_WITHOUT_PRERELEASE"
+
+      - name: Set version from tag or input
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Build
         run: npm run build
 
       - name: Install Apple Code Signing Certificate
         env:
-          MAC_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64 }}
-          MAC_DEVELOPMENT_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
-          MAC_APP_CERTIFICATE_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_BASE64 }}
-          MAC_INSTALLER_CERTIFICATE_PATH: ${{ runner.temp }}/mac_installer_certificate.p12
-          MAC_DEVELOPMENT_CERTIFICATE_PATH: ${{ runner.temp }}/mac_development_certificate.p12
-          MAC_APP_CERTIFICATE_PATH: ${{ runner.temp }}/mac_app_certificate.p12
+          MAC_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.MAC_INSTALLER_CERTIFICATE_BASE64 }}
+          MAC_DEVELOPMENT_CERTIFICATE_BASE64: ${{ secrets.MAC_DEVELOPMENT_CERTIFICATE_BASE64 }}
+          MAC_APP_CERTIFICATE_BASE64: ${{ secrets.MAC_APP_CERTIFICATE_BASE64 }}
+
+          MAC_INSTALLER_CERTIFICATE_PATH: ${{ runner.temp }}/mac_installer_certificate.cer
+          MAC_DEVELOPMENT_CERTIFICATE_PATH: ${{ runner.temp }}/mac_development_certificate.cer
+          MAC_APP_CERTIFICATE_PATH: ${{ runner.temp }}/mac_app_certificate.cer
+
           KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
@@ -54,7 +80,7 @@ jobs:
           security import $MAC_APP_CERTIFICATE_PATH -A -t cert -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Install Apple Code Signing Certificate
+      - name: Install Apple API key
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
@@ -78,31 +104,39 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:mac:publish
 
-      - name: Set version from tag (without pre-release)
-        env:
-          GITHUB_REF: ${{ github.ref }}
-        run: |
-          VERSION=$(echo "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//')
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - name: Set version from tag or input (without pre-release)
+        run: npm version "$VERSION_WITHOUT_PRERELEASE" --no-git-tag-version --allow-same-version
 
       - name: Package (Mac App Store)
         env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: npm run package:mac:store
+        run: |
+          echo "Packaging for Mac App Store..."
+          npm run package:mac:store
 
-      - name: Publish to App Store Connect
+      - name: Submit to App Store Connect
         continue-on-error: true
         env:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "Submitting to App Store Connect..."
+
+          PKG_FILE=$(find dist -name "*.pkg" -type f | head -1)
+          if [[ -z "$PKG_FILE" ]]; then
+            echo "Error: No .pkg file found in dist directory"
+            exit 1
+          fi
+
+          echo "Found package: $PKG_FILE"
+
           xcrun altool \
-            --notarize-app \
-            --file path/to/your/package.pkg \
+            --upload-app \
+            --file "$PKG_FILE" \
             --apiKey "$APPLE_API_KEY_ID" \
             --apiIssuer "$APPLE_API_ISSUER" \
-            --output-format xml
+            --output-format xml \
+            --verbose
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
