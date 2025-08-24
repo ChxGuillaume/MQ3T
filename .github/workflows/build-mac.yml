@@ -19,7 +19,7 @@ jobs:
     env:
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-      APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
       CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
     steps:
       - name: Checkout repository
