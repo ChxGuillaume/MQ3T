@@ -62,39 +62,18 @@ jobs:
 
       - name: Install Apple Code Signing Certificate
         env:
-          MAC_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.MAC_INSTALLER_CERTIFICATE_BASE64 }}
-          MAC_DEVELOPMENT_CERTIFICATE_BASE64: ${{ secrets.MAC_DEVELOPMENT_CERTIFICATE_BASE64 }}
-          MAC_APP_CERTIFICATE_BASE64: ${{ secrets.MAC_APP_CERTIFICATE_BASE64 }}
-          DEVELOPER_ID_APPLICATION_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_BASE64 }}
-          DEVELOPER_ID_INSTALLER_BASE64: ${{ secrets.DEVELOPER_ID_INSTALLER_BASE64 }}
-          DISTRIBUTION_BASE64: ${{ secrets.DISTRIBUTION_BASE64 }}
-
-          MAC_INSTALLER_CERTIFICATE_PATH: ${{ runner.temp }}/mac_installer_certificate.cer
-          MAC_DEVELOPMENT_CERTIFICATE_PATH: ${{ runner.temp }}/mac_development_certificate.cer
-          MAC_APP_CERTIFICATE_PATH: ${{ runner.temp }}/mac_app_certificate.cer
-          DEVELOPER_ID_APPLICATION_PATH: ${{ runner.temp }}/developerID_application.cer
-          DEVELOPER_ID_INSTALLER_PATH: ${{ runner.temp }}/developerID_installer.cer
-          DISTRIBUTION_PATH: ${{ runner.temp }}/distribution.cer
+          APPLE_CERTIFICATES_BUNDLE_BASE64: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
+          APPLE_CERTIFICATES_BUNDLE_PATH: ${{ runner.temp }}/apple_certificates_bundle.p12
+          APPLE_CERTIFICATES_BUNDLE_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
           KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
         run: |
-          echo -n "$MAC_INSTALLER_CERTIFICATE_BASE64" | base64 --decode -o $MAC_INSTALLER_CERTIFICATE_PATH
-          echo -n "$MAC_DEVELOPMENT_CERTIFICATE_BASE64" | base64 --decode -o $MAC_DEVELOPMENT_CERTIFICATE_PATH
-          echo -n "$MAC_APP_CERTIFICATE_BASE64" | base64 --decode -o $MAC_APP_CERTIFICATE_PATH
-          echo -n "$DEVELOPER_ID_APPLICATION_BASE64" | base64 --decode -o $DEVELOPER_ID_APPLICATION_PATH
-          echo -n "$DEVELOPER_ID_INSTALLER_BASE64" | base64 --decode -o $DEVELOPER_ID_INSTALLER_PATH
-          echo -n "$DISTRIBUTION_BASE64" | base64 --decode -o $DISTRIBUTION_PATH
+          echo -n "$APPLE_CERTIFICATES_BUNDLE_BASE64" | base64 --decode -o $APPLE_CERTIFICATES_BUNDLE_PATH
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          security import $MAC_INSTALLER_CERTIFICATE_PATH -A -t cert -k $KEYCHAIN_PATH
-          security import $MAC_DEVELOPMENT_CERTIFICATE_PATH -A -t cert -k $KEYCHAIN_PATH
-          security import $MAC_APP_CERTIFICATE_PATH -A -t cert -k $KEYCHAIN_PATH
-          security import $DEVELOPER_ID_APPLICATION_PATH -A -t cert -k $KEYCHAIN_PATH
-          security import $DEVELOPER_ID_INSTALLER_PATH -A -t cert -k $KEYCHAIN_PATH
-          security import $DISTRIBUTION_PATH -A -t cert -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          security import $APPLE_CERTIFICATES_BUNDLE_PATH -k $KEYCHAIN_PATH -f pkcs12 -P "$APPLE_CERTIFICATES_BUNDLE_PASSWORD"
 
       - name: Install Apple API key
         run: |
