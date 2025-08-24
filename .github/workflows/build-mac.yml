@@ -21,8 +21,6 @@ jobs:
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
-      CSC_LINK: ${{ runner.temp }}/app-signing.keychain-db
       CSC_KEY_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
     steps:
       - name: Checkout repository
@@ -77,6 +75,7 @@ jobs:
           DEVELOPER_ID_APPLICATION_PATH: ${{ runner.temp }}/developerID_application.cer
           DEVELOPER_ID_INSTALLER_PATH: ${{ runner.temp }}/developerID_installer.cer
           DISTRIBUTION_PATH: ${{ runner.temp }}/distribution.cer
+          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
         run: |
           echo -n "$MAC_INSTALLER_CERTIFICATE_BASE64" | base64 --decode -o $MAC_INSTALLER_CERTIFICATE_PATH
           echo -n "$MAC_DEVELOPMENT_CERTIFICATE_BASE64" | base64 --decode -o $MAC_DEVELOPMENT_CERTIFICATE_PATH
@@ -113,6 +112,7 @@ jobs:
       - name: Package (Mac)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ runner.temp }}/app-signing.keychain-db
         run: npm run package:mac:publish
 
       - name: Set version from tag or input (without pre-release)
@@ -121,6 +121,7 @@ jobs:
       - name: Package (Mac App Store)
         env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          CSC_LINK: ${{ runner.temp }}/app-signing.keychain-db
         run: |
           echo "Packaging for Mac App Store..."
           npm run package:mac:store
