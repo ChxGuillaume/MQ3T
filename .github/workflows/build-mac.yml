@@ -20,9 +20,7 @@ jobs:
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      CSC_KEY_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      CSC_KEYCHAIN: app-signing
+      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -65,16 +63,9 @@ jobs:
         env:
           APPLE_CERTIFICATES_BUNDLE_BASE64: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
           APPLE_CERTIFICATES_BUNDLE_PATH: ${{ runner.temp }}/apple_certificates_bundle.p12
-          APPLE_CERTIFICATES_BUNDLE_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
-          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
         run: |
           echo -n "$APPLE_CERTIFICATES_BUNDLE_BASE64" | base64 --decode -o $APPLE_CERTIFICATES_BUNDLE_PATH
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          security import $APPLE_CERTIFICATES_BUNDLE_PATH -k $KEYCHAIN_PATH -f pkcs12 -P "$APPLE_CERTIFICATES_BUNDLE_PASSWORD"
+          echo "CSC_LINK=$APPLE_CERTIFICATES_BUNDLE_PATH" >> $GITHUB_ENV
 
       - name: Install Apple API key
         run: |
