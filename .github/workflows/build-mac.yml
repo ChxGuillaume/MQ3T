@@ -112,7 +112,7 @@ jobs:
       - name: Package (Mac)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ runner.temp }}/app-signing.keychain-db
+          CSC_KEYCHAIN: ${{ runner.temp }}/app-signing.keychain-db
         run: npm run package:mac:publish
 
       - name: Set version from tag or input (without pre-release)
@@ -121,7 +121,7 @@ jobs:
       - name: Package (Mac App Store)
         env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          CSC_LINK: ${{ runner.temp }}/app-signing.keychain-db
+          CSC_KEYCHAIN: ${{ runner.temp }}/app-signing.keychain-db
         run: |
           echo "Packaging for Mac App Store..."
           npm run package:mac:store
