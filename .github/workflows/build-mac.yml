@@ -115,10 +115,11 @@ jobs:
           xcrun altool \
             --upload-app \
             --file "$PKG_FILE" \
+            --type macos \
             --apiKey "$APPLE_API_KEY_ID" \
             --apiIssuer "$APPLE_API_ISSUER" \
             --output-format xml \
-            --verbose
+            --show-progress
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
