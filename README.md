@@ -19,11 +19,20 @@ It allows you to visualize your MQTT topics, subscribe to them and publish messa
 You can simplify your development processes by using the built-in actions.
 
 # Download
-|                                    <img src='docs/platforms-logo/windows-logo.png' width='100'>                                     |                                   <img src='docs/platforms-logo/apple-logo.png' width='100'>                                   |                     <img src='docs/platforms-logo/linux-logo.png' width='100'>                     |               <img src='docs/platforms-logo/debian-logo.png' width='100'>                |
-|:-----------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
-|                  [Windows Portable](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=portable)                  |                  [Mac Apple Silicon](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=arm64&type=dmg)                   |  [AppImage (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=x86_64&type=AppImage)  |  [Deb (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=deb)   |
-|                     [Windows Setup](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=setup)                     |                       [Mac Intel](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=x64&type=dmg)                        | [AppImage (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=AppImage)  | [Deb (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=deb)  |
-| [<img src="docs/download-logo/microsoft-store.svg" alt="Alt Text" height="50">](	https://www.microsoft.com/store/apps/9N95JHMPSSQJ) | [<img src="docs/download-logo/mac-app-store.svg" alt="Alt Text" height="50">](https://apps.apple.com/fr/app/mq3t/id6479254709) | [AppImage (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=AppImage) | [Deb (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=deb) |
+
+## Stores
+
+|                                          <img src='docs/platforms-logo/windows-logo.png' height='100'>                                          |                                        <img src='docs/platforms-logo/apple-logo.png' height='100'>                                         |                                             <img src='docs/platforms-logo/ubuntu-logo.svg' height='100'>                                              |
+|:-----------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [<img src="docs/download-logo/microsoft-store.svg" alt="Alt Text" height="50" width="172">](	https://www.microsoft.com/store/apps/9N95JHMPSSQJ) | [<img src="docs/download-logo/mac-app-store.svg" alt="Alt Text" height="50" width="196">](https://apps.apple.com/fr/app/mq3t/id6479254709) | <a href="https://snapcraft.io/mq3t"><img alt="Get it from the Snap Store" src=https://snapcraft.io/en/dark/install.svg height="50" width="164" /></a> |
+
+## Installers
+
+|                   <img src='docs/platforms-logo/windows-logo.png' height='100'>                   |                 <img src='docs/platforms-logo/apple-logo.png' height='100'>                 |                    <img src='docs/platforms-logo/linux-logo.png' height='100'>                     |               <img src='docs/platforms-logo/debian-logo.png' height='100'>               |
+|:-------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
+| [Windows Portable](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=portable) | [Mac Apple Silicon](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=arm64&type=dmg) |  [AppImage (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=x86_64&type=AppImage)  |  [Deb (x64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=amd64&type=deb)   |
+|    [Windows Setup](https://mq3t.guillaumechx.dev/download.html?os=windows&arch=x64&type=setup)    |      [Mac Intel](https://mq3t.guillaumechx.dev/download.html?os=mac&arch=x64&type=dmg)      | [AppImage (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=AppImage)  | [Deb (arm64)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=arm64&type=deb)  |
+|                                                                                                   |                                                                                             | [AppImage (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=AppImage) | [Deb (armv7)](https://mq3t.guillaumechx.dev/download.html?os=linux&arch=armv7l&type=deb) |
 
 ## Project Setup
 
@@ -50,6 +59,7 @@ npm run dev
     - `src/` - Vue.js source code
       - `assets/` - Static assets
       - `components/` - Vue.js components
+      - `composables/` - Vue.js composables
       - `store/` - Pinia store
       - `tabs/` - Application tabs
       - `App.vue` - Vue.js root component
@@ -58,15 +68,32 @@ npm run dev
 
 ## Build
 
+### Build the application
+
 ```bash
-# For windows
+npm run build
+```
+
+## Package
+
+```bash
+# For windows (exe)
 npm run package:win
 
-# For macOS
+# For windows (Microsoft Store)
+npm run package:win:store
+
+# For macOS (dmg)
 npm run package:mac
+
+# For macOS (App Store)
+npm run package:mac:store
 
 # For Linux
 npm run package:linux
+
+# For Snapcraft
+npm run package:linux:snap
 ```
 
 # License

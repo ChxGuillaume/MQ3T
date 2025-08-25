@@ -3,13 +3,24 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
 
 jobs:
   mac:
     name: macos
-    runs-on: macos-latest
+    runs-on: macos-14
     permissions:
       contents: write
+    env:
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,42 +33,48 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set version from tag
+      - name: Determine version variables
         env:
           GITHUB_REF: ${{ github.ref }}
-        run: npm version "${GITHUB_REF#refs/tags/v}" --no-git-tag-version --allow-same-version
+          VERSION_INPUT: ${{ github.event.inputs.version }}
+        run: |
+          if [ -n "$VERSION_INPUT" ]; then
+            # Manual trigger with version input
+            VERSION="$VERSION_INPUT"
+          else
+            # Tag trigger
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          VERSION_WITHOUT_PRERELEASE=$(echo "$VERSION" | sed 's/-.*//')
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_WITHOUT_PRERELEASE=$VERSION_WITHOUT_PRERELEASE" >> $GITHUB_ENV
+
+          echo "Determined VERSION: $VERSION"
+          echo "Determined VERSION_WITHOUT_PRERELEASE: $VERSION_WITHOUT_PRERELEASE"
+
+      - name: Set version from tag or input
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Build
         run: npm run build
 
       - name: Install Apple Code Signing Certificate
         env:
-          APPLE_THIRD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64 }}
-          APPLE_THIRD_PARTY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_3RD_PARTY_SIGNING_CERTIFICATE_BASE64 }}
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.APPLE_SIGNING_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPLE_CERTIFICATES_BUNDLE_BASE64: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
+          APPLE_CERTIFICATES_BUNDLE_PATH: ${{ runner.temp }}/apple_certificates_bundle.p12
         run: |
-          THIRD_PARTY_INSTALLER_CERTIFICATE_PATH=$RUNNER_TEMP/3rd_party_installer_certificate.p12
-          THIRD_PARTY_CERTIFICATE_PATH=$RUNNER_TEMP/3rd_party_certificate.p12
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          echo -n "$APPLE_CERTIFICATES_BUNDLE_BASE64" | base64 --decode -o $APPLE_CERTIFICATES_BUNDLE_PATH
+          echo "CSC_LINK=$APPLE_CERTIFICATES_BUNDLE_PATH" >> $GITHUB_ENV
 
-          # import certificate and provisioning profile from secrets
-          echo -n "$APPLE_THIRD_PARTY_INSTALLER_SIGNING_CERTIFICATE_BASE64" | base64 --decode -o $THIRD_PARTY_INSTALLER_CERTIFICATE_PATH
-          echo -n "$APPLE_THIRD_PARTY_SIGNING_CERTIFICATE_BASE64" | base64 --decode -o $THIRD_PARTY_CERTIFICATE_PATH
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+      - name: Install Apple API key
+        run: |
+          mkdir -p ~/private_keys/
 
-          # create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          KEY_PATH=~/private_keys/AuthKey_$APPLE_API_KEY_ID.p8
 
-          # import certificate to keychain
-          security import $THIRD_PARTY_INSTALLER_CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security import $THIRD_PARTY_CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o $KEY_PATH
+          echo "APPLE_API_KEY=$KEY_PATH" >> $GITHUB_ENV
 
       - name: Install Mac Profiles
         env:
@@ -69,23 +86,40 @@ jobs:
 
       - name: Package (Mac)
         env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run package:mac:publish
 
-      - name: Set version from tag (without pre-release)
-        env:
-          GITHUB_REF: ${{ github.ref }}
-        run: |
-          VERSION=$(echo "${GITHUB_REF#refs/tags/v}" | sed 's/-.*//')
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - name: Set version from tag or input (without pre-release)
+        run: npm version "$VERSION_WITHOUT_PRERELEASE" --no-git-tag-version --allow-same-version
 
       - name: Package (Mac App Store)
         env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: npm run package:mac:store
+        run: |
+          echo "Packaging for Mac App Store..."
+          npm run package:mac:store
+
+      - name: Submit to App Store Connect
+        continue-on-error: true
+        run: |
+          echo "Submitting to App Store Connect..."
+
+          PKG_FILE=$(find dist -name "*.pkg" -type f | head -1)
+          if [[ -z "$PKG_FILE" ]]; then
+            echo "Error: No .pkg file found in dist directory"
+            exit 1
+          fi
+
+          echo "Found package: $PKG_FILE"
+
+          xcrun altool \
+            --upload-app \
+            --file "$PKG_FILE" \
+            --type macos \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_ISSUER" \
+            --output-format xml \
+            --show-progress
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
