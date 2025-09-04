@@ -3,15 +3,20 @@ import { useDataGraphsStore } from '../../store/data-graphs'
 import LineChartCard from '../graphs/LineChartCard.vue'
 import draggable from 'vuedraggable'
 import { computed } from 'vue'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 
 const dataGraphsStore = useDataGraphsStore()
+const mqttTopicsStore = useMqttTopicsStore()
 
 const dragOptions = computed(() => {
   return { animation: 200, group: 'topics-graph-list', ghostClass: 'ghost' }
 })
 
 const graphs = computed({
-  get: () => dataGraphsStore.dataGraph,
+  get: () =>
+    dataGraphsStore.dataGraph.filter(
+      (graph) => graph.clientKey === mqttTopicsStore.selectedConnection
+    ),
   set: (value) => dataGraphsStore.setDataGraphs(value)
 })
 </script>
