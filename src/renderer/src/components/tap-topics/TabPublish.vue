@@ -286,6 +286,7 @@ watch(
           :key="action.id"
           :action="action"
           :connection-id="mqttTopicsStore.selectedConnection"
+          class="dark:tw-bg-neutral-800"
           hide-topic
           edit-only
           no-grab
