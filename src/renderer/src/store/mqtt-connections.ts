@@ -88,7 +88,7 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       ElectronApi.connectMqtt(clone(client))
     },
     disconnectClient(clientKey: string) {
-      if (this.connectionsStatus[clientKey] !== 'connected') return
+      if (this.connectionsStatus[clientKey] === 'disconnected') return
 
       ElectronApi.disconnectMqtt(clientKey)
     }

@@ -30,7 +30,7 @@ const app = createApp(App)
 const pinia = createPinia()
 
 Notify.setDefaults({
-  position: 'bottom-right',
+  position: 'bottom',
   progress: true,
   timeout: 2500,
   group: false

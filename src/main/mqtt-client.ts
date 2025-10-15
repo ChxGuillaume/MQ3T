@@ -116,7 +116,7 @@ export class MqttClient {
     this.client.publish(topic, message, options)
   }
 
-  public disconnect() {
-    this.client.end()
+  public async disconnect() {
+    await this.client.endAsync(true)
   }
 }
