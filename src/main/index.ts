@@ -95,6 +95,7 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
 const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
+  if (mqttClients.has(clientKey)) return
   if (mqttClientsState.get(clientKey) === 'connecting') return
 
   mqttClientsState.set(clientKey, 'connecting')
@@ -245,8 +246,8 @@ const initIpcMain = () => {
     createConnection(connection).then()
   })
 
-  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
-    mqttClients.get(clientKey)?.disconnect()
+  ipcMain.on('disconnect-mqtt', async (event, clientKey: string) => {
+    await mqttClients.get(clientKey)?.disconnect()
     mqttClients.delete(clientKey)
 
     mqttClientsState.set(clientKey, 'disconnected')
