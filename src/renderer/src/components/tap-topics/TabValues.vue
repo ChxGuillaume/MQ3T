@@ -40,6 +40,14 @@ const selectedTopicLastMessage = computed(() => {
   return mqttTopicsStore.getSelectedTopicLastMessage
 })
 
+const isPrintableASCII = (buffer: Buffer): boolean =>
+  buffer.every((n) => Number.isInteger(n) && n >= 32 && n <= 126)
+
+const formatCorrelationData = (buffer: Buffer): string => {
+  if (isPrintableASCII(buffer)) return String.fromCharCode(...buffer)
+  else return buffer.toString()
+}
+
 const handleBreadcrumbClick = (index: number) => {
   mqttTopicsStore.setSelectedTopic(
     mqttTopicsStore.selectedConnection,
@@ -232,7 +240,7 @@ watch(
           <div v-if="selectedTopicLastMessage?.properties?.correlationData" class="tw-space-x-1">
             <span class="tw-inline tw-text-nowrap">Correlation Data:</span>
             <div class="tw-inline tw-break-all tw-opacity-70">
-              {{ selectedTopicLastMessage?.properties?.correlationData }}
+              {{ formatCorrelationData(selectedTopicLastMessage?.properties?.correlationData) }}
             </div>
           </div>
         </div>

@@ -229,8 +229,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         properties: packet.properties
       } as MqttMessage
 
-      console.log(packet.properties)
-
       this.topicsMessages[clientKey][topic].push(mqttMessage)
       this.topicsLastMessage[clientKey][topic] = mqttMessage
 
