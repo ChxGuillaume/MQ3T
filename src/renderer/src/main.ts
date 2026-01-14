@@ -1,4 +1,6 @@
+import { PiniaDebounce } from '@pinia/plugin-debounce'
 import { Notify, Quasar } from 'quasar'
+import debounce from 'lodash/debounce'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
@@ -28,6 +30,7 @@ import './tailwind.css'
 const app = createApp(App)
 
 const pinia = createPinia()
+pinia.use(PiniaDebounce(debounce))
 
 Notify.setDefaults({
   position: 'bottom',
