@@ -186,7 +186,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         )
       })
     },
-    removeTopicLastMessages(clientKey: string, topic: string) {
+    _removeTopicLastMessages(clientKey: string, topic: string) {
       const settingsStore = useSettingsStore()
 
       if (!this.topicsLastMessage[clientKey]) return
@@ -203,6 +203,16 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
       }
     },
+    removeTopicLastMessages(clientKey: string, topic: string) {
+      this.getDebouncedRemoveTopicLastMessages(clientKey, topic)(clientKey, topic)
+    },
+    getDebouncedRemoveTopicLastMessages: _.memoize(
+      (_clientKey: string, _topic: string) => {
+        const store = useMqttTopicsStore()
+        return _.debounce(store._removeTopicLastMessages, 250, { maxWait: 250 })
+      },
+      (clientKey, topic) => `${clientKey}:${topic}`
+    ),
     addMessage(clientKey: string, topic: string, message: string, packet: IPublishPacket) {
       const actionsCacheStore = useActionsCacheStore()
       const settingsStore = useSettingsStore()
@@ -372,8 +382,5 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           .forEach((subTopic) => (this.topicGroupOpened[clientKey][subTopic] = false))
       }
     }
-  },
-  debounce: {
-    removeTopicLastMessages: [250, { maxWait: 250 }]
   }
 })
