@@ -184,6 +184,23 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         )
       })
     },
+    removeTopicLastMessages(clientKey: string, topic: string) {
+      const settingsStore = useSettingsStore()
+
+      if (!this.topicsLastMessage[clientKey]) return
+      if (!this.topicsLastMessage[clientKey][topic]) return
+
+      const amountMessagesToRemove =
+        this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages
+
+      if (amountMessagesToRemove > 1) {
+        this.topicsMessages[clientKey][topic].sort(
+          (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+        )
+
+        this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
+      }
+    },
     addMessage(clientKey: string, topic: string, message: string, packet: IPublishPacket) {
       const actionsCacheStore = useActionsCacheStore()
       const settingsStore = useSettingsStore()
@@ -214,16 +231,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
 
       ///////////
       // Removing old messages when the limit is reached
+
       const amountMessagesToRemove =
-        this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages + 1
+        this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages
 
-      if (amountMessagesToRemove > 1) {
-        this.topicsMessages[clientKey][topic].sort(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-        )
-
-        this.topicsMessages[clientKey][topic].splice(0, amountMessagesToRemove)
-      }
+      if (amountMessagesToRemove > 1) this.removeTopicLastMessages(clientKey, topic)
 
       const topicParts = topic.split('/')
 
@@ -357,5 +369,8 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           .forEach((subTopic) => (this.topicGroupOpened[clientKey][subTopic] = false))
       }
     }
+  },
+  debounce: {
+    removeTopicLastMessages: [250, { maxWait: 250 }]
   }
 })

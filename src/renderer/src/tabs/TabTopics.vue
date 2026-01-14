@@ -17,6 +17,7 @@ import { useDataGraphsStore } from '../store/data-graphs'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
+import { useWindowSize } from '@vueuse/core'
 import { scroll } from 'quasar'
 
 const { setVerticalScrollPosition } = scroll
@@ -26,6 +27,8 @@ const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
+
+const { width: windowWidth } = useWindowSize()
 
 const visualizationSplitter = ref(400)
 
@@ -317,7 +320,7 @@ const focusTopicsScroll = (e: MouseEvent) => {
     <q-splitter
       v-model="visualizationSplitter"
       class="tw-overflow-hidden"
-      :limits="[400, 700]"
+      :limits="[400, windowWidth - 400]"
       emit-immediately
       unit="px"
       reverse

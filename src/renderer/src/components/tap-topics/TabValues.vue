@@ -8,6 +8,7 @@ import EraseButton from '../buttons/EraseButton.vue'
 import CopyButton from '../buttons/CopyButton.vue'
 import SplitterIcon from '../SplitterIcon.vue'
 import MessagesList from './MessagesList.vue'
+import { useWindowSize } from '@vueuse/core'
 import CodePreview from './CodePreview.vue'
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -16,14 +17,19 @@ const electronApi = window.api as ElectronIpc
 
 const $q = useQuasar()
 
+const { height: windowHeight } = useWindowSize()
+
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 
 const codePreviewSplitter = ref(200)
-const codePreviewLimits = ref([100, 400])
+const codePreviewLimits = computed(() => [100, windowHeight.value - 400])
 
 const selectedMessageCodePreviewSplitter = ref(0)
-const selectedCodePreviewLimits = ref([100, 400])
+const selectedCodePreviewLimits = computed(() =>
+  selectedMessage.value ? [100, windowHeight.value - 400] : [0, 0]
+)
+
 const selectedMessage = ref<MqttMessage>()
 
 const breadcrumbs = computed(() => {
@@ -93,13 +99,8 @@ watch(
 watch(
   () => selectedMessage.value,
   (newValue) => {
-    if (newValue) {
-      selectedCodePreviewLimits.value = [100, 400]
-      selectedMessageCodePreviewSplitter.value = 200
-    } else {
-      selectedCodePreviewLimits.value = [0, 0]
-      selectedMessageCodePreviewSplitter.value = 0
-    }
+    if (newValue) selectedMessageCodePreviewSplitter.value = 200
+    else selectedMessageCodePreviewSplitter.value = 0
   }
 )
 </script>
