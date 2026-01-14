@@ -40,6 +40,14 @@ const selectedTopicLastMessage = computed(() => {
   return mqttTopicsStore.getSelectedTopicLastMessage
 })
 
+const isPrintableASCII = (buffer: Buffer): boolean =>
+  buffer.every((n) => Number.isInteger(n) && n >= 32 && n <= 126)
+
+const formatCorrelationData = (buffer: Buffer): string => {
+  if (isPrintableASCII(buffer)) return String.fromCharCode(...buffer)
+  else return buffer.toString()
+}
+
 const handleBreadcrumbClick = (index: number) => {
   mqttTopicsStore.setSelectedTopic(
     mqttTopicsStore.selectedConnection,
@@ -109,7 +117,11 @@ watch(
   <div class="tw-flex tw-flex-col tw-gap-1 tw-p-4">
     <div class="tw-flex tw-gap-2">
       <h2 class="tw-text-xl tw-font-bold">Topic</h2>
-      <copy-button notification-message="Topic copied to clipboard" @click="copySelectedTopic" />
+      <copy-button
+        text="Copy Topic"
+        notification-message="Topic copied to clipboard"
+        @click="copySelectedTopic"
+      />
       <erase-button @click="handleEraseTopic" />
     </div>
     <div class="tw-flex tw-min-h-[28px] tw-items-center">
@@ -139,39 +151,97 @@ watch(
   <q-separator />
   <div class="tw-overflow-auto">
     <div v-if="selectedTopicLastMessage">
-      <div class="justify-between tw-flex tw-p-4">
-        <div>
-          QoS: {{ selectedTopicLastMessage?.qos || 0 }}
-          <copy-button
-            notification-message="Last topic message copied to clipboard"
-            @click="copySelectedTopicMessage"
-          />
-        </div>
-        <div v-if="selectedTopicLastMessage?.retained">
-          <q-chip
-            size="sm"
-            class="text-weight-bold"
-            color="primary"
-            text-color="white"
-            icon-right="fa-solid fa-xmark"
-            square
-            clickable
-            label="Retained"
-            @click="handleClearRetained"
-          />
-        </div>
-        <div class="items-end tw-flex tw-flex-col">
+      <div class="tw-flex tw-flex-col tw-justify-between tw-p-4">
+        <div class="tw-flex tw-justify-between">
           <div>
-            {{
-              selectedTopicLastMessage?.createdAt &&
-              settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
-            }}
+            QoS: {{ selectedTopicLastMessage?.qos || 0 }}
+            <copy-button
+              text="Copy Last Message"
+              notification-message="Last message copied to clipboard"
+              @click="copySelectedTopicMessage"
+            />
           </div>
-          <div>
-            {{
-              selectedTopicLastMessage?.createdAt &&
-              settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
-            }}
+          <div v-if="selectedTopicLastMessage?.retained">
+            <q-chip
+              size="sm"
+              class="text-weight-bold"
+              color="primary"
+              text-color="white"
+              icon-right="fa-solid fa-xmark"
+              square
+              clickable
+              label="Retained"
+              @click="handleClearRetained"
+            />
+          </div>
+          <div class="items-end tw-flex tw-flex-col">
+            <div>
+              {{
+                selectedTopicLastMessage?.createdAt &&
+                settingsStore.formatDate(selectedTopicLastMessage?.createdAt)
+              }}
+            </div>
+            <div>
+              {{
+                selectedTopicLastMessage?.createdAt &&
+                settingsStore.formatTime(selectedTopicLastMessage?.createdAt)
+              }}
+            </div>
+          </div>
+        </div>
+        <div class="tw-text-xs">
+          <div v-if="selectedTopicLastMessage?.properties?.contentType" class="tw-space-x-1">
+            <div class="tw-inline tw-text-nowrap">Content Type:</div>
+            <div class="tw-inline tw-break-all tw-opacity-70">
+              {{ selectedTopicLastMessage?.properties?.contentType }}
+            </div>
+          </div>
+          <div
+            v-if="selectedTopicLastMessage?.properties?.messageExpiryInterval"
+            class="tw-space-x-1"
+          >
+            <div class="tw-inline tw-text-nowrap">Message Expiry Interval:</div>
+            <div class="tw-inline tw-break-all tw-opacity-70">
+              {{ selectedTopicLastMessage?.properties?.messageExpiryInterval }}
+            </div>
+          </div>
+          <div
+            v-if="selectedTopicLastMessage?.properties?.userProperties"
+            class="tw-flex tw-flex-col"
+          >
+            <span class="tw-text-nowrap">User Properties:</span>
+            <div
+              v-for="[propertyKey, propertyValue] in Object.entries(
+                selectedTopicLastMessage?.properties?.userProperties
+              )"
+              :key="propertyKey"
+              class="tw-ml-2 tw-space-x-1"
+            >
+              <span class="tw-inline tw-text-nowrap">{{ propertyKey }}:</span>
+              <div class="tw-inline tw-break-all tw-opacity-70">
+                {{ propertyValue }}
+              </div>
+            </div>
+          </div>
+          <div v-if="selectedTopicLastMessage?.properties?.responseTopic" class="tw-space-x-1">
+            <div class="tw-inline tw-text-nowrap">Response Topic:</div>
+            <div
+              class="tw-inline tw-cursor-pointer tw-break-all tw-opacity-70 hover:tw-underline"
+              @click="
+                mqttTopicsStore.setSelectedTopic(
+                  mqttTopicsStore.selectedConnection,
+                  selectedTopicLastMessage?.properties?.responseTopic
+                )
+              "
+            >
+              {{ selectedTopicLastMessage?.properties?.responseTopic }}
+            </div>
+          </div>
+          <div v-if="selectedTopicLastMessage?.properties?.correlationData" class="tw-space-x-1">
+            <span class="tw-inline tw-text-nowrap">Correlation Data:</span>
+            <div class="tw-inline tw-break-all tw-opacity-70">
+              {{ formatCorrelationData(selectedTopicLastMessage?.properties?.correlationData) }}
+            </div>
           </div>
         </div>
       </div>
