@@ -15,6 +15,8 @@ export type MqttMessage = {
   retained: boolean
   createdDiff?: number
   createdAt: Date
+
+  properties?: IPublishPacket['properties']
 }
 
 export type MqttTopicStructure = {
@@ -223,8 +225,11 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         qos: packet.qos,
         dataType: codeType(message),
         retained: packet.retain || false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        properties: packet.properties
       } as MqttMessage
+
+      console.log(packet.properties)
 
       this.topicsMessages[clientKey][topic].push(mqttMessage)
       this.topicsLastMessage[clientKey][topic] = mqttMessage
