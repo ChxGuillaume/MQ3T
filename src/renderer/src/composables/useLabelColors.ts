@@ -1,6 +1,8 @@
 import { computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 
+const TAILWIND_CLASS_PREFIX = 'tw-'
+
 const COLORS = [
   { label: 'Red', value: 'red' },
   { label: 'Orange', value: 'orange' },
@@ -21,8 +23,6 @@ const COLORS = [
   { label: 'Rose', value: 'rose' }
 ]
 
-const TW_PREFIX = 'tw-'
-
 export function useLabelColors() {
   const customColorLabels = useLocalStorage<{ [key: string]: string }>('label-names', {})
 
@@ -35,8 +35,8 @@ export function useLabelColors() {
     COLORS.map((color) => ({
       ...color,
       label: customColorLabels.value[color.value] || color.label,
-      bg: `${TW_PREFIX}bg-${color.value}-500`,
-      border: `${TW_PREFIX}border-${color.value}-500`
+      bg: `${TAILWIND_CLASS_PREFIX}bg-${color.value}-500`,
+      border: `${TAILWIND_CLASS_PREFIX}border-${color.value}-500`
     }))
   )
 

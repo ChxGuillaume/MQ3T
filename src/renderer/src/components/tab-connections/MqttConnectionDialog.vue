@@ -312,7 +312,7 @@ watch(
                           auto-save
                           @update:model-value="setCustomLabel(selectedColor.value, $event)"
                         >
-                          <div class="text-accent tw-mb-1">My Custom Title</div>
+                          <div class="text-accent tw-mb-1">Edit label name</div>
 
                           <q-input
                             v-model="scope.value"
