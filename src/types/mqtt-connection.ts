@@ -41,6 +41,8 @@ export type MqttConnection = {
     retain: boolean
     payload: string
   }
+
+  labelColor?: string | null
 }
 
 export type MqttConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'disconnected'
