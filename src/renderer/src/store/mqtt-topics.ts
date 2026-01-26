@@ -195,7 +195,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       const amountMessagesToRemove =
         this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages
 
-      if (amountMessagesToRemove > 1) {
+      if (amountMessagesToRemove >= 1) {
         this.topicsMessages[clientKey][topic].sort(
           (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
         )
@@ -215,7 +215,6 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     ),
     addMessage(clientKey: string, topic: string, message: string, packet: IPublishPacket) {
       const actionsCacheStore = useActionsCacheStore()
-      const settingsStore = useSettingsStore()
 
       if (!this.topicsMessages[clientKey]) this.topicsMessages[clientKey] = {}
 
@@ -245,10 +244,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       ///////////
       // Removing old messages when the limit is reached
 
-      const amountMessagesToRemove =
-        this.topicsMessages[clientKey][topic].length - settingsStore.maxMessages
-
-      if (amountMessagesToRemove > 1) this.removeTopicLastMessages(clientKey, topic)
+      this.removeTopicLastMessages(clientKey, topic)
 
       const topicParts = topic.split('/')
 
