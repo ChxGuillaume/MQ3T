@@ -1,7 +1,7 @@
 import { MqttConnection, MqttConnectionStatus } from '../types/mqtt-connection'
 import { getGraphWindow, initGraphWindowHandlers } from './windowGraph'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import { electronApp, optimizer } from '@electron-toolkit/utils'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import installExtension from 'electron-devtools-installer'
 import { initDataGraphHandlers } from './stores/dataGraph'
 import { HasAutoUpdate } from './constants/hasAutoUpdate'
@@ -48,9 +48,11 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
-    .then((extension) => console.log(`Added Extension: ${extension.name}`))
-    .catch((err) => console.log('An error occurred: ', err))
+  if (is.dev) {
+    installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
+      .then((extension) => console.log(`Added Extension: ${extension.name}`))
+      .catch((err) => console.log('An error occurred: ', err))
+  }
 
   mainWindow = createWindow()
 
@@ -93,6 +95,7 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
 const createConnection = async (connection: MqttConnection) => {
   const clientKey = connection.clientKey
 
+  if (mqttClients.has(clientKey)) return
   if (mqttClientsState.get(clientKey) === 'connecting') return
 
   mqttClientsState.set(clientKey, 'connecting')
@@ -243,8 +246,8 @@ const initIpcMain = () => {
     createConnection(connection).then()
   })
 
-  ipcMain.on('disconnect-mqtt', (event, clientKey: string) => {
-    mqttClients.get(clientKey)?.disconnect()
+  ipcMain.on('disconnect-mqtt', async (event, clientKey: string) => {
+    await mqttClients.get(clientKey)?.disconnect()
     mqttClients.delete(clientKey)
 
     mqttClientsState.set(clientKey, 'disconnected')

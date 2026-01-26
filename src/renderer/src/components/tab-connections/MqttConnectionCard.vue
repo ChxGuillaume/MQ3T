@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MqttConnectionCardContextMenu from './MqttConnectionCardContextMenu.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
+import { useLabelColors } from '@renderer/composables/useLabelColors'
 import { MqttConnection } from '../../../../types/mqtt-connection'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { useMqttUrl } from '../../composables/useMqttUrl'
@@ -12,6 +13,7 @@ const mqttTopicsStore = useMqttTopicsStore()
 const appStore = useAppStore()
 
 const { formatMqttUrl } = useMqttUrl()
+const { getColor } = useLabelColors()
 
 const props = defineProps<{ connection: MqttConnection }>()
 
@@ -26,7 +28,8 @@ const connectionStatus = computed(() => {
 
 <template>
   <div
-    class="mqtt-connection-card tw-cursor-pointer tw-rounded tw-p-4 dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+    class="mqtt-connection-card tw-cursor-pointer tw-rounded tw-border-t-2 tw-p-4 dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+    :class="getColor(connection.labelColor)?.border ?? 'tw-border-transparent'"
     @click="
       () => {
         if (connectionStatus === 'disconnected') $emit('connect', connection)

@@ -58,7 +58,7 @@ export const createWindow = (routePath = '/') => {
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       await window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html#${routePath}`)
     } else {
-      await window.loadFile(path.join(__dirname, `../renderer/index.html#${routePath}`))
+      await window.loadFile(path.join(__dirname, `../renderer/index.html`), { hash: routePath })
     }
   }
 

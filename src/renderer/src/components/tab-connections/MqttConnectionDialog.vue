@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { MqttConnection, MqttTopicSubscription } from '../../../../types/mqtt-connection'
+import { useLabelColors } from '@renderer/composables/useLabelColors'
 import AdvancedSettings from '../tab-settings/AdvancedSettings.vue'
 import { QDialog, QForm, QPopupProxy, QTableProps } from 'quasar'
 import { useSettingsStore } from '../../store/settings-store'
 import CodeEditor from '../tap-topics/CodeEditor.vue'
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
 const settingsStore = useSettingsStore()
+
+const { colors, setCustomLabel } = useLabelColors()
 
 const props = defineProps<{
   dialogOpened: boolean
@@ -66,7 +69,9 @@ const form = ref<Required<MqttConnection>>({
     qos: 0,
     retain: false,
     payload: ''
-  }
+  },
+
+  labelColor: null
 })
 
 const addTopicForm = ref<MqttTopicSubscription>({
@@ -106,6 +111,8 @@ const clearForm = () => {
     retain: false,
     payload: ''
   }
+
+  form.value.labelColor = null
 
   settingsCategoryTab.value = 'general'
 }
@@ -207,6 +214,17 @@ const mqttProtocolOptions = [
   { label: 'wss://', value: 'wss' }
 ]
 
+const labelOptions = computed<Array<{ label: string; value: string | null; bg?: string }>>(() => {
+  const colorItems = colors.value ?? []
+
+  return [
+    { label: 'None', value: null, bg: 'tw-bg-transparent' },
+    ...colorItems.map(({ bg, label, value }) => ({ label, value, bg }))
+  ]
+})
+
+const selectedColor = computed(() => colors.value.find((o) => o.value === form.value.labelColor))
+
 const rules = {
   name: [(v: string) => !!v || 'Name is required'],
   protocol: [(v: string) => !!v || 'Protocol is required'],
@@ -254,8 +272,61 @@ watch(
           >
             <q-tab-panel name="general" class="tw-overflow-x-hidden">
               <q-form ref="generalSettingsFormRef" class="tw-flex tw-h-96 tw-flex-col tw-gap-4">
-                <div>
-                  <q-input v-model="form.name" filled label="Name" :rules="rules.name" />
+                <div class="tw-flex tw-gap-4">
+                  <q-input
+                    v-model="form.name"
+                    filled
+                    label="Name"
+                    :rules="rules.name"
+                    class="tw-flex-grow"
+                  />
+                  <q-select
+                    v-model="form.labelColor"
+                    :options="labelOptions"
+                    class="tw-min-w-[128px]"
+                    filled
+                    label="Label"
+                    emit-value
+                  >
+                    <template #selected-item>
+                      <div v-if="selectedColor" class="tw-space-x-2">
+                        <q-chip size="xs" :class="selectedColor?.bg" />
+                        {{ selectedColor?.label }}
+                      </div>
+                    </template>
+                    <template #option="{ itemProps, opt }">
+                      <q-item v-bind="itemProps">
+                        <q-item-section class="items-center tw-grid tw-grid-cols-[auto_1fr]">
+                          <q-chip size="xs" :class="opt.bg" />
+                          <q-item-label>{{ opt.label }}</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </template>
+                    <template #after>
+                      <q-btn v-if="selectedColor" class="tw-h-full" size="xs" color="accent">
+                        <q-icon name="fa-solid fa-pen" />
+                        <q-tooltip>Edit label name</q-tooltip>
+                        <q-popup-edit
+                          v-slot="scope"
+                          :model-value="selectedColor.label"
+                          auto-save
+                          @update:model-value="setCustomLabel(selectedColor.value, $event)"
+                        >
+                          <div class="text-accent tw-mb-1">Edit label name</div>
+
+                          <q-input
+                            v-model="scope.value"
+                            color="accent"
+                            clearable
+                            autofocus
+                            dense
+                            filled
+                            @keyup.enter="scope.set"
+                          />
+                        </q-popup-edit>
+                      </q-btn>
+                    </template>
+                  </q-select>
                 </div>
                 <div class="tw-flex tw-gap-4">
                   <q-select

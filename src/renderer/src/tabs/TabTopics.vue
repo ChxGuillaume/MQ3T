@@ -17,6 +17,7 @@ import { useDataGraphsStore } from '../store/data-graphs'
 import SplitterIcon from '../components/SplitterIcon.vue'
 import { useAppStore } from '../store/app-store'
 import { computed, onMounted, ref } from 'vue'
+import { useWindowSize } from '@vueuse/core'
 import { scroll } from 'quasar'
 
 const { setVerticalScrollPosition } = scroll
@@ -26,6 +27,8 @@ const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
 const appStore = useAppStore()
+
+const { width: windowWidth } = useWindowSize()
 
 const visualizationSplitter = ref(400)
 
@@ -38,10 +41,12 @@ const graphWindowShown = ref(ElectronApi.getGraphWindowShown())
 const graphListVisible = computed(() => {
   if (graphWindowShown.value) return false
 
-  return !!dataGraphsStore.dataGraph.length
+  return !!dataGraphsStore.dataGraph.filter(
+    (graph) => graph.clientKey === mqttTopicsStore.selectedConnection
+  ).length
 })
 
-const graphSplitterData = ref(40)
+const graphSplitterData = ref(296)
 const graphSplitter = computed({
   get: () => {
     if (!graphListVisible.value) return 0
@@ -315,7 +320,7 @@ const focusTopicsScroll = (e: MouseEvent) => {
     <q-splitter
       v-model="visualizationSplitter"
       class="tw-overflow-hidden"
-      :limits="[400, 700]"
+      :limits="[400, windowWidth - 400]"
       emit-immediately
       unit="px"
       reverse
@@ -324,7 +329,8 @@ const focusTopicsScroll = (e: MouseEvent) => {
         <q-splitter
           v-model="graphSplitter"
           class="overflow-hidden"
-          :limits="[0, 90]"
+          :limits="[0, 1000]"
+          unit="px"
           horizontal
           reverse
           :disable="!graphListVisible"
@@ -367,7 +373,7 @@ const focusTopicsScroll = (e: MouseEvent) => {
           </template>
 
           <template #separator>
-            <splitter-icon v-if="graphListVisible" @click:double="graphSplitter = 40" />
+            <splitter-icon v-if="graphListVisible" @click:double="graphSplitter = 296" />
           </template>
 
           <template #after>
