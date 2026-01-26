@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ConnectionContextMenu from '@renderer/components/tap-topics/ConnectionContextMenu.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
+import { useLabelColors } from '@renderer/composables/useLabelColors'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import ConnectionStatusBadge from './ConnectionStatusBadge.vue'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
@@ -10,6 +11,8 @@ import { computed, ref } from 'vue'
 const mqttConnectionsStore = useMqttConnectionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const appStore = useAppStore()
+
+const { getColor } = useLabelColors()
 
 const connectedConnections = computed(() => {
   return mqttConnectionsStore.getConnectionsWithStatus
@@ -78,13 +81,16 @@ const isTopicsTab = computed(() => {
       <div
         v-for="connection in connectedConnections"
         :key="connection.clientKey"
-        class="connection-tab"
-        :class="{
-          'tw-text-neutral-400 dark:tw-text-neutral-400':
-            connection.clientKey !== mqttTopicsStore.selectedConnection,
-          'tw-bg-neutral-200 tw-text-black dark:tw-bg-neutral-800 dark:tw-text-white':
-            connection.clientKey === mqttTopicsStore.selectedConnection
-        }"
+        class="connection-tab tw-mt-[1px] tw-border-t-2"
+        :class="[
+          {
+            'tw-text-neutral-400 dark:tw-text-neutral-400':
+              connection.clientKey !== mqttTopicsStore.selectedConnection,
+            'tw-bg-neutral-200 tw-text-black dark:tw-bg-neutral-800 dark:tw-text-white':
+              connection.clientKey === mqttTopicsStore.selectedConnection
+          },
+          getColor(connection.labelColor)?.border ?? 'tw-border-transparent'
+        ]"
         @click="
           () => {
             mqttTopicsStore.selectedConnection = connection.clientKey
