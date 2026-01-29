@@ -33,7 +33,9 @@ const updateElementHighlight = () => {
 
   const code = formatCode(props.code, props.language)
 
-  codeTextRef.value?.setHTMLUnsafe(hljs.highlight(code, { language: props.language }).value)
+  if (codeTextRef.value) {
+    codeTextRef.value.innerHTML = hljs.highlight(code, { language: props.language }).value
+  }
 }
 
 watch(
@@ -60,11 +62,17 @@ watch(
 )
 
 onMounted(() => updateElementHighlight())
+
+const getRawCode = () => {
+  if (props.code.length > MAX_RAW_CODE_LENGTH) {
+    return `${props.code.slice(0, MAX_RAW_CODE_LENGTH)}... (truncated)`
+  } else return props.code
+}
 </script>
 
 <template>
   <span v-if="showFormatedCode" ref="codeTextRef" class="code-text" />
-  <span v-else class="code-text" v-text="code.slice(0, MAX_RAW_CODE_LENGTH) + '... (truncated)'" />
+  <span v-else class="code-text" v-text="getRawCode()" />
 </template>
 
 <style scoped lang="less">

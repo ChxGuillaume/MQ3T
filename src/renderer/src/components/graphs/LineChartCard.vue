@@ -128,18 +128,18 @@ const defaultDataPathText = '<value>'
 <template>
   <q-card class="graph-card tw-border tw-p-2" flat :class="[dataGraph.size]">
     <q-card-section v-if="showTitle" class="drag-handle tw-cursor-grab tw-p-2">
-      <div class="tw-line-clamp-1 tw-h-7 tw-text-xl">
+      <div class="tw-line-clamp-1 tw-h-7 tw-break-all tw-text-xl">
         {{ dataGraph.dataPath || defaultDataPathText }}
 
         <q-tooltip
           class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
           :offset="[5, 5]"
         >
-          <slot>{{ dataGraph.dataPath || defaultDataPathText }}</slot>
+          {{ dataGraph.dataPath || defaultDataPathText }}
         </q-tooltip>
       </div>
       <div
-        class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-sm"
+        class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-break-all tw-text-sm"
         :title="dataGraph.topic"
       >
         {{ dataGraph.topic }}
@@ -148,7 +148,7 @@ const defaultDataPathText = '<value>'
           class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
           :offset="[5, 5]"
         >
-          <slot>{{ dataGraph.topic }}</slot>
+          {{ dataGraph.topic }}
         </q-tooltip>
       </div>
     </q-card-section>
