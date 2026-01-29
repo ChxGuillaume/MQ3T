@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-import { useHighlightTheme } from '@renderer/composables/useHighlightTheme'
+import { ref, watch, nextTick, computed, onMounted } from 'vue'
 import { formatCode } from '@renderer/assets/js/format-code'
 import json from 'highlight.js/lib/languages/json'
 import yaml from 'highlight.js/lib/languages/yaml'
 import xml from 'highlight.js/lib/languages/xml'
-import { ref, watch, nextTick } from 'vue'
 import hljs from 'highlight.js/lib/core'
+
+const MAX_CODE_LENGTH = 8192
+const MAX_RAW_CODE_LENGTH = 1024
 
 hljs.registerLanguage('json', json)
 hljs.registerLanguage('xml', xml)
@@ -18,21 +20,28 @@ type Props = {
 
 const props = defineProps<Props>()
 
-useHighlightTheme()
+const messageSize = computed(() => props.code.length)
 
-const highlighted = ref('')
+const showFormatedCode = computed(
+  () => props.language !== 'raw' && messageSize.value < MAX_CODE_LENGTH
+)
+
 const codeTextRef = ref<HTMLElement>()
+
+const updateElementHighlight = () => {
+  if (!props.language || props.language === 'raw') return
+
+  const code = formatCode(props.code, props.language)
+
+  codeTextRef.value?.setHTMLUnsafe(hljs.highlight(code, { language: props.language }).value)
+}
 
 watch(
   [() => props.code, () => props.language],
   () => {
     if (!props.language || props.language === 'raw') return
 
-    const code = formatCode(props.code, props.language)
-
-    highlighted.value = hljs.highlight(code, {
-      language: props.language
-    }).value
+    updateElementHighlight()
 
     nextTick(() => {
       if (!codeTextRef.value) return
@@ -49,11 +58,13 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(() => updateElementHighlight())
 </script>
 
 <template>
-  <span v-if="language !== 'raw'" ref="codeTextRef" class="code-text" v-html="highlighted" />
-  <span v-else class="code-text" v-text="code" />
+  <span v-if="showFormatedCode" ref="codeTextRef" class="code-text" />
+  <span v-else class="code-text" v-text="code.slice(0, MAX_RAW_CODE_LENGTH) + '... (truncated)'" />
 </template>
 
 <style scoped lang="less">
