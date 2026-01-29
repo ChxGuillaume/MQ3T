@@ -79,7 +79,7 @@ const options = computed(() => {
       trigger: 'axis',
       axisPointer: {
         label: {
-          formatter: (params: any) => moment(params.value).format('HH:mm:ss')
+          formatter: (params: { value: string }) => moment(params.value).format('HH:mm:ss')
         }
       }
     },
@@ -128,12 +128,29 @@ const defaultDataPathText = '<value>'
 <template>
   <q-card class="graph-card tw-border tw-p-2" flat :class="[dataGraph.size]">
     <q-card-section v-if="showTitle" class="drag-handle tw-cursor-grab tw-p-2">
-      <div class="tw-h-7 tw-text-xl">{{ dataGraph.dataPath || defaultDataPathText }}</div>
+      <div class="tw-line-clamp-1 tw-h-7 tw-text-xl">
+        {{ dataGraph.dataPath || defaultDataPathText }}
+
+        <q-tooltip
+          class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
+          :offset="[5, 5]"
+        >
+          <slot>{{ dataGraph.dataPath || defaultDataPathText }}</slot>
+        </q-tooltip>
+      </div>
       <div
         class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-sm"
         :title="dataGraph.topic"
-        v-text="dataGraph.topic"
-      />
+      >
+        {{ dataGraph.topic }}
+
+        <q-tooltip
+          class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
+          :offset="[5, 5]"
+        >
+          <slot>{{ dataGraph.topic }}</slot>
+        </q-tooltip>
+      </div>
     </q-card-section>
 
     <div class="tw-h-[200px]">
