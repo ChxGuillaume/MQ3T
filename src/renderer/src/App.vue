@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useHighlightTheme } from '@renderer/composables/useHighlightTheme'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { onBeforeMount, watch } from 'vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+
+useHighlightTheme()
 
 watch(
   () => $q.dark.isActive,
