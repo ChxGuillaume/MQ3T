@@ -50,7 +50,7 @@ watch(
   }
 )
 
-let decoration = ref<string[]>([])
+const decoration = ref<string[]>([])
 onMounted(() => {
   if (!monacoEditorRef.value) return
 

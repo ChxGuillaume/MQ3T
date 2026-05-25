@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.vue'
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useMqttConnectionsStore } from '../../store/mqtt-connections'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { computed, reactive, ref, useTemplateRef, watch } from 'vue'
@@ -10,6 +11,7 @@ import { useActionsStore } from '../../store/actions'
 import { matchTopics } from '../../assets/js/mqtt'
 import { Action } from '../../../../types/actions'
 import SplitterIcon from '../SplitterIcon.vue'
+import { IClientPublishOptions } from 'mqtt'
 import CodeEditor from './CodeEditor.vue'
 
 const emit = defineEmits<{
@@ -19,8 +21,14 @@ const emit = defineEmits<{
 const codeEditorRef = useTemplateRef('codeEditorRef')
 
 const mqttTopicsStore = useMqttTopicsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
+
+const isMqtt5 = computed(
+  () =>
+    mqttConnectionsStore.getConnection(mqttTopicsStore.selectedConnection)?.protocolVersion === 5
+)
 
 const publishType = ref<'manual' | 'action'>('manual')
 
@@ -49,6 +57,8 @@ const codeEditorData = computed<string>({
 })
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
+const responseTopic = ref('')
+const correlationData = ref('')
 const current = ref(1)
 
 const convertToActionDialogOpened = ref(false)
@@ -84,11 +94,24 @@ const slicedMessages = computed(() => {
 const electronApi = window.api as ElectronIpc
 
 const handlePublishMessage = () => {
+  const publishOptions: IClientPublishOptions = {
+    retain: retain.value,
+    qos: qos.value
+  }
+
+  if (isMqtt5.value && (responseTopic.value || correlationData.value)) {
+    publishOptions.properties = {}
+
+    if (responseTopic.value) publishOptions.properties.responseTopic = responseTopic.value
+    if (correlationData.value) {
+      publishOptions.properties.correlationData = correlationData.value as unknown as Buffer
+    }
+  }
   electronApi.sendMqttMessage(
     mqttTopicsStore.selectedConnection,
     publishTopic.value,
     codeEditorData.value,
-    { retain: retain.value, qos: qos.value }
+    publishOptions
   )
 
   mqttTopicsStore.addPublishMessage(
@@ -210,18 +233,40 @@ watch(
           </template>
 
           <template #after>
-            <div class="tw-flex tw-items-center tw-justify-between tw-p-3">
-              <div class="tw-flex">
-                <q-select
-                  v-model="qos"
-                  :options="[0, 1, 2]"
-                  filled
-                  dense
-                  label="QoS"
-                  class="tw-w-[96px]"
-                />
-                <q-toggle v-model="retain" label="Retain" />
+            <q-expansion-item
+              dense
+              dense-toggle
+              header-class="tw-text-secondary"
+              expand-icon-class="tw-text-secondary"
+            >
+              <template #header>
+                <q-item-section
+                  class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6"
+                >
+                  <q-icon name="fa-solid fa-sliders" size="xs" />
+                  <span>Additional publish settings</span>
+                </q-item-section>
+              </template>
+              <div class="tw-flex tw-flex-col tw-gap-3 tw-p-3">
+                <div class="tw-flex tw-items-center tw-gap-4">
+                  <q-select
+                    v-model="qos"
+                    :options="[0, 1, 2]"
+                    filled
+                    dense
+                    label="QoS"
+                    class="tw-w-[96px]"
+                  />
+                  <q-toggle v-model="retain" label="Retain" />
+                </div>
+                <template v-if="isMqtt5">
+                  <q-input v-model="responseTopic" filled dense label="Response Topic" />
+                  <q-input v-model="correlationData" filled dense label="Correlation Data" />
+                </template>
               </div>
+            </q-expansion-item>
+            <q-separator />
+            <div class="tw-flex tw-items-center tw-justify-end tw-p-3">
               <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
                 <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
                 Publish
