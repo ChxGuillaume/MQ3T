@@ -38,7 +38,7 @@ const handleBreadcrumbCopyPart = (part: string) => {
 
 <template>
   <q-card flat>
-    <q-card-section class="tw-flex tw-items-center tw-justify-between tw-p-2">
+    <q-card-section class="tw:flex tw:items-center tw:justify-between tw:p-2">
       <q-breadcrumbs gutter="none">
         <q-breadcrumbs-el>
           <q-chip
@@ -47,7 +47,7 @@ const handleBreadcrumbCopyPart = (part: string) => {
             square
             ripple
             clickable
-            class="tw-bg-yellow-500"
+            class="tw:bg-yellow-500"
             @click="favoriteTopicsStore.removeFavoriteTopic(props.clientKey, props.topicKey)"
           >
             <q-icon name="fa-regular fa-star" color="black" />
@@ -74,7 +74,7 @@ const handleBreadcrumbCopyPart = (part: string) => {
       </q-breadcrumbs>
     </q-card-section>
 
-    <q-card-section class="tw-h-32 tw-w-full tw-p-0">
+    <q-card-section class="tw:h-32 tw:w-full tw:p-0">
       <code-preview
         v-if="lastMessage"
         :value="lastMessage.message"
@@ -82,7 +82,7 @@ const handleBreadcrumbCopyPart = (part: string) => {
         :topic-key="props.topicKey"
         :connection-key="props.clientKey"
       />
-      <q-chip v-else class="tw-mr-2" color="grey-5" text-color="grey-10">No messages</q-chip>
+      <q-chip v-else class="tw:mr-2" color="grey-5" text-color="grey-10">No messages</q-chip>
     </q-card-section>
   </q-card>
   <q-separator />

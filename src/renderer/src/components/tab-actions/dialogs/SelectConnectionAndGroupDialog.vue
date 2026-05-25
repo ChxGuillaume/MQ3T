@@ -74,11 +74,11 @@ const groupIdModel = computed<string>({
 
 <template>
   <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="tw-min-w-[400px]">
+    <q-card flat class="tw:min-w-[400px]">
       <q-card-section>
-        <q-form ref="formRef" class="tw-grid tw-gap-2">
-          <h2 class="tw-mb-2 tw-text-xl">{{ title }}</h2>
-          <connection-select v-model="connectionIdModel" class="tw-w-[370px]" />
+        <q-form ref="formRef" class="tw:grid tw:gap-2">
+          <h2 class="tw:mb-2 tw:text-xl">{{ title }}</h2>
+          <connection-select v-model="connectionIdModel" class="tw:w-[370px]" />
           <q-select
             v-model="groupIdModel"
             :options="groupList"
@@ -93,10 +93,10 @@ const groupIdModel = computed<string>({
         </q-form>
       </q-card-section>
       <q-card-actions align="right">
-        <div class="tw-flex tw-gap-2">
+        <div class="tw:flex tw:gap-2">
           <q-btn flat label="Cancel" @click="handleCloseForm" />
           <q-btn color="primary" @click="handleSelect">
-            <q-icon class="tw-mr-2" size="xs" :name="actionIcon" />
+            <q-icon class="tw:mr-2" size="xs" :name="actionIcon" />
             {{ actionTitle }}
           </q-btn>
         </div>

@@ -315,11 +315,11 @@ const focusTopicsScroll = (e: MouseEvent) => {
 </script>
 
 <template>
-  <div class="tw-grid tw-h-full tw-max-h-full tw-grid-rows-[auto_1fr]">
+  <div class="tw:grid tw:h-full tw:max-h-full tw:grid-rows-[auto_1fr]">
     <tab-topics-header />
     <q-splitter
       v-model="visualizationSplitter"
-      class="tw-overflow-hidden"
+      class="tw:overflow-hidden"
       :limits="[400, windowWidth - 400]"
       emit-immediately
       unit="px"
@@ -336,11 +336,11 @@ const focusTopicsScroll = (e: MouseEvent) => {
           :disable="!graphListVisible"
         >
           <template #before>
-            <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-              <div class="tw-flex tw-overflow-hidden tw-p-2">
+            <div class="tw:grid tw:h-full" style="grid-template-rows: auto auto 1fr">
+              <div class="tw:flex tw:overflow-hidden tw:p-2">
                 <q-input
                   v-model="topicSearch"
-                  class="tw-flex-grow"
+                  class="tw:grow"
                   filled
                   name="topicSearch"
                   label="Search Topic..."
@@ -350,18 +350,18 @@ const focusTopicsScroll = (e: MouseEvent) => {
                   debounce="100"
                 />
                 <q-separator vertical />
-                <display-mode-select v-model="displayMode" class="tw-min-w-4" />
+                <display-mode-select v-model="displayMode" class="tw:min-w-4" />
               </div>
               <q-separator />
               <div
                 id="topicsVirtualScroll"
-                class="tw-overflow-auto"
+                class="tw:overflow-auto"
                 tabindex="0"
                 @keyup="handleKeyUp"
                 @keydown="handleKeyDown"
                 @click="focusTopicsScroll"
               >
-                <div v-if="selectedConnectionObj" class="tw-flex tw-flex-col tw-gap-1 tw-p-3">
+                <div v-if="selectedConnectionObj" class="tw:flex tw:flex-col tw:gap-1 tw:p-3">
                   <topic-item-list
                     :client-key="mqttTopicsStore.selectedConnection"
                     :display-mode="displayMode"
@@ -377,9 +377,9 @@ const focusTopicsScroll = (e: MouseEvent) => {
           </template>
 
           <template #after>
-            <div class="tw-flex tw-flex-col tw-gap-2 tw-p-2">
+            <div class="tw:flex tw:flex-col tw:gap-2 tw:p-2">
               <graph-list />
-              <q-btn class="tw-px-5" dense flat @click="ElectronApi.showGraphWindow">
+              <q-btn class="tw:px-5" dense flat @click="ElectronApi.showGraphWindow">
                 <q-icon name="fa-solid fa-external-link-alt" size="10px" left />
                 Show in external window
               </q-btn>
@@ -394,7 +394,7 @@ const focusTopicsScroll = (e: MouseEvent) => {
 
       <template #after>
         <q-card
-          class="tw-relative tw-grid tw-h-full tw-overflow-hidden"
+          class="tw:relative tw:grid tw:h-full tw:overflow-hidden"
           style="grid-template-rows: 1fr auto auto"
           square
           flat
@@ -408,25 +408,25 @@ const focusTopicsScroll = (e: MouseEvent) => {
           >
             <q-tab-panel
               name="values"
-              class="tw-grid tw-p-0"
+              class="tw:grid tw:p-0"
               style="grid-template-rows: auto auto 1fr"
             >
               <tab-values />
             </q-tab-panel>
 
-            <q-tab-panel name="publish" class="tw-p-0">
+            <q-tab-panel name="publish" class="tw:p-0">
               <tab-publish @click:publish="handleMessagePublished" />
             </q-tab-panel>
 
-            <q-tab-panel name="stats" class="tw-flex tw-items-center tw-justify-center">
+            <q-tab-panel name="stats" class="tw:flex tw:items-center tw:justify-center">
               <div class="text-h6">Stats In Work</div>
             </q-tab-panel>
 
-            <q-tab-panel name="favorites" class="tw-p-0">
+            <q-tab-panel name="favorites" class="tw:p-0">
               <tab-favorites />
             </q-tab-panel>
 
-            <q-tab-panel name="chain-actions" class="tw-p-0">
+            <q-tab-panel name="chain-actions" class="tw:p-0">
               <tab-chain-actions />
             </q-tab-panel>
           </q-tab-panels>
@@ -441,36 +441,36 @@ const focusTopicsScroll = (e: MouseEvent) => {
             indicator-color="transparent"
           >
             <q-tab name="values">
-              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-                <q-icon name="fa-solid fa-list-ol" class="tw-mr-2" :size="tabIconSize" />
+              <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:pt-1">
+                <q-icon name="fa-solid fa-list-ol" class="tw:mr-2" :size="tabIconSize" />
                 <div v-if="showTabsText">Values</div>
                 <q-tooltip v-else>Values</q-tooltip>
               </div>
             </q-tab>
             <q-tab name="publish">
-              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-                <q-icon name="fa-solid fa-paper-plane" class="tw-mr-2" :size="tabIconSize" />
+              <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:pt-1">
+                <q-icon name="fa-solid fa-paper-plane" class="tw:mr-2" :size="tabIconSize" />
                 <div v-if="showTabsText">Publish</div>
                 <q-tooltip v-else>Publish</q-tooltip>
               </div>
             </q-tab>
             <q-tab v-if="false" name="stats">
-              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-                <q-icon name="fa-solid fa-chart-simple" class="tw-mr-2" :size="tabIconSize" />
+              <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:pt-1">
+                <q-icon name="fa-solid fa-chart-simple" class="tw:mr-2" :size="tabIconSize" />
                 <div v-if="showTabsText">Stats</div>
                 <q-tooltip v-else>Stats</q-tooltip>
               </div>
             </q-tab>
             <q-tab name="favorites">
-              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-                <q-icon name="fa-solid fa-star" class="tw-mr-2" :size="tabIconSize" />
+              <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:pt-1">
+                <q-icon name="fa-solid fa-star" class="tw:mr-2" :size="tabIconSize" />
                 <div v-if="showTabsText">Favorites</div>
                 <q-tooltip v-else>Favorites</q-tooltip>
               </div>
             </q-tab>
             <q-tab name="chain-actions">
-              <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-pt-1">
-                <q-icon name="fa-solid fa-diagram-project" class="tw-mr-2" :size="tabIconSize" />
+              <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:pt-1">
+                <q-icon name="fa-solid fa-diagram-project" class="tw:mr-2" :size="tabIconSize" />
                 <div v-if="showTabsText">Chain Actions</div>
                 <q-tooltip v-else>Chain Actions</q-tooltip>
               </div>

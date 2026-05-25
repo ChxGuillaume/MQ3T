@@ -216,15 +216,15 @@ watch(
     @before-hide="showEditor = false"
   >
     <q-card flat class="dialog-card" :class="{ 'has-enum': hasEnum }">
-      <q-form ref="formRef" class="tw-flex">
-        <div class="tw-w-[760px]">
-          <q-card-section class="tw-grid tw-gap-2">
-            <h2 class="tw-mb-2 tw-text-xl">Action</h2>
+      <q-form ref="formRef" class="tw:flex">
+        <div class="tw:w-[760px]">
+          <q-card-section class="tw:grid tw:gap-2">
+            <h2 class="tw:mb-2 tw:text-xl">Action</h2>
             <div
-              class="tw-grid tw-gap-4"
+              class="tw:grid tw:gap-4"
               :class="{
-                'tw-grid-cols-2': !noTitle,
-                'tw-grid-cols-1': noTitle
+                'tw:grid-cols-2': !noTitle,
+                'tw:grid-cols-1': noTitle
               }"
             >
               <q-input
@@ -244,17 +244,17 @@ watch(
                 :hint="hint"
               />
             </div>
-            <div class="tw-grid-cols tw-grid tw-gap-4">
-              <div class="tw-flex tw-gap-4">
-                <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
+            <div class="tw-grid-cols tw:grid tw:gap-4">
+              <div class="tw:flex tw:gap-4">
+                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
                   <q-select
                     v-model="form.qos"
                     :options="[0, 1, 2]"
                     filled
                     label="QoS"
-                    class="tw-w-[128px]"
+                    class="tw:w-[128px]"
                   />
-                  <q-toggle v-model="form.retained" label="Retain" class="tw-pr-3" />
+                  <q-toggle v-model="form.retained" label="Retain" class="tw:pr-3" />
                 </div>
                 <q-input
                   v-model="form.description"
@@ -262,54 +262,54 @@ watch(
                   label="Description"
                   type="textarea"
                   rows="4"
-                  class="action-description tw-flex-grow"
+                  class="action-description tw:grow"
                 />
               </div>
             </div>
-            <div class="tw-mt-4 tw-h-[300px]">
+            <div class="tw:mt-4 tw:h-[300px]">
               <code-editor
                 v-if="showEditor"
                 ref="codeEditorRef"
                 v-model:language="editorLanguage"
                 v-model="form.payload"
                 :variable-completion="variableCompletion"
-                class="tw-h-[300px]"
+                class="tw:h-[300px]"
                 font-size="14"
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <div class="tw-flex tw-gap-2">
+            <div class="tw:flex tw:gap-2">
               <q-btn flat label="Cancel" @click="handleCloseForm" />
               <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
                 Create
               </q-btn>
               <q-btn v-else color="primary" @click="handleUpdate">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-save" />
+                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-save" />
                 Update
               </q-btn>
             </div>
           </q-card-actions>
         </div>
         <q-separator vertical />
-        <div class="tw-h-full tw-w-[280px]">
-          <q-card-section class="tw-flex tw-h-full tw-flex-col tw-gap-4 tw-overflow-auto">
-            <h2 class="tw-text-xl">Enums</h2>
+        <div class="tw:h-full tw:w-[280px]">
+          <q-card-section class="tw:flex tw:h-full tw:flex-col tw:gap-4 tw:overflow-auto">
+            <h2 class="tw:text-xl">Enums</h2>
             <div
               v-for="enum_name in enumVariableNames"
               :key="enum_name.name"
-              class="tw-flex tw-flex-col tw-gap-2"
+              class="tw:flex tw:flex-col tw:gap-2"
             >
-              <div class="tw-flex tw-w-full tw-items-center tw-justify-between">
+              <div class="tw:flex tw:w-full tw:items-center tw:justify-between">
                 <div
-                  class="tw-flex tw-items-center"
+                  class="tw:flex tw:items-center"
                   @click="copy(enum_name.name, 'Variable Name Copied')"
                 >
                   <h3
-                    class="tw-line-clamp-1 tw-max-w-48 tw-cursor-default tw-text-lg"
+                    class="tw:line-clamp-1 tw:max-w-48 tw:cursor-default tw:text-lg"
                     :class="{
-                      'tw-text-red-500': !enum_name.from_payload,
+                      'tw:text-red-500': !enum_name.from_payload,
                       'color-details': enum_name.from_payload
                     }"
                     :title="enum_name.name"
@@ -318,7 +318,7 @@ watch(
                   </h3>
                   <q-tooltip
                     v-if="!enum_name.from_payload"
-                    class="tw-bg-red-500"
+                    class="tw:bg-red-500"
                     anchor="center left"
                     self="center right"
                     :offset="[10, 0]"
@@ -340,7 +340,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw-mr-2" name="fa-solid fa-font" />
+                            <q-icon class="tw:mr-2" name="fa-solid fa-font" />
                             String
                           </div>
                         </q-item-section>
@@ -352,7 +352,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw-mr-2" name="fa-solid fa-hashtag" />
+                            <q-icon class="tw:mr-2" name="fa-solid fa-hashtag" />
                             Number
                           </div>
                         </q-item-section>

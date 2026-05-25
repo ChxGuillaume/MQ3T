@@ -46,19 +46,19 @@ watch(
     <q-card flat class="dialog-card">
       <div
         v-if="releasesLoading"
-        class="tw-w-full tw-h-full tw-flex tw-justify-center tw-items-center"
+        class="tw:w-full tw:h-full tw:flex tw:justify-center tw:items-center"
       >
         <q-spinner size="md" color="secondary" />
       </div>
       <q-card-section v-else>
-        <h1 class="tw-text-3xl">Change Logs</h1>
-        <div class="tw-mt-6 tw-flex tw-flex-col tw-gap-4">
+        <h1 class="tw:text-3xl">Change Logs</h1>
+        <div class="tw:mt-6 tw:flex tw:flex-col tw:gap-4">
           <div v-for="release in releases" :key="release.id">
             <h1 class="release-title" :class="{ current: release.name === appStore.appVersion }">
               {{ release.name }}
               {{ release.name === appStore.appVersion ? '(Current version)' : '' }}
             </h1>
-            <p class="tw-whitespace-pre-line">{{ release.body }}</p>
+            <p class="tw:whitespace-pre-line">{{ release.body }}</p>
           </div>
         </div>
       </q-card-section>

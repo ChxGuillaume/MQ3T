@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="tw-relative tw-h-[20px] tw-w-[20px]">
+  <div class="tw:relative tw:h-[20px] tw:w-[20px]">
     <transition appear name="slide-up">
       <q-circular-progress v-if="isRunning" indeterminate :thickness="0.4" class="progress-icon" />
       <q-icon v-else-if="isFinished" name="fa-solid fa-check" color="green" class="progress-icon" />

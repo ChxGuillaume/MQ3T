@@ -34,18 +34,18 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 <template>
   <q-list class="versions">
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://www.electronjs.org/')"
     >
-      <icon-electron-js class="tw-mr-3" />
+      <icon-electron-js class="tw:mr-3" />
       <q-item-section>
         <span>Electron</span>
         <span class="version-color">v{{ versions.electron }}</span>
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://www.chromium.org/')"
     >
@@ -56,7 +56,7 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://nodejs.org/')"
     >
@@ -67,7 +67,7 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://v8.dev/')"
     >

@@ -26,9 +26,9 @@ const handleUpdateInstall = () => {
 <template>
   <q-dialog v-model="dialogOpened">
     <q-card flat>
-      <q-card-section class="tw-max-w-[320px]">
-        <h1 class="tw-text-xl">Update Downloaded</h1>
-        <p class="tw-mt-2 color-details">
+      <q-card-section class="tw:max-w-[320px]">
+        <h1 class="tw:text-xl">Update Downloaded</h1>
+        <p class="tw:mt-2 color-details">
           A new version of MQ3T has been downloaded and is ready to be installed.
         </p>
       </q-card-section>

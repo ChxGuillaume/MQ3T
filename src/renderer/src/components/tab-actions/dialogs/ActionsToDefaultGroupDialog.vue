@@ -32,17 +32,17 @@ const handleMoveActions = () => {
 
 <template>
   <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="tw-w-[550px]">
+    <q-card flat class="tw:w-[550px]">
       <q-card-section>
-        <q-form ref="formRef" class="tw-grid tw-gap-2">
-          <h2 class="tw-mb-2 tw-text-xl">Move Actions</h2>
+        <q-form ref="formRef" class="tw:grid tw:gap-2">
+          <h2 class="tw:mb-2 tw:text-xl">Move Actions</h2>
           <p class="color-details">
             You have
-            <span v-if="actionCount" class="tw-text-white">{{ actionCount }} actions</span>
+            <span v-if="actionCount" class="tw:text-white">{{ actionCount }} actions</span>
 
-            <span v-if="actionCount && chainActionsCount" class="tw-mx-1">and</span>
+            <span v-if="actionCount && chainActionsCount" class="tw:mx-1">and</span>
 
-            <span v-if="chainActionsCount" class="tw-text-white">
+            <span v-if="chainActionsCount" class="tw:text-white">
               {{ chainActionsCount }} chain actions
             </span>
 
@@ -56,11 +56,11 @@ const handleMoveActions = () => {
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="red" flat @click="handleDeleteActions">
-          <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-trash" />
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-trash" />
           Delete
         </q-btn>
         <q-btn color="primary" @click="handleMoveActions">
-          <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
           Move
         </q-btn>
       </q-card-actions>

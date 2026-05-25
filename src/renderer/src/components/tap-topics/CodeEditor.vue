@@ -196,21 +196,21 @@ const editorStatus = computed(() => {
 
 <template>
   <div class="editor">
-    <div ref="monacoEditorRef" class="monaco-editor tw-w-full tw-flex-grow" :class="editorStatus" />
+    <div ref="monacoEditorRef" class="monaco-editor tw:w-full tw:grow" :class="editorStatus" />
     <slot name="between" />
     <div
-      class="options tw-flex tw-items-center tw-p-3"
-      :class="{ 'tw-py-1.5': dense, 'tw-justify-between': hasSlots }"
+      class="options tw:flex tw:items-center tw:p-3"
+      :class="{ 'tw:py-1.5': dense, 'tw:justify-between': hasSlots }"
     >
       <slot name="header-left" />
       <div
-        class="tw-flex tw-items-center tw-gap-2"
-        :class="hasSlots ? '' : 'tw-w-full tw-justify-between'"
+        class="tw:flex tw:items-center tw:gap-2"
+        :class="hasSlots ? '' : 'tw:w-full tw:justify-between'"
       >
         <q-select
           v-if="dense"
           v-model="editorLanguage"
-          class="tw-min-w-24"
+          class="tw:min-w-24"
           dense
           filled
           options-dense
@@ -237,8 +237,8 @@ const editorStatus = computed(() => {
             { label: 'YAML', value: 'yaml' }
           ]"
         />
-        <div v-if="!valideCode && !hideWarning" class="items-center tw-flex tw-select-none">
-          <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
+        <div v-if="!valideCode && !hideWarning" class="items-center tw:flex tw:select-none">
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
           <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
           <q-tooltip v-else anchor="top middle" self="bottom middle">
             Invalid {{ editorLanguage.toUpperCase() }} format
@@ -246,10 +246,10 @@ const editorStatus = computed(() => {
         </div>
         <div
           v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
-          class="items-center tw-flex tw-select-none"
+          class="items-center tw:flex tw:select-none"
         >
           <q-icon
-            class="tw-mr-2"
+            class="tw:mr-2"
             size="xs"
             name="fa-solid fa-exclamation-triangle"
             color="yellow"
@@ -257,8 +257,8 @@ const editorStatus = computed(() => {
           <span v-if="!dense">Duplicate variables</span>
           <q-tooltip anchor="top middle" self="bottom middle">
             <div>
-              <div class="tw-text-sm tw-font-semibold">Variable duplicates</div>
-              <div class="tw-text-xs">
+              <div class="tw:text-sm tw:font-semibold">Variable duplicates</div>
+              <div class="tw:text-xs">
                 The following variables names are duplicated: <br />
                 {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
               </div>
@@ -272,7 +272,7 @@ const editorStatus = computed(() => {
           :disable="editorLanguage === 'raw'"
           @click="handleFormatCode"
         >
-          <q-icon class="tw-mx-2" size="16px" name="fa-solid fa-align-left" />
+          <q-icon class="tw:mx-2" size="16px" name="fa-solid fa-align-left" />
           <q-tooltip anchor="top middle" self="bottom middle">Format</q-tooltip>
         </q-btn>
         <q-btn
@@ -283,7 +283,7 @@ const editorStatus = computed(() => {
           :disable="editorLanguage === 'raw'"
           @click="handleFormatCode"
         >
-          <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-align-left" />
           Format
         </q-btn>
       </div>

@@ -365,31 +365,31 @@ const chainActionEdit = ref<ChainAction | undefined>()
 </script>
 
 <template>
-  <div class="tw-grid tw-h-full tw-max-h-full tw-grid-rows-[auto_1fr]">
+  <div class="tw:grid tw:h-full tw:max-h-full tw:grid-rows-[auto_1fr]">
     <div
-      class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+      class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
     >
-      <div class="tw-w-[120px]">
+      <div class="tw:w-[120px]">
         <q-btn
           size="xs"
-          class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+          class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
           flat
           @click="appStore.setCurrentTab('topics')"
         >
-          <div class="tw-flex tw-place-items-center tw-gap-2">
+          <div class="tw:flex tw:place-items-center tw:gap-2">
             <q-icon name="fa-solid fa-arrow-left" size="10px" />
-            <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
+            <span class="tw:text-[0.65rem] tw:leading-0">Back</span>
           </div>
         </q-btn>
       </div>
 
-      <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Actions</div>
+      <div class="tw:bg-neutral-200 tw:text-center tw:dark:bg-neutral-800">Actions</div>
 
-      <div class="tw-flex tw-w-[120px] tw-justify-end">
-        <q-btn size="xs" class="tw-bg-primary tw-text-white" flat>
-          <div class="tw-flex tw-place-items-center tw-gap-2">
+      <div class="tw:flex tw:w-[120px] tw:justify-end">
+        <q-btn size="xs" class="tw:bg-primary tw:text-white" flat>
+          <div class="tw:flex tw:place-items-center tw:gap-2">
             <q-icon name="fa-solid fa-plus" size="10px" />
-            <span class="tw-text-[0.65rem] tw-leading-[0]">Create</span>
+            <span class="tw:text-[0.65rem] tw:leading-0">Create</span>
           </div>
 
           <q-menu anchor="bottom right" self="top right" :offset="[0, 5]">
@@ -397,7 +397,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
               <q-item v-close-popup clickable @click="actionDialogOpened = true">
                 <q-item-section>
                   <div>
-                    <q-icon class="tw-mr-2" name="fa-solid fa-paper-plane" />
+                    <q-icon class="tw:mr-2" name="fa-solid fa-paper-plane" />
                     Action
                   </div>
                 </q-item-section>
@@ -405,7 +405,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
               <q-item v-close-popup clickable @click="tab = 'chain-action'">
                 <q-item-section>
                   <div>
-                    <q-icon class="tw-mr-2" name="fa-solid fa-diagram-project" />
+                    <q-icon class="tw:mr-2" name="fa-solid fa-diagram-project" />
                     Chain Action
                   </div>
                 </q-item-section>
@@ -413,7 +413,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
               <q-item v-close-popup clickable @click="actionGroupDialogOpened = true">
                 <q-item-section>
                   <div>
-                    <q-icon class="tw-mr-2" name="fa-solid fa-layer-group" />
+                    <q-icon class="tw:mr-2" name="fa-solid fa-layer-group" />
                     Group
                   </div>
                 </q-item-section>
@@ -425,23 +425,23 @@ const chainActionEdit = ref<ChainAction | undefined>()
     </div>
     <q-tab-panels
       v-model="tab"
-      class="tw-h-full tw-bg-transparent"
+      class="tw:h-full tw:bg-transparent"
       animated
       vertical
       transition-prev="jump-up"
       transition-next="jump-down"
     >
-      <q-tab-panel class="tw-p-0" name="list">
+      <q-tab-panel class="tw:p-0" name="list">
         <q-splitter
           v-model="splitterModel"
-          class="tw-h-full tw-max-h-full"
+          class="tw:h-full tw:max-h-full"
           :limits="[400, 500]"
           unit="px"
           reverse
         >
           <template #before>
-            <div class="tw-grid tw-h-full" style="grid-template-rows: auto auto 1fr">
-              <div class="tw-relative">
+            <div class="tw:grid tw:h-full" style="grid-template-rows: auto auto 1fr">
+              <div class="tw:relative">
                 <transition
                   appear
                   enter-active-class="animated fadeIn"
@@ -449,17 +449,17 @@ const chainActionEdit = ref<ChainAction | undefined>()
                 >
                   <div
                     v-if="selectedConnection && !actions.length && !chainActions.length"
-                    class="tw-absolute tw-right-28 tw-top-4 tw-flex tw-gap-4"
+                    class="tw:absolute tw:right-28 tw:top-4 tw:flex tw:gap-4"
                   >
-                    <div class="tw-mt-3 tw-rotate-[-2deg] tw-text-center">
-                      <h2 class="tw-text-xl">You don't have any Action yet?</h2>
-                      <h3 class="color-details tw-text-sm">Feel free to create one here!</h3>
+                    <div class="tw:mt-3 tw:-rotate-2 tw:text-center">
+                      <h2 class="tw:text-xl">You don't have any Action yet?</h2>
+                      <h3 class="color-details tw:text-sm">Feel free to create one here!</h3>
                     </div>
                   </div>
                 </transition>
                 <div
                   v-if="!selectedConnection || (!actions.length && !chainActions.length)"
-                  class="tw-absolute tw-right-12 tw-top-4 tw-flex tw-gap-4"
+                  class="tw:absolute tw:right-12 tw:top-4 tw:flex tw:gap-4"
                   :class="[
                     { 'no-connection-selected': !selectedConnection },
                     { 'no-actions': selectedConnection }
@@ -468,11 +468,11 @@ const chainActionEdit = ref<ChainAction | undefined>()
                   <q-icon
                     name="fa-solid fa-reply"
                     size="xl"
-                    class="create-action-arrow tw-rotate-[145deg] tw-text-primary"
+                    class="create-action-arrow tw:rotate-145 tw:text-primary"
                   />
                 </div>
 
-                <h1 v-if="actions.length" class="tw-px-4 tw-pt-4 tw-text-xl tw-font-bold">
+                <h1 v-if="actions.length" class="tw:px-4 tw:pt-4 tw:text-xl tw:font-bold">
                   Actions
                 </h1>
 
@@ -482,12 +482,12 @@ const chainActionEdit = ref<ChainAction | undefined>()
                   v-bind="dragOptions"
                   group="actions"
                   handle=".drag-handle"
-                  class="actions-cards-grid tw-relative tw-gap-4 tw-overflow-auto tw-p-4"
+                  class="actions-cards-grid tw:relative tw:gap-4 tw:overflow-auto tw:p-4"
                   item-key="clientKey"
                 >
                   <template #item="{ element: action }">
                     <q-intersection
-                      class="tw-h-[135px]"
+                      class="tw:h-[135px]"
                       @dragstart="handleStartDrag($event, action.id)"
                     >
                       <action-card
@@ -526,7 +526,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
 
                 <q-separator v-if="actions.length && chainActions.length" />
 
-                <h1 v-if="chainActions.length" class="tw-px-4 tw-pt-4 tw-text-xl tw-font-bold">
+                <h1 v-if="chainActions.length" class="tw:px-4 tw:pt-4 tw:text-xl tw:font-bold">
                   Chain Actions
                 </h1>
 
@@ -536,12 +536,12 @@ const chainActionEdit = ref<ChainAction | undefined>()
                   v-bind="dragOptions"
                   group="chain-actions"
                   handle=".drag-handle"
-                  class="actions-cards-grid tw-relative tw-gap-4 tw-overflow-auto tw-p-4"
+                  class="actions-cards-grid tw:relative tw:gap-4 tw:overflow-auto tw:p-4"
                   item-key="clientKey"
                 >
                   <template #item="{ element: chainAction }">
                     <q-intersection
-                      class="tw-h-[114px]"
+                      class="tw:h-[114px]"
                       @dragstart="handleStartDrag($event, chainAction.id)"
                     >
                       <chain-action-card
@@ -591,14 +591,14 @@ const chainActionEdit = ref<ChainAction | undefined>()
           </template>
 
           <template #after>
-            <q-card class="tw-grid tw-h-full tw-grid-rows-[1fr_auto_auto]" square flat>
-              <div class="tw-flex tw-flex-col tw-gap-2 tw-overflow-auto tw-p-3">
+            <q-card class="tw:grid tw:h-full tw:grid-rows-[1fr_auto_auto]" square flat>
+              <div class="tw:flex tw:flex-col tw:gap-2 tw:overflow-auto tw:p-3">
                 <draggable
                   v-model="groups"
                   v-bind="dragOptions"
                   group="groups"
                   handle=".drag-handle"
-                  class="tw-relative tw-flex tw-flex-col tw-gap-2 tw-overflow-auto"
+                  class="tw:relative tw:flex tw:flex-col tw:gap-2 tw:overflow-auto"
                   item-key="id"
                   @start="isDraggingAction = true"
                   @end="isDraggingAction = false"
@@ -647,20 +647,20 @@ const chainActionEdit = ref<ChainAction | undefined>()
                 />
               </div>
               <q-separator />
-              <div class="tw-flex">
-                <q-btn flat square class="tw-w-full tw-text-teal-500" @click="handleImport">
-                  <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-download" />
+              <div class="tw:flex">
+                <q-btn flat square class="tw:w-full tw:text-teal-500" @click="handleImport">
+                  <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-download" />
                   Import
                 </q-btn>
                 <q-separator vertical />
                 <q-btn
                   flat
                   square
-                  class="tw-w-full tw-text-teal-500"
+                  class="tw:w-full tw:text-teal-500"
                   :disable="!selectedConnection"
                   @click="handleConnectionExport"
                 >
-                  <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-upload" />
+                  <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-upload" />
                   Export
                 </q-btn>
               </div>
@@ -668,7 +668,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
           </template>
         </q-splitter>
       </q-tab-panel>
-      <q-tab-panel class="tw-p-0" name="chain-action">
+      <q-tab-panel class="tw:p-0" name="chain-action">
         <chain-action-screen
           :chain-action="chainActionEdit"
           @back="

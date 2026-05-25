@@ -89,10 +89,10 @@ watch(
 
 <template>
   <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="tw-min-w-[400px]">
+    <q-card flat class="tw:min-w-[400px]">
       <q-card-section>
-        <q-form ref="formRef" class="tw-grid tw-gap-2">
-          <h2 class="tw-mb-2 tw-text-xl">Action Group</h2>
+        <q-form ref="formRef" class="tw:grid tw:gap-2">
+          <h2 class="tw:mb-2 tw:text-xl">Action Group</h2>
           <q-input
             v-model="form.name"
             filled
@@ -104,14 +104,14 @@ watch(
         </q-form>
       </q-card-section>
       <q-card-actions align="right">
-        <div class="tw-flex tw-gap-2">
+        <div class="tw:flex tw:gap-2">
           <q-btn flat label="Cancel" @click="handleCloseForm" />
           <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+            <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
             Create
           </q-btn>
           <q-btn v-else color="primary" @click="handleUpdate">
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-save" />
+            <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-save" />
             Update
           </q-btn>
         </div>

@@ -78,7 +78,7 @@ const handleFilterConnections = (val: string, update: (cbFn: () => void) => void
     ref="selectRef"
     v-model="connectionValue"
     :options="sortedConnectionsFiltered"
-    class="tw-max-h-[56px] tw-overflow-hidden"
+    class="tw:max-h-[56px] tw:overflow-hidden"
     option-value="clientKey"
     option-label="name"
     emit-value
@@ -94,10 +94,10 @@ const handleFilterConnections = (val: string, update: (cbFn: () => void) => void
   >
     <template #selected>
       <div
-        class="tw-flex tw-justify-between tw-items-center tw-gap-2"
-        :class="{ 'tw-w-full': !selectFocused, 'tw-max-w-[250px]': selectFocused }"
+        class="tw:flex tw:justify-between tw:items-center tw:gap-2"
+        :class="{ 'tw:w-full': !selectFocused, 'tw:max-w-[250px]': selectFocused }"
       >
-        <span class="tw-line-clamp-1 tw-break-all">{{ selectedConnection?.name }}</span>
+        <span class="tw:line-clamp-1 tw:break-all">{{ selectedConnection?.name }}</span>
         <connection-status-chip
           v-if="selectedConnection?.clientKey && !selectFocused"
           :connection-status="selectedConnectionStatus"
@@ -109,8 +109,8 @@ const handleFilterConnections = (val: string, update: (cbFn: () => void) => void
     <template #option="{ itemProps, opt }">
       <q-item v-bind="itemProps">
         <q-item-section>
-          <div class="tw-flex tw-justify-between tw-items-center tw-gap-2">
-            <span class="tw-line-clamp-1 tw-break-all">{{ opt.name }}</span>
+          <div class="tw:flex tw:justify-between tw:items-center tw:gap-2">
+            <span class="tw:line-clamp-1 tw:break-all">{{ opt.name }}</span>
             <connection-status-chip
               :connection-status="mqttConnectionsStore.getConnectionStatus(opt.clientKey)"
               size="xs"

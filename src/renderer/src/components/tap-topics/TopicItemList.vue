@@ -57,7 +57,7 @@ watchDebounced(
 
 <template>
   <template v-if="displayMode === 'line'">
-    <div class="tw-flex tw-flex-col tw-gap-1">
+    <div class="tw:flex tw:flex-col tw:gap-1">
       <topic-line-item
         v-for="topic in debouncedLineTopics"
         :key="`${clientKey}:${topic}`"

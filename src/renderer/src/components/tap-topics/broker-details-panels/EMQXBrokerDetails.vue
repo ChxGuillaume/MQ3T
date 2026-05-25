@@ -16,7 +16,7 @@ const brokers = computed(() => {
 </script>
 
 <template>
-  <div class="tw-grid tw-gap-8">
+  <div class="tw:grid tw:gap-8">
     <e-m-q-x-details v-for="broker in brokers" :key="broker" :broker="broker" />
   </div>
 </template>

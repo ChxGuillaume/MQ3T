@@ -92,13 +92,13 @@ defineExpose<{ animate: () => void }>({ animate })
 <template>
   <q-card
     flat
-    class="topic-item-card card-secondary-background tw-select-none tw-pr-3"
+    class="topic-item-card card-secondary-background tw:select-none tw:pr-3"
     :class="[
       { active },
       { opened },
       { animate: doAnimate },
-      { 'tw-pl-1': expandable },
-      { 'tw-pl-3': !expandable },
+      { 'tw:pl-1': expandable },
+      { 'tw:pl-3': !expandable },
       { 'not-scrubbing': !appStore.isScrubbingTopics },
       `animation-${settingsStore.showActivityAnimationType}`
     ]"
@@ -110,8 +110,8 @@ defineExpose<{ animate: () => void }>({ animate })
       size="xs"
       class="expand-icon topic-item-icon"
     />
-    <q-icon v-if="hasActions" name="fa-solid fa-play" class="topic-item-icon tw-text-accent" />
-    <q-icon v-if="favorite" name="fa-solid fa-star" class="topic-item-icon tw-text-yellow-500" />
+    <q-icon v-if="hasActions" name="fa-solid fa-play" class="topic-item-icon tw:text-accent" />
+    <q-icon v-if="favorite" name="fa-solid fa-star" class="topic-item-icon tw:text-yellow-500" />
     <slot />
   </q-card>
 </template>

@@ -151,21 +151,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="main-view tw-grid tw-h-full tw-grid-rows-[auto_1fr]">
+  <div class="main-view tw:grid tw:h-full tw:grid-rows-[auto_1fr]">
     <app-bar v-model="currentTab" />
-    <div class="tw-flex tw-content-between tw-overflow-auto">
-      <div class="tw-flex-grow">
-        <q-tab-panels v-model="currentTab" class="tw-h-full tw-bg-transparent" vertical keep-alive>
-          <q-tab-panel class="tw-p-0" name="topics">
+    <div class="tw:flex tw:content-between tw:overflow-auto">
+      <div class="tw:grow">
+        <q-tab-panels v-model="currentTab" class="tw:h-full tw:bg-transparent" vertical keep-alive>
+          <q-tab-panel class="tw:p-0" name="topics">
             <tab-topics />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="actions">
+          <q-tab-panel class="tw:p-0" name="actions">
             <tab-actions />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="settings">
+          <q-tab-panel class="tw:p-0" name="settings">
             <tab-settings />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="connections">
+          <q-tab-panel class="tw:p-0" name="connections">
             <tab-connections />
           </q-tab-panel>
         </q-tab-panels>

@@ -57,14 +57,14 @@ const isTopicsTab = computed(() => {
 
 <template>
   <q-bar
-    class="app-bar tw-grid tw-h-10 tw-gap-0 tw-overflow-hidden tw-bg-white tw-px-0 dark:tw-bg-[#121212]"
+    class="app-bar tw:grid tw:h-10 tw:gap-0 tw:overflow-hidden tw:bg-white tw:px-0 tw:dark:bg-[#121212]"
     :class="[AppPlatform]"
   >
     <div class="grabbable" />
     <div
       class="home-btn"
       :class="{
-        'tw-bg-neutral-200 dark:tw-bg-neutral-800': !isTopicsTab
+        'tw:bg-neutral-200 tw:dark:bg-neutral-800': !isTopicsTab
       }"
       @click.left="goToConnectionsTab"
     >
@@ -76,20 +76,20 @@ const isTopicsTab = computed(() => {
       />
     </div>
     <div
-      class="tw-ml-0 tw-grid tw-h-full tw-auto-cols-[minmax(36px,_150px)] tw-grid-flow-col tw-grid-rows-1"
+      class="tw:ml-0 tw:grid tw:h-full tw:auto-cols-[minmax(36px,150px)] tw:grid-flow-col tw:grid-rows-1"
     >
       <div
         v-for="connection in connectedConnections"
         :key="connection.clientKey"
-        class="connection-tab tw-mt-[1px] tw-border-t-2"
+        class="connection-tab tw:mt-px tw:border-t-2"
         :class="[
           {
-            'tw-text-neutral-400 dark:tw-text-neutral-400':
+            'tw:text-neutral-400 tw:dark:text-neutral-400':
               connection.clientKey !== mqttTopicsStore.selectedConnection,
-            'tw-bg-neutral-200 tw-text-black dark:tw-bg-neutral-800 dark:tw-text-white':
+            'tw:bg-neutral-200 tw:text-black tw:dark:bg-neutral-800 tw:dark:text-white':
               connection.clientKey === mqttTopicsStore.selectedConnection
           },
-          getColor(connection.labelColor)?.border ?? 'tw-border-transparent'
+          getColor(connection.labelColor)?.border ?? 'tw:border-transparent'
         ]"
         @click="
           () => {
@@ -99,7 +99,7 @@ const isTopicsTab = computed(() => {
         "
       >
         <p
-          class="text-weight-medium tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-xs"
+          class="text-weight-medium tw:line-clamp-1 tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-xs"
           :title="connection.name"
           v-text="connection.name"
         />

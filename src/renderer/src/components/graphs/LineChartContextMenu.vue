@@ -41,11 +41,11 @@ defineEmits<{
     transition-show="scale"
     transition-hide="scale"
   >
-    <q-list class="tw-min-w-[150px]">
-      <q-item class="tw-text-secondary" clickable>
+    <q-list class="tw:min-w-[150px]">
+      <q-item class="tw:text-secondary" clickable>
         <q-item-section>
           <span>
-            <q-icon name="fa-solid fa-palette" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-palette" class="tw:mr-2" />
             Graph Color
           </span>
         </q-item-section>
@@ -58,7 +58,7 @@ defineEmits<{
             <q-item
               v-for="n in graphColors"
               :key="n.value"
-              class="tw-select-none tw-pr-12"
+              class="tw:select-none tw:pr-12"
               dense
               clickable
               v-close-popup
@@ -74,10 +74,10 @@ defineEmits<{
         </q-menu>
       </q-item>
 
-      <q-item class="tw-text-secondary" clickable>
+      <q-item class="tw:text-secondary" clickable>
         <q-item-section>
           <span>
-            <q-icon name="fa-solid fa-ruler-horizontal" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-ruler-horizontal" class="tw:mr-2" />
             Card Width
           </span>
         </q-item-section>
@@ -88,7 +88,7 @@ defineEmits<{
         <q-menu anchor="top end" self="top start">
           <q-list>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -97,7 +97,7 @@ defineEmits<{
               <q-item-section>Small</q-item-section>
             </q-item>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -106,7 +106,7 @@ defineEmits<{
               <q-item-section>Medium</q-item-section>
             </q-item>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -118,10 +118,10 @@ defineEmits<{
         </q-menu>
       </q-item>
 
-      <q-item class="tw-text-secondary" clickable>
+      <q-item class="tw:text-secondary" clickable>
         <q-item-section>
           <span>
-            <q-icon name="fa-solid fa-chart-line" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-chart-line" class="tw:mr-2" />
             Curve Type
           </span>
         </q-item-section>
@@ -132,7 +132,7 @@ defineEmits<{
         <q-menu anchor="top end" self="top start">
           <q-list>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -141,7 +141,7 @@ defineEmits<{
               <q-item-section>Linear</q-item-section>
             </q-item>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -150,7 +150,7 @@ defineEmits<{
               <q-item-section>Curve</q-item-section>
             </q-item>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -159,7 +159,7 @@ defineEmits<{
               <q-item-section>Step Start</q-item-section>
             </q-item>
             <q-item
-              class="tw-select-none"
+              class="tw:select-none"
               dense
               clickable
               v-close-popup
@@ -171,10 +171,10 @@ defineEmits<{
         </q-menu>
       </q-item>
 
-      <q-item class="tw-text-red-500" clickable v-close-popup @click="$emit('delete')">
+      <q-item class="tw:text-red-500" clickable v-close-popup @click="$emit('delete')">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-trash" class="tw:mr-2" />
             Delete
           </div>
         </q-item-section>

@@ -218,7 +218,7 @@ const labelOptions = computed<Array<{ label: string; value: string | null; bg?: 
   const colorItems = colors.value ?? []
 
   return [
-    { label: 'None', value: null, bg: 'tw-bg-transparent' },
+    { label: 'None', value: null, bg: 'tw:bg-transparent' },
     ...colorItems.map(({ bg, label, value }) => ({ label, value, bg }))
   ]
 })
@@ -270,40 +270,40 @@ watch(
             transition-prev="jump-right"
             transition-next="jump-left"
           >
-            <q-tab-panel name="general" class="tw-overflow-x-hidden">
-              <q-form ref="generalSettingsFormRef" class="tw-flex tw-h-96 tw-flex-col tw-gap-4">
-                <div class="tw-flex tw-gap-4">
+            <q-tab-panel name="general" class="tw:overflow-x-hidden">
+              <q-form ref="generalSettingsFormRef" class="tw:flex tw:h-96 tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:gap-4">
                   <q-input
                     v-model="form.name"
                     filled
                     label="Name"
                     :rules="rules.name"
-                    class="tw-flex-grow"
+                    class="tw:grow"
                   />
                   <q-select
                     v-model="form.labelColor"
                     :options="labelOptions"
-                    class="tw-min-w-[128px]"
+                    class="tw:min-w-[128px]"
                     filled
                     label="Label"
                     emit-value
                   >
                     <template #selected-item>
-                      <div v-if="selectedColor" class="tw-space-x-2">
+                      <div v-if="selectedColor" class="tw:space-x-2">
                         <q-chip size="xs" :class="selectedColor?.bg" />
                         {{ selectedColor?.label }}
                       </div>
                     </template>
                     <template #option="{ itemProps, opt }">
                       <q-item v-bind="itemProps">
-                        <q-item-section class="items-center tw-grid tw-grid-cols-[auto_1fr]">
+                        <q-item-section class="items-center tw:grid tw:grid-cols-[auto_1fr]">
                           <q-chip size="xs" :class="opt.bg" />
                           <q-item-label>{{ opt.label }}</q-item-label>
                         </q-item-section>
                       </q-item>
                     </template>
                     <template #after>
-                      <q-btn v-if="selectedColor" class="tw-h-full" size="xs" color="accent">
+                      <q-btn v-if="selectedColor" class="tw:h-full" size="xs" color="accent">
                         <q-icon name="fa-solid fa-pen" />
                         <q-tooltip>Edit label name</q-tooltip>
                         <q-popup-edit
@@ -312,7 +312,7 @@ watch(
                           auto-save
                           @update:model-value="setCustomLabel(selectedColor.value, $event)"
                         >
-                          <div class="text-accent tw-mb-1">Edit label name</div>
+                          <div class="text-accent tw:mb-1">Edit label name</div>
 
                           <q-input
                             v-model="scope.value"
@@ -328,11 +328,11 @@ watch(
                     </template>
                   </q-select>
                 </div>
-                <div class="tw-flex tw-gap-4">
+                <div class="tw:flex tw:gap-4">
                   <q-select
                     v-model="form.protocol"
                     :options="mqttProtocolOptions"
-                    class="tw-w-[112px]"
+                    class="tw:w-[112px]"
                     filled
                     label="Protocol"
                     emit-value
@@ -345,14 +345,14 @@ watch(
                   </q-select>
                   <q-input
                     v-model="form.hostname"
-                    class="tw-flex-grow"
+                    class="tw:grow"
                     filled
                     label="Hostname"
                     :rules="rules.hostname"
                   />
                   <q-input
                     v-model.number="form.port"
-                    class="tw-w-[128px]"
+                    class="tw:w-[128px]"
                     filled
                     label="Port"
                     type="number"
@@ -366,7 +366,7 @@ watch(
                     <q-input
                       v-if="form.protocol === 'ws' || form.protocol === 'wss'"
                       v-model="form.path"
-                      class="tw-w-[128px]"
+                      class="tw:w-[128px]"
                       filled
                       label="Path"
                     />
@@ -380,7 +380,7 @@ watch(
                     :rules="rules.clientId"
                   />
                 </div>
-                <div class="tw-grid tw-gap-4 sm:tw-grid-cols-2">
+                <div class="tw:grid tw:gap-4 tw:sm:grid-cols-2">
                   <q-input v-model="form.username" filled label="Username" />
                   <q-input
                     v-model="form.password"
@@ -402,10 +402,10 @@ watch(
             </q-tab-panel>
 
             <q-tab-panel name="subscriptions">
-              <q-card flat class="tw-h-96">
-                <q-card flat class="card-secondary-background tw-rounded-xl">
+              <q-card flat class="tw:h-96">
+                <q-card flat class="card-secondary-background tw:rounded-xl">
                   <q-table
-                    class="tw-bg-transparent"
+                    class="tw:bg-transparent"
                     :rows="form.subscribedTopics"
                     :columns="columns"
                     row-key="topic"
@@ -417,14 +417,14 @@ watch(
                     <template #bottom-row>
                       <q-tr>
                         <q-td colspan="3" style="padding: 0">
-                          <q-btn color="primary" dense class="tw-w-full">
-                            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+                          <q-btn color="primary" dense class="tw:w-full">
+                            <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
 
                             <q-popup-proxy ref="addSubscriptionTopicPopupProxyRef">
                               <q-card>
                                 <q-form
                                   ref="addSubscriptionTopicFormRef"
-                                  class="tw-flex tw-gap-2 tw-p-2"
+                                  class="tw:flex tw:gap-2 tw:p-2"
                                 >
                                   <q-input
                                     v-model="addTopicForm.topic"
@@ -433,7 +433,7 @@ watch(
                                     dense
                                     hide-bottom-space
                                     label="Topic"
-                                    class="hide-error-message-slot tw-w-[250px]"
+                                    class="hide-error-message-slot tw:w-[250px]"
                                     :rules="addSubscriptionTopicRules.topic"
                                     @keydown.enter="handleAddTopic"
                                   />
@@ -444,16 +444,16 @@ watch(
                                     dense
                                     hide-bottom-space
                                     label="QoS"
-                                    class="hide-error-message-slot tw-w-[100px]"
+                                    class="hide-error-message-slot tw:w-[100px]"
                                     :rules="addSubscriptionTopicRules.qos"
                                   />
                                   <q-btn
-                                    class="tw-h-[40px]"
+                                    class="tw:h-[40px]"
                                     color="primary"
                                     dense
                                     @click="handleAddTopic"
                                   >
-                                    <q-icon class="tw-m-2" size="xs" name="fa-solid fa-plus" />
+                                    <q-icon class="tw:m-2" size="xs" name="fa-solid fa-plus" />
                                   </q-btn>
                                 </q-form>
                               </q-card>
@@ -464,7 +464,7 @@ watch(
                     </template>
                     <template #body-cell-topic="topicProps">
                       <q-td key="topic" :props="topicProps">
-                        <span class="tw-cursor-pointer">{{ topicProps.value }}</span>
+                        <span class="tw:cursor-pointer">{{ topicProps.value }}</span>
                         <q-popup-edit
                           v-slot="scope"
                           v-model="form.subscribedTopics[topicProps.rowIndex].topic"
@@ -481,9 +481,9 @@ watch(
                       </q-td>
                     </template>
                     <template #body-cell-qos="qosProps">
-                      <q-td key="qos" :props="qosProps" class="tw-text-end">
+                      <q-td key="qos" :props="qosProps" class="tw:text-end">
                         <q-badge
-                          class="tw-cursor-pointer"
+                          class="tw:cursor-pointer"
                           color="primary"
                           text-color="white"
                           :label="qosProps.value"
@@ -504,7 +504,7 @@ watch(
                       </q-td>
                     </template>
                     <template #body-cell-actions="itemProps">
-                      <q-td auto-width class="tw-text-end">
+                      <q-td auto-width class="tw:text-end">
                         <q-btn
                           color="red"
                           round
@@ -533,17 +533,17 @@ watch(
                   v-model:request-response-information="form.properties.requestResponseInformation"
                   v-model:request-problem-information="form.properties.requestProblemInformation"
                   v-model:user-properties="form.properties.userProperties"
-                  class="tw-h-96"
+                  class="tw:h-96"
                 />
               </q-form>
             </q-tab-panel>
 
             <q-tab-panel name="last-will">
-              <q-card v-if="form.lastWill" flat class="tw-h-96">
-                <div class="tw-flex tw-gap-2">
+              <q-card v-if="form.lastWill" flat class="tw:h-96">
+                <div class="tw:flex tw:gap-2">
                   <q-input
                     v-model="form.lastWill.topic"
-                    class="tw-flex-grow"
+                    class="tw:grow"
                     filled
                     label="Topic"
                     lazy-rules
@@ -554,16 +554,16 @@ watch(
                     :options="[0, 1, 2]"
                     filled
                     label="QoS"
-                    class="tw-w-[128px]"
+                    class="tw:w-[128px]"
                   />
                   <q-toggle v-model="form.lastWill.retain" label="Retain" />
                 </div>
-                <div class="tw-mt-4 tw-h-[300px]">
+                <div class="tw:mt-4 tw:h-[300px]">
                   <code-editor
                     ref="codeEditorRef"
                     v-model:language="codeEditorLanguage"
                     v-model="form.lastWill.payload"
-                    class="tw-h-[300px]"
+                    class="tw:h-[300px]"
                     font-size="14"
                   />
                 </div>
@@ -574,14 +574,14 @@ watch(
       </q-splitter>
 
       <q-card-actions align="right">
-        <div class="tw-flex tw-gap-2">
+        <div class="tw:flex tw:gap-2">
           <q-btn flat label="Cancel" @click="handleCloseForm" />
           <q-btn v-if="dialogType === 'add'" color="primary" @click="handleAddConnection">
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+            <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
             Create
           </q-btn>
           <q-btn v-else color="primary" @click="handleUpdateConnection">
-            <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-save" />
+            <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-save" />
             Update
           </q-btn>
         </div>

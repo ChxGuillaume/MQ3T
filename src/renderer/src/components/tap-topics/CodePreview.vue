@@ -203,19 +203,19 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw-border-t': !hideTopBorder }" />
+  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw:border-t': !hideTopBorder }" />
   <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
     <div
       ref="myGraph"
       v-if="!hideGlyphs && language === 'json'"
       v-show="showGraph || forceShowGraph"
-      class="tw-fixed tw-w-fit"
+      class="tw:fixed tw:w-fit"
       :style="{ left: `${x}px`, top: `${ySafe}px` }"
       @mouseenter="forceShowGraph = true"
       @mouseleave="forceShowGraph = false"
     >
       <line-chart-card
-        class="tw-w-[500px]"
+        class="tw:w-[500px]"
         :data-graph="{
           id: null,
           clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
@@ -225,7 +225,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
         }"
       >
         <template #bottom>
-          <div class="color-details tw-mt-3 tw-text-center">Click to add widget</div>
+          <div class="color-details tw:mt-3 tw:text-center">Click to add widget</div>
         </template>
       </line-chart-card>
     </div>

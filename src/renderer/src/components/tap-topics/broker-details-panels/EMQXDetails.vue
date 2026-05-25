@@ -89,8 +89,8 @@ const version = computed(() => {
 </script>
 
 <template>
-  <div class="tw-flex tw-flex-col tw-gap-2">
-    <h3 class="text-weight-bold tw-text-lg">{{ broker }}</h3>
+  <div class="tw:flex tw:flex-col tw:gap-2">
+    <h3 class="text-weight-bold tw:text-lg">{{ broker }}</h3>
     <div>
       Messages Received <span class="color-details">{{ messages_received }}</span>
     </div>

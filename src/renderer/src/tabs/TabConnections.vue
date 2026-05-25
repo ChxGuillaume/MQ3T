@@ -68,16 +68,16 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
 
 <template>
   <div
-    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+    class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
   >
-    <div class="tw-w-[81px]" />
+    <div class="tw:w-[81px]" />
 
-    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Actions</div>
+    <div class="tw:bg-neutral-200 tw:text-center tw:dark:bg-neutral-800">Actions</div>
 
-    <div class="tw-w-[81px] tw-text-right">
+    <div class="tw:w-[81px] tw:text-right">
       <q-btn
         size="xs"
-        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
         flat
         @click="appStore.setCurrentTab('settings')"
       >
@@ -90,7 +90,7 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
       v-model="connections"
       v-bind="dragOptions"
       handle=".drag-handle"
-      class="tw-grid tw-grid-cols-1 tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5"
+      class="tw:grid tw:grid-cols-1 tw:gap-4 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:xl:grid-cols-4 tw:2xl:grid-cols-5"
       item-key="clientKey"
     >
       <template #item="{ element }">
@@ -104,7 +104,7 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
         />
         <div
           v-else-if="element.type === 'add-connection'"
-          class="tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-transition-colors dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
+          class="tw:flex tw:h-full tw:w-full tw:cursor-pointer tw:items-center tw:justify-center tw:rounded tw:transition-colors tw:dark:bg-neutral-900 tw:dark:hover:bg-neutral-800"
           @click="addConnectionDialogOpened = true"
         >
           <q-icon name="fa-solid fa-plus" size="xl" />
