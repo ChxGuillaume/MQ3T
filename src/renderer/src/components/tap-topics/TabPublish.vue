@@ -14,6 +14,8 @@ import SplitterIcon from '../SplitterIcon.vue'
 import { IClientPublishOptions } from 'mqtt'
 import CodeEditor from './CodeEditor.vue'
 
+const DEFAULT_SPLITTER_HEIGHT = 250
+
 const emit = defineEmits<{
   'click:publish': [topic: string]
 }>()
@@ -33,8 +35,8 @@ const isMqtt5 = computed(
 const publishType = ref<'manual' | 'action'>('manual')
 
 const publishDataType = ref(settingsStore.defaultDataFormat)
-const codeEditorSplitter = ref(250)
-const codeEditorLimits = ref([150, 450])
+const codeEditorSplitter = ref(DEFAULT_SPLITTER_HEIGHT)
+const codeEditorLimits = ref([150, 800])
 const codeEditorDataPerTopic = ref<Record<string, Record<string, string>>>({})
 const codeEditorData = computed<string>({
   get: () => {
@@ -217,7 +219,7 @@ watch(
           <span>Manual Publish</span>
         </q-item-section>
       </template>
-      <q-card class="tw-min-h-[calc(100vh-154px)]">
+      <q-card class="tw-min-h-[calc(100vh-234px)]">
         <q-splitter v-model="codeEditorSplitter" horizontal :limits="codeEditorLimits" unit="px">
           <template #before>
             <code-editor
@@ -225,54 +227,57 @@ watch(
               v-model:language="publishDataType"
               v-model="codeEditorData"
               hide-warning
-            />
+              dense
+            >
+              <template #header-right>
+                <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
+                  <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+                  Publish
+                </q-btn>
+              </template>
+
+              <template #between>
+                <q-expansion-item dense dense-toggle>
+                  <template #header>
+                    <q-item-section
+                      class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6"
+                    >
+                      <q-icon name="fa-solid fa-sliders" size="xs" />
+                      <span>Additional publish settings</span>
+                    </q-item-section>
+                  </template>
+                  <div class="tw-flex tw-flex-col tw-gap-3 tw-p-3">
+                    <div class="tw-flex tw-items-center tw-gap-4">
+                      <q-select
+                        v-model="qos"
+                        :options="[0, 1, 2]"
+                        filled
+                        dense
+                        label="QoS"
+                        class="text-center tw-w-[96px]"
+                      />
+                      <q-toggle
+                        v-model="retain"
+                        label="Retain"
+                        color="accent"
+                        class="tw-select-none"
+                      />
+                    </div>
+                    <template v-if="isMqtt5">
+                      <q-input v-model="responseTopic" filled dense label="Response Topic" />
+                      <q-input v-model="correlationData" filled dense label="Correlation Data" />
+                    </template>
+                  </div>
+                </q-expansion-item>
+              </template>
+            </code-editor>
           </template>
 
           <template #separator>
-            <splitter-icon @click:double="codeEditorSplitter = 250" />
+            <splitter-icon @click:double="codeEditorSplitter = DEFAULT_SPLITTER_HEIGHT" />
           </template>
 
           <template #after>
-            <q-expansion-item
-              dense
-              dense-toggle
-              header-class="tw-text-secondary"
-              expand-icon-class="tw-text-secondary"
-            >
-              <template #header>
-                <q-item-section
-                  class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6"
-                >
-                  <q-icon name="fa-solid fa-sliders" size="xs" />
-                  <span>Additional publish settings</span>
-                </q-item-section>
-              </template>
-              <div class="tw-flex tw-flex-col tw-gap-3 tw-p-3">
-                <div class="tw-flex tw-items-center tw-gap-4">
-                  <q-select
-                    v-model="qos"
-                    :options="[0, 1, 2]"
-                    filled
-                    dense
-                    label="QoS"
-                    class="tw-w-[96px]"
-                  />
-                  <q-toggle v-model="retain" label="Retain" />
-                </div>
-                <template v-if="isMqtt5">
-                  <q-input v-model="responseTopic" filled dense label="Response Topic" />
-                  <q-input v-model="correlationData" filled dense label="Correlation Data" />
-                </template>
-              </div>
-            </q-expansion-item>
-            <q-separator />
-            <div class="tw-flex tw-items-center tw-justify-end tw-p-3">
-              <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
-                Publish
-              </q-btn>
-            </div>
-            <q-separator />
             <div class="justify-between tw-flex tw-px-4 tw-pt-2">
               <div class="items-center tw-flex tw-gap-2">
                 History
