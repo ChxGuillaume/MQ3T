@@ -158,7 +158,7 @@ const handleKeyUp = (event: KeyboardEvent) => {
   if (event.key === 'ArrowUp') handleUpKeyUp()
   else if (event.key === 'ArrowDown') handleDownKeyUp()
   else if (event.key === 'Escape') {
-    mqttTopicsStore.selectedTopic = ''
+    mqttTopicsStore.clearSelectedTopic()
   }
 }
 
