@@ -373,6 +373,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       const key = clientKey ?? this.selectedConnection
       if (!key) return
       delete this.selectedTopicByConnection[key]
+      delete this.selectedPublishTopicByConnection[key]
     },
     setTopicSearch(topicSearch: string) {
       this.topicSearch = topicSearch
