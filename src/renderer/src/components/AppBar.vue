@@ -36,8 +36,8 @@ const menuOpened = ref(false)
 const handleCloseConnection = (clientKey: string) => {
   mqttConnectionsStore.disconnectClient(clientKey)
 
+  mqttTopicsStore.clearSelectedTopic(clientKey)
   mqttTopicsStore.selectedConnection = ''
-  mqttTopicsStore.selectedTopic = ''
 
   setTimeout(() => {
     appStore.setCurrentTab('connections')
@@ -94,7 +94,6 @@ const isTopicsTab = computed(() => {
         @click="
           () => {
             mqttTopicsStore.selectedConnection = connection.clientKey
-            mqttTopicsStore.selectedTopic = ''
             appStore.setCurrentTab('topics')
           }
         "

@@ -42,12 +42,16 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     topicsStructure: {} as Record<string, MqttTopicStructure>,
     topicGroupOpened: {} as Record<string, Record<string, boolean>>,
     selectedConnection: '',
-    selectedTopic: '',
+    selectedTopicByConnection: {} as Record<string, string>,
     topicsPublishMessages: {} as Record<string, Record<string, MqttMessage[]>>,
-    selectedPublishTopic: '',
+    selectedPublishTopicByConnection: {} as Record<string, string>,
     topicSearch: ''
   }),
   getters: {
+    selectedTopic: (state): string =>
+      state.selectedTopicByConnection[state.selectedConnection] || '',
+    selectedPublishTopic: (state): string =>
+      state.selectedPublishTopicByConnection[state.selectedConnection] || '',
     getClientKeyList: (state) => {
       return Object.keys(state.topicsMessages)
     },
@@ -357,12 +361,19 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     setSelectedTopic(clientKey: string, topic: string) {
       this.selectedConnection = clientKey
-      this.selectedTopic = topic
+      this.selectedTopicByConnection[clientKey] = topic
 
       this.setSelectedPublishTopic(topic)
     },
     setSelectedPublishTopic(topic: string) {
-      this.selectedPublishTopic = topic
+      if (!this.selectedConnection) return
+      this.selectedPublishTopicByConnection[this.selectedConnection] = topic
+    },
+    clearSelectedTopic(clientKey?: string) {
+      const key = clientKey ?? this.selectedConnection
+      if (!key) return
+      delete this.selectedTopicByConnection[key]
+      delete this.selectedPublishTopicByConnection[key]
     },
     setTopicSearch(topicSearch: string) {
       this.topicSearch = topicSearch

@@ -3,20 +3,20 @@ import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
+import { computed, reactive, ref, useTemplateRef, watch } from 'vue'
 import { useSettingsStore } from '../../store/settings-store'
-import CodeEditor, { ICodeEditor } from './CodeEditor.vue'
 import ActionCard from '../tab-actions/ActionCard.vue'
 import { useActionsStore } from '../../store/actions'
-import { computed, reactive, ref, watch } from 'vue'
 import { matchTopics } from '../../assets/js/mqtt'
 import { Action } from '../../../../types/actions'
 import SplitterIcon from '../SplitterIcon.vue'
+import CodeEditor from './CodeEditor.vue'
 
 const emit = defineEmits<{
   'click:publish': [topic: string]
 }>()
 
-const codeEditorRef = ref<ICodeEditor | null>(null)
+const codeEditorRef = useTemplateRef('codeEditorRef')
 
 const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
@@ -27,7 +27,26 @@ const publishType = ref<'manual' | 'action'>('manual')
 const publishDataType = ref(settingsStore.defaultDataFormat)
 const codeEditorSplitter = ref(250)
 const codeEditorLimits = ref([150, 450])
-const codeEditorData = ref('')
+const codeEditorDataPerTopic = ref<Record<string, Record<string, string>>>({})
+const codeEditorData = computed<string>({
+  get: () => {
+    const connection = mqttTopicsStore.selectedConnection
+    const topic = mqttTopicsStore.selectedPublishTopic
+
+    return codeEditorDataPerTopic.value[connection]?.[topic] ?? ''
+  },
+  set: (value) => {
+    const connection = mqttTopicsStore.selectedConnection
+    const topic = mqttTopicsStore.selectedPublishTopic
+
+    if (value) {
+      if (!codeEditorDataPerTopic.value[connection]) codeEditorDataPerTopic.value[connection] = {}
+      codeEditorDataPerTopic.value[connection][topic] = value
+    } else if (codeEditorDataPerTopic.value[connection]) {
+      delete codeEditorDataPerTopic.value[connection][topic]
+    }
+  }
+})
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
 const current = ref(1)
@@ -140,6 +159,15 @@ watch(
 
     if (oldValue === 0 && value > 0) publishType.value = 'action'
     else if (oldValue > 0 && value === 0) publishType.value = 'manual'
+  }
+)
+
+watch(
+  () => [mqttTopicsStore.selectedConnection, mqttTopicsStore.selectedPublishTopic],
+  ([connection, topic]) => {
+    if (codeEditorDataPerTopic.value[connection]?.[topic])
+      codeEditorRef.value?.updateCodeEditorValue(codeEditorData.value)
+    else codeEditorRef.value?.updateCodeEditorValue('')
   }
 )
 </script>
