@@ -126,7 +126,11 @@ const defaultDataPathText = '<value>'
 </script>
 
 <template>
-  <q-card class="graph-card tw:border tw:p-2" flat :class="[dataGraph.size]">
+  <q-card
+    class="graph-card tw:border tw:border-neutral-300 tw:dark:border-neutral-800 tw:p-2"
+    flat
+    :class="[dataGraph.size]"
+  >
     <q-card-section v-if="showTitle" class="drag-handle tw:cursor-grab tw:p-2">
       <div class="tw:line-clamp-1 tw:h-7 tw:break-all tw:text-xl">
         {{ dataGraph.dataPath || defaultDataPathText }}

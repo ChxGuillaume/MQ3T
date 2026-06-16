@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 
-const TAILWIND_CLASS_PREFIX = 'tw-'
+const TAILWIND_CLASS_PREFIX = 'tw:'
 
 const COLORS = [
   { label: 'Red', value: 'red' },

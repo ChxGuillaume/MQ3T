@@ -283,9 +283,10 @@ watch(
                   <q-select
                     v-model="form.labelColor"
                     :options="labelOptions"
-                    class="tw:min-w-[128px]"
+                    class="tw:min-w-32"
                     filled
                     label="Label"
+                    color="accent"
                     emit-value
                   >
                     <template #selected-item>
@@ -296,7 +297,7 @@ watch(
                     </template>
                     <template #option="{ itemProps, opt }">
                       <q-item v-bind="itemProps">
-                        <q-item-section class="items-center tw:grid tw:grid-cols-[auto_1fr]">
+                        <q-item-section class="tw:grid tw:grid-cols-[auto_1fr] items-center">
                           <q-chip size="xs" :class="opt.bg" />
                           <q-item-label>{{ opt.label }}</q-item-label>
                         </q-item-section>

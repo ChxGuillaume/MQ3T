@@ -17,7 +17,6 @@ export default {
       }
     }
   },
-  safelist: [{ pattern: /bg-.*/ }, { pattern: /border-.*/ }],
   important: true,
   plugins: []
 } satisfies Config
