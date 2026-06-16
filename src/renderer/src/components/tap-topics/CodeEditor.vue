@@ -237,7 +237,7 @@ const editorStatus = computed(() => {
             { label: 'YAML', value: 'yaml' }
           ]"
         />
-        <div v-if="!valideCode && !hideWarning" class="items-center tw:flex tw:select-none">
+        <div v-if="!valideCode && !hideWarning" class="tw:flex tw:select-none items-center">
           <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
           <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
           <q-tooltip v-else anchor="top middle" self="bottom middle">
@@ -246,7 +246,7 @@ const editorStatus = computed(() => {
         </div>
         <div
           v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
-          class="items-center tw:flex tw:select-none"
+          class="tw:flex tw:select-none items-center"
         >
           <q-icon
             class="tw:mr-2"
@@ -286,6 +286,7 @@ const editorStatus = computed(() => {
           <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-align-left" />
           Format
         </q-btn>
+        <slot name="format-right" />
       </div>
       <slot name="header-right" />
     </div>
@@ -324,7 +325,7 @@ const editorStatus = computed(() => {
   border-top-width: 2px;
   border-bottom-width: 2px;
   border-color: rgb(34 197 94 / 0.4);
-  outline-width: 0px;
+  outline-width: 0;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;

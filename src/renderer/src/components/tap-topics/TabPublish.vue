@@ -236,39 +236,35 @@ watch(
                 </q-btn>
               </template>
 
-              <template #between>
-                <q-expansion-item dense dense-toggle>
-                  <template #header>
-                    <q-item-section
-                      class="tw:flex tw:flex-row tw:items-center tw:justify-start tw:gap-6"
-                    >
-                      <q-icon name="fa-solid fa-sliders" size="xs" />
-                      <span>Additional publish settings</span>
-                    </q-item-section>
-                  </template>
-                  <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3">
-                    <div class="tw:flex tw:items-center tw:gap-4">
-                      <q-select
-                        v-model="qos"
-                        :options="[0, 1, 2]"
-                        filled
-                        dense
-                        label="QoS"
-                        class="tw:w-[96px] text-center"
-                      />
-                      <q-toggle
-                        v-model="retain"
-                        label="Retain"
-                        color="accent"
-                        class="tw:select-none"
-                      />
+              <template #format-right>
+                <q-btn dense color="primary">
+                  <q-icon class="tw:mx-2" size="16px" name="fa-solid fa-sliders" />
+                  <q-tooltip anchor="top middle" self="bottom middle">Publish settings</q-tooltip>
+                  <q-menu anchor="bottom left" self="top left" :offset="[0, 4]">
+                    <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:min-w-96">
+                      <div class="tw:flex tw:items-center tw:gap-4">
+                        <q-select
+                          v-model="qos"
+                          :options="[0, 1, 2]"
+                          filled
+                          dense
+                          label="QoS"
+                          class="tw:w-24 text-center"
+                        />
+                        <q-toggle
+                          v-model="retain"
+                          label="Retain"
+                          color="accent"
+                          class="tw:select-none"
+                        />
+                      </div>
+                      <template v-if="isMqtt5">
+                        <q-input v-model="responseTopic" filled dense label="Response Topic" />
+                        <q-input v-model="correlationData" filled dense label="Correlation Data" />
+                      </template>
                     </div>
-                    <template v-if="isMqtt5">
-                      <q-input v-model="responseTopic" filled dense label="Response Topic" />
-                      <q-input v-model="correlationData" filled dense label="Correlation Data" />
-                    </template>
-                  </div>
-                </q-expansion-item>
+                  </q-menu>
+                </q-btn>
               </template>
             </code-editor>
           </template>
