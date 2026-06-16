@@ -81,7 +81,7 @@ const connectionStatus = computed(() => {
 <style scoped lang="less">
 .body--light {
   .mqtt-connection-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 </style>

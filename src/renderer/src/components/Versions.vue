@@ -82,15 +82,15 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 
 <style scoped lang="less">
 .body--dark .version-color {
-  @apply tw-text-neutral-500;
+  color: #737373;
 }
 
 .body--light .version-color {
-  @apply tw-text-neutral-400;
+  color: #a3a3a3;
 }
 
 .versions {
-  @apply tw-grid;
+  display: grid;
   grid-template-columns: 150px 1fr;
 }
 </style>

@@ -182,20 +182,22 @@ onUnmounted(() => {
 @import '../assets/css/styles.less';
 
 .nav-bar-left {
-  @apply tw-border-r;
+  border-right-width: 1px;
   min-width: 135px;
   width: 135px;
 }
 
 .body--light {
   .nav-bar-left {
-    @apply tw-border-black/10 tw-bg-zinc-100;
+    border-color: rgb(0 0 0 / 0.1);
+    background-color: #f4f4f5;
   }
 }
 
 .body--dark {
   .nav-bar-left {
-    @apply tw-border-white/10 tw-bg-neutral-900;
+    border-color: rgb(255 255 255 / 0.1);
+    background-color: #171717;
   }
 }
 </style>

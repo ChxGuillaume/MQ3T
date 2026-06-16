@@ -76,10 +76,12 @@ watch(
 }
 
 .release-title {
-  @apply tw-text-2xl tw-text-neutral-500;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: #737373;
 }
 
 .release-title.current {
-  @apply tw-text-secondary;
+  color: var(--q-secondary);
 }
 </style>

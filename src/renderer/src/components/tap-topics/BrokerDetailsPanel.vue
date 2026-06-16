@@ -52,18 +52,24 @@ const brokerType = computed(() => {
 
 <style scoped lang="less">
 .broker-details-panel {
-  @apply tw-flex tw-flex-col tw-gap-2 tw-overflow-auto tw-p-4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: auto;
+  padding: 1rem;
 }
 
 .body--light {
   .broker-details-panel {
-    @apply tw-bg-white tw-text-black;
+    background-color: white;
+    color: black;
   }
 }
 
 .body--dark {
   .broker-details-panel {
-    @apply tw-bg-neutral-900 tw-text-white;
+    background-color: #171717;
+    color: white;
   }
 }
 </style>

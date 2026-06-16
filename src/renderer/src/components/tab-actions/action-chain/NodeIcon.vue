@@ -19,7 +19,13 @@ defineProps<{
 <style scoped lang="less">
 .progress-icon {
   top: 2px;
-  @apply tw-absolute tw-bottom-0 tw-left-0 tw-right-0 tw-mx-auto tw-align-middle;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  vertical-align: middle;
 }
 
 .slide-up-enter-active,

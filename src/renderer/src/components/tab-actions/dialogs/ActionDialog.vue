@@ -417,11 +417,14 @@ watch(
 
 <style scoped lang="less">
 .action-description {
-  @apply tw-resize-none;
+  resize: none;
 }
 
 .dialog-card {
-  @apply tw-flex tw-transition-all;
+  display: flex;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
   min-width: 760px;
   overflow: hidden !important;
 }

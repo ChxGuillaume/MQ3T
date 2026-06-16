@@ -36,13 +36,13 @@ const topics = computed(() => {
 <style scoped lang="less">
 .body--light {
   .title-container {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 
 .body--dark {
   .title-container {
-    @apply tw-bg-neutral-800;
+    background-color: #262626;
   }
 }
 </style>

@@ -62,7 +62,7 @@ onMounted(() => {
 @import '../assets/css/scrollbar';
 
 .grabbable {
-  @apply tw-h-full;
+  height: 100%;
 
   -webkit-app-region: drag;
 }

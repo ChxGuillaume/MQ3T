@@ -128,6 +128,9 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
 
 <style scoped lang="less">
 .connections {
-  @apply tw-flex tw-flex-col tw-gap-4 tw-p-4;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
 }
 </style>

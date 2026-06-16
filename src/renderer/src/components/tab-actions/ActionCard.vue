@@ -189,12 +189,17 @@ const send = () => {
 
 <style scoped lang="less">
 .truncate-hover-one-line {
-  @apply tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .body--light {
   .action-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 </style>

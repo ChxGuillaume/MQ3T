@@ -124,7 +124,7 @@ const isTopicsTab = computed(() => {
 
 <style lang="less" scoped>
 .grabbable {
-  @apply tw-h-full;
+  height: 100%;
 
   -webkit-app-region: drag;
 }
@@ -145,45 +145,83 @@ const isTopicsTab = computed(() => {
 }
 
 .home-btn {
-  @apply tw-ml-0 tw-flex tw-h-full tw-cursor-pointer tw-items-center tw-justify-center hover:tw-bg-black/10 hover:dark:tw-bg-white/10;
+  margin-left: 0px;
+  display: flex;
+  height: 100%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    background-color: rgb(0 0 0 / 0.1);
+  }
+  .body--dark &:hover {
+    background-color: rgb(255 255 255 / 0.1);
+  }
 
   & {
     .home-icon.topics {
-      @apply tw-text-neutral-400 dark:tw-text-neutral-400;
+      color: #a3a3a3;
+      .body--dark & {
+        color: #a3a3a3;
+      }
     }
 
     .home-icon.other {
-      @apply tw-text-black dark:tw-text-white;
+      color: black;
+      .body--dark & {
+        color: white;
+      }
     }
   }
 
   &:hover {
     .home-icon {
-      @apply tw-text-black dark:tw-text-white;
+      color: black;
+      .body--dark & {
+        color: white;
+      }
     }
   }
 }
 
 .connection-tab {
-  @apply tw-relative tw-flex tw-cursor-pointer tw-select-none tw-items-center tw-justify-between tw-gap-2 tw-px-3 hover:tw-text-black hover:dark:tw-text-white;
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  &:hover {
+    color: black;
+  }
+  .body--dark &:hover {
+    color: white;
+  }
 
   .connection-tab-close-icon {
-    @apply tw-absolute tw-right-2 tw-cursor-pointer tw-opacity-0;
+    position: absolute;
+    right: 0.5rem;
+    cursor: pointer;
+    opacity: 0;
 
     padding: 2px;
 
     &:hover {
-      @apply tw-rounded tw-bg-neutral-700;
+      border-radius: 0.25rem;
+      background-color: #404040;
     }
   }
 
   &:hover {
     .connection-tab-close-icon {
-      @apply tw-opacity-100;
+      opacity: 1;
     }
 
     .connection-tab-status-badge {
-      @apply tw-opacity-0;
+      opacity: 0;
     }
   }
 }

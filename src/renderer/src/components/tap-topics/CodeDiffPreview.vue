@@ -132,42 +132,48 @@ onBeforeUnmount(() => {
 
 <style lang="less">
 .code-preview-glyph {
-  @apply tw-rounded-full tw-transition-colors;
+  border-radius: 9999px;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
   font-size: 10px;
 }
 
 .body--dark {
   .code-preview-glyph {
-    @apply tw-text-white;
+    color: white;
   }
 }
 
 .body--light {
   .code-preview-glyph {
-    @apply tw-text-black;
+    color: black;
   }
 }
 
 .code-preview-glyph:hover {
-  @apply tw-cursor-pointer tw-bg-secondary tw-text-black;
+  cursor: pointer;
+  background-color: #75E67C;
+  color: black;
 }
 </style>
 
 <style scoped lang="less">
 .monaco-editor {
-  @apply tw-w-full tw-outline-0;
+  width: 100%;
+  outline-width: 0px;
   height: 100%;
 }
 
 .body--light {
   .monaco-editor {
-    @apply tw-border-black/20;
+    border-color: rgb(0 0 0 / 0.2);
   }
 }
 
 .body--dark {
   .monaco-editor {
-    @apply tw-border-white/20;
+    border-color: rgb(255 255 255 / 0.2);
   }
 }
 </style>

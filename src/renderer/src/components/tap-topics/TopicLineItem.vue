@@ -96,21 +96,21 @@ watch(
 <style scoped lang="less">
 .body--light {
   .topic-item-key {
-    @apply tw-text-black;
+    color: black;
   }
 
   .topic-item-key.empty {
-    @apply tw-text-neutral-300;
+    color: #d4d4d4;
   }
 }
 
 .body--dark {
   .topic-item-key {
-    @apply tw-text-white;
+    color: white;
   }
 
   .topic-item-key.empty {
-    @apply tw-text-neutral-500;
+    color: #737373;
   }
 }
 </style>

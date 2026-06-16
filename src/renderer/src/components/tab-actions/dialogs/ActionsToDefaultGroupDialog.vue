@@ -70,7 +70,7 @@ const handleMoveActions = () => {
 
 <style scoped lang="less">
 .action-description {
-  @apply tw-resize-none;
+  resize: none;
 }
 </style>
 

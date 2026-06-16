@@ -160,7 +160,10 @@ const parseLibraryName = (library: string) => library.split('@').slice(0, -1).jo
 
 <style scoped lang="less">
 .top-section {
-  @apply tw-p-0 tw-transition-shadow;
+  padding: 0px;
+  transition-property: box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
   box-shadow: none;
 }
 

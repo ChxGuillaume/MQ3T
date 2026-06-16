@@ -307,13 +307,13 @@ watch(
 <style scoped lang="less">
 .body--light {
   .message-details {
-    @apply tw-text-neutral-500;
+    color: #737373;
   }
 }
 
 .body--dark {
   .message-details {
-    @apply tw-text-neutral-400;
+    color: #a3a3a3;
   }
 }
 </style>

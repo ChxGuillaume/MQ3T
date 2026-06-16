@@ -37,14 +37,27 @@ const graphs = computed({
 
 <style scoped lang="less">
 .graph-list {
-  @apply tw-grid tw-gap-2;
+  display: grid;
+  gap: 0.5rem;
 
   .main-view & {
-    @apply tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 1536px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 
   .graph-view & {
-    @apply tw-grid-cols-2 xl:tw-grid-cols-3 3xl:tw-grid-cols-5;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    @media (min-width: 1920px) {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
   }
 }
 </style>

@@ -772,6 +772,13 @@ const chainActionEdit = ref<ChainAction | undefined>()
 }
 
 .actions-cards-grid {
-  @apply tw-grid tw-grid-cols-1 md:tw-grid-cols-1 lg:tw-grid-cols-1 xl:tw-grid-cols-2 2xl:tw-grid-cols-3;
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 1536px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 </style>

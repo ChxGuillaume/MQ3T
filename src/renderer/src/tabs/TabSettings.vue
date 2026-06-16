@@ -345,40 +345,60 @@ const showVersionModal = ref(false)
 
 <style scoped lang="less">
 .settings {
-  @apply tw-p-4;
+  padding: 1rem;
 }
 
 .settings-group {
-  @apply tw-flex tw-flex-col tw-gap-2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .settings-group .settings-group-title {
-  @apply tw-text-lg tw-font-bold;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 700;
 }
 
 .settings-group .settings-group-separator {
-  @apply tw-h-px tw-border-0 tw-bg-neutral-700;
+  height: 1px;
+  border-width: 0px;
+  background-color: #404040;
 }
 
 .settings-group .settings-group-item-container {
-  @apply tw-grid tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5;
+  display: grid;
+  gap: 1rem;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (min-width: 1536px) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .card-toggle {
-  @apply tw-flex tw-items-center;
+  display: flex;
+  align-items: center;
   min-height: 56px;
   border-radius: 0.25em !important;
 }
 
 .body--light {
   .card-toggle {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 
 .body--dark {
   .card-toggle {
-    @apply tw-bg-neutral-800;
+    background-color: #262626;
   }
 }
 </style>

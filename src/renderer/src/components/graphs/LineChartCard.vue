@@ -192,31 +192,56 @@ const defaultDataPathText = '<value>'
 <style lang="less">
 .graph-card {
   .main-view &.small {
-    @apply tw-col-span-1;
+    grid-column: span 1 / span 1;
   }
 
   .main-view &.medium {
-    @apply tw-col-span-1 xl:tw-col-span-2;
+    grid-column: span 1 / span 1;
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
   }
 
   .main-view &.large {
-    @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+    grid-column: span 1 / span 1;
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1536px) {
+      grid-column: span 3 / span 3;
+    }
   }
 
   .graph-view &.small {
-    @apply tw-col-span-1;
+    grid-column: span 1 / span 1;
   }
 
   .graph-view &.medium {
-    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-2;
+    grid-column: span 1 / span 1;
+    @media (min-width: 768px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
   }
 
   .graph-view &.large {
-    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-3 2xl:tw-col-span-5;
+    grid-column: span 1 / span 1;
+    @media (min-width: 768px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1280px) {
+      grid-column: span 3 / span 3;
+    }
+    @media (min-width: 1536px) {
+      grid-column: span 5 / span 5;
+    }
   }
 }
 
 .chart {
-  @apply tw-h-full tw-w-full;
+  height: 100%;
+  width: 100%;
 }
 </style>

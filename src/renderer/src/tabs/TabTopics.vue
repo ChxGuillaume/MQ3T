@@ -495,7 +495,12 @@ const focusTopicsScroll = (e: MouseEvent) => {
 
 <style scoped lang="less">
 .broker-details-panel {
-  @apply tw-absolute tw-h-full tw-w-full tw-transition-transform;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 .broker-details-panel.show {
@@ -504,13 +509,13 @@ const focusTopicsScroll = (e: MouseEvent) => {
 
 .body--light {
   .connection-card-title {
-    @apply tw-text-black;
+    color: black;
   }
 }
 
 .body--dark {
   .connection-card-title {
-    @apply tw-text-white;
+    color: white;
   }
 }
 

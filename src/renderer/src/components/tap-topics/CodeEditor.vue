@@ -296,40 +296,51 @@ const editorStatus = computed(() => {
 .body--light {
   .monaco-editor.raw,
   .options {
-    @apply tw-border-black/20;
+    border-color: rgb(0 0 0 / 0.2);
   }
 }
 
 .body--dark {
   .monaco-editor.raw,
   .options {
-    @apply tw-border-white/20;
+    border-color: rgb(255 255 255 / 0.2);
   }
 }
 
 .options {
-  @apply tw-border-t-2;
+  border-top-width: 2px;
 }
 
 .editor {
-  @apply tw-flex tw-h-full tw-flex-col-reverse tw-overflow-y-auto;
+  display: flex;
+  height: 100%;
+  flex-direction: column-reverse;
+  overflow-y: auto;
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-overflow-auto tw-border-y-2 tw-border-green-500/40 tw-outline-0 tw-transition-colors;
+  width: 100%;
+  overflow: auto;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+  border-color: rgb(34 197 94 / 0.4);
+  outline-width: 0px;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 .monaco-editor.validation-error {
-  @apply tw-border-red-500/40;
+  border-color: rgb(239 68 68 / 0.4);
 }
 
 .monaco-editor.validation-warning {
-  @apply tw-border-yellow-500/40;
+  border-color: rgb(234 179 8 / 0.4);
 }
 </style>
 
 <style lang="less">
 .mq3t-variable-highlight {
-  @apply tw-underline;
+  text-decoration-line: underline;
 }
 </style>
