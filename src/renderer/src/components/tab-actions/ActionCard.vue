@@ -80,18 +80,18 @@ const send = () => {
 </script>
 
 <template>
-  <q-card flat class="action-card tw-h-fit tw-p-4">
-    <div class="tw-flex tw-justify-between">
+  <q-card flat class="action-card tw:h-fit tw:p-4">
+    <div class="tw:flex tw:justify-between">
       <h2
-        class="truncate-hover-one-line drag-handle tw-w-full tw-text-lg"
-        :class="{ 'tw-cursor-grab': !noGrab }"
+        class="truncate-hover-one-line drag-handle tw:w-full tw:text-lg"
+        :class="{ 'tw:cursor-grab': !noGrab }"
         :title="action.name"
       >
         {{ action.name }}
       </h2>
       <q-btn
         v-if="!noContextMenu"
-        class="tw-ml-2"
+        class="tw:ml-2"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round
@@ -108,61 +108,61 @@ const send = () => {
     </div>
     <p
       v-if="!hideTopic"
-      class="truncate-hover-one-line color-details tw-cursor-pointer"
+      class="truncate-hover-one-line color-details tw:cursor-pointer"
       :title="action.topic"
       @click="handleCopyTopic"
     >
       {{ action.topic }}
     </p>
-    <div class="tw-mt-4 tw-flex tw-justify-between">
-      <div class="tw-flex tw-gap-4">
+    <div class="tw:mt-4 tw:flex tw:justify-between">
+      <div class="tw:flex tw:gap-4">
         <q-icon
           v-if="variablesCount"
           name="fa-solid fa-code"
-          class="color-details tw-mt-2"
+          class="color-details tw:mt-2"
           size="xs"
         >
-          <q-tooltip class="tw-text-sm">{{ variablesCount }} variables</q-tooltip>
+          <q-tooltip class="tw:text-sm">{{ variablesCount }} variables</q-tooltip>
         </q-icon>
 
         <q-icon
           v-if="action.description"
           name="fa-solid fa-info-circle"
-          class="color-details tw-mt-2"
+          class="color-details tw:mt-2"
           size="xs"
         >
-          <q-tooltip class="tw-whitespace-pre tw-text-sm" v-text="action.description" />
+          <q-tooltip class="tw:whitespace-pre tw:text-sm" v-text="action.description" />
         </q-icon>
 
-        <q-icon name="fa-solid fa-ranking-star" class="color-details tw-mt-2 tw-px-1" size="xs">
-          <q-tooltip class="tw-text-sm" v-text="`QoS ${action.qos}`" />
+        <q-icon name="fa-solid fa-ranking-star" class="color-details tw:mt-2 tw:px-1" size="xs">
+          <q-tooltip class="tw:text-sm" v-text="`QoS ${action.qos}`" />
         </q-icon>
 
         <q-icon
           v-if="action.retained"
           name="fa-solid fa-retweet"
-          class="color-details tw-mt-2"
+          class="color-details tw:mt-2"
           size="xs"
         >
-          <q-tooltip class="tw-text-sm">Retained</q-tooltip>
+          <q-tooltip class="tw:text-sm">Retained</q-tooltip>
         </q-icon>
 
         <q-icon
           name="fa-solid fa-file-lines"
-          class="color-details tw-mt-2 tw-cursor-pointer"
+          class="color-details tw:mt-2 tw:cursor-pointer"
           size="xs"
           @click="handleCopyPayload"
         >
-          <q-tooltip class="tw-text-sm" v-text="action.payload" />
+          <q-tooltip class="tw:text-sm" v-text="action.payload" />
         </q-icon>
       </div>
       <q-btn color="primary" :disable="disableDisconnected || disableWildcard" @click="send">
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+        <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
-        <q-tooltip v-if="disableDisconnected" class="tw-bg-primary tw-text-sm tw-text-white">
+        <q-tooltip v-if="disableDisconnected" class="tw:bg-primary tw:text-sm tw:text-white">
           Connection is not active.
         </q-tooltip>
-        <q-tooltip v-if="disableWildcard" class="tw-bg-primary tw-text-sm tw-text-white">
+        <q-tooltip v-if="disableWildcard" class="tw:bg-primary tw:text-sm tw:text-white">
           Wildcard topics are only supported in the Topics tab.
         </q-tooltip>
       </q-btn>
@@ -189,12 +189,17 @@ const send = () => {
 
 <style scoped lang="less">
 .truncate-hover-one-line {
-  @apply tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .body--light {
   .action-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 </style>

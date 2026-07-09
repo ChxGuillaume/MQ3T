@@ -10,7 +10,7 @@ const LIGHT_MODE = { height: 40, color: '#FFFFFF', symbolColor: '#650164' }
 
 export const createWindow = (routePath = '/') => {
   const windowConfig: Electron.BrowserWindowConstructorOptions = {
-    width: 1300,
+    width: 1280,
     minWidth: 800,
     height: 800,
     minHeight: 600,

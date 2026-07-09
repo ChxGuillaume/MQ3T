@@ -85,12 +85,12 @@ const deleteUserProperty = (key: string) => {
       </template>
       <template #top-right>
         <q-btn flat dense color="accent" @click="addUserProperty">
-          <q-icon class="tw-mr-2" name="add" />
+          <q-icon class="tw:mr-2" name="add" />
           Add
         </q-btn>
       </template>
       <template #body="props">
-        <q-tr :props="props" class="tw-py-2">
+        <q-tr :props="props" class="tw:py-2">
           <q-td>
             <q-input
               v-model="props.row.key"
@@ -109,7 +109,7 @@ const deleteUserProperty = (key: string) => {
               @input="updateUserProperty(props.row.key, props.row.value)"
             />
           </q-td>
-          <q-td class="tw-text-end">
+          <q-td class="tw:text-end">
             <q-btn
               flat
               dense

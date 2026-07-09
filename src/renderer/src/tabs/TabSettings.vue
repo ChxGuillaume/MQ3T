@@ -149,29 +149,29 @@ const showVersionModal = ref(false)
 
 <template>
   <div
-    class="text-weight-medium tw-flex tw-justify-between tw-bg-neutral-200 tw-p-2 dark:tw-bg-neutral-800"
+    class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
   >
-    <div class="tw-w-24">
+    <div class="tw:w-24">
       <q-btn
         size="xs"
-        class="tw-bg-white hover:tw-bg-neutral-200 dark:tw-bg-neutral-700"
+        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
         flat
         @click="appStore.setCurrentTab('connections')"
       >
-        <div class="tw-flex tw-place-items-center tw-gap-2">
+        <div class="tw:flex tw:place-items-center tw:gap-2">
           <q-icon name="fa-solid fa-arrow-left" size="10px" />
-          <span class="tw-text-[0.65rem] tw-leading-[0]">Back</span>
+          <span class="tw:text-[0.65rem] tw:leading-0">Back</span>
         </div>
       </q-btn>
     </div>
 
-    <div class="tw-bg-neutral-200 tw-text-center dark:tw-bg-neutral-800">Settings</div>
+    <div class="tw:bg-neutral-200 tw:text-center tw:dark:bg-neutral-800">Settings</div>
 
-    <div class="tw-w-24" />
+    <div class="tw:w-24" />
   </div>
 
   <div class="settings">
-    <div class="tw-flex tw-flex-col tw-gap-6">
+    <div class="tw:flex tw:flex-col tw:gap-6">
       <div class="settings-group">
         <h2 class="settings-group-title">App</h2>
         <hr class="settings-group-separator" />
@@ -192,7 +192,7 @@ const showVersionModal = ref(false)
             v-model="dateFormatSetting"
             name="date-format-setting"
             filled
-            class="tw-text-white"
+            class="tw:text-white"
             :options="dateFormatOptions"
             label="Date Format"
             emit-value
@@ -205,7 +205,7 @@ const showVersionModal = ref(false)
             v-model="timeFormatSetting"
             name="time-format-setting"
             filled
-            class="tw-text-white"
+            class="tw:text-white"
             :options="timeFormatOptions"
             label="Time Format"
             emit-value
@@ -225,7 +225,7 @@ const showVersionModal = ref(false)
               v-model="showActivitySetting"
               name="show-activity-setting"
               label="Show Activity"
-              class="tw-w-full"
+              class="tw:w-full"
             />
           </q-card>
           <q-select
@@ -271,10 +271,10 @@ const showVersionModal = ref(false)
             <q-toggle
               v-model="smartTopicGroupCloseSetting"
               name="smart-topic-group-close-setting"
-              class="tw-w-full"
+              class="tw:w-full"
               label="Smart Topic Group"
             />
-            <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+            <q-icon name="fa-solid fa-info-circle" class="tw:mx-3">
               <q-tooltip>
                 When enabled topic groups closes if they are selected and clicked again
               </q-tooltip>
@@ -285,7 +285,7 @@ const showVersionModal = ref(false)
               v-model="messagesPaginationSetting"
               name="messages-pagination-setting"
               label="Messages Pagination"
-              class="tw-w-full"
+              class="tw:w-full"
             />
           </q-card>
         </div>
@@ -298,7 +298,7 @@ const showVersionModal = ref(false)
             v-model="defaultDataFormatSetting"
             name="default-data-format-setting"
             filled
-            class="tw-text-white"
+            class="tw:text-white"
             :options="defaultDataFormatOptions"
             label="Default Data Format"
             emit-value
@@ -313,11 +313,11 @@ const showVersionModal = ref(false)
             <q-toggle
               v-model="autoOpenPublishActionsSetting"
               name="auto-open-publish-actions-setting"
-              class="tw-w-full"
+              class="tw:w-full"
               label="Auto Open Actions Pan"
             >
             </q-toggle>
-            <q-icon name="fa-solid fa-info-circle" class="tw-mx-3">
+            <q-icon name="fa-solid fa-info-circle" class="tw:mx-3">
               <q-tooltip>
                 Automatically open the actions pan in the publish tab when an action is available
               </q-tooltip>
@@ -327,14 +327,14 @@ const showVersionModal = ref(false)
       </div>
     </div>
 
-    <div class="color-details tw-fixed tw-bottom-2 tw-right-2 tw-flex tw-select-none tw-gap-2">
-      <div class="tw-cursor-pointer" @click="showChangeLogsModal = true">
-        <q-icon name="fa-solid fa-bug" class="tw-mr-1" />
+    <div class="color-details tw:fixed tw:bottom-2 tw:right-2 tw:flex tw:select-none tw:gap-2">
+      <div class="tw:cursor-pointer" @click="showChangeLogsModal = true">
+        <q-icon name="fa-solid fa-bug" class="tw:mr-1" />
         Change Logs
       </div>
       |
-      <div class="tw-cursor-pointer" @click="showVersionModal = true">
-        <q-icon name="fa-solid fa-info-circle" class="tw-mr-1" />
+      <div class="tw:cursor-pointer" @click="showVersionModal = true">
+        <q-icon name="fa-solid fa-info-circle" class="tw:mr-1" />
         Version {{ appStore.appVersion }}
       </div>
     </div>
@@ -345,40 +345,60 @@ const showVersionModal = ref(false)
 
 <style scoped lang="less">
 .settings {
-  @apply tw-p-4;
+  padding: 1rem;
 }
 
 .settings-group {
-  @apply tw-flex tw-flex-col tw-gap-2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .settings-group .settings-group-title {
-  @apply tw-text-lg tw-font-bold;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 700;
 }
 
 .settings-group .settings-group-separator {
-  @apply tw-h-px tw-border-0 tw-bg-neutral-700;
+  height: 1px;
+  border-width: 0px;
+  background-color: #404040;
 }
 
 .settings-group .settings-group-item-container {
-  @apply tw-grid tw-gap-4 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 2xl:tw-grid-cols-5;
+  display: grid;
+  gap: 1rem;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (min-width: 1536px) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .card-toggle {
-  @apply tw-flex tw-items-center;
+  display: flex;
+  align-items: center;
   min-height: 56px;
   border-radius: 0.25em !important;
 }
 
 .body--light {
   .card-toggle {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 
 .body--dark {
   .card-toggle {
-    @apply tw-bg-neutral-800;
+    background-color: #262626;
   }
 }
 </style>

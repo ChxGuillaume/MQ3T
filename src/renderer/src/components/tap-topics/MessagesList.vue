@@ -81,14 +81,14 @@ watch(
 </script>
 
 <template>
-  <div class="justify-between tw-flex tw-min-h-12 tw-px-4 tw-pt-2">
-    <div class="items-center tw-flex tw-gap-2">
+  <div class="tw:flex tw:min-h-12 tw:px-4 tw:pt-2 justify-between">
+    <div class="tw:flex tw:gap-2 items-center">
       History
       <q-chip size="sm" color="primary" text-color="white">
         {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages
       </q-chip>
     </div>
-    <div class="tw-flex tw-items-center tw-gap-1">
+    <div class="tw:flex tw:items-center tw:gap-1">
       <q-pagination
         v-if="settingsStore.messagesPagination"
         v-model="currentPage"
@@ -104,7 +104,7 @@ watch(
       </q-btn>
     </div>
   </div>
-  <div class="tw-flex tw-flex-col tw-gap-2 tw-overflow-hidden tw-p-3">
+  <div class="tw:flex tw:flex-col tw:gap-2 tw:overflow-hidden tw:p-3">
     <q-intersection
       v-for="message in slicedMessages"
       :key="message.uid"
@@ -113,21 +113,21 @@ watch(
     >
       <q-card
         flat
-        class="card-secondary-background tw-cursor-pointer tw-select-none tw-p-2 tw-outline tw-outline-2 tw-transition-all"
+        class="card-secondary-background tw:cursor-pointer tw:select-none tw:p-2 tw:outline tw:outline-2 tw:transition-all"
         :class="{
-          'tw-outline-transparent': selectedMessage?.uid !== message.uid,
-          'tw-outline-primary': selectedMessage?.uid === message.uid
+          'tw:outline-transparent': selectedMessage?.uid !== message.uid,
+          'tw:outline-primary': selectedMessage?.uid === message.uid
         }"
         @click="handleMessageClick(message)"
       >
-        <div class="tw-mb-1 tw-flex tw-justify-between">
+        <div class="tw:mb-1 tw:flex tw:justify-between">
           <div>
-            <div class="color-details tw-flex tw-h-fit tw-items-center tw-gap-1">
+            <div class="color-details tw:flex tw:h-fit tw:items-center tw:gap-1">
               {{ settingsStore.formatDateTime(message.createdAt) }}
-              <span v-if="message.createdDiff" class="tw-text-xs tw-opacity-70">
+              <span v-if="message.createdDiff" class="tw:text-xs tw:opacity-70">
                 ({{ formatDuration(message.createdDiff) }})
               </span>
-              <q-icon size="12px" name="fa-solid fa-info-circle" class="tw-ml-1 tw-opacity-70">
+              <q-icon size="12px" name="fa-solid fa-info-circle" class="tw:ml-1 tw:opacity-70">
                 <q-tooltip :offset="[5, 5]">
                   <div>QoS: {{ message.qos }}</div>
                   <div>Retained: {{ message.retained }}</div>
@@ -135,14 +135,14 @@ watch(
               </q-icon>
             </div>
           </div>
-          <div class="tw-flex">
+          <div class="tw:flex">
             <copy-button
               notification-message="Message copied to clipboard"
               @click="copyMessage(message.message)"
             />
           </div>
         </div>
-        <div class="tw-line-clamp-4 tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
+        <div class="tw:line-clamp-4 tw:w-full tw:max-w-full tw:overflow-hidden tw:break-all">
           {{ formatMessage(message.message) }}
         </div>
       </q-card>

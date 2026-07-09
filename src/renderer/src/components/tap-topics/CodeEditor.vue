@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue'
 import { validCode } from '../../assets/js/format-code'
 import * as monaco from 'monaco-editor'
 import { useQuasar } from 'quasar'
@@ -17,6 +17,9 @@ export interface ICodeEditor {
 }
 
 const $q = useQuasar()
+const slots = useSlots()
+
+const hasSlots = computed(() => !!slots['header-left'] || !!slots['header-right'])
 
 const props = defineProps<{
   modelValue: string
@@ -24,6 +27,7 @@ const props = defineProps<{
   language?: 'raw' | 'json' | 'xml' | 'yaml' | string
   hideWarning?: boolean
   variableCompletion?: boolean
+  dense?: boolean
 }>()
 
 const emits = defineEmits(['update:modelValue', 'update:language'])
@@ -50,7 +54,7 @@ watch(
   }
 )
 
-let decoration = ref<string[]>([])
+const decoration = ref<string[]>([])
 onMounted(() => {
   if (!monacoEditorRef.value) return
 
@@ -192,51 +196,99 @@ const editorStatus = computed(() => {
 
 <template>
   <div class="editor">
-    <div ref="monacoEditorRef" class="monaco-editor tw-w-full tw-flex-grow" :class="editorStatus" />
-    <div class="options tw-flex tw-justify-between tw-p-3">
-      <q-btn-toggle
-        v-model="editorLanguage"
-        toggle-color="primary"
-        unelevated
-        dense
-        padding="4px 12px"
-        :options="[
-          { label: 'Raw', value: 'raw' },
-          { label: 'JSON', value: 'json' },
-          { label: 'XML', value: 'xml' },
-          { label: 'YAML', value: 'yaml' }
-        ]"
-      />
-      <div v-if="!valideCode && !hideWarning" class="items-center tw-flex tw-select-none">
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
-        Invalid {{ editorLanguage.toUpperCase() }} format
-      </div>
+    <div ref="monacoEditorRef" class="monaco-editor tw:w-full tw:grow" :class="editorStatus" />
+    <slot name="between" />
+    <div
+      class="options tw:flex tw:items-center tw:p-3"
+      :class="{ 'tw:py-1.5': dense, 'tw:justify-between': hasSlots }"
+    >
+      <slot name="header-left" />
       <div
-        v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
-        class="items-center tw-flex tw-select-none"
+        class="tw:flex tw:items-center tw:gap-2"
+        :class="hasSlots ? '' : 'tw:w-full tw:justify-between'"
       >
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-exclamation-triangle" color="yellow" />
-        Duplicate variables
-        <q-tooltip anchor="top middle" self="bottom middle">
-          <div>
-            <div class="tw-text-sm tw-font-semibold">Variable duplicates</div>
-            <div class="tw-text-xs">
-              The following variables names are duplicated: <br />
-              {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
+        <q-select
+          v-if="dense"
+          v-model="editorLanguage"
+          class="tw:min-w-24"
+          dense
+          filled
+          options-dense
+          :options="[
+            { label: 'Raw', value: 'raw' },
+            { label: 'JSON', value: 'json' },
+            { label: 'XML', value: 'xml' },
+            { label: 'YAML', value: 'yaml' }
+          ]"
+          emit-value
+          map-options
+        />
+        <q-btn-toggle
+          v-else
+          v-model="editorLanguage"
+          toggle-color="primary"
+          unelevated
+          dense
+          padding="4px 12px"
+          :options="[
+            { label: 'Raw', value: 'raw' },
+            { label: 'JSON', value: 'json' },
+            { label: 'XML', value: 'xml' },
+            { label: 'YAML', value: 'yaml' }
+          ]"
+        />
+        <div v-if="!valideCode && !hideWarning" class="tw:flex tw:select-none items-center">
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
+          <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
+          <q-tooltip v-else anchor="top middle" self="bottom middle">
+            Invalid {{ editorLanguage.toUpperCase() }} format
+          </q-tooltip>
+        </div>
+        <div
+          v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
+          class="tw:flex tw:select-none items-center"
+        >
+          <q-icon
+            class="tw:mr-2"
+            size="xs"
+            name="fa-solid fa-exclamation-triangle"
+            color="yellow"
+          />
+          <span v-if="!dense">Duplicate variables</span>
+          <q-tooltip anchor="top middle" self="bottom middle">
+            <div>
+              <div class="tw:text-sm tw:font-semibold">Variable duplicates</div>
+              <div class="tw:text-xs">
+                The following variables names are duplicated: <br />
+                {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
+              </div>
             </div>
-          </div>
-        </q-tooltip>
+          </q-tooltip>
+        </div>
+        <q-btn
+          v-if="dense"
+          dense
+          color="primary"
+          :disable="editorLanguage === 'raw'"
+          @click="handleFormatCode"
+        >
+          <q-icon class="tw:mx-2" size="16px" name="fa-solid fa-align-left" />
+          <q-tooltip anchor="top middle" self="bottom middle">Format</q-tooltip>
+        </q-btn>
+        <q-btn
+          v-else
+          color="primary"
+          dense
+          padding="10px 12px"
+          :disable="editorLanguage === 'raw'"
+          @click="handleFormatCode"
+        >
+          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-align-left" />
+          Format
+        </q-btn>
+        <slot name="format-right" />
       </div>
-      <q-btn
-        color="primary"
-        dense
-        padding="0px 12px"
-        :disable="editorLanguage === 'raw'"
-        @click="handleFormatCode"
-      >
-        <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-align-left" />
-        Format
-      </q-btn>
+      <slot name="header-right" />
     </div>
   </div>
 </template>
@@ -245,40 +297,51 @@ const editorStatus = computed(() => {
 .body--light {
   .monaco-editor.raw,
   .options {
-    @apply tw-border-black/20;
+    border-color: rgb(0 0 0 / 0.2);
   }
 }
 
 .body--dark {
   .monaco-editor.raw,
   .options {
-    @apply tw-border-white/20;
+    border-color: rgb(255 255 255 / 0.2);
   }
 }
 
 .options {
-  @apply tw-border-t-2;
+  border-top-width: 2px;
 }
 
 .editor {
-  @apply tw-flex tw-h-full tw-flex-col-reverse;
+  display: flex;
+  height: 100%;
+  flex-direction: column-reverse;
+  overflow-y: auto;
 }
 
 .monaco-editor {
-  @apply tw-w-full tw-overflow-auto tw-border-y-2 tw-border-green-500/40 tw-outline-0 tw-transition-colors;
+  width: 100%;
+  overflow: auto;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+  border-color: rgb(34 197 94 / 0.4);
+  outline-width: 0;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 .monaco-editor.validation-error {
-  @apply tw-border-red-500/40;
+  border-color: rgb(239 68 68 / 0.4);
 }
 
 .monaco-editor.validation-warning {
-  @apply tw-border-yellow-500/40;
+  border-color: rgb(234 179 8 / 0.4);
 }
 </style>
 
 <style lang="less">
 .mq3t-variable-highlight {
-  @apply tw-underline;
+  text-decoration-line: underline;
 }
 </style>

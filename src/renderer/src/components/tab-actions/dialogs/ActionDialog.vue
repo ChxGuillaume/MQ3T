@@ -2,6 +2,7 @@
 import { getPayloadVariablesGrouped } from '@renderer/assets/js/actions-variables'
 import { useCopyClipboard } from '@renderer/composables/useCopyClipboard'
 import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
+import { useMqttConnectionsStore } from '../../../store/mqtt-connections'
 import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
@@ -9,6 +10,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
+const mqttConnectionsStore = useMqttConnectionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 
@@ -23,6 +25,7 @@ const props = defineProps<{
   noWildcard?: boolean
   editMode?: boolean
   action?: Action
+  connectionId?: string
   variableCompletion?: boolean
 }>()
 
@@ -33,6 +36,12 @@ const emits = defineEmits<{
   close: []
 }>()
 
+const isMqtt5 = computed(
+  () =>
+    !props.connectionId ||
+    mqttConnectionsStore.getConnection(props.connectionId)?.protocolVersion === 5
+)
+
 const editorLanguage = ref<'raw' | 'json' | 'xml' | 'yaml'>(settingsStore.defaultDataFormat)
 const showEditor = ref(false)
 const form = reactive({
@@ -42,6 +51,8 @@ const form = reactive({
   payload: '',
   retained: false,
   description: '',
+  responseTopic: '',
+  correlationData: '',
   enumOptions: {} as Record<string, (string | number)[]>
 })
 const enumOptionsCache = ref<Record<string, ('string' | 'number')[]>>({})
@@ -113,6 +124,8 @@ const clearForm = () => {
   form.payload = ''
   form.retained = false
   form.description = ''
+  form.responseTopic = ''
+  form.correlationData = ''
   form.enumOptions = {}
 
   editorLanguage.value = 'raw'
@@ -145,7 +158,9 @@ const handleCreate = async () => {
     payload: form.payload,
     retained: form.retained,
     description: form.description,
-    payloadFormat: editorLanguage.value
+    payloadFormat: editorLanguage.value,
+    responseTopic: form.responseTopic,
+    correlationData: form.correlationData
   })
 
   handleCloseForm()
@@ -165,7 +180,9 @@ const handleUpdate = async () => {
     retained: form.retained,
     description: form.description,
     payloadFormat: editorLanguage.value,
-    enumOptions: form.enumOptions
+    enumOptions: form.enumOptions,
+    responseTopic: form.responseTopic,
+    correlationData: form.correlationData
   })
 
   handleCloseForm()
@@ -193,6 +210,8 @@ watch(
     form.payload = action.payload
     form.retained = action.retained
     form.description = action.description!
+    form.responseTopic = action.responseTopic || ''
+    form.correlationData = action.correlationData || ''
 
     enumOptionsCache.value = Object.fromEntries(
       Object.entries(action.enumOptions || {}).map(([key, value]) => [
@@ -216,15 +235,15 @@ watch(
     @before-hide="showEditor = false"
   >
     <q-card flat class="dialog-card" :class="{ 'has-enum': hasEnum }">
-      <q-form ref="formRef" class="tw-flex">
-        <div class="tw-w-[760px]">
-          <q-card-section class="tw-grid tw-gap-2">
-            <h2 class="tw-mb-2 tw-text-xl">Action</h2>
+      <q-form ref="formRef" class="tw:flex">
+        <div class="tw:w-[760px]">
+          <q-card-section class="tw:grid tw:gap-2">
+            <h2 class="tw:mb-2 tw:text-xl">Action</h2>
             <div
-              class="tw-grid tw-gap-4"
+              class="tw:grid tw:gap-4"
               :class="{
-                'tw-grid-cols-2': !noTitle,
-                'tw-grid-cols-1': noTitle
+                'tw:grid-cols-2': !noTitle,
+                'tw:grid-cols-1': noTitle
               }"
             >
               <q-input
@@ -244,17 +263,17 @@ watch(
                 :hint="hint"
               />
             </div>
-            <div class="tw-grid-cols tw-grid tw-gap-4">
-              <div class="tw-flex tw-gap-4">
-                <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
+            <div class="tw-grid-cols tw:grid tw:gap-4">
+              <div class="tw:flex tw:gap-4">
+                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
                   <q-select
                     v-model="form.qos"
                     :options="[0, 1, 2]"
                     filled
                     label="QoS"
-                    class="tw-w-[128px]"
+                    class="tw:w-[128px]"
                   />
-                  <q-toggle v-model="form.retained" label="Retain" class="tw-pr-3" />
+                  <q-toggle v-model="form.retained" label="Retain" class="tw:pr-3" />
                 </div>
                 <q-input
                   v-model="form.description"
@@ -262,54 +281,72 @@ watch(
                   label="Description"
                   type="textarea"
                   rows="4"
-                  class="action-description tw-flex-grow"
+                  class="action-description tw:grow"
                 />
               </div>
+              <template v-if="isMqtt5">
+                <div class="tw:flex tw:gap-4">
+                  <q-input
+                    v-model="form.responseTopic"
+                    filled
+                    dense
+                    label="Response Topic"
+                    class="tw:grow"
+                  />
+                  <q-input
+                    v-model="form.correlationData"
+                    filled
+                    dense
+                    label="Correlation Data"
+                    class="tw:grow"
+                  />
+                </div>
+              </template>
             </div>
-            <div class="tw-mt-4 tw-h-[300px]">
+            <div class="tw:mt-4 tw:h-[300px]">
               <code-editor
                 v-if="showEditor"
                 ref="codeEditorRef"
                 v-model:language="editorLanguage"
                 v-model="form.payload"
                 :variable-completion="variableCompletion"
-                class="tw-h-[300px]"
+                class="tw:h-[300px]"
                 font-size="14"
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <div class="tw-flex tw-gap-2">
+            <div class="tw:flex tw:gap-2">
               <q-btn flat label="Cancel" @click="handleCloseForm" />
               <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-plus" />
+                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
                 Create
               </q-btn>
               <q-btn v-else color="primary" @click="handleUpdate">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-save" />
+                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-save" />
                 Update
               </q-btn>
             </div>
           </q-card-actions>
         </div>
         <q-separator vertical />
-        <div class="tw-h-full tw-w-[280px]">
-          <q-card-section class="tw-flex tw-h-full tw-flex-col tw-gap-4 tw-overflow-auto">
-            <h2 class="tw-text-xl">Enums</h2>
+        <div class="tw:h-full tw:w-[280px]">
+          <q-card-section class="tw:flex tw:h-full tw:flex-col tw:gap-4 tw:overflow-auto">
+            <h2 class="tw:text-xl">Enums</h2>
             <div
               v-for="enum_name in enumVariableNames"
               :key="enum_name.name"
-              class="tw-flex tw-flex-col tw-gap-2"
+              class="tw:flex tw:flex-col tw:gap-2"
             >
-              <div class="tw-flex tw-w-full tw-items-center tw-justify-between">
+              <div class="tw:flex tw:w-full tw:items-center tw:justify-between">
                 <div
-                  class="tw-flex tw-items-center"
+                  class="tw:flex tw:items-center"
                   @click="copy(enum_name.name, 'Variable Name Copied')"
                 >
                   <h3
-                    class="tw-line-clamp-1 tw-max-w-48 tw-cursor-default tw-text-lg"
+                    class="tw:line-clamp-1 tw:max-w-48 tw:cursor-default tw:text-lg"
                     :class="{
-                      'tw-text-red-500': !enum_name.from_payload,
+                      'tw:text-red-500': !enum_name.from_payload,
                       'color-details': enum_name.from_payload
                     }"
                     :title="enum_name.name"
@@ -318,7 +355,7 @@ watch(
                   </h3>
                   <q-tooltip
                     v-if="!enum_name.from_payload"
-                    class="tw-bg-red-500"
+                    class="tw:bg-red-500"
                     anchor="center left"
                     self="center right"
                     :offset="[10, 0]"
@@ -340,7 +377,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw-mr-2" name="fa-solid fa-font" />
+                            <q-icon class="tw:mr-2" name="fa-solid fa-font" />
                             String
                           </div>
                         </q-item-section>
@@ -352,7 +389,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw-mr-2" name="fa-solid fa-hashtag" />
+                            <q-icon class="tw:mr-2" name="fa-solid fa-hashtag" />
                             Number
                           </div>
                         </q-item-section>
@@ -417,11 +454,14 @@ watch(
 
 <style scoped lang="less">
 .action-description {
-  @apply tw-resize-none;
+  resize: none;
 }
 
 .dialog-card {
-  @apply tw-flex tw-transition-all;
+  display: flex;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
   min-width: 760px;
   overflow: hidden !important;
 }

@@ -77,6 +77,10 @@ const getRawCode = () => {
 
 <style scoped lang="less">
 .code-text {
-  @apply tw-ml-1 tw-overflow-x-hidden tw-overflow-ellipsis tw-text-xs;
+  margin-left: 0.25rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 </style>

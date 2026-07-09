@@ -42,8 +42,8 @@ const selectedProtocolVersion = computed(() => {
 </script>
 
 <template>
-  <q-card flat class="tw-grid tw-auto-rows-min tw-gap-2">
-    <div class="tw-grid tw-grid-cols-4 tw-gap-4">
+  <q-card flat class="tw:grid tw:auto-rows-min tw:gap-2">
+    <div class="tw:grid tw:grid-cols-4 tw:gap-4">
       <q-select
         v-model="protocolVersion"
         :options="mqttProtocolVersions"
@@ -71,12 +71,12 @@ const selectedProtocolVersion = computed(() => {
         min="0"
         :rules="advancedSettingsRules.reconnectPeriod"
       />
-      <q-toggle v-model="cleanSession" class="tw-pb-5" label="Clean session" color="primary" />
+      <q-toggle v-model="cleanSession" class="tw:pb-5" label="Clean session" color="primary" />
     </div>
-    <div v-if="protocolVersion === 5" class="tw-grid tw-grid-cols-3 tw-gap-4">
+    <div v-if="protocolVersion === 5" class="tw:grid tw:grid-cols-3 tw:gap-4">
       <q-input
         v-model.number="sessionExpiryInterval"
-        class="tw-flex-grow"
+        class="tw:grow"
         filled
         label="Session Expiry Interval"
         type="number"
@@ -87,7 +87,7 @@ const selectedProtocolVersion = computed(() => {
       />
       <q-input
         v-model.number="receiveMaximum"
-        class="tw-flex-grow"
+        class="tw:grow"
         filled
         label="Receive Maximum"
         type="number"
@@ -96,7 +96,7 @@ const selectedProtocolVersion = computed(() => {
       />
       <q-input
         v-model.number="maximumPacketSize"
-        class="tw-flex-grow"
+        class="tw:grow"
         filled
         label="Maximum Packet Size"
         type="number"
@@ -104,7 +104,7 @@ const selectedProtocolVersion = computed(() => {
         :rules="advancedSettingsRules.optionalNumber"
       />
     </div>
-    <div v-if="protocolVersion === 5" class="tw-grid tw-grid-cols-2 tw-gap-2">
+    <div v-if="protocolVersion === 5" class="tw:grid tw:grid-cols-2 tw:gap-2">
       <q-toggle
         v-model="requestResponseInformation"
         label="Request Response Information"
@@ -116,7 +116,7 @@ const selectedProtocolVersion = computed(() => {
         color="primary"
       />
     </div>
-    <div v-if="protocolVersion === 5" class="tw-mt-4 tw-grid tw-gap-2">
+    <div v-if="protocolVersion === 5" class="tw:mt-4 tw:grid tw:gap-2">
       <user-properties-table v-model:user-properties="userProperties" />
     </div>
   </q-card>

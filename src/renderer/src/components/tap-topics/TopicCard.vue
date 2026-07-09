@@ -92,13 +92,13 @@ defineExpose<{ animate: () => void }>({ animate })
 <template>
   <q-card
     flat
-    class="topic-item-card card-secondary-background tw-select-none tw-pr-3"
+    class="topic-item-card card-secondary-background tw:select-none tw:pr-3"
     :class="[
       { active },
       { opened },
       { animate: doAnimate },
-      { 'tw-pl-1': expandable },
-      { 'tw-pl-3': !expandable },
+      { 'tw:pl-1': expandable },
+      { 'tw:pl-3': !expandable },
       { 'not-scrubbing': !appStore.isScrubbingTopics },
       `animation-${settingsStore.showActivityAnimationType}`
     ]"
@@ -110,8 +110,8 @@ defineExpose<{ animate: () => void }>({ animate })
       size="xs"
       class="expand-icon topic-item-icon"
     />
-    <q-icon v-if="hasActions" name="fa-solid fa-play" class="topic-item-icon tw-text-accent" />
-    <q-icon v-if="favorite" name="fa-solid fa-star" class="topic-item-icon tw-text-yellow-500" />
+    <q-icon v-if="hasActions" name="fa-solid fa-play" class="topic-item-icon tw:text-accent" />
+    <q-icon v-if="favorite" name="fa-solid fa-star" class="topic-item-icon tw:text-yellow-500" />
     <slot />
   </q-card>
 </template>
@@ -124,15 +124,25 @@ defineExpose<{ animate: () => void }>({ animate })
 }
 
 .topic-item-card {
-  @apply tw-flex tw-cursor-pointer tw-items-center tw-overflow-hidden tw-whitespace-nowrap tw-break-all tw-py-1 tw-text-neutral-500;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  word-break: break-all;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  color: #737373;
 }
 
 .topic-item-card.not-scrubbing {
-  @apply tw-transition-colors;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 .topic-item-icon {
-  @apply tw-h-4;
+  height: 1rem;
 
   margin-right: 5px;
   margin-bottom: 2px;
@@ -152,7 +162,9 @@ defineExpose<{ animate: () => void }>({ animate })
 .topic-item-card:before {
   content: '';
 
-  @apply tw-absolute tw-top-0 tw-h-full;
+  position: absolute;
+  top: 0px;
+  height: 100%;
   z-index: 1;
 }
 
@@ -189,7 +201,7 @@ defineExpose<{ animate: () => void }>({ animate })
   }
 
   .topic-item-card {
-    @apply tw-text-neutral-500;
+    color: #737373;
   }
 
   .topic-item-card:hover {
@@ -216,7 +228,7 @@ defineExpose<{ animate: () => void }>({ animate })
   }
 
   .topic-item-card {
-    @apply tw-text-neutral-400;
+    color: #a3a3a3;
   }
 
   .topic-item-card:hover {

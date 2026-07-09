@@ -1,29 +1,14 @@
+import type { MqttMessage, MqttTopicStructure, TopicMessages } from '../../../types/mqtt-topics'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { useSettingsStore } from './settings-store'
 import { codeType } from '../assets/js/format-code'
-import { IPublishPacket } from 'mqtt'
+import type { IPublishPacket } from 'mqtt'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 import _ from 'lodash'
 
-export type MqttMessage = {
-  uid: string
-  qos: 0 | 1 | 2
-  message: string
-  dataType?: 'raw' | 'json' | 'xml' | 'yaml'
-  retained: boolean
-  createdDiff?: number
-  createdAt: Date
-
-  properties?: IPublishPacket['properties']
-}
-
-export type MqttTopicStructure = {
-  [key: string]: MqttTopicStructure | null
-}
-
-export type TopicMessages = Record<string, Record<string, MqttMessage[]>>
+export type { MqttMessage, MqttTopicStructure, TopicMessages } from '../../../types/mqtt-topics'
 
 const filterBySearchTerms = (text: string, searchTerms: string): boolean => {
   return searchTerms

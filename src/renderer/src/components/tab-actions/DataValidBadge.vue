@@ -25,17 +25,17 @@ const iconSize = computed(() => {
 <template>
   <div
     class="badge"
-    :class="[{ 'tw-bg-green-500': isValid, 'tw-bg-red-500': !isValid }, `size-${size}`]"
+    :class="[{ 'tw:bg-green-500': isValid, 'tw:bg-red-500': !isValid }, `size-${size}`]"
   >
     <q-icon
       :name="isValid ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"
-      :class="{ 'tw-text-green-100': isValid, 'tw-text-red-100': !isValid }"
+      :class="{ 'tw:text-green-100': isValid, 'tw:text-red-100': !isValid }"
       :size="iconSize"
     >
     </q-icon>
     <q-tooltip
-      class="tw-text-sm"
-      :class="{ 'tw-bg-green-500': isValid, 'tw-bg-red-500': !isValid }"
+      class="tw:text-sm"
+      :class="{ 'tw:bg-green-500': isValid, 'tw:bg-red-500': !isValid }"
     >
       {{ isValid ? 'Valid Format' : 'Invalid Format' }}
     </q-tooltip>
@@ -44,22 +44,27 @@ const iconSize = computed(() => {
 
 <style scoped lang="less">
 .badge {
-  @apply tw-flex tw-justify-center tw-items-center tw-rounded-full;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 9999px;
 }
 
 .badge.valid {
-  @apply tw-bg-green-500;
+  background-color: #22c55e;
 }
 
 .badge.invalid {
-  @apply tw-bg-red-500;
+  background-color: #ef4444;
 }
 
 .badge.size-xs {
-  @apply tw-w-6 tw-h-6;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .badge.size-sm {
-  @apply tw-w-8 tw-h-8;
+  width: 2rem;
+  height: 2rem;
 }
 </style>

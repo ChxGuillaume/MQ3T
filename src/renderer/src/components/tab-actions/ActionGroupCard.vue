@@ -47,7 +47,7 @@ const handleDragEnd = (event: DragEvent) => {
 
 <template>
   <q-card
-    class="group-card tw-grid tw-h-fit tw-cursor-pointer tw-p-2 tw-transition-colors hover:tw-bg-primary/50"
+    class="group-card tw:grid tw:h-fit tw:cursor-pointer tw:p-2 tw:transition-colors tw:hover:bg-primary/50"
     :class="{ active, 'drop-zone': dropZoneActiveAndNotActive }"
     flat
     @dragleave.prevent="setDropZoneActive(false)"
@@ -56,21 +56,21 @@ const handleDragEnd = (event: DragEvent) => {
     @drop.prevent="handleDragEnd"
   >
     <div
-      class="tw-pointer-events-none tw-my-1 tw-flex tw-select-none tw-items-start tw-justify-between"
+      class="tw:pointer-events-none tw:my-1 tw:flex tw:select-none tw:items-start tw:justify-between"
     >
       <div>
         <h2
-          class="tw-line-clamp-1 tw-cursor-pointer tw-overflow-hidden tw-text-ellipsis tw-text-lg"
+          class="tw:line-clamp-1 tw:cursor-pointer tw:overflow-hidden tw:text-ellipsis tw:text-lg"
         >
           {{ title }}
         </h2>
-        <p class="description color-details tw-line-clamp-3 tw-transition-colors">
+        <p class="description color-details tw:line-clamp-3 tw:transition-colors">
           {{ description }}
         </p>
       </div>
       <q-btn
-        class="drag-handle tw-pointer-events-auto"
-        :class="{ 'tw-cursor-grab': !notDraggable }"
+        class="drag-handle tw:pointer-events-auto"
+        :class="{ 'tw:cursor-grab': !notDraggable }"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round
@@ -78,8 +78,8 @@ const handleDragEnd = (event: DragEvent) => {
         @click.stop
       >
         <action-group-context-menu
-          :cantModify="cantModify"
-          :notMovable="notMovable"
+          :cant-modify="cantModify"
+          :not-movable="notMovable"
           @edit="$emit('edit')"
           @delete="$emit('delete')"
           @copy="$emit('copy')"
@@ -95,8 +95,8 @@ const handleDragEnd = (event: DragEvent) => {
       context-menu
       anchor="bottom left"
       self="top left"
-      :cantModify="cantModify"
-      :notMovable="notMovable"
+      :cant-modify="cantModify"
+      :not-movable="notMovable"
       @edit="$emit('edit')"
       @delete="$emit('delete')"
       @copy="$emit('copy')"
@@ -111,36 +111,38 @@ const handleDragEnd = (event: DragEvent) => {
 <style scoped lang="less">
 .body--dark {
   .group-card {
-    @apply tw-bg-neutral-800;
+    background-color: #262626;
   }
 
   .group-card.active {
-    @apply tw-bg-primary/70 tw-text-white;
+    background-color: rgb(101 1 100 / 0.7);
+    color: white;
   }
 
   .group-card.active .color-details {
-    @apply tw-text-neutral-200;
+    color: #e5e5e5;
   }
 }
 
 .body--light {
   .group-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 
   .group-card.active {
-    @apply tw-bg-primary/70 tw-text-white;
+    background-color: rgb(101 1 100 / 0.7);
+    color: white;
   }
   .group-card.active .color-details {
-    @apply tw-text-neutral-200;
+    color: #e5e5e5;
   }
 }
 
 .group-card.drop-zone {
-  @apply tw-bg-secondary;
+  background-color: #75e67c;
 }
 
 .group-card.drop-zone .description {
-  @apply tw-text-neutral-100;
+  color: #f5f5f5;
 }
 </style>

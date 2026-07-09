@@ -16,14 +16,14 @@ const topics = computed(() => {
   <q-card
     v-if="!topics.length"
     flat
-    class="tw-flex tw-h-full tw-flex-col tw-justify-center tw-gap-4"
+    class="tw:flex tw:h-full tw:flex-col tw:justify-center tw:gap-4"
   >
-    <h1 class="tw-w-full tw-text-center tw-text-2xl tw-font-bold">No favorite topic found</h1>
-    <h2 class="tw-w-full tw-px-4 tw-text-center tw-text-sm">
+    <h1 class="tw:w-full tw:text-center tw:text-2xl tw:font-bold">No favorite topic found</h1>
+    <h2 class="tw:w-full tw:px-4 tw:text-center tw:text-sm">
       To add a topic to your favorites, right click on a topic and select "Favorite"
     </h2>
   </q-card>
-  <div v-else class="tw-flex tw-h-full tw-w-full tw-flex-col">
+  <div v-else class="tw:flex tw:h-full tw:w-full tw:flex-col">
     <favorite-topic-card
       v-for="topic in topics"
       :key="topic"
@@ -36,13 +36,13 @@ const topics = computed(() => {
 <style scoped lang="less">
 .body--light {
   .title-container {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 
 .body--dark {
   .title-container {
-    @apply tw-bg-neutral-800;
+    background-color: #262626;
   }
 }
 </style>

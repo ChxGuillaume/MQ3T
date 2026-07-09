@@ -34,28 +34,36 @@ const handleClick = () => {
 
 <style scoped lang="less">
 .icon {
-  @apply tw-flex tw-justify-center tw-items-center tw-rounded-xl;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.75rem;
 }
 
 .icon.horizontal {
-  @apply tw-px-3;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   height: 12px;
 }
 
 .icon.vertical {
-  @apply tw-py-3 tw-flex;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  display: flex;
   width: 12px;
 }
 
 .body--light {
   .icon {
-    @apply tw-bg-neutral-200 tw-text-black;
+    background-color: #e5e5e5;
+    color: black;
   }
 }
 
 .body--dark {
   .icon {
-    @apply tw-bg-neutral-600 tw-text-white;
+    background-color: #525252;
+    color: white;
   }
 }
 </style>

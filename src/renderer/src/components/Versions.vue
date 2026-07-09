@@ -34,18 +34,18 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 <template>
   <q-list class="versions">
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://www.electronjs.org/')"
     >
-      <icon-electron-js class="tw-mr-3" />
+      <icon-electron-js class="tw:mr-3" />
       <q-item-section>
         <span>Electron</span>
         <span class="version-color">v{{ versions.electron }}</span>
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://www.chromium.org/')"
     >
@@ -56,7 +56,7 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://nodejs.org/')"
     >
@@ -67,7 +67,7 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
       </q-item-section>
     </q-item>
     <q-item
-      class="tw-flex tw-items-center"
+      class="tw:flex tw:items-center"
       clickable
       @click="ElectronApi.openUrl('https://v8.dev/')"
     >
@@ -82,15 +82,15 @@ const versions = reactive({ ...window.electron.process.versions } as Versions)
 
 <style scoped lang="less">
 .body--dark .version-color {
-  @apply tw-text-neutral-500;
+  color: #737373;
 }
 
 .body--light .version-color {
-  @apply tw-text-neutral-400;
+  color: #a3a3a3;
 }
 
 .versions {
-  @apply tw-grid;
+  display: grid;
   grid-template-columns: 150px 1fr;
 }
 </style>

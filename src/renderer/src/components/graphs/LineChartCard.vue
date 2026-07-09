@@ -126,26 +126,30 @@ const defaultDataPathText = '<value>'
 </script>
 
 <template>
-  <q-card class="graph-card tw-border tw-p-2" flat :class="[dataGraph.size]">
-    <q-card-section v-if="showTitle" class="drag-handle tw-cursor-grab tw-p-2">
-      <div class="tw-line-clamp-1 tw-h-7 tw-break-all tw-text-xl">
+  <q-card
+    class="graph-card tw:border tw:border-neutral-300 tw:dark:border-neutral-800 tw:p-2"
+    flat
+    :class="[dataGraph.size]"
+  >
+    <q-card-section v-if="showTitle" class="drag-handle tw:cursor-grab tw:p-2">
+      <div class="tw:line-clamp-1 tw:h-7 tw:break-all tw:text-xl">
         {{ dataGraph.dataPath || defaultDataPathText }}
 
         <q-tooltip
-          class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
+          class="tw:bg-gray-200 tw:text-black tw:dark:bg-neutral-700 tw:dark:text-neutral-200"
           :offset="[5, 5]"
         >
           {{ dataGraph.dataPath || defaultDataPathText }}
         </q-tooltip>
       </div>
       <div
-        class="color-details tw-line-clamp-1 tw-max-w-full tw-overflow-hidden tw-overflow-ellipsis tw-break-all tw-text-sm"
+        class="color-details tw:line-clamp-1 tw:max-w-full tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-sm"
         :title="dataGraph.topic"
       >
         {{ dataGraph.topic }}
 
         <q-tooltip
-          class="tw-bg-gray-200 tw-text-black dark:tw-bg-neutral-700 dark:tw-text-neutral-200"
+          class="tw:bg-gray-200 tw:text-black tw:dark:bg-neutral-700 tw:dark:text-neutral-200"
           :offset="[5, 5]"
         >
           {{ dataGraph.topic }}
@@ -153,7 +157,7 @@ const defaultDataPathText = '<value>'
       </div>
     </q-card-section>
 
-    <div class="tw-h-[200px]">
+    <div class="tw:h-50">
       <v-chart v-if="showGraph" class="chart" :option="options" autoresize />
     </div>
 
@@ -161,7 +165,7 @@ const defaultDataPathText = '<value>'
 
     <q-btn
       v-if="showContextMenu"
-      class="tw-absolute tw-right-1 tw-top-1 tw-text-neutral-500"
+      class="tw:absolute tw:right-1 tw:top-1 tw:text-neutral-500"
       round
       flat
       size="sm"
@@ -192,31 +196,56 @@ const defaultDataPathText = '<value>'
 <style lang="less">
 .graph-card {
   .main-view &.small {
-    @apply tw-col-span-1;
+    grid-column: span 1 / span 1;
   }
 
   .main-view &.medium {
-    @apply tw-col-span-1 xl:tw-col-span-2;
+    grid-column: span 1 / span 1;
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
   }
 
   .main-view &.large {
-    @apply tw-col-span-1 xl:tw-col-span-2 2xl:tw-col-span-3;
+    grid-column: span 1 / span 1;
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1536px) {
+      grid-column: span 3 / span 3;
+    }
   }
 
   .graph-view &.small {
-    @apply tw-col-span-1;
+    grid-column: span 1 / span 1;
   }
 
   .graph-view &.medium {
-    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-2;
+    grid-column: span 1 / span 1;
+    @media (min-width: 768px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1280px) {
+      grid-column: span 2 / span 2;
+    }
   }
 
   .graph-view &.large {
-    @apply tw-col-span-1 md:tw-col-span-2 xl:tw-col-span-3 2xl:tw-col-span-5;
+    grid-column: span 1 / span 1;
+    @media (min-width: 768px) {
+      grid-column: span 2 / span 2;
+    }
+    @media (min-width: 1280px) {
+      grid-column: span 3 / span 3;
+    }
+    @media (min-width: 1536px) {
+      grid-column: span 5 / span 5;
+    }
   }
 }
 
 .chart {
-  @apply tw-h-full tw-w-full;
+  height: 100%;
+  width: 100%;
 }
 </style>

@@ -12,7 +12,7 @@ export const parseJsonForGlyphs = (value: string): GlyphLine[] => {
   const arrayIndex: Record<string, number> = {}
 
   splitValue.forEach((line, index) => {
-    let trimmedLine = trimLine(line)
+    const trimmedLine = trimLine(line)
     const [key, value] = trimmedLine.replace(/"/g, '').split(':')
     const isKeyValueLine = trimmedLine.includes(':')
     const endsWithOpenBracket = trimmedLine.endsWith('{')

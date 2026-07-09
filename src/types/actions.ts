@@ -14,6 +14,8 @@ export type Action = {
   retained: boolean
   payloadFormat?: 'raw' | 'json' | 'xml' | 'yaml'
   enumOptions?: Record<string, (string | number)[]>
+  responseTopic?: string
+  correlationData?: string
 }
 
 type Empty = Record<string, never>

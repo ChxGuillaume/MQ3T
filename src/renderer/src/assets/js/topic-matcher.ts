@@ -1,9 +1,13 @@
+const escapeRegExp = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export const topicMatchesSlicedWildcards = (topic: string, wildcards: string[]): string[] => {
-  let matchingWildcards = wildcards.filter((wildcard) => {
-    let regexTopic = wildcard
-      .slice(0, wildcard.lastIndexOf('+') + 2)
-      .replace(/\+/g, '.+?')
-      .replace(/\//g, '\\/')
+  const matchingWildcards = wildcards.filter((wildcard) => {
+    const regexTopic = escapeRegExp(wildcard.slice(0, wildcard.lastIndexOf('+') + 2)).replace(
+      /\\\+/g,
+      '.+?'
+    )
 
     return new RegExp(regexTopic).test(topic)
   })
@@ -21,11 +25,11 @@ export const topicMatchesSlicedWildcards = (topic: string, wildcards: string[]):
 }
 
 export const slicedWildcardMatchesTopics = (wildcard: string, topics: string[]): string[] => {
-  let matchingTopics = topics.filter((topic) => {
-    let regexTopic = wildcard
-      .slice(0, wildcard.lastIndexOf('+') + 2)
-      .replace(/\+/g, '.+?')
-      .replace(/\//g, '\\/')
+  const matchingTopics = topics.filter((topic) => {
+    const regexTopic = escapeRegExp(wildcard.slice(0, wildcard.lastIndexOf('+') + 2)).replace(
+      /\\\+/g,
+      '.+?'
+    )
 
     return new RegExp(regexTopic).test(topic)
   })
@@ -46,7 +50,7 @@ export const slicedWildcardMatchesTopics = (wildcard: string, topics: string[]):
 
 export const wildcardMatchesTopics = (wildcard: string, topics: string[]): string[] => {
   return topics.filter((topic) => {
-    let regexTopic = wildcard.replace(/\+/g, '.+?').replace(/\//g, '\\/')
+    const regexTopic = escapeRegExp(wildcard).replace(/\\\+/g, '.+?')
 
     return new RegExp(regexTopic).test(topic)
   })

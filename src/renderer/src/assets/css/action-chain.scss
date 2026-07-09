@@ -38,23 +38,32 @@ $wait: #f0ad4e;
   border-radius: 8px;
   transition: outline-color 0.2s ease !important;
 
-  @apply tw-flex tw-items-center tw-justify-center tw-py-[10px];
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .vue-flow__node-action,
 .vue-flow__node-wait {
-  @apply tw-h-[80px] tw-py-0;
+  height: 80px;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 .body--dark {
   .vue-flow__node {
-    @apply tw-bg-neutral-800 tw-text-white;
+    background-color: #262626;
+    color: white;
   }
 }
 
 .body--light {
   .vue-flow__node {
-    @apply tw-bg-neutral-100 tw-text-black tw-shadow-lg;
+    background-color: #f5f5f5;
+    color: black;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 }
 

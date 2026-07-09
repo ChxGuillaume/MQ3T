@@ -139,33 +139,34 @@ const codeEditorLimits = ref([400, 700])
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" v-model="opened" @hide="handleCloseForm" full-width>
+  <q-dialog ref="dialogRef" v-model="opened" full-width @hide="handleCloseForm">
     <q-card flat class="action-variables-card">
       <q-form ref="formRef" @submit="handleSend">
         <q-splitter
           v-model="codeEditorSplitter"
           :limits="codeEditorLimits"
           unit="px"
-          class="tw-h-96"
+          class="tw:h-96"
         >
           <template #before>
-            <div class="tw-max-h-fit tw-overflow-auto">
+            <div class="tw:max-h-fit tw:overflow-auto">
               <q-card-section>
-                <h2 class="tw-line-clamp-1 tw-text-lg">{{ props.action.name }}</h2>
-                <span class="tw-caption-top tw-text-neutral-500">{{ props.action.topic }}</span>
+                <h2 class="tw:line-clamp-1 tw:text-lg">{{ props.action.name }}</h2>
+                <span class="tw:caption-top tw:text-neutral-500">{{ props.action.topic }}</span>
               </q-card-section>
-              <q-card-section class="tw-grid tw-select-none tw-gap-6 tw-pt-0">
+              <q-card-section class="tw:grid tw:select-none tw:gap-6 tw:pt-0">
                 <div v-for="variableGroup in variablesGroups" :key="variableGroup.type">
                   <div
-                    class="tw-grid tw-gap-2"
+                    class="tw:grid tw:gap-2"
                     :class="{
-                      'tw-grid-cols-2':
+                      'tw:grid-cols-2':
                         variableGroup.type !== 'string' && variableGroup.variables.length > 1
                     }"
                   >
                     <q-input
-                      v-if="variableGroup.type === 'string'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-if="variableGroup.type === 'string'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :label="variable.name"
                       debounce="50"
@@ -186,8 +187,9 @@ const codeEditorLimits = ref([400, 700])
                       </template>
                     </q-input>
                     <q-input
-                      v-else-if="variableGroup.type === 'number'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-else-if="variableGroup.type === 'number'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :label="variable.name"
                       debounce="50"
@@ -213,17 +215,19 @@ const codeEditorLimits = ref([400, 700])
                     <q-toggle
                       v-for="(variable, index) in variableGroup.variables"
                       v-else-if="variableGroup.type === 'boolean'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`] || false"
                       dense
                       @update:model-value="form[`${index}:${variable.full}`] = $event"
                     >
-                      <div class="color-details tw-line-clamp-1" :title="variable.name">
+                      <div class="color-details tw:line-clamp-1" :title="variable.name">
                         {{ variable.name }}
                       </div>
                     </q-toggle>
                     <q-select
-                      v-else-if="variableGroup.type === 'enum'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-else-if="variableGroup.type === 'enum'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :options="action.enumOptions?.[variable.name] || []"
                       :label="variable.name"
@@ -238,11 +242,11 @@ const codeEditorLimits = ref([400, 700])
           </template>
 
           <template #separator>
-            <splitter-icon @click:double="codeEditorSplitter = 500" vertical />
+            <splitter-icon vertical @click:double="codeEditorSplitter = 500" />
           </template>
 
           <template #after>
-            <q-card-section class="tw-h-full tw-w-full tw-grow tw-p-0">
+            <q-card-section class="tw:h-full tw:w-full tw:grow tw:p-0">
               <code-preview
                 v-if="showEditor"
                 :value="transformedPayload"
@@ -254,13 +258,13 @@ const codeEditorLimits = ref([400, 700])
           </template>
         </q-splitter>
 
-        <q-separator class="tw-col-span-2" />
+        <q-separator class="tw:col-span-2" />
 
-        <q-card-actions class="tw-col-span-2" align="right">
-          <div class="tw-flex tw-gap-2">
+        <q-card-actions class="tw:col-span-2" align="right">
+          <div class="tw:flex tw:gap-2">
             <q-btn flat label="Cancel" @click="handleCloseForm" />
             <q-btn color="primary" type="submit">
-              <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
+              <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
               Send
             </q-btn>
           </div>

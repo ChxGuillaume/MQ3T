@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.vue'
 import { MqttMessage, useMqttTopicsStore } from '../../store/mqtt-topics'
+import { useMqttConnectionsStore } from '../../store/mqtt-connections'
 import ConvertToActionDialog from './dialogs/ConvertToActionDialog.vue'
 import { ElectronIpc } from '../../../../types/electron-ipc-callbacks'
 import { computed, reactive, ref, useTemplateRef, watch } from 'vue'
@@ -10,7 +11,10 @@ import { useActionsStore } from '../../store/actions'
 import { matchTopics } from '../../assets/js/mqtt'
 import { Action } from '../../../../types/actions'
 import SplitterIcon from '../SplitterIcon.vue'
+import { IClientPublishOptions } from 'mqtt'
 import CodeEditor from './CodeEditor.vue'
+
+const DEFAULT_SPLITTER_HEIGHT = 250
 
 const emit = defineEmits<{
   'click:publish': [topic: string]
@@ -19,14 +23,20 @@ const emit = defineEmits<{
 const codeEditorRef = useTemplateRef('codeEditorRef')
 
 const mqttTopicsStore = useMqttTopicsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
+
+const isMqtt5 = computed(
+  () =>
+    mqttConnectionsStore.getConnection(mqttTopicsStore.selectedConnection)?.protocolVersion === 5
+)
 
 const publishType = ref<'manual' | 'action'>('manual')
 
 const publishDataType = ref(settingsStore.defaultDataFormat)
-const codeEditorSplitter = ref(250)
-const codeEditorLimits = ref([150, 450])
+const codeEditorSplitter = ref(DEFAULT_SPLITTER_HEIGHT)
+const codeEditorLimits = ref([150, 800])
 const codeEditorDataPerTopic = ref<Record<string, Record<string, string>>>({})
 const codeEditorData = computed<string>({
   get: () => {
@@ -49,6 +59,8 @@ const codeEditorData = computed<string>({
 })
 const retain = ref(false)
 const qos = ref<0 | 1 | 2>(0)
+const responseTopic = ref('')
+const correlationData = ref('')
 const current = ref(1)
 
 const convertToActionDialogOpened = ref(false)
@@ -84,11 +96,24 @@ const slicedMessages = computed(() => {
 const electronApi = window.api as ElectronIpc
 
 const handlePublishMessage = () => {
+  const publishOptions: IClientPublishOptions = {
+    retain: retain.value,
+    qos: qos.value
+  }
+
+  if (isMqtt5.value && (responseTopic.value || correlationData.value)) {
+    publishOptions.properties = {}
+
+    if (responseTopic.value) publishOptions.properties.responseTopic = responseTopic.value
+    if (correlationData.value) {
+      publishOptions.properties.correlationData = correlationData.value as unknown as Buffer
+    }
+  }
   electronApi.sendMqttMessage(
     mqttTopicsStore.selectedConnection,
     publishTopic.value,
     codeEditorData.value,
-    { retain: retain.value, qos: qos.value }
+    publishOptions
   )
 
   mqttTopicsStore.addPublishMessage(
@@ -177,24 +202,24 @@ watch(
     <q-input v-model="publishTopic" filled label="Topic" dense square />
     <q-separator />
   </div>
-  <q-list class="tw-h-full tw-max-h-[calc(100%-41px)] tw-overflow-hidden">
+  <q-list class="tw:h-full tw:max-h-[calc(100%-41px)] tw:overflow-hidden">
     <q-expansion-item
       :model-value="publishType === 'manual'"
       group="publish_type"
       default-opened
       dense
-      class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
-      header-class="tw-text-secondary"
+      class="tw:max-h-[calc(100%-32px)] tw:overflow-auto"
+      header-class="tw:text-secondary"
       @show="togglePublishType('manual')"
       @hide="togglePublishType('action')"
     >
       <template #header>
-        <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
+        <q-item-section class="tw:flex tw:flex-row tw:items-center tw:justify-start tw:gap-6">
           <q-icon name="fa-solid fa-pen" size="xs" />
           <span>Manual Publish</span>
         </q-item-section>
       </template>
-      <q-card class="tw-min-h-[calc(100vh-154px)]">
+      <q-card class="tw:min-h-[calc(100vh-234px)]">
         <q-splitter v-model="codeEditorSplitter" horizontal :limits="codeEditorLimits" unit="px">
           <template #before>
             <code-editor
@@ -202,34 +227,55 @@ watch(
               v-model:language="publishDataType"
               v-model="codeEditorData"
               hide-warning
-            />
+              dense
+            >
+              <template #header-right>
+                <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
+                  <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
+                  Publish
+                </q-btn>
+              </template>
+
+              <template #format-right>
+                <q-btn dense color="primary">
+                  <q-icon class="tw:mx-2" size="16px" name="fa-solid fa-sliders" />
+                  <q-tooltip anchor="top middle" self="bottom middle">Publish settings</q-tooltip>
+                  <q-menu anchor="bottom left" self="top left" :offset="[0, 4]">
+                    <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:min-w-96">
+                      <div class="tw:flex tw:items-center tw:gap-4">
+                        <q-select
+                          v-model="qos"
+                          :options="[0, 1, 2]"
+                          filled
+                          dense
+                          label="QoS"
+                          class="tw:w-24 text-center"
+                        />
+                        <q-toggle
+                          v-model="retain"
+                          label="Retain"
+                          color="accent"
+                          class="tw:select-none"
+                        />
+                      </div>
+                      <template v-if="isMqtt5">
+                        <q-input v-model="responseTopic" filled dense label="Response Topic" />
+                        <q-input v-model="correlationData" filled dense label="Correlation Data" />
+                      </template>
+                    </div>
+                  </q-menu>
+                </q-btn>
+              </template>
+            </code-editor>
           </template>
 
           <template #separator>
-            <splitter-icon @click:double="codeEditorSplitter = 250" />
+            <splitter-icon @click:double="codeEditorSplitter = DEFAULT_SPLITTER_HEIGHT" />
           </template>
 
           <template #after>
-            <div class="tw-flex tw-items-center tw-justify-between tw-p-3">
-              <div class="tw-flex">
-                <q-select
-                  v-model="qos"
-                  :options="[0, 1, 2]"
-                  filled
-                  dense
-                  label="QoS"
-                  class="tw-w-[96px]"
-                />
-                <q-toggle v-model="retain" label="Retain" />
-              </div>
-              <q-btn color="primary" :disable="!canPublish" @click="handlePublishMessage">
-                <q-icon class="tw-mr-2" size="xs" name="fa-solid fa-paper-plane" />
-                Publish
-              </q-btn>
-            </div>
-            <q-separator />
-            <div class="justify-between tw-flex tw-px-4 tw-pt-2">
-              <div class="items-center tw-flex tw-gap-2">
+            <div class="tw:flex tw:px-4 tw:pt-2 justify-between">
+              <div class="tw:flex tw:gap-2 items-center">
                 History
                 <q-chip size="sm" color="primary" text-color="white">
                   {{ mqttTopicsStore.getSelectedPublishTopicMessages.length }} messages
@@ -243,18 +289,18 @@ watch(
                 input
               />
             </div>
-            <div class="tw-flex tw-flex-col tw-gap-2 tw-p-3">
+            <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3">
               <q-card
                 v-for="message in slicedMessages"
                 :key="message.uid"
                 flat
-                class="card-secondary-background tw-cursor-pointer tw-select-none tw-p-2"
+                class="card-secondary-background tw:cursor-pointer tw:select-none tw:p-2"
                 @click="handleMessageClick(message)"
               >
-                <div class="tw-mb-2 tw-flex tw-justify-between">
-                  <div class="tw-flex tw-max-h-[22px] tw-items-start tw-gap-2">
+                <div class="tw:mb-2 tw:flex tw:justify-between">
+                  <div class="tw:flex tw:max-h-[22px] tw:items-start tw:gap-2">
                     <div>
-                      QoS: <span class="tw-font-bold">{{ message.qos }}</span>
+                      QoS: <span class="tw:font-bold">{{ message.qos }}</span>
                     </div>
 
                     <q-chip
@@ -263,7 +309,7 @@ watch(
                       color="primary"
                       text-color="white"
                       label="Retained"
-                      class="tw-m-0"
+                      class="tw:m-0"
                     />
                   </div>
                   <q-btn
@@ -274,12 +320,12 @@ watch(
                     icon="fa-solid fa-right-left"
                     @click.stop="handleConvertToAction(message)"
                   >
-                    <q-tooltip class="tw-bg-secondary tw-text-black">
+                    <q-tooltip class="tw:bg-secondary tw:text-black">
                       Convert into action button
                     </q-tooltip>
                   </q-btn>
                 </div>
-                <div class="tw-w-full tw-max-w-full tw-overflow-hidden tw-break-all">
+                <div class="tw:w-full tw:max-w-full tw:overflow-hidden tw:break-all">
                   {{ message.message }}
                 </div>
               </q-card>
@@ -296,25 +342,25 @@ watch(
       :disable="sortedActions.length === 0"
       group="publish_type"
       dense
-      class="tw-max-h-[calc(100%-32px)] tw-overflow-auto"
-      header-class="tw-text-accent"
+      class="tw:max-h-[calc(100%-32px)] tw:overflow-auto"
+      header-class="tw:text-accent"
       @show="togglePublishType('action')"
       @hide="togglePublishType('manual')"
     >
       <template #header>
-        <q-item-section class="tw-flex tw-flex-row tw-items-center tw-justify-start tw-gap-6">
+        <q-item-section class="tw:flex tw:flex-row tw:items-center tw:justify-start tw:gap-6">
           <q-icon name="fa-solid fa-play" size="xs" />
           <span>Actions</span>
         </q-item-section>
       </template>
       <q-separator />
-      <q-card class="tw-grid tw-gap-2 tw-p-2">
+      <q-card class="tw:grid tw:gap-2 tw:p-2">
         <action-card
           v-for="action in sortedActions"
           :key="action.id"
           :action="action"
           :connection-id="mqttTopicsStore.selectedConnection"
-          class="dark:tw-bg-neutral-800"
+          class="tw:dark:bg-neutral-800"
           hide-topic
           edit-only
           no-grab
@@ -347,6 +393,7 @@ watch(
     variable-completion
     edit-mode
     :action="editAction"
+    :connection-id="mqttTopicsStore.selectedConnection"
     @update:action="
       actionsStore.updateAction(mqttTopicsStore.selectedConnection, $event.groupId, $event)
     "

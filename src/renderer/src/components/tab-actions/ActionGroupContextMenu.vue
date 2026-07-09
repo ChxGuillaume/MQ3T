@@ -31,28 +31,28 @@ defineEmits([
     <q-list style="min-width: 170px">
       <q-item
         v-if="!cantModify"
-        class="tw-text-blue-500"
-        clickable
         v-close-popup
+        class="tw:text-blue-500"
+        clickable
         @click="$emit('edit')"
       >
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-edit" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-edit" class="tw:mr-2" />
             Edit
           </div>
         </q-item-section>
       </q-item>
       <q-item
         v-if="!cantModify"
-        class="tw-text-red-500"
-        clickable
         v-close-popup
+        class="tw:text-red-500"
+        clickable
         @click="$emit('delete')"
       >
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-trash" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-trash" class="tw:mr-2" />
             Delete
           </div>
         </q-item-section>
@@ -60,10 +60,10 @@ defineEmits([
 
       <q-separator />
 
-      <q-item class="tw-text-amber-500" clickable v-close-popup @click="$emit('copy')">
+      <q-item v-close-popup class="tw:text-amber-500" clickable @click="$emit('copy')">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-copy" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-copy" class="tw:mr-2" />
             Copy
           </div>
         </q-item-section>
@@ -71,14 +71,14 @@ defineEmits([
 
       <q-item
         v-if="!notMovable"
-        class="tw-text-amber-500"
-        clickable
         v-close-popup
+        class="tw:text-amber-500"
+        clickable
         @click="$emit('move')"
       >
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-right-left" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-right-left" class="tw:mr-2" />
             Move
           </div>
         </q-item-section>
@@ -86,33 +86,33 @@ defineEmits([
 
       <q-separator />
 
-      <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:group')">
+      <q-item v-close-popup class="tw:text-teal-500" clickable @click="$emit('export:group')">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-upload" class="tw:mr-2" />
             Export Group
           </div>
         </q-item-section>
       </q-item>
 
-      <q-item class="tw-text-teal-500" clickable v-close-popup @click="$emit('export:actions')">
+      <q-item v-close-popup class="tw:text-teal-500" clickable @click="$emit('export:actions')">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-upload" class="tw:mr-2" />
             Export Actions
           </div>
         </q-item-section>
       </q-item>
 
       <q-item
-        class="tw-text-teal-500"
-        clickable
         v-close-popup
+        class="tw:text-teal-500"
+        clickable
         @click="$emit('export:chain-actions')"
       >
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-upload" class="tw-mr-2" />
+            <q-icon name="fa-solid fa-upload" class="tw:mr-2" />
             Export Chain Actions
           </div>
         </q-item-section>

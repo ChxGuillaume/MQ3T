@@ -203,19 +203,19 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw-border-t': !hideTopBorder }" />
+  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw:border-t': !hideTopBorder }" />
   <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
     <div
-      ref="myGraph"
       v-if="!hideGlyphs && language === 'json'"
       v-show="showGraph || forceShowGraph"
-      class="tw-fixed tw-w-fit"
+      ref="myGraph"
+      class="tw:fixed tw:w-fit"
       :style="{ left: `${x}px`, top: `${ySafe}px` }"
       @mouseenter="forceShowGraph = true"
       @mouseleave="forceShowGraph = false"
     >
       <line-chart-card
-        class="tw-w-[500px]"
+        class="tw:w-[500px]"
         :data-graph="{
           id: null,
           clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
@@ -225,7 +225,7 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
         }"
       >
         <template #bottom>
-          <div class="color-details tw-mt-3 tw-text-center">Click to add widget</div>
+          <div class="color-details tw:mt-3 tw:text-center">Click to add widget</div>
         </template>
       </line-chart-card>
     </div>
@@ -234,42 +234,48 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 
 <style lang="less">
 .code-preview-glyph {
-  @apply tw-rounded-full tw-transition-colors;
+  border-radius: 9999px;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
   font-size: 10px;
 }
 
 .body--dark {
   .code-preview-glyph {
-    @apply tw-text-white;
+    color: white;
   }
 }
 
 .body--light {
   .code-preview-glyph {
-    @apply tw-text-black;
+    color: black;
   }
 }
 
 .code-preview-glyph:hover {
-  @apply tw-cursor-pointer tw-bg-secondary tw-text-black;
+  cursor: pointer;
+  background-color: #75e67c;
+  color: black;
 }
 </style>
 
 <style scoped lang="less">
 .monaco-editor {
-  @apply tw-w-full tw-outline-0;
+  width: 100%;
+  outline-width: 0px;
   height: 100%;
 }
 
 .body--light {
   .monaco-editor {
-    @apply tw-border-black/20;
+    border-color: rgb(0 0 0 / 0.2);
   }
 }
 
 .body--dark {
   .monaco-editor {
-    @apply tw-border-white/20;
+    border-color: rgb(255 255 255 / 0.2);
   }
 }
 </style>

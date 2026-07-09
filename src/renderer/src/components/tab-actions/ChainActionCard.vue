@@ -26,18 +26,18 @@ const actionCount = computed(() => {
 </script>
 
 <template>
-  <q-card flat class="chain-action-card tw-h-fit tw-p-4">
-    <div class="tw-flex tw-justify-between">
+  <q-card flat class="chain-action-card tw:h-fit tw:p-4">
+    <div class="tw:flex tw:justify-between">
       <h2
-        class="truncate-hover-one-line drag-handle tw-w-full tw-text-lg"
-        :class="{ 'tw-cursor-grab': !noGrab }"
+        class="truncate-hover-one-line drag-handle tw:w-full tw:text-lg"
+        :class="{ 'tw:cursor-grab': !noGrab }"
         :title="chainAction.name"
       >
         {{ chainAction.name }}
       </h2>
       <q-btn
         v-if="!noContextMenu"
-        class="tw-ml-2"
+        class="tw:ml-2"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round
@@ -51,18 +51,18 @@ const actionCount = computed(() => {
         />
       </q-btn>
     </div>
-    <div class="tw-mt-4 tw-flex tw-select-none tw-justify-between">
-      <div class="tw-flex tw-gap-4">
-        <div class="color-details tw-flex tw-items-center tw-gap-1.5">
-          <span class="tw-text-lg">{{ waitActionCount }}</span>
+    <div class="tw:mt-4 tw:flex tw:select-none tw:justify-between">
+      <div class="tw:flex tw:gap-4">
+        <div class="color-details tw:flex tw:items-center tw:gap-1.5">
+          <span class="tw:text-lg">{{ waitActionCount }}</span>
           <q-icon name="fa-solid fa-clock" size="xs" />
-          <q-tooltip class="tw-whitespace-pre tw-text-sm">Wait Nodes</q-tooltip>
+          <q-tooltip class="tw:whitespace-pre tw:text-sm">Wait Nodes</q-tooltip>
         </div>
 
-        <div class="color-details tw-flex tw-items-center tw-gap-1.5">
-          <span class="tw-text-lg">{{ actionCount }}</span>
+        <div class="color-details tw:flex tw:items-center tw:gap-1.5">
+          <span class="tw:text-lg">{{ actionCount }}</span>
           <q-icon name="fa-solid fa-paper-plane" size="xs" />
-          <q-tooltip class="tw-whitespace-pre tw-text-sm">Action Nodes</q-tooltip>
+          <q-tooltip class="tw:whitespace-pre tw:text-sm">Action Nodes</q-tooltip>
         </div>
       </div>
       <q-btn
@@ -74,13 +74,13 @@ const actionCount = computed(() => {
           v-if="running"
           color="white"
           indeterminate
-          class="tw-mr-2"
+          class="tw:mr-2"
           size="18px"
           :thickness="0.5"
         />
-        <q-icon v-else class="tw-mr-2" size="xs" name="fa-solid fa-play" />
+        <q-icon v-else class="tw:mr-2" size="xs" name="fa-solid fa-play" />
         Run
-        <q-tooltip v-if="disable" class="tw-bg-primary tw-text-sm tw-text-white">
+        <q-tooltip v-if="disable" class="tw:bg-primary tw:text-sm tw:text-white">
           Connection is not active.
         </q-tooltip>
       </q-btn>
@@ -101,12 +101,17 @@ const actionCount = computed(() => {
 
 <style scoped lang="less">
 .truncate-hover-one-line {
-  @apply tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .body--light {
   .chain-action-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 </style>

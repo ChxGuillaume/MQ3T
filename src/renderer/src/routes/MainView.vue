@@ -151,21 +151,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="main-view tw-grid tw-h-full tw-grid-rows-[auto_1fr]">
+  <div class="main-view tw:grid tw:h-full tw:grid-rows-[auto_1fr]">
     <app-bar v-model="currentTab" />
-    <div class="tw-flex tw-content-between tw-overflow-auto">
-      <div class="tw-flex-grow">
-        <q-tab-panels v-model="currentTab" class="tw-h-full tw-bg-transparent" vertical keep-alive>
-          <q-tab-panel class="tw-p-0" name="topics">
+    <div class="tw:flex tw:content-between tw:overflow-auto">
+      <div class="tw:grow">
+        <q-tab-panels v-model="currentTab" class="tw:h-full tw:bg-transparent" vertical keep-alive>
+          <q-tab-panel class="tw:p-0" name="topics">
             <tab-topics />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="actions">
+          <q-tab-panel class="tw:p-0" name="actions">
             <tab-actions />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="settings">
+          <q-tab-panel class="tw:p-0" name="settings">
             <tab-settings />
           </q-tab-panel>
-          <q-tab-panel class="tw-p-0" name="connections">
+          <q-tab-panel class="tw:p-0" name="connections">
             <tab-connections />
           </q-tab-panel>
         </q-tab-panels>
@@ -182,20 +182,22 @@ onUnmounted(() => {
 @import '../assets/css/styles.less';
 
 .nav-bar-left {
-  @apply tw-border-r;
+  border-right-width: 1px;
   min-width: 135px;
   width: 135px;
 }
 
 .body--light {
   .nav-bar-left {
-    @apply tw-border-black/10 tw-bg-zinc-100;
+    border-color: rgb(0 0 0 / 0.1);
+    background-color: #f4f4f5;
   }
 }
 
 .body--dark {
   .nav-bar-left {
-    @apply tw-border-white/10 tw-bg-neutral-900;
+    border-color: rgb(255 255 255 / 0.1);
+    background-color: #171717;
   }
 }
 </style>

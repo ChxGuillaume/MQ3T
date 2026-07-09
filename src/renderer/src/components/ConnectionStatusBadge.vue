@@ -17,27 +17,27 @@ const props = withDefaults(defineProps<Props>(), {
 const statusColor = computed(() => {
   switch (props.status) {
     case 'connected':
-      return 'tw-bg-green-500'
+      return 'tw:bg-green-500'
     case 'connecting':
     case 'reconnecting':
-      return 'tw-bg-yellow-500'
+      return 'tw:bg-yellow-500'
     case 'disconnected':
     default:
-      return 'tw-bg-red-500'
+      return 'tw:bg-red-500'
   }
 })
 
 const sizeClasses = computed(() => {
   switch (props.size) {
     case 'xs':
-      return 'tw-h-2 tw-w-2'
+      return 'tw:h-2 tw:w-2'
     case 'sm':
-      return 'tw-h-3 tw-w-3'
+      return 'tw:h-3 tw:w-3'
     case 'lg':
-      return 'tw-h-5 tw-w-5'
+      return 'tw:h-5 tw:w-5'
     case 'md':
     default:
-      return 'tw-h-4 tw-w-4'
+      return 'tw:h-4 tw:w-4'
   }
 })
 
@@ -57,9 +57,9 @@ const statusLabel = computed(() => {
 </script>
 
 <template>
-  <div class="tw-flex tw-items-center tw-gap-1.5">
-    <div class="tw-rounded-full" :class="[statusColor, sizeClasses]" :title="statusLabel" />
-    <span v-if="showLabel" class="tw-text-xs tw-font-medium">{{ statusLabel }}</span>
+  <div class="tw:flex tw:items-center tw:gap-1.5">
+    <div class="tw:rounded-full" :class="[statusColor, sizeClasses]" :title="statusLabel" />
+    <span v-if="showLabel" class="tw:text-xs tw:font-medium">{{ statusLabel }}</span>
   </div>
 </template>
 

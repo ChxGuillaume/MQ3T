@@ -127,10 +127,10 @@ watch(
 
 <template>
   <div v-if="!isLastTopicPart" :id="`topic-item-${clientKey}:${path}`">
-    <div class="tw-flex">
+    <div class="tw:flex">
       <q-intersection
         :id="`topic-item-${clientKey}:${path}-intersection`"
-        class="tw-h-[29px] tw-max-w-full"
+        class="tw:h-[29px] tw:max-w-full"
         @visibility="itemVisible = $event"
       >
         <topic-card
@@ -149,10 +149,10 @@ watch(
           </span>
           <span
             v-if="!expandedTopicsSection"
-            class="tw-ml-1 tw-text-xs"
+            class="tw:ml-1 tw:text-xs"
             v-text="`(${subTopicsTopicsCount} topics ${subTopicsMessagesCount} messages)`"
           />
-          <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
+          <span v-if="topicLastMessage?.message" class="tw:ml-1">=</span>
           <code-highlight
             v-if="topicLastMessage?.message && topicLastMessage.dataType"
             :code="topicLastMessage?.message"
@@ -185,7 +185,7 @@ watch(
       <topic-tree-item
         v-for="[key, value] in sortedTopicStructure"
         :key="key"
-        class="tw-mt-1"
+        class="tw:mt-1"
         :client-key="clientKey"
         :topic-key="key"
         :path="`${path}/${key}`"
@@ -195,10 +195,10 @@ watch(
       />
     </template>
   </div>
-  <div v-else :id="`topic-item-${path}`" class="tw-flex">
+  <div v-else :id="`topic-item-${path}`" class="tw:flex">
     <q-intersection
       :id="`topic-item-${clientKey}:${path}-intersection`"
-      class="tw-h-[29px] tw-max-w-full"
+      class="tw:h-[29px] tw:max-w-full"
       @visibility="itemVisible = $event"
     >
       <topic-card
@@ -213,7 +213,7 @@ watch(
         <span class="topic-item-key" :class="{ empty: !topicKey }">
           {{ topicKey ? topicKey : '<\empty>' }}
         </span>
-        <span v-if="topicLastMessage?.message" class="tw-ml-1">=</span>
+        <span v-if="topicLastMessage?.message" class="tw:ml-1">=</span>
         <code-highlight
           v-if="topicLastMessage?.message"
           :code="topicLastMessage?.message"
@@ -247,21 +247,21 @@ watch(
 <style scoped lang="less">
 .body--light {
   .topic-item-key {
-    @apply tw-text-black;
+    color: black;
   }
 
   .topic-item-key.empty {
-    @apply tw-text-neutral-300;
+    color: #d4d4d4;
   }
 }
 
 .body--dark {
   .topic-item-key {
-    @apply tw-text-white;
+    color: white;
   }
 
   .topic-item-key.empty {
-    @apply tw-text-neutral-500;
+    color: #737373;
   }
 }
 

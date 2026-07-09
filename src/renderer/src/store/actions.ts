@@ -1,8 +1,10 @@
 import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
+import { useMqttConnectionsStore } from './mqtt-connections'
 import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
+import { IClientPublishOptions } from 'mqtt'
 import {
   ConnectionsActionsGroups,
   ConnectionsActionsFile,
@@ -251,10 +253,28 @@ export const useActionsStore = defineStore('actions', {
       this.saveActionsGroups()
     },
     sendAction(connectionId: string, action: Action, topicOverride?: string) {
-      ElectronApi.sendMqttMessage(connectionId, topicOverride || action.topic, action.payload, {
+      const publishOptions: IClientPublishOptions = {
         qos: action.qos,
         retain: action.retained
-      })
+      }
+
+      const isMqtt5 = useMqttConnectionsStore().getConnection(connectionId)?.protocolVersion === 5
+
+      if (isMqtt5 && (action.responseTopic || action.correlationData)) {
+        publishOptions.properties = {}
+
+        if (action.responseTopic) publishOptions.properties.responseTopic = action.responseTopic
+        if (action.correlationData) {
+          publishOptions.properties.correlationData = action.correlationData as unknown as Buffer
+        }
+      }
+
+      ElectronApi.sendMqttMessage(
+        connectionId,
+        topicOverride || action.topic,
+        action.payload,
+        publishOptions
+      )
     },
     saveActions() {
       ElectronApi.saveActions({

@@ -28,8 +28,8 @@ const connectionStatus = computed(() => {
 
 <template>
   <div
-    class="mqtt-connection-card tw-cursor-pointer tw-rounded tw-border-t-2 tw-p-4 dark:tw-bg-neutral-900 dark:hover:tw-bg-neutral-800"
-    :class="getColor(connection.labelColor)?.border ?? 'tw-border-transparent'"
+    class="mqtt-connection-card tw:cursor-pointer tw:rounded tw:border-t-2 tw:p-4 tw:dark:bg-neutral-900 tw:dark:hover:bg-neutral-800"
+    :class="getColor(connection.labelColor)?.border ?? 'tw:border-transparent'"
     @click="
       () => {
         if (connectionStatus === 'disconnected') $emit('connect', connection)
@@ -39,9 +39,9 @@ const connectionStatus = computed(() => {
       }
     "
   >
-    <div class="tw-flex tw-justify-between">
+    <div class="tw:flex tw:justify-between">
       <p
-        class="drag-handle tw-line-clamp-1 tw-w-full tw-cursor-grab tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-lg"
+        class="drag-handle tw:line-clamp-1 tw:w-full tw:cursor-grab tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-lg"
         :title="connection.name"
       >
         {{ connection.name }}
@@ -62,7 +62,7 @@ const connectionStatus = computed(() => {
       </q-btn>
     </div>
     <p
-      class="tw-line-clamp-1 tw-overflow-hidden tw-text-ellipsis tw-break-all tw-text-sm tw-text-neutral-500"
+      class="tw:line-clamp-1 tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-sm tw:text-neutral-500"
       :title="formatMqttUrl(connection)"
     >
       {{ formatMqttUrl(connection) }}
@@ -81,7 +81,7 @@ const connectionStatus = computed(() => {
 <style scoped lang="less">
 .body--light {
   .mqtt-connection-card {
-    @apply tw-bg-neutral-100;
+    background-color: #f5f5f5;
   }
 }
 </style>

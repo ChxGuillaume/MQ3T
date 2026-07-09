@@ -6,3 +6,8 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+declare module 'tailwindcss/colors' {
+  const colors: Record<string, string | Record<string, string>>
+  export default colors
+}
