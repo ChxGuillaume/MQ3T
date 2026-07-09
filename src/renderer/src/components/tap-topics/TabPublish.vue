@@ -393,6 +393,7 @@ watch(
     variable-completion
     edit-mode
     :action="editAction"
+    :connection-id="mqttTopicsStore.selectedConnection"
     @update:action="
       actionsStore.updateAction(mqttTopicsStore.selectedConnection, $event.groupId, $event)
     "

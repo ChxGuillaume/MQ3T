@@ -1,5 +1,7 @@
 import { ElectronApi } from '@renderer/assets/js/electron-api'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { Edge, Node, useVueFlow } from '@vue-flow/core'
+import { IClientPublishOptions } from 'mqtt'
 import { ref } from 'vue'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -99,9 +101,21 @@ export function useRunActionChain() {
     if (!node.data.action) return
 
     const action = node.data.action
-    const options = {
+    const options: IClientPublishOptions = {
       retain: action.retained,
       qos: action.qos
+    }
+
+    const isMqtt5 =
+      useMqttConnectionsStore().getConnection(_connectionId.value)?.protocolVersion === 5
+
+    if (isMqtt5 && (action.responseTopic || action.correlationData)) {
+      options.properties = {}
+
+      if (action.responseTopic) options.properties.responseTopic = action.responseTopic
+      if (action.correlationData) {
+        options.properties.correlationData = action.correlationData as unknown as Buffer
+      }
     }
 
     ElectronApi.sendMqttMessage(_connectionId.value, action.topic, action.payload, options)

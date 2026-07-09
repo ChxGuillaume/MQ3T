@@ -78,8 +78,8 @@ const handleDragEnd = (event: DragEvent) => {
         @click.stop
       >
         <action-group-context-menu
-          :cantModify="cantModify"
-          :notMovable="notMovable"
+          :cant-modify="cantModify"
+          :not-movable="notMovable"
           @edit="$emit('edit')"
           @delete="$emit('delete')"
           @copy="$emit('copy')"
@@ -95,8 +95,8 @@ const handleDragEnd = (event: DragEvent) => {
       context-menu
       anchor="bottom left"
       self="top left"
-      :cantModify="cantModify"
-      :notMovable="notMovable"
+      :cant-modify="cantModify"
+      :not-movable="notMovable"
       @edit="$emit('edit')"
       @delete="$emit('delete')"
       @copy="$emit('copy')"
@@ -139,7 +139,7 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 .group-card.drop-zone {
-  background-color: #75E67C;
+  background-color: #75e67c;
 }
 
 .group-card.drop-zone .description {

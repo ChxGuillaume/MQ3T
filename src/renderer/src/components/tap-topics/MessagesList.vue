@@ -81,8 +81,8 @@ watch(
 </script>
 
 <template>
-  <div class="justify-between tw:flex tw:min-h-12 tw:px-4 tw:pt-2">
-    <div class="items-center tw:flex tw:gap-2">
+  <div class="tw:flex tw:min-h-12 tw:px-4 tw:pt-2 justify-between">
+    <div class="tw:flex tw:gap-2 items-center">
       History
       <q-chip size="sm" color="primary" text-color="white">
         {{ mqttTopicsStore.getSelectedTopicMessages.length }} messages

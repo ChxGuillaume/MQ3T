@@ -31,9 +31,9 @@ defineEmits([
     <q-list style="min-width: 170px">
       <q-item
         v-if="!cantModify"
+        v-close-popup
         class="tw:text-blue-500"
         clickable
-        v-close-popup
         @click="$emit('edit')"
       >
         <q-item-section>
@@ -45,9 +45,9 @@ defineEmits([
       </q-item>
       <q-item
         v-if="!cantModify"
+        v-close-popup
         class="tw:text-red-500"
         clickable
-        v-close-popup
         @click="$emit('delete')"
       >
         <q-item-section>
@@ -60,7 +60,7 @@ defineEmits([
 
       <q-separator />
 
-      <q-item class="tw:text-amber-500" clickable v-close-popup @click="$emit('copy')">
+      <q-item v-close-popup class="tw:text-amber-500" clickable @click="$emit('copy')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-copy" class="tw:mr-2" />
@@ -71,9 +71,9 @@ defineEmits([
 
       <q-item
         v-if="!notMovable"
+        v-close-popup
         class="tw:text-amber-500"
         clickable
-        v-close-popup
         @click="$emit('move')"
       >
         <q-item-section>
@@ -86,7 +86,7 @@ defineEmits([
 
       <q-separator />
 
-      <q-item class="tw:text-teal-500" clickable v-close-popup @click="$emit('export:group')">
+      <q-item v-close-popup class="tw:text-teal-500" clickable @click="$emit('export:group')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-upload" class="tw:mr-2" />
@@ -95,7 +95,7 @@ defineEmits([
         </q-item-section>
       </q-item>
 
-      <q-item class="tw:text-teal-500" clickable v-close-popup @click="$emit('export:actions')">
+      <q-item v-close-popup class="tw:text-teal-500" clickable @click="$emit('export:actions')">
         <q-item-section>
           <div>
             <q-icon name="fa-solid fa-upload" class="tw:mr-2" />
@@ -105,9 +105,9 @@ defineEmits([
       </q-item>
 
       <q-item
+        v-close-popup
         class="tw:text-teal-500"
         clickable
-        v-close-popup
         @click="$emit('export:chain-actions')"
       >
         <q-item-section>

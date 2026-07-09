@@ -129,6 +129,7 @@ onMounted(() => {
         <action-node
           :id="props.id"
           :data="props.data"
+          :connection-id="selectedConnection"
           @copy="copyNode(props)"
           @remove="removeNodes([props.id])"
         />

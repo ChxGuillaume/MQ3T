@@ -2,6 +2,7 @@
 import { getPayloadVariablesGrouped } from '@renderer/assets/js/actions-variables'
 import { useCopyClipboard } from '@renderer/composables/useCopyClipboard'
 import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
+import { useMqttConnectionsStore } from '../../../store/mqtt-connections'
 import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
@@ -9,6 +10,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { QForm } from 'quasar'
 
+const mqttConnectionsStore = useMqttConnectionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 
@@ -23,6 +25,7 @@ const props = defineProps<{
   noWildcard?: boolean
   editMode?: boolean
   action?: Action
+  connectionId?: string
   variableCompletion?: boolean
 }>()
 
@@ -33,6 +36,12 @@ const emits = defineEmits<{
   close: []
 }>()
 
+const isMqtt5 = computed(
+  () =>
+    !props.connectionId ||
+    mqttConnectionsStore.getConnection(props.connectionId)?.protocolVersion === 5
+)
+
 const editorLanguage = ref<'raw' | 'json' | 'xml' | 'yaml'>(settingsStore.defaultDataFormat)
 const showEditor = ref(false)
 const form = reactive({
@@ -42,6 +51,8 @@ const form = reactive({
   payload: '',
   retained: false,
   description: '',
+  responseTopic: '',
+  correlationData: '',
   enumOptions: {} as Record<string, (string | number)[]>
 })
 const enumOptionsCache = ref<Record<string, ('string' | 'number')[]>>({})
@@ -113,6 +124,8 @@ const clearForm = () => {
   form.payload = ''
   form.retained = false
   form.description = ''
+  form.responseTopic = ''
+  form.correlationData = ''
   form.enumOptions = {}
 
   editorLanguage.value = 'raw'
@@ -145,7 +158,9 @@ const handleCreate = async () => {
     payload: form.payload,
     retained: form.retained,
     description: form.description,
-    payloadFormat: editorLanguage.value
+    payloadFormat: editorLanguage.value,
+    responseTopic: form.responseTopic,
+    correlationData: form.correlationData
   })
 
   handleCloseForm()
@@ -165,7 +180,9 @@ const handleUpdate = async () => {
     retained: form.retained,
     description: form.description,
     payloadFormat: editorLanguage.value,
-    enumOptions: form.enumOptions
+    enumOptions: form.enumOptions,
+    responseTopic: form.responseTopic,
+    correlationData: form.correlationData
   })
 
   handleCloseForm()
@@ -193,6 +210,8 @@ watch(
     form.payload = action.payload
     form.retained = action.retained
     form.description = action.description!
+    form.responseTopic = action.responseTopic || ''
+    form.correlationData = action.correlationData || ''
 
     enumOptionsCache.value = Object.fromEntries(
       Object.entries(action.enumOptions || {}).map(([key, value]) => [
@@ -265,6 +284,24 @@ watch(
                   class="action-description tw:grow"
                 />
               </div>
+              <template v-if="isMqtt5">
+                <div class="tw:flex tw:gap-4">
+                  <q-input
+                    v-model="form.responseTopic"
+                    filled
+                    dense
+                    label="Response Topic"
+                    class="tw:grow"
+                  />
+                  <q-input
+                    v-model="form.correlationData"
+                    filled
+                    dense
+                    label="Correlation Data"
+                    class="tw:grow"
+                  />
+                </div>
+              </template>
             </div>
             <div class="tw:mt-4 tw:h-[300px]">
               <code-editor

@@ -25,7 +25,7 @@ const messagesPaginationSetting = computed({
 <template>
   <q-menu :offset="[0, 5]" anchor="bottom right" self="top right">
     <q-list dense>
-      <q-item class="custom-padding-left" v-ripple>
+      <q-item v-ripple class="custom-padding-left">
         <q-item-section>
           <q-checkbox v-model="selectedMessageCompare" size="xs">
             <span class="tw:pl-1">Compare</span>
@@ -37,7 +37,7 @@ const messagesPaginationSetting = computed({
         </q-tooltip>
       </q-item>
 
-      <q-item class="custom-padding-left" v-ripple>
+      <q-item v-ripple class="custom-padding-left">
         <q-item-section>
           <q-checkbox v-model="messagesPaginationSetting" size="xs">
             <span class="tw:pl-1">Pagination</span>
@@ -65,8 +65,8 @@ const messagesPaginationSetting = computed({
         <q-menu anchor="top end" self="top start" class="tw:w-28">
           <q-list dense>
             <q-item
-              clickable
               v-ripple
+              clickable
               @click="exportMessages('raw', mqttTopicsStore.getSelectedTopicMessages)"
             >
               <q-item-section>
@@ -77,8 +77,8 @@ const messagesPaginationSetting = computed({
               </q-item-section>
             </q-item>
             <q-item
-              clickable
               v-ripple
+              clickable
               @click="exportMessages('json', mqttTopicsStore.getSelectedTopicMessages)"
             >
               <q-item-section>
@@ -89,8 +89,8 @@ const messagesPaginationSetting = computed({
               </q-item-section>
             </q-item>
             <q-item
-              clickable
               v-ripple
+              clickable
               @click="exportMessages('csv', mqttTopicsStore.getSelectedTopicMessages)"
             >
               <q-item-section>

@@ -29,7 +29,7 @@ const isFinished = computed(() => {
 <template>
   <div class="tw:flex tw:h-full tw:w-full tw:flex-col tw:justify-around tw:p-1">
     <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:text-lg">
-      <node-icon :isRunning="isRunning" :isFinished="isFinished" icon="fa-solid fa-clock" />
+      <node-icon :is-running="isRunning" :is-finished="isFinished" icon="fa-solid fa-clock" />
       Wait
     </div>
 

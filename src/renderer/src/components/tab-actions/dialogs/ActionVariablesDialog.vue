@@ -139,7 +139,7 @@ const codeEditorLimits = ref([400, 700])
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" v-model="opened" @hide="handleCloseForm" full-width>
+  <q-dialog ref="dialogRef" v-model="opened" full-width @hide="handleCloseForm">
     <q-card flat class="action-variables-card">
       <q-form ref="formRef" @submit="handleSend">
         <q-splitter
@@ -164,8 +164,9 @@ const codeEditorLimits = ref([400, 700])
                     }"
                   >
                     <q-input
-                      v-if="variableGroup.type === 'string'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-if="variableGroup.type === 'string'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :label="variable.name"
                       debounce="50"
@@ -186,8 +187,9 @@ const codeEditorLimits = ref([400, 700])
                       </template>
                     </q-input>
                     <q-input
-                      v-else-if="variableGroup.type === 'number'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-else-if="variableGroup.type === 'number'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :label="variable.name"
                       debounce="50"
@@ -213,6 +215,7 @@ const codeEditorLimits = ref([400, 700])
                     <q-toggle
                       v-for="(variable, index) in variableGroup.variables"
                       v-else-if="variableGroup.type === 'boolean'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`] || false"
                       dense
                       @update:model-value="form[`${index}:${variable.full}`] = $event"
@@ -222,8 +225,9 @@ const codeEditorLimits = ref([400, 700])
                       </div>
                     </q-toggle>
                     <q-select
-                      v-else-if="variableGroup.type === 'enum'"
                       v-for="(variable, index) in variableGroup.variables"
+                      v-else-if="variableGroup.type === 'enum'"
+                      :key="variable.full"
                       :model-value="form[`${index}:${variable.full}`]"
                       :options="action.enumOptions?.[variable.name] || []"
                       :label="variable.name"
@@ -238,7 +242,7 @@ const codeEditorLimits = ref([400, 700])
           </template>
 
           <template #separator>
-            <splitter-icon @click:double="codeEditorSplitter = 500" vertical />
+            <splitter-icon vertical @click:double="codeEditorSplitter = 500" />
           </template>
 
           <template #after>

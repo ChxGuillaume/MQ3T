@@ -64,10 +64,10 @@ const filteredChainActions = computed(() => {
       </q-card>
       <chain-action-card
         v-for="chainAction in filteredChainActions"
+        :key="chainAction.id"
         class="tw:bg-neutral-800"
         :connection-id="mqttTopicsStore.selectedConnection"
         :chain-action="chainAction"
-        :key="chainAction.id"
         no-context-menu
         no-grab
       />

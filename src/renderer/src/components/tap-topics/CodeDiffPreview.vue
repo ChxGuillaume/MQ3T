@@ -104,9 +104,9 @@ onBeforeUnmount(() => {
   <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'tw:border-t': !hideTopBorder }" />
   <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
     <div
-      ref="myGraph"
       v-if="!hideGlyphs && language === 'json'"
       v-show="showGraph || forceShowGraph"
+      ref="myGraph"
       class="tw:fixed tw:w-fit"
       :style="{ left: `${x}px`, top: `${ySafe}px` }"
       @mouseenter="forceShowGraph = true"
@@ -153,7 +153,7 @@ onBeforeUnmount(() => {
 
 .code-preview-glyph:hover {
   cursor: pointer;
-  background-color: #75E67C;
+  background-color: #75e67c;
   color: black;
 }
 </style>

@@ -687,6 +687,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
     variable-completion
     :edit-mode="!!editAction"
     :action="editAction"
+    :connection-id="selectedConnection"
     @create:action="actionsStore.addAction($event)"
     @update:action="actionsStore.updateSelectedActionGroupAction($event)"
     @close="editAction = undefined"

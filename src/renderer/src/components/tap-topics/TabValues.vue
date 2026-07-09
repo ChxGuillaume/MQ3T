@@ -174,7 +174,7 @@ watch(
               @click="handleClearRetained"
             />
           </div>
-          <div class="items-end tw:flex tw:flex-col">
+          <div class="tw:flex tw:flex-col items-end">
             <div>
               {{
                 selectedTopicLastMessage?.createdAt &&
