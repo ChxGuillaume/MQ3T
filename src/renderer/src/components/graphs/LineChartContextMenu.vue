@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { QMenu, useQuasar } from 'quasar'
-import colors from 'tailwindcss/dist/colors.js'
+import colors from 'tailwindcss/colors'
 
 const $q = useQuasar()
 
@@ -41,7 +41,7 @@ defineEmits<{
     transition-show="scale"
     transition-hide="scale"
   >
-    <q-list class="tw:min-w-[150px]">
+    <q-list class="tw:min-w-37.5">
       <q-item class="tw:text-secondary" clickable>
         <q-item-section>
           <span>

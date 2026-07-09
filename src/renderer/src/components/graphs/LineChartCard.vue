@@ -9,7 +9,7 @@ import formatNumber from '../../assets/js/format-number'
 import { useAppStore } from '../../store/app-store'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
-import colors from 'tailwindcss/dist/colors.js'
+import colors from 'tailwindcss/colors'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { use } from 'echarts/core'
@@ -157,7 +157,7 @@ const defaultDataPathText = '<value>'
       </div>
     </q-card-section>
 
-    <div class="tw:h-[200px]">
+    <div class="tw:h-50">
       <v-chart v-if="showGraph" class="chart" :option="options" autoresize />
     </div>
 
