@@ -1,54 +1,99 @@
-<script setup>
-import { computed } from 'vue'
-import { Handle, Position, useVueFlow } from '@vue-flow/core'
-import NodeIcon from '@renderer/components/tab-actions/action-chain/NodeIcon.vue'
+<script setup lang="ts">
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { Handle, Position } from '@vue-flow/core'
+import type { ContextMenuItem } from '@nuxt/ui'
+import ProgressRing from './ProgressRing.vue'
 
-const props = defineProps(['id', 'data'])
+const props = defineProps<{
+  id: string
+  data: {
+    duration?: number
+    durationType?: 'ms' | 's'
+    isRunning?: boolean
+    isFinished?: boolean
+    waitStartedAt?: number
+    waitEndsAt?: number
+  }
+  selected?: boolean
+}>()
 
-const { updateNodeData } = useVueFlow()
+const emit = defineEmits<{ copy: []; remove: [] }>()
 
-const duration = computed({
-  get: () => props.data.duration || 0,
-  set: (value) => updateNodeData(props.id, { duration: Math.max(0, value) })
+const now = ref(Date.now())
+let timer: ReturnType<typeof setInterval> | undefined
+
+watch(
+  () => props.data?.isRunning,
+  (isRunning) => {
+    clearInterval(timer)
+    if (isRunning) timer = setInterval(() => (now.value = Date.now()), 100)
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(() => clearInterval(timer))
+
+const label = computed(
+  () => `Wait ${props.data?.duration || 0} ${props.data?.durationType || 'ms'}`
+)
+
+const remaining = computed(() => {
+  if (!props.data?.isRunning || !props.data.waitEndsAt) return undefined
+
+  return Math.max(0, props.data.waitEndsAt - now.value)
 })
 
-const durationType = computed({
-  get: () => props.data.durationType || 'ms',
-  set: (value) => updateNodeData(props.id, { durationType: value })
+const fraction = computed(() => {
+  const { waitStartedAt, waitEndsAt } = props.data ?? {}
+
+  if (!waitStartedAt || !waitEndsAt || remaining.value === undefined) return undefined
+
+  return 1 - remaining.value / Math.max(1, waitEndsAt - waitStartedAt)
 })
 
-const isRunning = computed(() => {
-  return props.data.isRunning
+const remainingLabel = computed(() => {
+  if (remaining.value === undefined) return ''
+
+  return remaining.value >= 1000
+    ? `${(remaining.value / 1000).toFixed(1)} s left`
+    : `${Math.round(remaining.value)} ms left`
 })
 
-const isFinished = computed(() => {
-  return props.data.isFinished
-})
+const menuItems: ContextMenuItem[][] = [
+  [{ label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => emit('copy') }],
+  [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => emit('remove') }]
+]
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col justify-around p-1">
-    <div class="flex items-center justify-center gap-2 text-lg">
-      <node-icon :is-running="isRunning" :is-finished="isFinished" icon="fa-solid fa-clock" />
-      Wait
+  <UContextMenu :items="menuItems">
+    <div class="relative">
+      <div
+        class="flex h-12 w-[130px] items-center gap-2 rounded-xl px-3 text-[13px] font-bold"
+        :class="
+          data?.isRunning || selected
+            ? 'bg-primary/10 text-primary ring-primary ring-2 ring-inset'
+            : 'border-default bg-default text-muted border border-dashed'
+        "
+      >
+        <ProgressRing v-if="data?.isRunning" :value="fraction" :size="16" class="shrink-0" />
+        <UIcon
+          v-else-if="data?.isFinished"
+          name="i-lucide-check"
+          class="text-success size-4 shrink-0"
+        />
+        <UIcon v-else name="i-lucide-timer" class="size-4 shrink-0" />
+        {{ label }}
+      </div>
+      <div
+        v-if="remainingLabel"
+        class="text-muted absolute top-full mt-1.5 w-full text-center text-[11px]"
+      >
+        {{ remainingLabel }}
+      </div>
     </div>
+  </UContextMenu>
 
-    <q-separator />
-
-    <div class="flex min-h-[28px] items-center justify-around gap-2 px-1">
-      {{ duration }} {{ durationType }}
-    </div>
-  </div>
-
-  <q-menu context-menu>
-    <div class="flex gap-2 p-2">
-      <q-input v-model="duration" type="number" autofocus filled dense />
-      <q-select v-model="durationType" :options="['ms', 's']" filled dense />
-    </div>
-  </q-menu>
-
-  <Handle type="source" :position="Position.Right" />
   <Handle type="target" :position="Position.Left" />
+  <Handle type="source" :position="Position.Right" />
 </template>
-
-<style scoped lang="scss"></style>

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import ImportActionsGroups from '../components/ImportActionsGroups.vue'
+import ImportActionsDialog from '@renderer/components/tab-actions/dialogs/ImportActionsDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { computed, onMounted, watch } from 'vue'
-import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useSettingsStore } from '../store/settings-store'
@@ -155,9 +153,7 @@ watch(
     <new-tab-view v-else class="min-h-0 flex-1 overflow-auto" />
   </div>
   <update-dialog />
-  <import-actions />
-  <import-chain-actions />
-  <import-actions-groups />
+  <import-actions-dialog />
 </template>
 
 <style lang="less">

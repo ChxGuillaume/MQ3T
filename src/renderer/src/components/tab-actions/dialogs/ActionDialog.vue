@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { getPayloadVariablesGrouped } from '@renderer/assets/js/actions-variables'
-import { useCopyClipboard } from '@renderer/composables/useCopyClipboard'
-import CodeEditor from '../../tap-topics/CodeEditor.vue'
-import { useMqttConnectionsStore } from '../../../store/mqtt-connections'
+import {
+  ActionForm,
+  actionToForm,
+  formToAction,
+  hasErrors,
+  validateActionForm
+} from '../action-form'
 import { useSettingsStore } from '../../../store/settings-store'
+import ActionVariablesPanel from '../ActionVariablesPanel.vue'
 import { useActionsStore } from '../../../store/actions'
 import { Action } from '../../../../../types/actions'
-import { computed, reactive, ref, watch } from 'vue'
+import ActionFields from '../ActionFields.vue'
+import { computed, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
-import { QForm } from 'quasar'
-
-const mqttConnectionsStore = useMqttConnectionsStore()
-const settingsStore = useSettingsStore()
-const actionsStore = useActionsStore()
-
-const { copy } = useCopyClipboard()
-
-const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
   opened: boolean
@@ -35,154 +31,40 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const isMqtt5 = computed(
-  () =>
-    !props.connectionId ||
-    mqttConnectionsStore.getConnection(props.connectionId)?.protocolVersion === 5
-)
+const settingsStore = useSettingsStore()
+const actionsStore = useActionsStore()
 
-const editorLanguage = ref<'raw' | 'json' | 'xml' | 'yaml'>(settingsStore.defaultDataFormat)
+const form = ref<ActionForm>(actionToForm(undefined, settingsStore.defaultDataFormat))
+const submitted = ref(false)
 const showEditor = ref(false)
-const form = reactive({
-  name: '',
-  topic: '',
-  qos: 0 as 0 | 1 | 2,
-  payload: '',
-  retained: false,
-  description: '',
-  responseTopic: '',
-  correlationData: '',
-  enumOptions: {} as Record<string, (string | number)[]>
-})
-const enumOptionsCache = ref<Record<string, ('string' | 'number')[]>>({})
 
-const addEnumOption = (enumName: string, type: 'string' | 'number') => {
-  if (!form.enumOptions[enumName]) form.enumOptions[enumName] = []
-  if (!enumOptionsCache.value[enumName]) enumOptionsCache.value[enumName] = []
-
-  form.enumOptions[enumName].push(type === 'string' ? '' : 0)
-  enumOptionsCache.value[enumName].push(type)
-}
-
-const removeEnumOption = (enumName: string, index: number) => {
-  form.enumOptions[enumName].splice(index, 1)
-  enumOptionsCache.value[enumName].splice(index, 1)
-
-  if (!form.enumOptions[enumName].length) delete form.enumOptions[enumName]
-  if (!enumOptionsCache.value[enumName].length) delete enumOptionsCache.value[enumName]
-}
-
-const rules = computed(() => {
-  const extraTopicRules: ((v: string) => true | string)[] = []
-
-  if (props.noWildcard) {
-    extraTopicRules.push((v: string) => !v.includes('+') || 'Topic cannot include +')
-  }
-
-  return {
-    name: [(v: string) => !!v || 'Title is required'],
-    topic: [
-      (v: string) => !!v || 'Topic is required',
-      (v: string) => !v.includes('#') || 'Topic cannot include #',
-      (v: string) => !v.endsWith('+') || 'Topic cannot end with +',
-      ...extraTopicRules
-    ]
-  }
-})
-
-const hint = computed(() => {
-  return props.noWildcard ? 'Topics cannot include + or #' : 'Topics can include + wildcard'
-})
-
-const enums = computed(() => {
-  const variables = getPayloadVariablesGrouped(form.payload)
-
-  return variables.find((v) => v.type === 'enum')?.variables || []
-})
-
-const enumVariableNames = computed(() => {
-  const payloadVariablesName = Array.from(new Set(enums.value.map((v) => v.name)))
-  const enumOptionsVariableNames = Object.keys(form.enumOptions)
-
-  return [
-    ...payloadVariablesName.map((name) => ({ from_payload: true, name })),
-    ...enumOptionsVariableNames
-      .filter((name) => !payloadVariablesName.includes(name))
-      .map((name) => ({ from_payload: false, name }))
-  ]
-})
-
-const hasEnum = computed(() => {
-  return !!enums.value.length
-})
-
-const clearForm = () => {
-  form.name = ''
-  form.topic = ''
-  form.qos = 0
-  form.payload = ''
-  form.retained = false
-  form.description = ''
-  form.responseTopic = ''
-  form.correlationData = ''
-  form.enumOptions = {}
-
-  editorLanguage.value = 'raw'
-  enumOptionsCache.value = {}
-}
+const errors = computed(() =>
+  submitted.value
+    ? validateActionForm(form.value, { noTitle: props.noTitle, noWildcard: props.noWildcard })
+    : {}
+)
 
 const handleCloseForm = () => {
   showEditor.value = false
   emits('close')
-
-  setTimeout(() => {
-    clearForm()
-    emits('update:opened', false)
-  }, 250)
+  emits('update:opened', false)
 }
 
-const validateForm = async (): Promise<boolean> => {
-  return (await formRef.value?.validate()) || false
-}
+const handleSubmit = () => {
+  submitted.value = true
+  if (hasErrors(errors.value)) return
 
-const handleCreate = async () => {
-  if (!(await validateForm())) return
-
-  emits('create:action', {
-    id: `action-${uuidV4()}`,
-    groupId: actionsStore.selectedActionGroup,
-    name: form.name,
-    topic: form.topic,
-    qos: form.qos,
-    payload: form.payload,
-    retained: form.retained,
-    description: form.description,
-    payloadFormat: editorLanguage.value,
-    responseTopic: form.responseTopic,
-    correlationData: form.correlationData
-  })
-
-  handleCloseForm()
-}
-
-const handleUpdate = async () => {
-  if (!props.action) return
-  if (!(await validateForm())) return
-
-  emits('update:action', {
-    id: props.action.id,
-    groupId: props.action.groupId,
-    name: form.name,
-    topic: form.topic,
-    qos: form.qos,
-    payload: form.payload,
-    retained: form.retained,
-    description: form.description,
-    payloadFormat: editorLanguage.value,
-    enumOptions: form.enumOptions,
-    responseTopic: form.responseTopic,
-    correlationData: form.correlationData
-  })
+  if (props.editMode && props.action) {
+    emits('update:action', formToAction(form.value, props.action))
+  } else {
+    emits(
+      'create:action',
+      formToAction(form.value, {
+        id: `action-${uuidV4()}`,
+        groupId: actionsStore.selectedActionGroup
+      })
+    )
+  }
 
   handleCloseForm()
 }
@@ -192,285 +74,50 @@ watch(
   (opened) => {
     if (!opened) return
 
-    setTimeout(() => {
-      showEditor.value = props.opened
-    }, 150)
-  }
-)
+    form.value = actionToForm(props.action, settingsStore.defaultDataFormat)
+    submitted.value = false
 
-watch(
-  () => props.opened && props.action,
-  (action) => {
-    if (!action) return
-
-    form.name = action.name
-    form.topic = action.topic
-    form.qos = action.qos
-    form.payload = action.payload
-    form.retained = action.retained
-    form.description = action.description!
-    form.responseTopic = action.responseTopic || ''
-    form.correlationData = action.correlationData || ''
-
-    enumOptionsCache.value = Object.fromEntries(
-      Object.entries(action.enumOptions || {}).map(([key, value]) => [
-        key,
-        value.map((v) => (typeof v === 'string' ? 'string' : 'number'))
-      ])
-    )
-
-    form.enumOptions = action.enumOptions || {}
-
-    editorLanguage.value = action.payloadFormat || 'raw'
-  }
+    setTimeout(() => (showEditor.value = props.opened), 150)
+  },
+  { immediate: true }
 )
 </script>
 
 <template>
-  <q-dialog
-    ref="dialogRef"
-    :model-value="opened"
-    @hide="handleCloseForm"
-    @before-hide="showEditor = false"
+  <UModal
+    :open="opened"
+    :title="editMode ? 'Edit action' : 'New action'"
+    :ui="{ content: 'sm:max-w-[1040px]', body: 'p-0 sm:p-0', footer: 'justify-end' }"
+    @update:open="!$event && handleCloseForm()"
   >
-    <q-card flat class="dialog-card" :class="{ 'has-enum': hasEnum }">
-      <q-form ref="formRef" class="flex">
-        <div class="w-[760px]">
-          <q-card-section class="grid gap-2">
-            <h2 class="mb-2 text-xl">Action</h2>
-            <div
-              class="grid gap-4"
-              :class="{
-                'grid-cols-2': !noTitle,
-                'grid-cols-1': noTitle
-              }"
-            >
-              <q-input
-                v-if="!noTitle"
-                v-model="form.name"
-                filled
-                label="Title"
-                :rules="rules.name"
-              />
-              <q-input
-                v-model="form.topic"
-                filled
-                label="Topic"
-                lazy-rules
-                :rules="rules.topic"
-                hide-hint
-                :hint="hint"
-              />
-            </div>
-            <div class="tw-grid-cols grid gap-4">
-              <div class="flex gap-4">
-                <div class="flex flex-col items-center gap-2">
-                  <q-select
-                    v-model="form.qos"
-                    :options="[0, 1, 2]"
-                    filled
-                    label="QoS"
-                    class="w-[128px]"
-                  />
-                  <q-toggle v-model="form.retained" label="Retain" class="pr-3" />
-                </div>
-                <q-input
-                  v-model="form.description"
-                  filled
-                  label="Description"
-                  type="textarea"
-                  rows="4"
-                  class="action-description grow"
-                />
-              </div>
-              <template v-if="isMqtt5">
-                <div class="flex gap-4">
-                  <q-input
-                    v-model="form.responseTopic"
-                    filled
-                    dense
-                    label="Response Topic"
-                    class="grow"
-                  />
-                  <q-input
-                    v-model="form.correlationData"
-                    filled
-                    dense
-                    label="Correlation Data"
-                    class="grow"
-                  />
-                </div>
-              </template>
-            </div>
-            <div class="mt-4 h-[300px]">
-              <code-editor
-                v-if="showEditor"
-                v-model:language="editorLanguage"
-                v-model="form.payload"
-                :variable-completion="variableCompletion"
-                class="h-[300px]"
-                font-size="14"
-              />
-            </div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <div class="flex gap-2">
-              <q-btn flat label="Cancel" @click="handleCloseForm" />
-              <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-                <q-icon class="mr-2" size="xs" name="fa-solid fa-plus" />
-                Create
-              </q-btn>
-              <q-btn v-else color="primary" @click="handleUpdate">
-                <q-icon class="mr-2" size="xs" name="fa-solid fa-save" />
-                Update
-              </q-btn>
-            </div>
-          </q-card-actions>
+    <template #body>
+      <div class="flex max-h-[75vh] min-h-0">
+        <div class="min-w-0 flex-1 overflow-auto p-5">
+          <ActionFields
+            v-model="form"
+            :connection-id="connectionId"
+            :errors="errors"
+            :no-title="noTitle"
+            :no-wildcard="noWildcard"
+            :variable-completion="variableCompletion"
+            :show-editor="showEditor"
+            editor-class="h-[300px]"
+          />
         </div>
-        <q-separator vertical />
-        <div class="h-full w-[280px]">
-          <q-card-section class="flex h-full flex-col gap-4 overflow-auto">
-            <h2 class="text-xl">Enums</h2>
-            <div
-              v-for="enum_name in enumVariableNames"
-              :key="enum_name.name"
-              class="flex flex-col gap-2"
-            >
-              <div class="flex w-full items-center justify-between">
-                <div
-                  class="flex items-center"
-                  @click="copy(enum_name.name, 'Variable Name Copied')"
-                >
-                  <h3
-                    class="line-clamp-1 max-w-48 cursor-default text-lg"
-                    :class="{
-                      'text-red-500': !enum_name.from_payload,
-                      'color-details': enum_name.from_payload
-                    }"
-                    :title="enum_name.name"
-                  >
-                    {{ enum_name.name }}
-                  </h3>
-                  <q-tooltip
-                    v-if="!enum_name.from_payload"
-                    class="bg-red-500"
-                    anchor="center left"
-                    self="center right"
-                    :offset="[10, 0]"
-                  >
-                    This variable is not used in the payload
-                  </q-tooltip>
-                </div>
-                <q-btn color="primary" size="xs">
-                  <q-icon name="fa-solid fa-plus" size="xs" />
-                  <q-tooltip anchor="center left" self="center right" :offset="[5, 0]">
-                    Add Option
-                  </q-tooltip>
-                  <q-menu anchor="bottom right" self="top right" :offset="[0, 5]">
-                    <q-list>
-                      <q-item
-                        v-close-popup
-                        clickable
-                        @click="addEnumOption(enum_name.name, 'string')"
-                      >
-                        <q-item-section>
-                          <div>
-                            <q-icon class="mr-2" name="fa-solid fa-font" />
-                            String
-                          </div>
-                        </q-item-section>
-                      </q-item>
-                      <q-item
-                        v-close-popup
-                        clickable
-                        @click="addEnumOption(enum_name.name, 'number')"
-                      >
-                        <q-item-section>
-                          <div>
-                            <q-icon class="mr-2" name="fa-solid fa-hashtag" />
-                            Number
-                          </div>
-                        </q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </div>
-              <div v-for="(_, index) in form.enumOptions[enum_name.name]" :key="index">
-                <q-input
-                  v-if="enumOptionsCache[enum_name.name][index] === 'string'"
-                  v-model="form.enumOptions[enum_name.name][index]"
-                  :label="`Option ${index + 1}`"
-                  hide-bottom-space
-                  filled
-                  dense
-                  :rules="[(v: string) => !!v || 'Option is required']"
-                >
-                  <template #append>
-                    <q-btn
-                      flat
-                      dense
-                      size="sm"
-                      color="red"
-                      icon="fa-solid fa-trash"
-                      @click="removeEnumOption(enum_name.name, index)"
-                    />
-                  </template>
-                </q-input>
-                <q-input
-                  v-else
-                  v-model.number="form.enumOptions[enum_name.name][index]"
-                  :label="`Option ${index + 1}`"
-                  hide-bottom-space
-                  filled
-                  dense
-                  type="number"
-                  :rules="[
-                    (v: number) => !isNaN(v) || 'Invalid number',
-                    (v: number | string) => typeof v === 'number' || 'Invalid number'
-                  ]"
-                >
-                  <template #append>
-                    <q-btn
-                      flat
-                      dense
-                      size="sm"
-                      color="red"
-                      icon="fa-solid fa-trash"
-                      @click="removeEnumOption(enum_name.name, index)"
-                    />
-                  </template>
-                </q-input>
-              </div>
-            </div>
-          </q-card-section>
-        </div>
-      </q-form>
-    </q-card>
-  </q-dialog>
+        <aside class="border-default w-[300px] shrink-0 overflow-auto border-l p-5">
+          <ActionVariablesPanel v-model:enum-options="form.enumOptions" :payload="form.payload" />
+        </aside>
+      </div>
+    </template>
+
+    <template #footer>
+      <UButton color="neutral" variant="outline" label="Cancel" @click="handleCloseForm" />
+      <UButton
+        :icon="editMode ? 'i-lucide-save' : 'i-lucide-plus'"
+        :label="editMode ? 'Update' : 'Create'"
+        class="font-semibold"
+        @click="handleSubmit"
+      />
+    </template>
+  </UModal>
 </template>
-
-<style scoped lang="less">
-.action-description {
-  resize: none;
-}
-
-.dialog-card {
-  display: flex;
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-  min-width: 760px;
-  overflow: hidden !important;
-}
-
-.dialog-card.has-enum {
-  min-width: 1040px;
-}
-</style>
-
-<style lang="less">
-.action-description textarea {
-  resize: none !important;
-}
-</style>

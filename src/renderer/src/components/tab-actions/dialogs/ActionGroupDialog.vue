@@ -2,9 +2,6 @@
 import { ActionGroup } from '../../../../../types/actions'
 import { reactive, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
-import { QForm } from 'quasar'
-
-const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
   opened: boolean
@@ -19,105 +16,75 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const form = reactive({
-  name: '',
-  description: ''
-})
-
-const rules = {
-  name: [(v: string) => !!v || 'Title is required']
-}
-
-const clearForm = () => {
-  form.name = ''
-  form.description = ''
-}
+const form = reactive({ name: '', description: '' })
+const nameError = ref<string>()
 
 const handleCloseForm = () => {
-  clearForm()
   emits('close')
   emits('update:opened', false)
 }
 
-const validateForm = async (): Promise<boolean> => {
-  return (await formRef.value?.validate()) || false
-}
+const handleSubmit = () => {
+  nameError.value = form.name.trim() ? undefined : 'Name is required'
+  if (nameError.value) return
 
-const handleCreate = async () => {
-  if (!(await validateForm())) return
-
-  emits('create:actionGroup', {
-    id: `group-${uuidV4()}`,
-    name: form.name,
-    description: form.description
-  })
-
-  handleCloseForm()
-}
-
-const handleUpdate = async () => {
-  if (!props.actionGroup) return
-  if (!(await validateForm())) return
-
-  emits('update:actionGroup', {
-    id: props.actionGroup.id,
-    name: form.name,
-    description: form.description
-  })
-
-  handleCloseForm()
-}
-
-const handleSubmit = async () => {
-  if (props.editMode) {
-    await handleUpdate()
+  if (props.editMode && props.actionGroup) {
+    emits('update:actionGroup', {
+      id: props.actionGroup.id,
+      name: form.name,
+      description: form.description
+    })
   } else {
-    await handleCreate()
+    emits('create:actionGroup', {
+      id: `group-${uuidV4()}`,
+      name: form.name,
+      description: form.description
+    })
   }
+
+  handleCloseForm()
 }
 
 watch(
-  () => props.opened && props.actionGroup,
-  (actionGroup) => {
-    if (!actionGroup) return
+  () => props.opened,
+  (opened) => {
+    if (!opened) return
 
-    form.name = actionGroup.name
-    form.description = actionGroup.description!
-  }
+    form.name = props.actionGroup?.name ?? ''
+    form.description = props.actionGroup?.description ?? ''
+    nameError.value = undefined
+  },
+  { immediate: true }
 )
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="min-w-[400px]">
-      <q-card-section>
-        <q-form ref="formRef" class="grid gap-2">
-          <h2 class="mb-2 text-xl">Action Group</h2>
-          <q-input
-            v-model="form.name"
-            filled
-            label="Title"
-            :rules="rules.name"
-            @keydown.enter.prevent="handleSubmit"
-          />
-          <q-input v-model="form.description" filled label="Description" type="textarea" />
-        </q-form>
-      </q-card-section>
-      <q-card-actions align="right">
-        <div class="flex gap-2">
-          <q-btn flat label="Cancel" @click="handleCloseForm" />
-          <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-            <q-icon class="mr-2" size="xs" name="fa-solid fa-plus" />
-            Create
-          </q-btn>
-          <q-btn v-else color="primary" @click="handleUpdate">
-            <q-icon class="mr-2" size="xs" name="fa-solid fa-save" />
-            Update
-          </q-btn>
-        </div>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
+  <UModal
+    :open="opened"
+    :title="editMode ? 'Edit group' : 'New group'"
+    description="Groups keep related actions and chains together."
+    :ui="{ content: 'sm:max-w-md', footer: 'justify-end' }"
+    @update:open="!$event && handleCloseForm()"
+  >
+    <template #body>
+      <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+        <UFormField label="Name" :error="nameError" required>
+          <UInput v-model="form.name" class="w-full" autofocus />
+        </UFormField>
+        <UFormField label="Description">
+          <UTextarea v-model="form.description" class="w-full" :rows="3" autoresize />
+        </UFormField>
+        <button type="submit" class="hidden" />
+      </form>
+    </template>
 
-<style scoped lang="less"></style>
+    <template #footer>
+      <UButton color="neutral" variant="outline" label="Cancel" @click="handleCloseForm" />
+      <UButton
+        :label="editMode ? 'Save' : 'Create group'"
+        class="font-semibold"
+        @click="handleSubmit"
+      />
+    </template>
+  </UModal>
+</template>

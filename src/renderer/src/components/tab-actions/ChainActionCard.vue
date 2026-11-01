@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import ActionCardContextMenu from '@renderer/components/tab-actions/ActionCardContextMenu.vue'
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { chainStepLabel, chainSteps } from './action-utils'
+import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
+import ProgressRing from './action-chain/ProgressRing.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -12,106 +14,86 @@ const props = defineProps<{
   disable?: boolean
 }>()
 
-defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
 const { running, run } = useRunActionChain()
 
-const waitActionCount = computed(() => {
-  return props.chainAction.nodes.filter((node) => node.type === 'wait').length
-})
+const steps = computed(() =>
+  chainSteps(props.chainAction).map((node) => ({
+    id: node.id,
+    type: node.type,
+    label: chainStepLabel(node)
+  }))
+)
 
-const actionCount = computed(() => {
-  return props.chainAction.nodes.filter((node) => node.type === 'action').length
-})
+const handleRun = () => {
+  run(props.connectionId, props.chainAction.nodes, props.chainAction.edges)
+  emit('send')
+}
+
+const menuItems = computed<ContextMenuItem[][]>(() => [
+  [{ label: 'Edit', icon: 'i-lucide-pencil', onSelect: () => emit('edit') }],
+  [
+    { label: 'Copy to…', icon: 'i-lucide-copy', onSelect: () => emit('copy') },
+    { label: 'Move to…', icon: 'i-lucide-arrow-right-left', onSelect: () => emit('move') }
+  ],
+  [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => emit('delete') }]
+])
 </script>
 
 <template>
-  <q-card flat class="chain-action-card h-fit p-4">
-    <div class="flex justify-between">
-      <h2
-        class="truncate-hover-one-line drag-handle w-full text-lg"
-        :class="{ 'cursor-grab': !noGrab }"
-        :title="chainAction.name"
-      >
-        {{ chainAction.name }}
-      </h2>
-      <q-btn
-        v-if="!noContextMenu"
-        class="ml-2"
-        icon="fa-solid fa-ellipsis-vertical"
-        flat
-        round
-        size="sm"
-      >
-        <action-card-context-menu
-          @edit="$emit('edit')"
-          @copy="$emit('copy')"
-          @move="$emit('move')"
-          @delete="$emit('delete')"
-        />
-      </q-btn>
-    </div>
-    <div class="mt-4 flex justify-between select-none">
-      <div class="flex gap-4">
-        <div class="color-details flex items-center gap-1.5">
-          <span class="text-lg">{{ waitActionCount }}</span>
-          <q-icon name="fa-solid fa-clock" size="xs" />
-          <q-tooltip class="text-sm whitespace-pre">Wait Nodes</q-tooltip>
-        </div>
-
-        <div class="color-details flex items-center gap-1.5">
-          <span class="text-lg">{{ actionCount }}</span>
-          <q-icon name="fa-solid fa-paper-plane" size="xs" />
-          <q-tooltip class="text-sm whitespace-pre">Action Nodes</q-tooltip>
+  <UContextMenu :items="menuItems" :disabled="noContextMenu">
+    <div class="bg-muted flex min-w-0 items-center gap-3.5 rounded-xl px-4 py-3.5">
+      <div class="flex min-w-0 flex-1 flex-col gap-2.5">
+        <span
+          class="drag-handle truncate font-bold"
+          :class="{ 'cursor-grab': !noGrab }"
+          :title="chainAction.name"
+        >
+          {{ chainAction.name }}
+        </span>
+        <div class="flex items-center gap-1.5 overflow-hidden">
+          <template v-for="(step, index) in steps" :key="step.id">
+            <span
+              class="rounded-full px-2.5 py-1 text-xs whitespace-nowrap"
+              :class="{
+                'bg-primary text-inverted font-bold': step.type === 'start',
+                'border-default text-muted border border-dashed': step.type === 'wait',
+                'border-default bg-default border': step.type === 'action'
+              }"
+            >
+              {{ step.label }}
+            </span>
+            <span v-if="index < steps.length - 1" aria-hidden="true" class="text-muted">→</span>
+          </template>
+          <span v-if="steps.length <= 1" class="text-muted text-xs">No steps connected yet</span>
         </div>
       </div>
-      <q-btn
-        :disable="running || disable"
-        color="primary"
-        @click="run(connectionId, chainAction.nodes, chainAction.edges)"
-      >
-        <q-circular-progress
-          v-if="running"
-          color="white"
-          indeterminate
-          class="mr-2"
-          size="18px"
-          :thickness="0.5"
-        />
-        <q-icon v-else class="mr-2" size="xs" name="fa-solid fa-play" />
-        Run
-        <q-tooltip v-if="disable" class="bg-primary text-sm text-white">
-          Connection is not active.
-        </q-tooltip>
-      </q-btn>
+      <UButton
+        v-if="!noContextMenu"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-pencil"
+        aria-label="Edit chain"
+        @click="emit('edit')"
+      />
+      <UDropdownMenu v-if="!noContextMenu" :items="menuItems" :content="{ align: 'end' }">
+        <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis" aria-label="More" />
+      </UDropdownMenu>
+      <UTooltip :text="disable ? 'Connection is not active' : undefined" :disabled="!disable">
+        <UButton
+          size="sm"
+          label="Run"
+          class="font-semibold"
+          :icon="running ? undefined : 'i-lucide-play'"
+          :disabled="running || disable"
+          @click="handleRun"
+        >
+          <template v-if="running" #leading>
+            <ProgressRing :size="14" />
+          </template>
+        </UButton>
+      </UTooltip>
     </div>
-
-    <action-card-context-menu
-      v-if="!noContextMenu"
-      context-menu
-      anchor="bottom left"
-      self="top left"
-      @edit="$emit('edit')"
-      @copy="$emit('copy')"
-      @move="$emit('move')"
-      @delete="$emit('delete')"
-    />
-  </q-card>
+  </UContextMenu>
 </template>
-
-<style scoped lang="less">
-.truncate-hover-one-line {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  text-overflow: ellipsis;
-  word-break: break-all;
-}
-
-.body--light {
-  .chain-action-card {
-    background-color: #f5f5f5;
-  }
-}
-</style>

@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import ConnectionSelect from '../../ConnectionSelect.vue'
-import { computed, ref } from 'vue'
-import { QForm } from 'quasar'
-
-const formRef = ref<QForm | null>(null)
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
   connectionId?: string
@@ -11,6 +8,7 @@ const props = defineProps<{
   actionIcon: string
   opened: boolean
   title: string
+  description?: string
 }>()
 
 const emits = defineEmits<{
@@ -20,52 +18,51 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const validateForm = async () => {
-  return await formRef.value?.validate()
-}
+const connectionError = ref<string>()
+
+const icon = computed(() => (props.actionIcon?.startsWith('i-') ? props.actionIcon : undefined))
+
+const connectionIdModel = computed<string>({
+  get: () => props.connectionId || '',
+  set: (value) => emits('update:connectionId', value)
+})
 
 const handleCloseForm = () => {
   emits('close')
   emits('update:opened', false)
 }
 
-const handleSelect = async () => {
-  const valid = await validateForm()
-
-  if (!valid) return
+const handleSelect = () => {
+  connectionError.value = props.connectionId ? undefined : 'Connection is required'
+  if (connectionError.value) return
 
   emits('input')
   handleCloseForm()
 }
 
-const connectionIdModel = computed<string>({
-  get: () => props.connectionId || '',
-  set: (value) => {
-    emits('update:connectionId', value)
-  }
-})
+watch(
+  () => props.opened,
+  () => (connectionError.value = undefined)
+)
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="min-w-[400px]">
-      <q-card-section>
-        <q-form ref="formRef" class="grid gap-2">
-          <h2 class="mb-2 text-xl">{{ title }}</h2>
-          <connection-select v-model="connectionIdModel" class="w-[370px]" />
-        </q-form>
-      </q-card-section>
-      <q-card-actions align="right">
-        <div class="flex gap-2">
-          <q-btn flat label="Cancel" @click="handleCloseForm" />
-          <q-btn color="primary" @click="handleSelect">
-            <q-icon class="mr-2" size="xs" :name="actionIcon" />
-            {{ actionTitle }}
-          </q-btn>
-        </div>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
+  <UModal
+    :open="opened"
+    :title="title"
+    :description="description"
+    :ui="{ content: 'sm:max-w-md', footer: 'justify-end' }"
+    @update:open="!$event && handleCloseForm()"
+  >
+    <template #body>
+      <UFormField label="Connection" :error="connectionError" required>
+        <ConnectionSelect v-model="connectionIdModel" class="w-full" />
+      </UFormField>
+    </template>
 
-<style scoped lang="less"></style>
+    <template #footer>
+      <UButton color="neutral" variant="outline" label="Cancel" @click="handleCloseForm" />
+      <UButton :icon="icon" :label="actionTitle" class="font-semibold" @click="handleSelect" />
+    </template>
+  </UModal>
+</template>

@@ -13,7 +13,6 @@ import '@quasar/extras/material-icons/material-icons.css'
 import '@quasar/extras/mdi-v7/mdi-v7.css'
 
 import '@vue-flow/core/dist/style.css'
-import './assets/css/action-chain.scss'
 
 // A few examples for animations from Animate.css:
 import '@quasar/extras/animate/fadeOutRight.css'
