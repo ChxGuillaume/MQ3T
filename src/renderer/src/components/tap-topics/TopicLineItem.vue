@@ -52,20 +52,20 @@ watch(
 <template>
   <q-intersection
     :id="`topic-item-${clientKey}:${topic}-intersection`"
-    class="tw:h-[29px] tw:w-auto tw:self-start"
+    class="h-[29px] w-auto self-start"
   >
     <topic-card
       ref="topicCardRef"
       :has-actions="hasActions"
       :favorite="favoritedTopics"
       :active="isSelectedTopic"
-      class="tw:ml-4"
+      class="ml-4"
       @open:toggle="handleTopicClick"
     >
       <span class="topic-item-key" :class="{ empty: !topic }">
         {{ topic ? topic : '<\empty>' }}
       </span>
-      <span v-if="topicLastMessage?.message" class="tw:ml-1">=</span>
+      <span v-if="topicLastMessage?.message" class="ml-1">=</span>
       <code-highlight
         v-if="topicLastMessage?.message && topicLastMessage.dataType"
         :code="topicLastMessage?.message"

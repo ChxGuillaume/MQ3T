@@ -42,56 +42,41 @@ const connectionStatus = computed(() => {
   <q-menu touch-position context-menu>
     <q-list dense style="min-width: 220px">
       <template v-if="connectionStatus === 'disconnected'">
-        <q-item
-          v-close-popup
-          class="tw:text-green-500"
-          clickable
-          @click="handleConnect(connection)"
-        >
+        <q-item v-close-popup class="text-green-500" clickable @click="handleConnect(connection)">
           <q-item-section>
             <div>
-              <q-icon name="fa-solid fa-plug" class="tw:mr-2" />
+              <q-icon name="fa-solid fa-plug" class="mr-2" />
               Connect
             </div>
           </q-item-section>
         </q-item>
         <q-item
           v-close-popup
-          class="tw:text-neutral-400"
+          class="text-neutral-400"
           clickable
           @click="handleHideConnection(connection)"
         >
           <q-item-section>
             <div>
-              <q-icon name="fa-solid fa-eye-slash" class="tw:mr-2" />
+              <q-icon name="fa-solid fa-eye-slash" class="mr-2" />
               Hide Connection
             </div>
           </q-item-section>
         </q-item>
       </template>
       <template v-else>
-        <q-item
-          v-close-popup
-          class="tw:text-amber-500"
-          clickable
-          @click="handleReconnect(connection)"
-        >
+        <q-item v-close-popup class="text-amber-500" clickable @click="handleReconnect(connection)">
           <q-item-section>
             <div>
-              <q-icon name="fa-solid fa-sync" class="tw:mr-2" />
+              <q-icon name="fa-solid fa-sync" class="mr-2" />
               Reconnect
             </div>
           </q-item-section>
         </q-item>
-        <q-item
-          v-close-popup
-          class="tw:text-red-500"
-          clickable
-          @click="handleDisconnect(connection)"
-        >
+        <q-item v-close-popup class="text-red-500" clickable @click="handleDisconnect(connection)">
           <q-item-section>
             <div>
-              <q-icon name="fa-solid fa-times" class="tw:mr-2" />
+              <q-icon name="fa-solid fa-times" class="mr-2" />
               Disconnect
             </div>
           </q-item-section>
@@ -103,9 +88,9 @@ const connectionStatus = computed(() => {
         clickable
         @click="mqttTopicsStore.clearConnectionMessages(connection.clientKey)"
       >
-        <q-item-section class="tw:flex">
+        <q-item-section class="flex">
           <div>
-            <q-icon name="fa-solid fa-trash" class="tw:mr-2" />
+            <q-icon name="fa-solid fa-trash" class="mr-2" />
             Clear All Topics
           </div>
         </q-item-section>

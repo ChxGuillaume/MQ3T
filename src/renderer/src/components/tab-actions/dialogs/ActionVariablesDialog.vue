@@ -143,24 +143,19 @@ const codeEditorLimits = ref([400, 700])
   <q-dialog ref="dialogRef" v-model="opened" full-width @hide="handleCloseForm">
     <q-card flat class="action-variables-card">
       <q-form ref="formRef" @submit="handleSend">
-        <q-splitter
-          v-model="codeEditorSplitter"
-          :limits="codeEditorLimits"
-          unit="px"
-          class="tw:h-96"
-        >
+        <q-splitter v-model="codeEditorSplitter" :limits="codeEditorLimits" unit="px" class="h-96">
           <template #before>
-            <div class="tw:max-h-fit tw:overflow-auto">
+            <div class="max-h-fit overflow-auto">
               <q-card-section>
-                <h2 class="tw:line-clamp-1 tw:text-lg">{{ props.action.name }}</h2>
-                <span class="tw:caption-top tw:text-neutral-500">{{ props.action.topic }}</span>
+                <h2 class="line-clamp-1 text-lg">{{ props.action.name }}</h2>
+                <span class="caption-top text-neutral-500">{{ props.action.topic }}</span>
               </q-card-section>
-              <q-card-section class="tw:grid tw:select-none tw:gap-6 tw:pt-0">
+              <q-card-section class="grid gap-6 pt-0 select-none">
                 <div v-for="variableGroup in variablesGroups" :key="variableGroup.type">
                   <div
-                    class="tw:grid tw:gap-2"
+                    class="grid gap-2"
                     :class="{
-                      'tw:grid-cols-2':
+                      'grid-cols-2':
                         variableGroup.type !== 'string' && variableGroup.variables.length > 1
                     }"
                   >
@@ -221,7 +216,7 @@ const codeEditorLimits = ref([400, 700])
                       dense
                       @update:model-value="form[`${index}:${variable.full}`] = $event"
                     >
-                      <div class="color-details tw:line-clamp-1" :title="variable.name">
+                      <div class="color-details line-clamp-1" :title="variable.name">
                         {{ variable.name }}
                       </div>
                     </q-toggle>
@@ -247,7 +242,7 @@ const codeEditorLimits = ref([400, 700])
           </template>
 
           <template #after>
-            <q-card-section class="tw:h-full tw:w-full tw:grow tw:p-0">
+            <q-card-section class="h-full w-full grow p-0">
               <code-preview
                 v-if="showEditor"
                 :value="transformedPayload"
@@ -259,13 +254,13 @@ const codeEditorLimits = ref([400, 700])
           </template>
         </q-splitter>
 
-        <q-separator class="tw:col-span-2" />
+        <q-separator class="col-span-2" />
 
-        <q-card-actions class="tw:col-span-2" align="right">
-          <div class="tw:flex tw:gap-2">
+        <q-card-actions class="col-span-2" align="right">
+          <div class="flex gap-2">
             <q-btn flat label="Cancel" @click="handleCloseForm" />
             <q-btn color="primary" type="submit">
-              <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
+              <q-icon class="mr-2" size="xs" name="fa-solid fa-paper-plane" />
               Send
             </q-btn>
           </div>

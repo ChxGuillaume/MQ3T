@@ -80,18 +80,18 @@ const send = () => {
 </script>
 
 <template>
-  <q-card flat class="action-card tw:h-fit tw:p-4">
-    <div class="tw:flex tw:justify-between">
+  <q-card flat class="action-card h-fit p-4">
+    <div class="flex justify-between">
       <h2
-        class="truncate-hover-one-line drag-handle tw:w-full tw:text-lg"
-        :class="{ 'tw:cursor-grab': !noGrab }"
+        class="truncate-hover-one-line drag-handle w-full text-lg"
+        :class="{ 'cursor-grab': !noGrab }"
         :title="action.name"
       >
         {{ action.name }}
       </h2>
       <q-btn
         v-if="!noContextMenu"
-        class="tw:ml-2"
+        class="ml-2"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round
@@ -108,61 +108,56 @@ const send = () => {
     </div>
     <p
       v-if="!hideTopic"
-      class="truncate-hover-one-line color-details tw:cursor-pointer"
+      class="truncate-hover-one-line color-details cursor-pointer"
       :title="action.topic"
       @click="handleCopyTopic"
     >
       {{ action.topic }}
     </p>
-    <div class="tw:mt-4 tw:flex tw:justify-between">
-      <div class="tw:flex tw:gap-4">
-        <q-icon
-          v-if="variablesCount"
-          name="fa-solid fa-code"
-          class="color-details tw:mt-2"
-          size="xs"
-        >
-          <q-tooltip class="tw:text-sm">{{ variablesCount }} variables</q-tooltip>
+    <div class="mt-4 flex justify-between">
+      <div class="flex gap-4">
+        <q-icon v-if="variablesCount" name="fa-solid fa-code" class="color-details mt-2" size="xs">
+          <q-tooltip class="text-sm">{{ variablesCount }} variables</q-tooltip>
         </q-icon>
 
         <q-icon
           v-if="action.description"
           name="fa-solid fa-info-circle"
-          class="color-details tw:mt-2"
+          class="color-details mt-2"
           size="xs"
         >
-          <q-tooltip class="tw:whitespace-pre tw:text-sm">{{ action.description }}</q-tooltip>
+          <q-tooltip class="text-sm whitespace-pre">{{ action.description }}</q-tooltip>
         </q-icon>
 
-        <q-icon name="fa-solid fa-ranking-star" class="color-details tw:mt-2 tw:px-1" size="xs">
-          <q-tooltip class="tw:text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
+        <q-icon name="fa-solid fa-ranking-star" class="color-details mt-2 px-1" size="xs">
+          <q-tooltip class="text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
         </q-icon>
 
         <q-icon
           v-if="action.retained"
           name="fa-solid fa-retweet"
-          class="color-details tw:mt-2"
+          class="color-details mt-2"
           size="xs"
         >
-          <q-tooltip class="tw:text-sm">Retained</q-tooltip>
+          <q-tooltip class="text-sm">Retained</q-tooltip>
         </q-icon>
 
         <q-icon
           name="fa-solid fa-file-lines"
-          class="color-details tw:mt-2 tw:cursor-pointer"
+          class="color-details mt-2 cursor-pointer"
           size="xs"
           @click="handleCopyPayload"
         >
-          <q-tooltip class="tw:text-sm">{{ action.payload }}</q-tooltip>
+          <q-tooltip class="text-sm">{{ action.payload }}</q-tooltip>
         </q-icon>
       </div>
       <q-btn color="primary" :disable="disableDisconnected || disableWildcard" @click="send">
-        <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
+        <q-icon class="mr-2" size="xs" name="fa-solid fa-paper-plane" />
         Send
-        <q-tooltip v-if="disableDisconnected" class="tw:bg-primary tw:text-sm tw:text-white">
+        <q-tooltip v-if="disableDisconnected" class="bg-primary text-sm text-white">
           Connection is not active.
         </q-tooltip>
-        <q-tooltip v-if="disableWildcard" class="tw:bg-primary tw:text-sm tw:text-white">
+        <q-tooltip v-if="disableWildcard" class="bg-primary text-sm text-white">
           Wildcard topics are only supported in the Topics tab.
         </q-tooltip>
       </q-btn>

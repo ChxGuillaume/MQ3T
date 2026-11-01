@@ -5,7 +5,7 @@ defineProps(['id'])
 </script>
 
 <template>
-  <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:text-lg">
+  <div class="flex items-center justify-center gap-2 text-lg">
     <q-icon name="fa-solid fa-flag-checkered" />
     Start
   </div>

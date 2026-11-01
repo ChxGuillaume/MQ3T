@@ -234,15 +234,15 @@ watch(
     @before-hide="showEditor = false"
   >
     <q-card flat class="dialog-card" :class="{ 'has-enum': hasEnum }">
-      <q-form ref="formRef" class="tw:flex">
-        <div class="tw:w-[760px]">
-          <q-card-section class="tw:grid tw:gap-2">
-            <h2 class="tw:mb-2 tw:text-xl">Action</h2>
+      <q-form ref="formRef" class="flex">
+        <div class="w-[760px]">
+          <q-card-section class="grid gap-2">
+            <h2 class="mb-2 text-xl">Action</h2>
             <div
-              class="tw:grid tw:gap-4"
+              class="grid gap-4"
               :class="{
-                'tw:grid-cols-2': !noTitle,
-                'tw:grid-cols-1': noTitle
+                'grid-cols-2': !noTitle,
+                'grid-cols-1': noTitle
               }"
             >
               <q-input
@@ -262,17 +262,17 @@ watch(
                 :hint="hint"
               />
             </div>
-            <div class="tw-grid-cols tw:grid tw:gap-4">
-              <div class="tw:flex tw:gap-4">
-                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
+            <div class="tw-grid-cols grid gap-4">
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center gap-2">
                   <q-select
                     v-model="form.qos"
                     :options="[0, 1, 2]"
                     filled
                     label="QoS"
-                    class="tw:w-[128px]"
+                    class="w-[128px]"
                   />
-                  <q-toggle v-model="form.retained" label="Retain" class="tw:pr-3" />
+                  <q-toggle v-model="form.retained" label="Retain" class="pr-3" />
                 </div>
                 <q-input
                   v-model="form.description"
@@ -280,71 +280,71 @@ watch(
                   label="Description"
                   type="textarea"
                   rows="4"
-                  class="action-description tw:grow"
+                  class="action-description grow"
                 />
               </div>
               <template v-if="isMqtt5">
-                <div class="tw:flex tw:gap-4">
+                <div class="flex gap-4">
                   <q-input
                     v-model="form.responseTopic"
                     filled
                     dense
                     label="Response Topic"
-                    class="tw:grow"
+                    class="grow"
                   />
                   <q-input
                     v-model="form.correlationData"
                     filled
                     dense
                     label="Correlation Data"
-                    class="tw:grow"
+                    class="grow"
                   />
                 </div>
               </template>
             </div>
-            <div class="tw:mt-4 tw:h-[300px]">
+            <div class="mt-4 h-[300px]">
               <code-editor
                 v-if="showEditor"
                 v-model:language="editorLanguage"
                 v-model="form.payload"
                 :variable-completion="variableCompletion"
-                class="tw:h-[300px]"
+                class="h-[300px]"
                 font-size="14"
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <div class="tw:flex tw:gap-2">
+            <div class="flex gap-2">
               <q-btn flat label="Cancel" @click="handleCloseForm" />
               <q-btn v-if="!editMode" color="primary" @click="handleCreate">
-                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-plus" />
+                <q-icon class="mr-2" size="xs" name="fa-solid fa-plus" />
                 Create
               </q-btn>
               <q-btn v-else color="primary" @click="handleUpdate">
-                <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-save" />
+                <q-icon class="mr-2" size="xs" name="fa-solid fa-save" />
                 Update
               </q-btn>
             </div>
           </q-card-actions>
         </div>
         <q-separator vertical />
-        <div class="tw:h-full tw:w-[280px]">
-          <q-card-section class="tw:flex tw:h-full tw:flex-col tw:gap-4 tw:overflow-auto">
-            <h2 class="tw:text-xl">Enums</h2>
+        <div class="h-full w-[280px]">
+          <q-card-section class="flex h-full flex-col gap-4 overflow-auto">
+            <h2 class="text-xl">Enums</h2>
             <div
               v-for="enum_name in enumVariableNames"
               :key="enum_name.name"
-              class="tw:flex tw:flex-col tw:gap-2"
+              class="flex flex-col gap-2"
             >
-              <div class="tw:flex tw:w-full tw:items-center tw:justify-between">
+              <div class="flex w-full items-center justify-between">
                 <div
-                  class="tw:flex tw:items-center"
+                  class="flex items-center"
                   @click="copy(enum_name.name, 'Variable Name Copied')"
                 >
                   <h3
-                    class="tw:line-clamp-1 tw:max-w-48 tw:cursor-default tw:text-lg"
+                    class="line-clamp-1 max-w-48 cursor-default text-lg"
                     :class="{
-                      'tw:text-red-500': !enum_name.from_payload,
+                      'text-red-500': !enum_name.from_payload,
                       'color-details': enum_name.from_payload
                     }"
                     :title="enum_name.name"
@@ -353,7 +353,7 @@ watch(
                   </h3>
                   <q-tooltip
                     v-if="!enum_name.from_payload"
-                    class="tw:bg-red-500"
+                    class="bg-red-500"
                     anchor="center left"
                     self="center right"
                     :offset="[10, 0]"
@@ -375,7 +375,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw:mr-2" name="fa-solid fa-font" />
+                            <q-icon class="mr-2" name="fa-solid fa-font" />
                             String
                           </div>
                         </q-item-section>
@@ -387,7 +387,7 @@ watch(
                       >
                         <q-item-section>
                           <div>
-                            <q-icon class="tw:mr-2" name="fa-solid fa-hashtag" />
+                            <q-icon class="mr-2" name="fa-solid fa-hashtag" />
                             Number
                           </div>
                         </q-item-section>

@@ -127,29 +127,29 @@ const defaultDataPathText = '<value>'
 
 <template>
   <q-card
-    class="graph-card tw:border tw:border-neutral-300 tw:dark:border-neutral-800 tw:p-2"
+    class="graph-card border border-neutral-300 p-2 dark:border-neutral-800"
     flat
     :class="[dataGraph.size]"
   >
-    <q-card-section v-if="showTitle" class="drag-handle tw:cursor-grab tw:p-2">
-      <div class="tw:line-clamp-1 tw:h-7 tw:break-all tw:text-xl">
+    <q-card-section v-if="showTitle" class="drag-handle cursor-grab p-2">
+      <div class="line-clamp-1 h-7 text-xl break-all">
         {{ dataGraph.dataPath || defaultDataPathText }}
 
         <q-tooltip
-          class="tw:bg-gray-200 tw:text-black tw:dark:bg-neutral-700 tw:dark:text-neutral-200"
+          class="bg-gray-200 text-black dark:bg-neutral-700 dark:text-neutral-200"
           :offset="[5, 5]"
         >
           {{ dataGraph.dataPath || defaultDataPathText }}
         </q-tooltip>
       </div>
       <div
-        class="color-details tw:line-clamp-1 tw:max-w-full tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-sm"
+        class="color-details line-clamp-1 max-w-full overflow-hidden text-sm break-all text-ellipsis"
         :title="dataGraph.topic"
       >
         {{ dataGraph.topic }}
 
         <q-tooltip
-          class="tw:bg-gray-200 tw:text-black tw:dark:bg-neutral-700 tw:dark:text-neutral-200"
+          class="bg-gray-200 text-black dark:bg-neutral-700 dark:text-neutral-200"
           :offset="[5, 5]"
         >
           {{ dataGraph.topic }}
@@ -157,7 +157,7 @@ const defaultDataPathText = '<value>'
       </div>
     </q-card-section>
 
-    <div class="tw:h-50">
+    <div class="h-50">
       <v-chart v-if="showGraph" class="chart" :option="options" autoresize />
     </div>
 
@@ -165,7 +165,7 @@ const defaultDataPathText = '<value>'
 
     <q-btn
       v-if="showContextMenu"
-      class="tw:absolute tw:right-1 tw:top-1 tw:text-neutral-500"
+      class="absolute top-1 right-1 text-neutral-500"
       round
       flat
       size="sm"

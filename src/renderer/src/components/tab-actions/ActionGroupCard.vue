@@ -47,7 +47,7 @@ const handleDragEnd = (event: DragEvent) => {
 
 <template>
   <q-card
-    class="group-card tw:grid tw:h-fit tw:cursor-pointer tw:p-2 tw:transition-colors tw:hover:bg-primary/50"
+    class="group-card hover:bg-primary/50 grid h-fit cursor-pointer p-2 transition-colors"
     :class="{ active, 'drop-zone': dropZoneActiveAndNotActive }"
     flat
     @dragleave.prevent="setDropZoneActive(false)"
@@ -55,22 +55,18 @@ const handleDragEnd = (event: DragEvent) => {
     @dragover.prevent
     @drop.prevent="handleDragEnd"
   >
-    <div
-      class="tw:pointer-events-none tw:my-1 tw:flex tw:select-none tw:items-start tw:justify-between"
-    >
+    <div class="pointer-events-none my-1 flex items-start justify-between select-none">
       <div>
-        <h2
-          class="tw:line-clamp-1 tw:cursor-pointer tw:overflow-hidden tw:text-ellipsis tw:text-lg"
-        >
+        <h2 class="line-clamp-1 cursor-pointer overflow-hidden text-lg text-ellipsis">
           {{ title }}
         </h2>
-        <p class="description color-details tw:line-clamp-3 tw:transition-colors">
+        <p class="description color-details line-clamp-3 transition-colors">
           {{ description }}
         </p>
       </div>
       <q-btn
-        class="drag-handle tw:pointer-events-auto"
-        :class="{ 'tw:cursor-grab': !notDraggable }"
+        class="drag-handle pointer-events-auto"
+        :class="{ 'cursor-grab': !notDraggable }"
         icon="fa-solid fa-ellipsis-vertical"
         flat
         round

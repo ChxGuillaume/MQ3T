@@ -19,11 +19,11 @@ defineEmits(['copy'])
 
 <template>
   <q-menu :anchor="anchor" :self="self" :context-menu="contextMenu">
-    <q-list class="tw:min-w-[150px]">
-      <q-item v-close-popup class="tw:text-secondary" clickable @click="$emit('copy')">
+    <q-list class="min-w-[150px]">
+      <q-item v-close-popup class="text-secondary" clickable @click="$emit('copy')">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-copy" class="tw:mr-2" />
+            <q-icon name="fa-solid fa-copy" class="mr-2" />
             Copy
           </div>
         </q-item-section>

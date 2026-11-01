@@ -23,20 +23,14 @@ const iconSize = computed(() => {
 </script>
 
 <template>
-  <div
-    class="badge"
-    :class="[{ 'tw:bg-green-500': isValid, 'tw:bg-red-500': !isValid }, `size-${size}`]"
-  >
+  <div class="badge" :class="[{ 'bg-green-500': isValid, 'bg-red-500': !isValid }, `size-${size}`]">
     <q-icon
       :name="isValid ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"
-      :class="{ 'tw:text-green-100': isValid, 'tw:text-red-100': !isValid }"
+      :class="{ 'text-green-100': isValid, 'text-red-100': !isValid }"
       :size="iconSize"
     >
     </q-icon>
-    <q-tooltip
-      class="tw:text-sm"
-      :class="{ 'tw:bg-green-500': isValid, 'tw:bg-red-500': !isValid }"
-    >
+    <q-tooltip class="text-sm" :class="{ 'bg-green-500': isValid, 'bg-red-500': !isValid }">
       {{ isValid ? 'Valid Format' : 'Invalid Format' }}
     </q-tooltip>
   </div>

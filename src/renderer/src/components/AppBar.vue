@@ -57,14 +57,14 @@ const isTopicsTab = computed(() => {
 
 <template>
   <q-bar
-    class="app-bar tw:grid tw:h-10 tw:gap-0 tw:overflow-hidden tw:bg-white tw:px-0 tw:dark:bg-[#121212]"
+    class="app-bar grid h-10 gap-0 overflow-hidden bg-white px-0 dark:bg-[#121212]"
     :class="[AppPlatform]"
   >
     <div class="grabbable" />
     <div
       class="home-btn"
       :class="{
-        'tw:bg-neutral-200 tw:dark:bg-neutral-800': !isTopicsTab
+        'bg-neutral-200 dark:bg-neutral-800': !isTopicsTab
       }"
       @click.left="goToConnectionsTab"
     >
@@ -75,21 +75,19 @@ const isTopicsTab = computed(() => {
         :class="{ other: !isTopicsTab, topics: isTopicsTab }"
       />
     </div>
-    <div
-      class="tw:ml-0 tw:grid tw:h-full tw:auto-cols-[minmax(36px,150px)] tw:grid-flow-col tw:grid-rows-1"
-    >
+    <div class="ml-0 grid h-full auto-cols-[minmax(36px,150px)] grid-flow-col grid-rows-1">
       <div
         v-for="connection in connectedConnections"
         :key="connection.clientKey"
-        class="connection-tab tw:mt-px tw:border-t-2"
+        class="connection-tab mt-px border-t-2"
         :class="[
           {
-            'tw:text-neutral-400 tw:dark:text-neutral-400':
+            'text-neutral-400 dark:text-neutral-400':
               connection.clientKey !== mqttTopicsStore.selectedConnection,
-            'tw:bg-neutral-200 tw:text-black tw:dark:bg-neutral-800 tw:dark:text-white':
+            'bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white':
               connection.clientKey === mqttTopicsStore.selectedConnection
           },
-          getColor(connection.labelColor)?.border ?? 'tw:border-transparent'
+          getColor(connection.labelColor)?.border ?? 'border-transparent'
         ]"
         @click="
           () => {
@@ -99,7 +97,7 @@ const isTopicsTab = computed(() => {
         "
       >
         <p
-          class="text-weight-medium tw:line-clamp-1 tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-xs"
+          class="text-weight-medium line-clamp-1 overflow-hidden text-xs break-all text-ellipsis"
           :title="connection.name"
           v-text="connection.name"
         />

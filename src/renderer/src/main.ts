@@ -1,10 +1,12 @@
 import { Notify, Quasar } from 'quasar'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+import ui from '@nuxt/ui/vue-plugin'
 
 import { router } from '@renderer/router'
 import './assets/js/init-monaco-editor'
 import App from './App.vue'
+import { migrateLegacyColorMode } from './composables/useAppColorMode'
 
 import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
 import '@quasar/extras/material-icons/material-icons.css'
@@ -23,7 +25,9 @@ import '@quasar/extras/animate/slideInRight.css'
 
 import 'quasar/src/css/index.sass'
 import './assets/css/fonts.css'
-import './tailwind.css'
+import './assets/css/main.css'
+
+migrateLegacyColorMode()
 
 const app = createApp(App)
 
@@ -42,5 +46,6 @@ app.use(Quasar, {
 })
 
 app.use(router)
+app.use(ui)
 
 app.mount('#app')

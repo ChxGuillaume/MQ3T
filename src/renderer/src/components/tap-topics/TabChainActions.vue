@@ -39,33 +39,29 @@ const filteredChainActions = computed(() => {
 </script>
 
 <template>
-  <q-card v-if="!mqttTopicsStore.selectedConnection" flat class="tw:flex tw:h-full tw:items-center">
-    <h1 class="tw:w-full tw:text-center tw:text-2xl tw:font-bold">Please select a topic</h1>
+  <q-card v-if="!mqttTopicsStore.selectedConnection" flat class="flex h-full items-center">
+    <h1 class="w-full text-center text-2xl font-bold">Please select a topic</h1>
   </q-card>
-  <q-card
-    v-else-if="chainActions.length === 0"
-    flat
-    class="tw:flex tw:h-full tw:flex-col tw:justify-center"
-  >
-    <h1 class="tw:w-full tw:text-center tw:text-2xl tw:font-bold">No chain actions found</h1>
+  <q-card v-else-if="chainActions.length === 0" flat class="flex h-full flex-col justify-center">
+    <h1 class="w-full text-center text-2xl font-bold">No chain actions found</h1>
     <div class="text-center">
-      <q-btn class="tw:mt-4" color="primary" label="Create new chain action" @click="goToActions" />
+      <q-btn class="mt-4" color="primary" label="Create new chain action" @click="goToActions" />
     </div>
   </q-card>
-  <q-card v-else flat class="tw:grid tw:h-full tw:p-0" style="grid-template-rows: auto auto 1fr">
-    <q-card-section class="tw:h-[40px] tw:p-0">
+  <q-card v-else flat class="grid h-full p-0" style="grid-template-rows: auto auto 1fr">
+    <q-card-section class="h-[40px] p-0">
       <q-input v-model="search" filled label="Search Chain Action..." dense square debounce="100" />
     </q-card-section>
     <q-separator />
 
-    <q-card-section class="tw:flex tw:flex-col tw:gap-2 tw:overflow-auto tw:p-2">
-      <q-card v-if="!filteredChainActions.length" flat class="tw:flex tw:h-full tw:items-center">
-        <h1 class="tw:w-full tw:text-center tw:text-2xl tw:font-bold">No chain actions found</h1>
+    <q-card-section class="flex flex-col gap-2 overflow-auto p-2">
+      <q-card v-if="!filteredChainActions.length" flat class="flex h-full items-center">
+        <h1 class="w-full text-center text-2xl font-bold">No chain actions found</h1>
       </q-card>
       <chain-action-card
         v-for="chainAction in filteredChainActions"
         :key="chainAction.id"
-        class="tw:bg-neutral-800"
+        class="bg-neutral-800"
         :connection-id="mqttTopicsStore.selectedConnection"
         :chain-action="chainAction"
         no-context-menu

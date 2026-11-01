@@ -1,11 +1,11 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import { useAppColorMode } from '@renderer/composables/useAppColorMode'
 
 import light from '@renderer/assets/css/themes/highlightjs/light.scss?inline'
 import dark from '@renderer/assets/css/themes/highlightjs/dark.scss?inline'
 
 export function useHighlightTheme() {
-  const $q = useQuasar()
+  const { isDark } = useAppColorMode()
   let themeStyleElement: HTMLStyleElement | null = null
 
   function loadThemeCSS(isDark: boolean) {
@@ -23,7 +23,7 @@ export function useHighlightTheme() {
   }
 
   onMounted(() => {
-    loadThemeCSS($q.dark.isActive)
+    loadThemeCSS(isDark.value)
   })
 
   onBeforeUnmount(() => {
@@ -33,10 +33,7 @@ export function useHighlightTheme() {
     }
   })
 
-  watch(
-    () => $q.dark.isActive,
-    (isDark) => loadThemeCSS(isDark)
-  )
+  watch(isDark, (value) => loadThemeCSS(value))
 
   return { loadThemeCSS }
 }

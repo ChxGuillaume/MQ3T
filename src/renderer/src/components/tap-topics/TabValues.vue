@@ -114,9 +114,9 @@ watch(
 </script>
 
 <template>
-  <div class="tw:flex tw:flex-col tw:gap-1 tw:p-4">
-    <div class="tw:flex tw:gap-2">
-      <h2 class="tw:text-xl tw:font-bold">Topic</h2>
+  <div class="flex flex-col gap-1 p-4">
+    <div class="flex gap-2">
+      <h2 class="text-xl font-bold">Topic</h2>
       <copy-button
         text="Copy Topic"
         notification-message="Topic copied to clipboard"
@@ -124,7 +124,7 @@ watch(
       />
       <erase-button @click="handleEraseTopic" />
     </div>
-    <div class="tw:flex tw:min-h-[28px] tw:items-center">
+    <div class="flex min-h-[28px] items-center">
       <span v-if="!breadcrumbs.length">No Topic Selected</span>
       <q-breadcrumbs v-else gutter="none">
         <q-breadcrumbs-el v-for="(topicPart, index) in breadcrumbs" :key="index">
@@ -149,10 +149,10 @@ watch(
     </div>
   </div>
   <q-separator />
-  <div class="tw:overflow-auto">
+  <div class="overflow-auto">
     <div v-if="selectedTopicLastMessage">
-      <div class="tw:flex tw:flex-col tw:justify-between tw:p-4">
-        <div class="tw:flex tw:justify-between">
+      <div class="flex flex-col justify-between p-4">
+        <div class="flex justify-between">
           <div>
             QoS: {{ selectedTopicLastMessage?.qos || 0 }}
             <copy-button
@@ -174,7 +174,7 @@ watch(
               @click="handleClearRetained"
             />
           </div>
-          <div class="tw:flex tw:flex-col items-end">
+          <div class="flex flex-col items-end">
             <div>
               {{
                 selectedTopicLastMessage?.createdAt &&
@@ -189,44 +189,38 @@ watch(
             </div>
           </div>
         </div>
-        <div class="tw:text-xs">
-          <div v-if="selectedTopicLastMessage?.properties?.contentType" class="tw:space-x-1">
-            <div class="tw:inline tw:text-nowrap">Content Type:</div>
-            <div class="tw:inline tw:break-all tw:opacity-70">
+        <div class="text-xs">
+          <div v-if="selectedTopicLastMessage?.properties?.contentType" class="space-x-1">
+            <div class="inline text-nowrap">Content Type:</div>
+            <div class="inline break-all opacity-70">
               {{ selectedTopicLastMessage?.properties?.contentType }}
             </div>
           </div>
-          <div
-            v-if="selectedTopicLastMessage?.properties?.messageExpiryInterval"
-            class="tw:space-x-1"
-          >
-            <div class="tw:inline tw:text-nowrap">Message Expiry Interval:</div>
-            <div class="tw:inline tw:break-all tw:opacity-70">
+          <div v-if="selectedTopicLastMessage?.properties?.messageExpiryInterval" class="space-x-1">
+            <div class="inline text-nowrap">Message Expiry Interval:</div>
+            <div class="inline break-all opacity-70">
               {{ selectedTopicLastMessage?.properties?.messageExpiryInterval }}
             </div>
           </div>
-          <div
-            v-if="selectedTopicLastMessage?.properties?.userProperties"
-            class="tw:flex tw:flex-col"
-          >
-            <span class="tw:text-nowrap">User Properties:</span>
+          <div v-if="selectedTopicLastMessage?.properties?.userProperties" class="flex flex-col">
+            <span class="text-nowrap">User Properties:</span>
             <div
               v-for="[propertyKey, propertyValue] in Object.entries(
                 selectedTopicLastMessage?.properties?.userProperties
               )"
               :key="propertyKey"
-              class="tw:ml-2 tw:space-x-1"
+              class="ml-2 space-x-1"
             >
-              <span class="tw:inline tw:text-nowrap">{{ propertyKey }}:</span>
-              <div class="tw:inline tw:break-all tw:opacity-70">
+              <span class="inline text-nowrap">{{ propertyKey }}:</span>
+              <div class="inline break-all opacity-70">
                 {{ propertyValue }}
               </div>
             </div>
           </div>
-          <div v-if="selectedTopicLastMessage?.properties?.responseTopic" class="tw:space-x-1">
-            <div class="tw:inline tw:text-nowrap">Response Topic:</div>
+          <div v-if="selectedTopicLastMessage?.properties?.responseTopic" class="space-x-1">
+            <div class="inline text-nowrap">Response Topic:</div>
             <div
-              class="tw:inline tw:cursor-pointer tw:break-all tw:opacity-70 tw:hover:underline"
+              class="inline cursor-pointer break-all opacity-70 hover:underline"
               @click="
                 mqttTopicsStore.setSelectedTopic(
                   mqttTopicsStore.selectedConnection,
@@ -237,9 +231,9 @@ watch(
               {{ selectedTopicLastMessage?.properties?.responseTopic }}
             </div>
           </div>
-          <div v-if="selectedTopicLastMessage?.properties?.correlationData" class="tw:space-x-1">
-            <span class="tw:inline tw:text-nowrap">Correlation Data:</span>
-            <div class="tw:inline tw:break-all tw:opacity-70">
+          <div v-if="selectedTopicLastMessage?.properties?.correlationData" class="space-x-1">
+            <span class="inline text-nowrap">Correlation Data:</span>
+            <div class="inline break-all opacity-70">
               {{ formatCorrelationData(selectedTopicLastMessage?.properties?.correlationData) }}
             </div>
           </div>
@@ -295,12 +289,7 @@ watch(
         </template>
       </q-splitter>
     </div>
-    <div
-      v-else
-      class="tw:flex tw:h-full tw:items-center tw:justify-center tw:text-2xl tw:font-bold"
-    >
-      No Messages
-    </div>
+    <div v-else class="flex h-full items-center justify-center text-2xl font-bold">No Messages</div>
   </div>
 </template>
 

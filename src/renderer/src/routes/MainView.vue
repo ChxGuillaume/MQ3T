@@ -17,7 +17,7 @@ import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
 import AppBar from '../components/AppBar.vue'
-import { useQuasar } from 'quasar'
+import { useToast } from '@nuxt/ui/composables'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -26,6 +26,7 @@ const dataGraphsStore = useDataGraphsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
+const toast = useToast()
 
 const currentTab = computed({
   get: () => appStore.currentTab,
@@ -33,8 +34,6 @@ const currentTab = computed({
     appStore.setCurrentTab(val)
   }
 })
-
-const $q = useQuasar()
 
 const handleKeyUp = (event: KeyboardEvent) => {
   if (event.ctrlKey) {
@@ -55,31 +54,7 @@ const handleKeyUp = (event: KeyboardEvent) => {
   }
 }
 
-watch(
-  () => $q.dark.isActive,
-  (value) => {
-    const classDark = 'dark'
-
-    if (value) document.documentElement.classList.add(classDark)
-    else document.documentElement.classList.remove(classDark)
-  }
-)
-
 onMounted(() => {
-  const storedTheme = localStorage.getItem('darkMode')
-
-  switch (storedTheme) {
-    case 'true':
-      $q.dark.set(true)
-      break
-    case 'false':
-      $q.dark.set(false)
-      break
-    default:
-      $q.dark.set('auto')
-      break
-  }
-
   ElectronApi.initRenderer()
 
   ElectronApi.appVersion((_, value) => {
@@ -97,10 +72,11 @@ onMounted(() => {
 
     if (!connection) return
 
-    $q.notify({
-      message: `[${connection.name}]`,
-      caption: value.error.message,
-      type: 'negative'
+    toast.add({
+      title: connection.name,
+      description: value.error.message,
+      color: 'error',
+      icon: 'i-lucide-circle-alert'
     })
   })
 
@@ -151,21 +127,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="main-view tw:grid tw:h-full tw:grid-rows-[auto_1fr]">
+  <div class="main-view grid h-full grid-rows-[auto_1fr]">
     <app-bar v-model="currentTab" />
-    <div class="tw:flex tw:content-between tw:overflow-auto">
-      <div class="tw:grow">
-        <q-tab-panels v-model="currentTab" class="tw:h-full tw:bg-transparent" vertical keep-alive>
-          <q-tab-panel class="tw:p-0" name="topics">
+    <div class="flex content-between overflow-auto">
+      <div class="grow">
+        <q-tab-panels v-model="currentTab" class="h-full bg-transparent" vertical keep-alive>
+          <q-tab-panel class="p-0" name="topics">
             <tab-topics />
           </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="actions">
+          <q-tab-panel class="p-0" name="actions">
             <tab-actions />
           </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="settings">
+          <q-tab-panel class="p-0" name="settings">
             <tab-settings />
           </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="connections">
+          <q-tab-panel class="p-0" name="connections">
             <tab-connections />
           </q-tab-panel>
         </q-tab-panels>

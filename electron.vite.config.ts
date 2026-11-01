@@ -2,6 +2,7 @@ import monacoEditorPlugin, { IMonacoEditorOpts } from 'vite-plugin-monaco-editor
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import { quasar } from '@quasar/vite-plugin'
 import vue from '@vitejs/plugin-vue'
+import ui from '@nuxt/ui/vite'
 import { resolve } from 'path'
 
 const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
@@ -28,6 +29,19 @@ export default defineConfig({
     },
     plugins: [
       vue(),
+      ui({
+        ui: {
+          colors: {
+            primary: 'plum',
+            neutral: 'neutral'
+          }
+        },
+        icon: {
+          clientBundle: {
+            scan: true
+          }
+        }
+      }),
       quasar({
         sassVariables: resolve('src/renderer/src/assets/css/quasar-variables.sass')
       }),

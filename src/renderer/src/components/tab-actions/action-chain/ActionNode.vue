@@ -26,20 +26,17 @@ const isFinished = computed(() => {
 </script>
 
 <template>
-  <div class="tw:flex tw:h-full tw:w-full tw:flex-col tw:justify-around tw:p-1">
-    <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:text-lg">
+  <div class="flex h-full w-full flex-col justify-around p-1">
+    <div class="flex items-center justify-center gap-2 text-lg">
       <node-icon :is-running="isRunning" :is-finished="isFinished" icon="fa-solid fa-paper-plane" />
       Action
     </div>
 
     <q-separator />
 
-    <div
-      v-if="action"
-      class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-around tw:gap-2 tw:px-1"
-    >
-      <q-icon name="fa-solid fa-exchange-alt" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm">{{ action.topic }}</q-tooltip>
+    <div v-if="action" class="flex min-h-[28px] items-center justify-around gap-2 px-1">
+      <q-icon name="fa-solid fa-exchange-alt" class="color-details cursor-pointer" size="xs">
+        <q-tooltip class="text-sm">{{ action.topic }}</q-tooltip>
       </q-icon>
 
       <q-icon
@@ -48,24 +45,24 @@ const isFinished = computed(() => {
         class="color-details"
         size="xs"
       >
-        <q-tooltip class="tw:whitespace-pre tw:text-sm">{{ action.description }}</q-tooltip>
+        <q-tooltip class="text-sm whitespace-pre">{{ action.description }}</q-tooltip>
       </q-icon>
 
-      <q-icon name="fa-solid fa-ranking-star" class="color-details tw:px-1" size="xs">
-        <q-tooltip class="tw:text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
+      <q-icon name="fa-solid fa-ranking-star" class="color-details px-1" size="xs">
+        <q-tooltip class="text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
       </q-icon>
 
       <q-icon v-if="action.retained" name="fa-solid fa-retweet" class="color-details" size="xs">
-        <q-tooltip class="tw:text-sm">Retained</q-tooltip>
+        <q-tooltip class="text-sm">Retained</q-tooltip>
       </q-icon>
 
-      <q-icon name="fa-solid fa-file-lines" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm">{{ action.payload }}</q-tooltip>
+      <q-icon name="fa-solid fa-file-lines" class="color-details cursor-pointer" size="xs">
+        <q-tooltip class="text-sm">{{ action.payload }}</q-tooltip>
       </q-icon>
     </div>
-    <div v-else class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-center">
-      <q-btn size="sm" color="accent" flat class="tw:px-2" @click="actionDialogOpened = true">
-        <q-icon name="fa-solid fa-wrench" class="tw:mr-2" size="16px" />
+    <div v-else class="flex min-h-[28px] items-center justify-center">
+      <q-btn size="sm" color="accent" flat class="px-2" @click="actionDialogOpened = true">
+        <q-icon name="fa-solid fa-wrench" class="mr-2" size="16px" />
         Setup
       </q-btn>
     </div>
@@ -73,10 +70,10 @@ const isFinished = computed(() => {
 
   <q-menu context-menu>
     <q-list dense>
-      <q-item v-close-popup class="tw:text-blue-500" clickable @click="actionDialogOpened = true">
+      <q-item v-close-popup class="text-blue-500" clickable @click="actionDialogOpened = true">
         <q-item-section>
           <div>
-            <q-icon name="fa-solid fa-edit" class="tw:mr-2" />
+            <q-icon name="fa-solid fa-edit" class="mr-2" />
             Edit
           </div>
         </q-item-section>
@@ -85,22 +82,22 @@ const isFinished = computed(() => {
       <q-item
         v-close-popup
         :disable="!action"
-        class="tw:text-amber-500"
+        class="text-amber-500"
         clickable
         @click="$emit('copy')"
       >
         <q-item-section>
-          <div class="tw:flex tw:items-center tw:gap-2">
-            <q-icon name="fa-solid fa-copy" class="tw:mr-2" />
+          <div class="flex items-center gap-2">
+            <q-icon name="fa-solid fa-copy" class="mr-2" />
             Copy
           </div>
         </q-item-section>
       </q-item>
 
-      <q-item v-close-popup class="tw:text-red-500" clickable @click="$emit('remove')">
+      <q-item v-close-popup class="text-red-500" clickable @click="$emit('remove')">
         <q-item-section>
-          <div class="tw:flex tw:items-center tw:gap-2">
-            <q-icon name="fa-solid fa-trash" class="tw:mr-2" />
+          <div class="flex items-center gap-2">
+            <q-icon name="fa-solid fa-trash" class="mr-2" />
             Delete
           </div>
         </q-item-section>

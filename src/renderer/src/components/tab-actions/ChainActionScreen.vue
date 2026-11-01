@@ -103,7 +103,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="tw:h-full tw:w-full">
+  <div class="h-full w-full">
     <vue-flow
       v-model:nodes="nodes"
       v-model:edges="edges"
@@ -140,42 +140,39 @@ onMounted(() => {
       </template>
     </vue-flow>
 
-    <q-card flat class="tw:absolute tw:left-0 tw:top-0 tw:bg-transparent">
-      <q-card-section v-if="editName" class="tw:flex tw:items-center tw:gap-2">
+    <q-card flat class="absolute top-0 left-0 bg-transparent">
+      <q-card-section v-if="editName" class="flex items-center gap-2">
         <q-input
           v-model="name"
           standout
-          class="tw:w-80 tw:text-xl"
+          class="w-80 text-xl"
           @keydown.enter.prevent="editName = false"
         />
         <q-btn color="secondary" flat round @click="editName = false">
           <q-icon name="fa-solid fa-check" />
         </q-btn>
       </q-card-section>
-      <q-card-actions
-        v-else
-        class="tw:flex tw:select-none tw:items-center tw:gap-2 tw:px-[27px] tw:py-[23px]"
-      >
-        <h1 class="tw:text-xl">{{ name }}</h1>
+      <q-card-actions v-else class="flex items-center gap-2 px-[27px] py-[23px] select-none">
+        <h1 class="text-xl">{{ name }}</h1>
         <q-btn color="secondary" flat round @click="editName = true">
           <q-icon name="fa-solid fa-pen" size="xs" />
         </q-btn>
       </q-card-actions>
     </q-card>
 
-    <q-btn-group class="tw:absolute tw:bottom-4 tw:left-4" rounded>
+    <q-btn-group class="absolute bottom-4 left-4" rounded>
       <q-btn color="primary">
         <q-icon name="fa-solid fa-plus" />
         <q-menu>
           <q-list dense>
-            <q-item v-close-popup class="tw:text-accent" clickable @click="addNode('action')">
+            <q-item v-close-popup class="text-accent" clickable @click="addNode('action')">
               <q-item-section>
-                <div><q-icon name="fa-solid fa-paper-plane" class="tw:mr-2" /> Action Node</div>
+                <div><q-icon name="fa-solid fa-paper-plane" class="mr-2" /> Action Node</div>
               </q-item-section>
             </q-item>
-            <q-item v-close-popup class="tw:text-tertiary" clickable @click="addNode('wait')">
+            <q-item v-close-popup class="text-tertiary" clickable @click="addNode('wait')">
               <q-item-section>
-                <div><q-icon name="fa-solid fa-clock" class="tw:mr-2" /> Wait Node</div>
+                <div><q-icon name="fa-solid fa-clock" class="mr-2" /> Wait Node</div>
               </q-item-section>
             </q-item>
           </q-list>
@@ -187,17 +184,17 @@ onMounted(() => {
         <q-tooltip>Reset zoom and pan</q-tooltip>
       </q-btn>
 
-      <div class="tw:rounded-r-full tw:bg-primary tw:pr-4">
+      <div class="bg-primary rounded-r-full pr-4">
         <q-checkbox
           v-model="trackPadMode"
-          class="tw:select-none tw:text-white"
+          class="text-white select-none"
           label="Trackpad mode"
           color="accent"
         />
       </div>
     </q-btn-group>
 
-    <q-btn-group class="tw:absolute tw:bottom-4 tw:right-4" rounded>
+    <q-btn-group class="absolute right-4 bottom-4" rounded>
       <q-btn color="primary" @click="$emit('back')">
         <q-icon name="fa-solid fa-arrow-left" />
         <q-tooltip>Back</q-tooltip>
@@ -212,7 +209,7 @@ onMounted(() => {
           v-if="running"
           color="white"
           indeterminate
-          class="tw:mr-2"
+          class="mr-2"
           size="16px"
           :thickness="0.5"
         />

@@ -51,7 +51,7 @@ const selectedOption = computed(() => {
     :emit-value="emitValue"
   >
     <template #selected>
-      <div v-if="selectedOption" class="tw:flex tw:items-center">
+      <div v-if="selectedOption" class="flex items-center">
         <q-icon :name="selectedOption.icon" size="xs" />
       </div>
     </template>

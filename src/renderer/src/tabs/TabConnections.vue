@@ -66,17 +66,15 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
 </script>
 
 <template>
-  <div
-    class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
-  >
-    <div class="tw:w-[81px]" />
+  <div class="text-weight-medium flex justify-between bg-neutral-200 p-2 dark:bg-neutral-800">
+    <div class="w-[81px]" />
 
-    <div class="tw:bg-neutral-200 tw:text-center tw:dark:bg-neutral-800">Actions</div>
+    <div class="bg-neutral-200 text-center dark:bg-neutral-800">Actions</div>
 
-    <div class="tw:w-[81px] tw:text-right">
+    <div class="w-[81px] text-right">
       <q-btn
         size="xs"
-        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
+        class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
         @click="appStore.setCurrentTab('settings')"
       >
@@ -89,7 +87,7 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
       v-model="connections"
       v-bind="dragOptions"
       handle=".drag-handle"
-      class="tw:grid tw:grid-cols-1 tw:gap-4 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:xl:grid-cols-4 tw:2xl:grid-cols-5"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
       item-key="clientKey"
     >
       <template #item="{ element }">
@@ -103,7 +101,7 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
         />
         <div
           v-else-if="element.type === 'add-connection'"
-          class="tw:flex tw:h-full tw:w-full tw:cursor-pointer tw:items-center tw:justify-center tw:rounded tw:transition-colors tw:dark:bg-neutral-900 tw:dark:hover:bg-neutral-800"
+          class="flex h-full w-full cursor-pointer items-center justify-center rounded transition-colors dark:bg-neutral-900 dark:hover:bg-neutral-800"
           @click="addConnectionDialogOpened = true"
         >
           <q-icon name="fa-solid fa-plus" size="xl" />

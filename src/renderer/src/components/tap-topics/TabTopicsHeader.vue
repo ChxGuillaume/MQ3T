@@ -19,39 +19,37 @@ const selectedConnectionObj = computed(() => {
 </script>
 
 <template>
-  <div
-    class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
-  >
-    <div class="tw:w-[100px]">
+  <div class="text-weight-medium flex justify-between bg-neutral-200 p-2 dark:bg-neutral-800">
+    <div class="w-[100px]">
       <q-btn
         size="xs"
-        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
+        class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
         @click="appStore.setCurrentTab('actions')"
       >
-        <div class="tw:flex tw:h-[10px] tw:place-items-center tw:gap-2">
-          <q-icon name="fa-solid fa-play" size="10px" class="tw:text-accent" />
-          <span class="tw:text-[0.65rem]">Actions</span>
+        <div class="flex h-[10px] place-items-center gap-2">
+          <q-icon name="fa-solid fa-play" size="10px" class="text-accent" />
+          <span class="text-[0.65rem]">Actions</span>
         </div>
       </q-btn>
     </div>
 
     <p
       v-if="selectedConnectionObj"
-      class="tw:line-clamp-1 tw:overflow-hidden tw:text-ellipsis tw:break-all tw:text-sm tw:text-neutral-500"
+      class="line-clamp-1 overflow-hidden text-sm break-all text-ellipsis text-neutral-500"
       :title="formatMqttUrl(selectedConnectionObj)"
     >
       {{ formatMqttUrl(selectedConnectionObj) }}
     </p>
 
-    <div class="tw:w-[100px] tw:text-right">
+    <div class="w-[100px] text-right">
       <q-btn
         v-if="
           selectedConnectionObj &&
           mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) === 'connected'
         "
         size="xs"
-        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
+        class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
         @click="mqttConnectionsStore.disconnectClient(selectedConnectionObj.clientKey)"
       >
@@ -72,13 +70,13 @@ const selectedConnectionObj = computed(() => {
           mqttConnectionsStore.getConnectionStatus(selectedConnectionObj.clientKey) !== 'connected'
         "
         size="xs"
-        class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
+        class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
         @click="mqttConnectionsStore.connectClient(selectedConnectionObj.clientKey)"
       >
-        <div class="tw:flex tw:place-items-center tw:gap-2">
+        <div class="flex place-items-center gap-2">
           <q-icon name="fa-solid fa-plug" size="10px" />
-          <span class="tw:text-[0.65rem] tw:leading-0">Connect</span>
+          <span class="text-[0.65rem] leading-0">Connect</span>
         </div>
       </q-btn>
     </div>

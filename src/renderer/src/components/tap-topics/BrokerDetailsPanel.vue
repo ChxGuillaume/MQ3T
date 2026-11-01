@@ -26,22 +26,18 @@ const brokerType = computed(() => {
 
 <template>
   <div class="broker-details-panel">
-    <h2 class="text-weight-bold tw:mb-4 tw:text-xl">Broker Details</h2>
+    <h2 class="text-weight-bold mb-4 text-xl">Broker Details</h2>
     <mosquitto-broker-details v-if="brokerType === 'Mosquitto'" />
     <e-m-q-x-broker-details v-else-if="brokerType === 'EMQX'" />
-    <div v-else class="tw:grid tw:gap-2">
-      <p class="tw:italic">Unknown Broker</p>
+    <div v-else class="grid gap-2">
+      <p class="italic">Unknown Broker</p>
       <p>
         You are either missing permissions on the $SYS/# topics or the broker is not supported by
         MQ3T yet.
       </p>
       <p>
         Feel free to open an issue on
-        <a
-          href="https://github.com/ChxGuillaume/MQ3T/issues"
-          class="tw:text-accent"
-          target="_blank"
-        >
+        <a href="https://github.com/ChxGuillaume/MQ3T/issues" class="text-accent" target="_blank">
           MQ3T Github Repository
         </a>
         with the relevant topics for this feature and broker.
