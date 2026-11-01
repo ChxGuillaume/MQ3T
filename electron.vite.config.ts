@@ -1,5 +1,4 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import { quasar } from '@quasar/vite-plugin'
 import vue from '@vitejs/plugin-vue'
 import ui from '@nuxt/ui/vite'
 import { resolve } from 'path'
@@ -31,9 +30,6 @@ export default defineConfig({
             scan: true
           }
         }
-      }),
-      quasar({
-        sassVariables: resolve('src/renderer/src/assets/css/quasar-variables.sass')
       })
     ]
   }

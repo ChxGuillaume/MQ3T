@@ -40,7 +40,6 @@ declare module 'vue' {
     ConnectionEditor: typeof import('./src/components/connections/ConnectionEditor.vue')['default']
     ConnectionLostBanner: typeof import('./src/components/connections/ConnectionLostBanner.vue')['default']
     ConnectionSelect: typeof import('./src/components/ConnectionSelect.vue')['default']
-    ConnectionStatusChip: typeof import('./src/components/ConnectionStatusChip.vue')['default']
     ConnectionToolbar: typeof import('./src/components/shell/ConnectionToolbar.vue')['default']
     ConvertToActionDialog: typeof import('./src/components/tap-topics/dialogs/ConvertToActionDialog.vue')['default']
     ExploreFilterBar: typeof import('./src/components/explore/ExploreFilterBar.vue')['default']

@@ -19,9 +19,6 @@ export default defineConfigWithVueTs(
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
-      'vue/block-lang': 'warn',
-      'vue/require-prop-types': 'warn',
-      'vue/no-use-v-if-with-v-for': 'warn',
       'vue/require-default-prop': 'off',
       'vue/multi-word-component-names': 'off',
       'vue/no-unused-vars': ['error', { ignorePattern: '^_' }],

@@ -169,27 +169,3 @@ watch(
   <update-dialog />
   <import-actions-dialog />
 </template>
-
-<style lang="less">
-@import '../assets/css/styles.less';
-
-.nav-bar-left {
-  border-right-width: 1px;
-  min-width: 135px;
-  width: 135px;
-}
-
-.body--light {
-  .nav-bar-left {
-    border-color: rgb(0 0 0 / 0.1);
-    background-color: #f4f4f5;
-  }
-}
-
-.body--dark {
-  .nav-bar-left {
-    border-color: rgb(255 255 255 / 0.1);
-    background-color: #171717;
-  }
-}
-</style>
