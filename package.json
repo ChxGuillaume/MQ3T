@@ -73,6 +73,7 @@
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.9.0",
+    "electron": "^45.2.1",
     "electron-builder": "^26.18.0",
     "electron-devtools-installer": "^4.0.0",
     "electron-vite": "^6.0.0",
@@ -90,5 +91,10 @@
     "vite-plugin-monaco-editor": "^1.1.0",
     "vue": "^3.5.44",
     "vue-tsc": "^3.3.14"
+  },
+  "allowScripts": {
+    "electron": true,
+    "vue-demi": true,
+    "esbuild": true
   }
 }

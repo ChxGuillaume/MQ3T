@@ -13,8 +13,6 @@ export const router = createRouter({
   routes
 })
 
-router.beforeEach((to, _, next) => {
+router.afterEach((to) => {
   document.title = (to.meta['title'] as string) || 'MQ3T'
-
-  next()
 })
