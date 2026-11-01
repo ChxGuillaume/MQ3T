@@ -36,11 +36,30 @@ const enumSummary = (name: string) => {
   return options?.length ? `${name}: ${options.join(' · ')}` : name
 }
 
+const VARIABLE_REGEX = /\$(?:s|n|b|enum)\$([a-zA-Z0-9_ -]+)\$|\$uuid\$v4\$/g
+
+const payloadSegments = computed(() => {
+  const payload = props.action.payload
+  const segments: { text: string; variable?: boolean }[] = []
+  let cursor = 0
+
+  for (const match of payload.matchAll(VARIABLE_REGEX)) {
+    if (match.index > cursor) segments.push({ text: payload.slice(cursor, match.index) })
+    segments.push({ text: match[1] ?? 'uuid', variable: true })
+    cursor = match.index + match[0].length
+  }
+
+  if (cursor < payload.length) segments.push({ text: payload.slice(cursor) })
+
+  return segments
+})
+
 const variables = computed(() => {
   const names = new Set<string>()
-  const regex = /\$(?:s|n|b|enum)\$([a-zA-Z0-9_ -]+)\$/g
 
-  for (const match of props.action.payload.matchAll(regex)) names.add(match[1])
+  for (const match of props.action.payload.matchAll(VARIABLE_REGEX)) {
+    if (match[1]) names.add(match[1])
+  }
 
   return Array.from(names).map(enumSummary)
 })
@@ -182,30 +201,49 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
         </UDropdownMenu>
       </div>
 
-      <pre
-        class="bg-muted m-0 line-clamp-4 overflow-hidden rounded-md px-2.5 py-2 font-mono text-xs leading-[18px] break-all whitespace-pre-wrap"
-        >{{ action.payload || ' ' }}</pre>
+      <div class="bg-muted h-[88px] shrink-0 rounded-md px-2.5 py-2">
+        <pre
+          class="m-0 line-clamp-4 overflow-hidden font-mono text-xs leading-[18px] break-all whitespace-pre-wrap"
+        ><template v-for="(segment, index) in payloadSegments" :key="index"><span
+          v-if="segment.variable"
+          class="bg-primary/10 text-primary rounded-xs px-0.5 font-bold"
+        >{{ segment.text }}</span><template v-else>{{ segment.text }}</template></template></pre>
+      </div>
 
-      <div class="mt-auto flex flex-wrap items-center gap-1.5">
-        <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs"
-          >QoS {{ action.qos }}</span
-        >
-        <span v-if="action.retained" class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
-          Retain
-        </span>
-        <span
-          v-for="variable in variables"
-          :key="variable"
-          class="bg-primary/10 text-primary max-w-full truncate rounded-full px-2 py-0.5 font-mono text-xs font-bold"
-          :title="variable"
-        >
-          {{ variable }}
-        </span>
+      <div class="mt-auto flex items-center gap-1.5">
+        <div class="text-muted flex min-w-0 items-center gap-1.5 text-xs">
+          <span class="shrink-0">QoS {{ action.qos }}</span>
+          <template v-if="action.retained">
+            <span class="text-dimmed">·</span>
+            <span class="shrink-0">Retain</span>
+          </template>
+          <template v-if="variables.length">
+            <span class="text-dimmed">·</span>
+            <UTooltip :content="{ side: 'top', align: 'start' }" :ui="{ content: 'h-auto py-1.5' }">
+              <span class="text-primary flex min-w-0 items-center gap-1 font-semibold">
+                <UIcon name="i-lucide-variable" class="size-3.5 shrink-0" />
+                <span class="truncate">
+                  {{ variables.length }} variable{{ variables.length === 1 ? '' : 's' }}
+                </span>
+              </span>
+              <template #content>
+                <ul class="flex max-w-72 flex-col gap-0.5 py-0.5">
+                  <li v-for="variable in variables" :key="variable" class="truncate">
+                    {{ variable }}
+                  </li>
+                </ul>
+              </template>
+            </UTooltip>
+          </template>
+          <template v-if="isWildcard && !disableWildcard">
+            <span class="text-dimmed">·</span>
+            <span class="shrink-0">
+              {{ targets.length }} topic{{ targets.length === 1 ? '' : 's' }}
+            </span>
+          </template>
+        </div>
 
         <template v-if="isWildcard && !disableWildcard">
-          <span class="bg-muted text-muted ml-auto rounded-full px-2.5 py-0.5 text-xs">
-            {{ targets.length }} topic{{ targets.length === 1 ? '' : 's' }}
-          </span>
           <UDropdownMenu
             :items="sendMenuItems"
             :disabled="sendDisabled"
@@ -220,7 +258,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
                 icon="i-lucide-send"
                 trailing-icon="i-lucide-chevron-down"
                 label="Send to"
-                class="font-semibold"
+                class="ml-auto shrink-0 font-semibold"
                 :disabled="sendDisabled"
               />
             </UTooltip>
@@ -233,7 +271,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
             size="sm"
             icon="i-lucide-send"
             label="Send"
-            class="ml-auto font-semibold"
+            class="ml-auto shrink-0 font-semibold"
             :disabled="sendDisabled"
             @click="sendTo([action.topic])"
           />
