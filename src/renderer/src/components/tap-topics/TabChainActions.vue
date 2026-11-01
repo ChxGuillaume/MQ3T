@@ -15,7 +15,7 @@ const search = ref('')
 
 const goToActions = () => {
   actionsStore.setSelectedConnection(mqttTopicsStore.selectedConnection)
-  appStore.setCurrentTab('actions')
+  appStore.setSection(mqttTopicsStore.selectedConnection, 'actions')
 }
 
 const chainActions = computed(() => {

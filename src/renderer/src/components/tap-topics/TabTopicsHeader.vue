@@ -25,7 +25,7 @@ const selectedConnectionObj = computed(() => {
         size="xs"
         class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
-        @click="appStore.setCurrentTab('actions')"
+        @click="appStore.setSection(mqttTopicsStore.selectedConnection, 'actions')"
       >
         <div class="flex h-[10px] place-items-center gap-2">
           <q-icon name="fa-solid fa-play" size="10px" class="text-accent" />

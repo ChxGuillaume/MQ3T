@@ -76,7 +76,7 @@ const dragOptions = computed<{ animation: number; group: string; ghostClass: str
         size="xs"
         class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
-        @click="appStore.setCurrentTab('settings')"
+        @click="appStore.setView('settings')"
       >
         <q-icon name="fa-solid fa-cog" size="10px" />
       </q-btn>

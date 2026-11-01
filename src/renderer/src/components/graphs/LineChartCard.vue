@@ -119,7 +119,7 @@ const options = computed(() => {
 })
 
 const showGraph = computed(() => {
-  return appStore.currentTab === 'topics' || route.path === '/graph'
+  return appStore.view === 'connection' || route.path === '/graph'
 })
 
 const defaultDataPathText = '<value>'

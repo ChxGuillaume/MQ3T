@@ -3,7 +3,7 @@ import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
@@ -11,13 +11,17 @@ import { useSettingsStore } from '../store/settings-store'
 import UpdateAlerts from '../components/UpdateAlerts.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import TabConnections from '../tabs/TabConnections.vue'
+import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
+import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
+import AppTitleBar from '../components/shell/AppTitleBar.vue'
+import GraphList from '../components/tap-topics/GraphList.vue'
+import { useAppNavigation } from '../composables/useAppNavigation'
 import { useActionsStore } from '../store/actions'
 import TabSettings from '../tabs/TabSettings.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
-import AppBar from '../components/AppBar.vue'
-import { useToast } from '@nuxt/ui/composables'
+import { defineShortcuts, useToast } from '@nuxt/ui/composables'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -28,31 +32,16 @@ const actionsStore = useActionsStore()
 const appStore = useAppStore()
 const toast = useToast()
 
-const currentTab = computed({
-  get: () => appStore.currentTab,
-  set: (val) => {
-    appStore.setCurrentTab(val)
-  }
-})
+const { currentSection, openSection, openNewTab, toggleSettings } = useAppNavigation()
 
-const handleKeyUp = (event: KeyboardEvent) => {
-  if (event.ctrlKey) {
-    switch (event.key) {
-      case '1':
-        currentTab.value = 'topics'
-        break
-      case '2':
-        currentTab.value = 'actions'
-        break
-      case '4':
-        currentTab.value = 'settings'
-        break
-      case '5':
-        currentTab.value = 'connections'
-        break
-    }
-  }
-}
+defineShortcuts({
+  meta_1: () => openSection('explore'),
+  meta_2: () => openSection('actions'),
+  meta_3: () => openSection('graphs'),
+  meta_4: () => openSection('broker'),
+  meta_t: () => openNewTab(),
+  'meta_,': () => toggleSettings()
+})
 
 onMounted(() => {
   ElectronApi.initRenderer()
@@ -106,8 +95,6 @@ onMounted(() => {
 
   dataGraphsStore.initStore()
   settingsStore.initStore()
-
-  window.addEventListener('keyup', handleKeyUp)
 })
 
 // TODO: This is kept as a counter mesure due to the refactoring of the application,
@@ -120,33 +107,33 @@ watch(
     actionsStore.selectedConnection = clientKey
   }
 )
-
-onUnmounted(() => {
-  window.removeEventListener('keyup', handleKeyUp)
-})
 </script>
 
 <template>
-  <div class="main-view grid h-full grid-rows-[auto_1fr]">
-    <app-bar v-model="currentTab" />
-    <div class="flex content-between overflow-auto">
-      <div class="grow">
-        <q-tab-panels v-model="currentTab" class="h-full bg-transparent" vertical keep-alive>
-          <q-tab-panel class="p-0" name="topics">
-            <tab-topics />
-          </q-tab-panel>
-          <q-tab-panel class="p-0" name="actions">
-            <tab-actions />
-          </q-tab-panel>
-          <q-tab-panel class="p-0" name="settings">
-            <tab-settings />
-          </q-tab-panel>
-          <q-tab-panel class="p-0" name="connections">
-            <tab-connections />
-          </q-tab-panel>
-        </q-tab-panels>
+  <div class="main-view flex h-full flex-col">
+    <app-title-bar />
+
+    <tab-settings v-if="appStore.view === 'settings'" class="min-h-0 flex-1" />
+
+    <div
+      v-else-if="appStore.view === 'connection' && mqttTopicsStore.selectedConnection"
+      class="flex min-h-0 flex-1 flex-col"
+    >
+      <connection-toolbar @new-message="openSection('explore')" />
+
+      <div class="min-h-0 flex-1 overflow-auto">
+        <keep-alive>
+          <tab-topics v-if="currentSection === 'explore'" />
+          <tab-actions v-else-if="currentSection === 'actions'" />
+          <div v-else-if="currentSection === 'graphs'" class="p-4">
+            <graph-list />
+          </div>
+          <broker-details-panel v-else-if="currentSection === 'broker'" class="p-4" />
+        </keep-alive>
       </div>
     </div>
+
+    <tab-connections v-else class="min-h-0 flex-1 overflow-auto" />
   </div>
   <update-alerts />
   <import-actions />

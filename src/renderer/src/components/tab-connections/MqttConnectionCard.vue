@@ -34,7 +34,7 @@ const connectionStatus = computed(() => {
       () => {
         if (connectionStatus === 'disconnected') $emit('connect', connection)
 
-        appStore.setCurrentTab('topics')
+        appStore.setView('connection')
         mqttTopicsStore.selectedConnection = connection.clientKey
       }
     "

@@ -372,7 +372,7 @@ const chainActionEdit = ref<ChainAction | undefined>()
           size="xs"
           class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
           flat
-          @click="appStore.setCurrentTab('topics')"
+          @click="appStore.setSection(mqttTopicsStore.selectedConnection, 'explore')"
         >
           <div class="flex place-items-center gap-2">
             <q-icon name="fa-solid fa-arrow-left" size="10px" />

@@ -147,7 +147,7 @@ const showVersionModal = ref(false)
         size="xs"
         class="bg-white hover:bg-neutral-200 dark:bg-neutral-700"
         flat
-        @click="appStore.setCurrentTab('connections')"
+        @click="appStore.setView('new-tab')"
       >
         <div class="flex place-items-center gap-2">
           <q-icon name="fa-solid fa-arrow-left" size="10px" />
