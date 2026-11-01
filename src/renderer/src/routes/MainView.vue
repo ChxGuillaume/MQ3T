@@ -3,15 +3,17 @@ import ImportChainActions from '@renderer/components/ImportChainActions.vue'
 import ImportActionsGroups from '../components/ImportActionsGroups.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useSettingsStore } from '../store/settings-store'
 import UpdateDialog from '../components/settings/UpdateDialog.vue'
 import { ElectronApi } from '../assets/js/electron-api'
-import TabConnections from '../tabs/TabConnections.vue'
-import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
+import ConnectionLostBanner from '../components/connections/ConnectionLostBanner.vue'
+import ConnectionEditor from '../components/connections/ConnectionEditor.vue'
+import NewTabView from '../components/connections/NewTabView.vue'
+import BrokerView from '../components/broker/BrokerView.vue'
 import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
 import AppTitleBar from '../components/shell/AppTitleBar.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
@@ -33,6 +35,12 @@ const appStore = useAppStore()
 const toast = useToast()
 
 const { currentSection, openSection, openNewTab, toggleSettings } = useAppNavigation()
+
+const isConnectionLost = computed(() => {
+  const status = mqttConnectionsStore.getConnectionStatus(mqttTopicsStore.selectedConnection)
+
+  return status === 'disconnected' || status === 'reconnecting'
+})
 
 defineShortcuts({
   meta_1: () => openSection('explore'),
@@ -56,6 +64,8 @@ onMounted(() => {
 
   ElectronApi.handleMqttError((event, value) => {
     console.error(event, value)
+
+    mqttConnectionsStore.setConnectionError(value.clientKey, value.error.message)
 
     const connection = mqttConnectionsStore.getConnection(value.clientKey)
 
@@ -115,25 +125,36 @@ watch(
 
     <settings-view v-if="appStore.view === 'settings'" class="min-h-0 flex-1" />
 
+    <connection-editor
+      v-else-if="appStore.view === 'connection-editor'"
+      :key="appStore.editingClientKey ?? 'new'"
+      class="min-h-0 flex-1"
+    />
+
     <div
       v-else-if="appStore.view === 'connection' && mqttTopicsStore.selectedConnection"
       class="flex min-h-0 flex-1 flex-col"
     >
       <connection-toolbar @new-message="openSection('explore')" />
 
-      <div class="min-h-0 flex-1 overflow-auto">
+      <connection-lost-banner
+        v-if="isConnectionLost"
+        :client-key="mqttTopicsStore.selectedConnection"
+      />
+
+      <div class="min-h-0 flex-1 overflow-auto" :class="{ 'opacity-55': isConnectionLost }">
         <keep-alive>
           <tab-topics v-if="currentSection === 'explore'" />
           <tab-actions v-else-if="currentSection === 'actions'" />
           <div v-else-if="currentSection === 'graphs'" class="p-4">
             <graph-list />
           </div>
-          <broker-details-panel v-else-if="currentSection === 'broker'" class="p-4" />
+          <broker-view v-else-if="currentSection === 'broker'" />
         </keep-alive>
       </div>
     </div>
 
-    <tab-connections v-else class="min-h-0 flex-1 overflow-auto" />
+    <new-tab-view v-else class="min-h-0 flex-1 overflow-auto" />
   </div>
   <update-dialog />
   <import-actions />

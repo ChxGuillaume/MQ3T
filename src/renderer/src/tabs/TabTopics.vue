@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import TabChainActions from '@renderer/components/tap-topics/TabChainActions.vue'
-import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
 import TopicItemList from '@renderer/components/tap-topics/TopicItemList.vue'
 import TabFavorites from '@renderer/components/tap-topics/TabFavorites.vue'
 import TabTopicsHeader from '../components/tap-topics/TabTopicsHeader.vue'
@@ -472,17 +471,6 @@ const focusTopicsScroll = (e: MouseEvent) => {
               </div>
             </q-tab>
           </q-tabs>
-
-          <transition
-            appear
-            enter-active-class="animated fadeInRight"
-            leave-active-class="animated fadeOutRight"
-          >
-            <broker-details-panel
-              v-if="mqttTopicsStore.selectedTopic === ''"
-              class="broker-details-panel"
-            />
-          </transition>
         </q-card>
       </template>
     </q-splitter>
@@ -490,19 +478,6 @@ const focusTopicsScroll = (e: MouseEvent) => {
 </template>
 
 <style scoped lang="less">
-.broker-details-panel {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-.broker-details-panel.show {
-  transform: translateX(0);
-}
-
 .body--light {
   .connection-card-title {
     color: black;

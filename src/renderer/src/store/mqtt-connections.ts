@@ -7,7 +7,10 @@ const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 export const useMqttConnectionsStore = defineStore('mqtt-connections', {
   state: () => ({
     connections: [] as MqttConnection[],
-    connectionsStatus: {} as Record<string, MqttConnectionStatus>
+    connectionsStatus: {} as Record<string, MqttConnectionStatus>,
+    connectedAt: {} as Record<string, number>,
+    reconnectAttempts: {} as Record<string, number>,
+    lastErrors: {} as Record<string, string>
   }),
   getters: {
     getConnection:
@@ -72,9 +75,31 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     },
     setConnectionStatus(clientKey: string, status: MqttConnectionStatus) {
       this.connectionsStatus[clientKey] = status
+
+      if (status === 'connected') {
+        this.connectedAt[clientKey] = Date.now()
+        delete this.reconnectAttempts[clientKey]
+        delete this.lastErrors[clientKey]
+      } else if (status === 'reconnecting') {
+        this.reconnectAttempts[clientKey] = (this.reconnectAttempts[clientKey] ?? 0) + 1
+      }
+
+      if (status !== 'connected') delete this.connectedAt[clientKey]
+    },
+    setConnectionError(clientKey: string, message: string) {
+      this.lastErrors[clientKey] = message
+    },
+    duplicateConnection(clientKey: string, newConnection: MqttConnection) {
+      const index = this.connections.findIndex((c) => c.clientKey === clientKey)
+
+      this.connections.splice(index + 1, 0, newConnection)
+
+      this.saveConnections()
     },
     hideConnection(clientKey: string) {
       delete this.connectionsStatus[clientKey]
+      delete this.reconnectAttempts[clientKey]
+      delete this.lastErrors[clientKey]
     },
     connectClient(clientKey: string) {
       const status = this.connectionsStatus[clientKey]
