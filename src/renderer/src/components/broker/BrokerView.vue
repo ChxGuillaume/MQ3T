@@ -251,7 +251,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
       <section class="border-default flex flex-col gap-2.5 rounded-xl border p-4 text-[13px]">
         <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Session</h2>
         <div v-for="row in sessionRows" :key="row.k" class="flex justify-between gap-3">
-          <span class="text-muted">{{ row.k }}</span>
+          <span class="text-muted shrink-0">{{ row.k }}</span>
           <span class="truncate text-right font-mono font-semibold" :title="row.v">
             {{ row.v }}
           </span>

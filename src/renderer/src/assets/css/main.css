@@ -107,7 +107,21 @@
   }
 }
 
-/* Quasar's global .flex adds flex-wrap: wrap; remove once Quasar is uninstalled */
+/* Quasar's global .flex and typography rules beat Tailwind's preflight; remove once Quasar is uninstalled */
 .flex {
   flex-wrap: nowrap;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
 }
