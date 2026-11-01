@@ -229,7 +229,7 @@ const licensesOpen = ref(false)
         </button>
       </nav>
 
-      <div class="flex min-w-0 flex-[999_1_560px] flex-col gap-7">
+      <div class="min-w-0 flex-[999_1_560px] space-y-7">
         <section data-section="app" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">App</h2>
           <div class="border-default overflow-hidden rounded-[14px] border">

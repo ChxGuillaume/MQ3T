@@ -8,7 +8,7 @@
 
 @theme static {
   --font-sans: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: Consolas, 'Courier New', ui-monospace, monospace;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Cascadia Mono', monospace;
 
   --breakpoint-3xl: 120rem;
 
@@ -105,4 +105,9 @@
   body {
     @apply bg-default text-default font-sans text-sm antialiased;
   }
+}
+
+/* Quasar's global .flex adds flex-wrap: wrap; remove once Quasar is uninstalled */
+.flex {
+  flex-wrap: nowrap;
 }

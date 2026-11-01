@@ -47,10 +47,10 @@ const items = computed(() => connectionItems(props.connection))
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex min-w-0">
     <UContextMenu :items="items">
       <article
-        class="border-default bg-default flex flex-1 flex-col gap-3.5 rounded-[14px] border p-4"
+        class="border-default bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-[14px] border p-4"
       >
         <div class="flex items-center gap-3">
           <span

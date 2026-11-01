@@ -11,7 +11,7 @@ export const labelColorStyle = (labelColor?: string | null) =>
 export const connectionInitials = (name: string) => {
   const words = name
     .trim()
-    .split(/[\s_-]+/)
+    .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean)
 
   if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
