@@ -6,7 +6,7 @@ import { computed, ref } from 'vue'
 
 type Licenses = Record<
   string,
-  { publisher?: string; repository: string; licenses: string; url?: string }
+  { publisher?: string; repository?: string; licenses: string; url?: string }
 >
 
 const open = defineModel<boolean>('open', { default: false })
@@ -113,7 +113,7 @@ const filteredLibraries = computed(() => {
               @click="ElectronApi.openUrl(library.url)"
             />
           </UTooltip>
-          <UTooltip text="Repository">
+          <UTooltip v-if="library.repository" text="Repository">
             <UButton
               icon="i-lucide-github"
               color="neutral"
