@@ -481,7 +481,7 @@ const testConnection = async () => {
             v-for="section in sections"
             :key="section.id"
             type="button"
-            class="flex h-9 cursor-pointer items-center rounded-lg px-3 text-left"
+            class="flex h-9 cursor-pointer items-center rounded-md px-3 text-left"
             :class="
               activeSection === section.id
                 ? 'bg-primary/10 text-primary font-bold'
@@ -503,7 +503,7 @@ const testConnection = async () => {
         >
           <section
             id="connection-general"
-            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-[14px] border p-5"
+            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-lg border p-5"
           >
             <h2 class="text-base font-bold">General</h2>
 
@@ -520,7 +520,7 @@ const testConnection = async () => {
                       type="button"
                       aria-label="No label color"
                       :aria-pressed="!form.labelColor"
-                      class="border-default text-muted flex size-7 cursor-pointer items-center justify-center rounded-lg border border-dashed"
+                      class="border-default text-muted flex size-7 cursor-pointer items-center justify-center rounded-sm border border-dashed"
                       :class="{ 'outline-2 outline-offset-2 outline-current': !form.labelColor }"
                       @click="form.labelColor = null"
                     >
@@ -532,7 +532,7 @@ const testConnection = async () => {
                       type="button"
                       :aria-label="color.label"
                       :aria-pressed="form.labelColor === color.value"
-                      class="size-7 cursor-pointer rounded-lg"
+                      class="size-7 cursor-pointer rounded-sm"
                       :class="{
                         'outline-2 outline-offset-2': form.labelColor === color.value
                       }"
@@ -602,7 +602,7 @@ const testConnection = async () => {
               </UFormField>
             </div>
 
-            <div class="bg-muted rounded-lg px-3 py-2 font-mono text-[13px] break-all">
+            <div class="bg-muted rounded-md px-3 py-2 font-mono text-[13px] break-all">
               <span class="text-muted">Connects to </span>{{ formatMqttUrl(form) }}
             </div>
 
@@ -647,7 +647,7 @@ const testConnection = async () => {
 
           <section
             id="connection-subs"
-            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-[14px] border p-5"
+            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-lg border p-5"
           >
             <div class="flex items-center justify-between">
               <h2 class="text-base font-bold">Subscriptions</h2>
@@ -691,7 +691,7 @@ const testConnection = async () => {
 
           <section
             id="connection-will"
-            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-[14px] border p-5"
+            class="border-default flex scroll-mt-6 flex-col gap-4 rounded-lg border p-5"
           >
             <div class="flex items-center gap-3">
               <div class="flex-1">
@@ -747,7 +747,7 @@ const testConnection = async () => {
 
           <section
             id="connection-adv"
-            class="border-default flex scroll-mt-6 items-center gap-3 rounded-[14px] border p-5"
+            class="border-default flex scroll-mt-6 items-center gap-3 rounded-lg border p-5"
           >
             <div class="flex-1">
               <h2 class="text-base font-bold">Advanced</h2>

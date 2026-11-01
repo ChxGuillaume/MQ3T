@@ -158,7 +158,7 @@ const handlePublished = (topic: string) => {
             >
               <button
                 type="button"
-                class="hover:bg-muted hover:text-default rounded-md px-1.5 py-0.5"
+                class="hover:bg-muted hover:text-default rounded-sm px-1.5 py-0.5"
                 :class="{ 'italic opacity-70': !part }"
                 @click="selectParent(index)"
               >

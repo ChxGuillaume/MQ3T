@@ -163,7 +163,7 @@ const addToGraphs = () => {
           { label: 'Max', value: stats.max }
         ]"
         :key="stat.label"
-        class="border-default flex-1 rounded-lg border px-3 py-2"
+        class="border-default flex-1 rounded-md border px-3 py-2"
       >
         <div class="text-muted text-[11px]">{{ stat.label }}</div>
         <div class="font-mono font-bold">{{ formatGraphValue(stat.value) }}</div>

@@ -40,7 +40,7 @@ const isMac = AppPlatform === 'darwin'
           role="tab"
           tabindex="0"
           :aria-selected="isActive(connection.clientKey)"
-          class="group -mb-px flex h-[38px] max-w-60 min-w-[190px] cursor-pointer items-center gap-2 rounded-t-lg border border-b-0 pr-1.5 pl-3.5 text-[13px] select-none"
+          class="group -mb-px flex h-[38px] max-w-60 min-w-[190px] cursor-pointer items-center gap-2 rounded-t-md border border-b-0 pr-1.5 pl-3.5 text-[13px] select-none"
           :class="
             isActive(connection.clientKey)
               ? 'border-default bg-default text-default font-semibold'
@@ -72,7 +72,7 @@ const isMac = AppPlatform === 'darwin'
         v-if="appStore.view === 'new-tab' && openConnections.length"
         role="tab"
         aria-selected="true"
-        class="border-default bg-default -mb-px flex h-[38px] min-w-[190px] items-center rounded-t-lg border border-b-0 pl-3.5 text-[13px] font-semibold select-none"
+        class="border-default bg-default -mb-px flex h-[38px] min-w-[190px] items-center rounded-t-md border border-b-0 pl-3.5 text-[13px] font-semibold select-none"
       >
         New tab
       </div>

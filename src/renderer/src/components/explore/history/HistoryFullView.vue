@@ -210,7 +210,7 @@ watch(
             type="button"
             role="option"
             :aria-selected="index === selectedIndex"
-            class="flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs"
+            class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-xs"
             :class="index === selectedIndex ? 'bg-primary/10 font-bold' : 'hover:bg-muted'"
             @click="selectedIndex = index"
           >
@@ -272,7 +272,7 @@ watch(
 
           <div
             v-if="selected && view === 'tree' && isContainer(selectedValue)"
-            class="border-default min-h-0 flex-1 overflow-auto rounded-xl border p-2.5 font-mono text-[13px]"
+            class="border-default min-h-0 flex-1 overflow-auto rounded-lg border p-2.5 font-mono text-[13px]"
           >
             <div class="flex min-h-[30px] items-center gap-2.5 px-2.5">
               <span class="text-muted w-3">▾</span>
@@ -290,7 +290,7 @@ watch(
               />
             </div>
           </div>
-          <div v-else-if="selected" class="bg-muted min-h-0 flex-1 overflow-hidden rounded-xl">
+          <div v-else-if="selected" class="bg-muted min-h-0 flex-1 overflow-hidden rounded-lg">
             <CodePreview
               :value="selected.message.message"
               :language="selected.message.dataType"

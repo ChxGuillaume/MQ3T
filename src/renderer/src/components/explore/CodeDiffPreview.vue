@@ -91,5 +91,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="h-full w-full overflow-hidden rounded-[10px]" />
+  <div ref="monacoEditorRef" class="h-full w-full overflow-hidden rounded-lg" />
 </template>

@@ -46,7 +46,7 @@ onMounted(listen)
 <template>
   <UModal
     v-model:open="dialogOpen"
-    :ui="{ content: 'max-w-[520px] rounded-2xl', footer: 'justify-end gap-2' }"
+    :ui="{ content: 'max-w-[520px] rounded-lg', footer: 'justify-end gap-2' }"
   >
     <template #header>
       <div class="flex flex-col gap-1">

@@ -24,7 +24,7 @@ const importActions = () => {
           icon="i-lucide-plus"
           label="New connection"
           size="lg"
-          class="h-[42px] rounded-[10px] px-[22px] font-semibold"
+          class="h-[42px] px-[22px] font-semibold"
           @click="appStore.openConnectionEditor(null)"
         />
         <UButton
@@ -32,12 +32,12 @@ const importActions = () => {
           color="neutral"
           variant="outline"
           size="lg"
-          class="h-[42px] rounded-[10px] px-[18px]"
+          class="h-[42px] px-[18px]"
           @click="importActions"
         />
       </div>
 
-      <ol class="bg-muted flex w-full flex-col gap-3.5 rounded-[14px] p-5 text-left text-[13px]">
+      <ol class="bg-muted flex w-full flex-col gap-3.5 rounded-lg p-5 text-left text-[13px]">
         <li class="flex items-start gap-3">
           <b
             class="bg-primary/10 text-primary flex size-6 shrink-0 items-center justify-center rounded-full text-xs"

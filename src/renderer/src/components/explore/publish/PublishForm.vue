@@ -219,7 +219,7 @@ defineExpose({ load, openConvert })
     <UCollapsible
       v-if="isMqtt5"
       v-model:open="propertiesOpen"
-      class="border-default rounded-[10px] border px-3.5"
+      class="border-default rounded-lg border px-3.5"
     >
       <button type="button" class="flex h-10 w-full items-center gap-2 text-[13px] font-semibold">
         MQTT 5 properties

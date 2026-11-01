@@ -43,7 +43,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
 
 <template>
   <UContextMenu :items="menuItems" :disabled="noContextMenu">
-    <div class="bg-muted flex min-w-0 items-center gap-3.5 rounded-xl px-4 py-3.5">
+    <div class="bg-muted flex min-w-0 items-center gap-3.5 rounded-lg px-4 py-3.5">
       <div class="flex min-w-0 flex-1 flex-col gap-2.5">
         <span
           class="drag-handle truncate font-bold"

@@ -428,12 +428,12 @@ onMounted(async () => {
         <button
           type="button"
           draggable="true"
-          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-[10px] border border-dashed p-2 text-[13px] font-semibold"
+          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-md border border-dashed p-2 text-[13px] font-semibold"
           @dragstart="handlePaletteDragStart($event, { type: 'wait' })"
           @click="addWaitStep()"
         >
           <span
-            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-[7px] border"
+            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
           >
             <UIcon name="i-lucide-timer" class="size-3.5" />
           </span>
@@ -442,12 +442,12 @@ onMounted(async () => {
         <button
           type="button"
           draggable="true"
-          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-[10px] border border-dashed p-2 text-[13px] font-semibold"
+          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-md border border-dashed p-2 text-[13px] font-semibold"
           @dragstart="handlePaletteDragStart($event, { type: 'custom' })"
           @click="addStep('action', {})"
         >
           <span
-            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-[7px] border"
+            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
           >
             <UIcon name="i-lucide-send" class="size-3.5" />
           </span>
@@ -464,13 +464,13 @@ onMounted(async () => {
           :key="action.id"
           type="button"
           draggable="true"
-          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-[10px] border p-2 text-left text-[13px] font-semibold"
+          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-md border p-2 text-left text-[13px] font-semibold"
           :title="action.topic"
           @dragstart="handlePaletteDragStart($event, { type: 'action', actionId: action.id })"
           @click="addActionStep(action)"
         >
           <span
-            class="border-default flex size-7 shrink-0 items-center justify-center rounded-[7px] border font-mono text-[11px] font-bold"
+            class="border-default flex size-7 shrink-0 items-center justify-center rounded-sm border font-mono text-[11px] font-bold"
             :class="formatTile(action.payloadFormat).class"
           >
             {{ formatTile(action.payloadFormat).glyph }}
@@ -479,7 +479,7 @@ onMounted(async () => {
           <span
             v-if="isWildcardTopic(action.topic)"
             title="Wildcard topic"
-            class="bg-primary/10 text-primary rounded-[5px] px-1.5 text-xs font-bold"
+            class="bg-primary/10 text-primary rounded-xs px-1.5 text-xs font-bold"
           >
             +
           </span>
@@ -542,7 +542,7 @@ onMounted(async () => {
         </VueFlow>
 
         <div
-          class="border-default bg-default absolute right-4 bottom-4 flex items-center gap-1 rounded-[10px] border p-1"
+          class="border-default bg-default absolute right-4 bottom-4 flex items-center gap-1 rounded-lg border p-1"
         >
           <UTooltip text="Trackpad mode: scroll pans, Shift + scroll zooms">
             <UButton

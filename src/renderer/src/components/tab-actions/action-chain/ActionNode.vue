@@ -40,14 +40,14 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
 <template>
   <UContextMenu :items="menuItems">
     <div
-      class="bg-default flex w-[220px] items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-[opacity,box-shadow]"
+      class="bg-default flex w-[220px] items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-[opacity,box-shadow]"
       :class="[
         selected || data?.isRunning ? 'border-primary ring-primary ring-1' : 'border-default',
         { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished }
       ]"
     >
       <span
-        class="border-default flex size-7 shrink-0 items-center justify-center rounded-[7px] border font-mono text-[11px] font-bold"
+        class="border-default flex size-7 shrink-0 items-center justify-center rounded-sm border font-mono text-[11px] font-bold"
         :class="tile.class"
       >
         {{ tile.glyph }}

@@ -96,7 +96,7 @@ watch(
         role="listbox"
         aria-multiselectable="true"
         aria-label="Messages"
-        class="border-default shrink-0 overflow-hidden rounded-xl border"
+        class="border-default shrink-0 overflow-hidden rounded-lg border"
       >
         <div
           v-for="message in pageItems"
@@ -111,7 +111,7 @@ watch(
         >
           <span
             aria-hidden="true"
-            class="flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-[11px] font-bold"
+            class="flex size-[18px] shrink-0 items-center justify-center rounded-xs text-[11px] font-bold"
             :class="
               mark(message.uid) ? 'bg-primary text-inverted' : 'border-default border-[1.5px]'
             "
@@ -153,7 +153,7 @@ watch(
         />
       </div>
 
-      <div v-if="ordered" class="bg-muted h-[360px] shrink-0 overflow-hidden rounded-[10px]">
+      <div v-if="ordered" class="bg-muted h-[360px] shrink-0 overflow-hidden rounded-lg">
         <CodeDiffPreview
           :value="ordered.a.message"
           :modified-value="ordered.b.message"

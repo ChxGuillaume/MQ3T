@@ -56,7 +56,7 @@ const retry = () => {
 <template>
   <div
     role="status"
-    class="bg-warning/10 border-warning mx-4 mt-3 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3"
+    class="bg-warning/10 border-warning mx-4 mt-3 flex flex-wrap items-center gap-3 rounded-lg border px-4 py-3"
   >
     <UIcon name="i-lucide-triangle-alert" class="text-warning size-5 shrink-0" />
     <div class="min-w-0 flex-[1_1_300px]">

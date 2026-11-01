@@ -50,12 +50,12 @@ const items = computed(() => connectionItems(props.connection))
   <div class="flex min-w-0">
     <UContextMenu :items="items">
       <article
-        class="border-default bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-[14px] border p-4"
+        class="border-default bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-lg border p-4"
       >
         <div class="flex items-center gap-3">
           <span
             aria-hidden="true"
-            class="flex size-10 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-current text-sm font-bold"
+            class="flex size-10 shrink-0 items-center justify-center rounded-md border-[1.5px] border-current text-sm font-bold"
             :class="[
               connection.labelColor ? '' : 'text-primary',
               { 'drag-handle cursor-grab': draggable }

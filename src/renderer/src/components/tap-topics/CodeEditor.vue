@@ -261,7 +261,7 @@ const editorStatus = computed(() => {
     <slot name="between" />
     <div
       ref="monacoEditorRef"
-      class="min-h-0 w-full grow overflow-hidden rounded-[10px] border transition-colors"
+      class="min-h-0 w-full grow overflow-hidden rounded-md border transition-colors"
       :class="editorStatus"
     />
   </div>

@@ -354,11 +354,11 @@ const handleImport = () => {
   >
     <template #body>
       <div
-        class="border-default flex items-center gap-3 rounded-xl border-[1.5px] border-dashed px-3.5 py-3"
+        class="border-default flex items-center gap-3 rounded-lg border-[1.5px] border-dashed px-3.5 py-3"
       >
         <span
           aria-hidden="true"
-          class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold"
+          class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md font-mono text-xs font-bold"
         >
           {}
         </span>
@@ -378,7 +378,7 @@ const handleImport = () => {
         <span class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
           Pick what to import
         </span>
-        <div class="border-default max-h-[360px] overflow-auto rounded-xl border">
+        <div class="border-default max-h-[360px] overflow-auto rounded-lg border">
           <template v-for="(group, groupIndex) in tree" :key="group.key">
             <div
               role="checkbox"

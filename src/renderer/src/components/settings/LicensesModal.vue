@@ -54,7 +54,7 @@ const filteredLibraries = computed(() => {
       <div class="flex flex-wrap items-center gap-4">
         <button
           type="button"
-          class="hover:bg-muted flex items-center gap-3 rounded-lg p-1.5 pr-3 transition-colors"
+          class="hover:bg-muted flex items-center gap-3 rounded-md p-1.5 pr-3 transition-colors"
           @click="ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ3T')"
         >
           <img :src="logo" alt="" class="size-10" />
@@ -85,7 +85,7 @@ const filteredLibraries = computed(() => {
         class="w-full"
       />
 
-      <ul class="border-default -mx-1 min-h-0 flex-1 overflow-y-auto rounded-xl border">
+      <ul class="border-default -mx-1 min-h-0 flex-1 overflow-y-auto rounded-lg border">
         <li
           v-for="library in filteredLibraries"
           :key="library.key"

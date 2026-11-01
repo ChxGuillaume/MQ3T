@@ -98,8 +98,8 @@ watch(
       role="treeitem"
       :aria-selected="isSelectedTopic"
       :data-topic-path="topic"
-      class="relative flex h-11 w-full shrink-0 cursor-pointer items-center gap-3 overflow-hidden rounded-lg px-2.5 select-none"
-      :class="[toneClass, { 'transition-colors': !appStore.isScrubbingTopics }]"
+      class="relative flex h-11 w-full shrink-0 cursor-pointer items-center gap-3 overflow-hidden px-2.5 select-none"
+      :class="[toneClass, tone === 'root' ? 'rounded-lg' : 'rounded-md', { 'transition-colors': !appStore.isScrubbingTopics }]"
       @click="emit('select', topic)"
     >
       <template v-if="visible">

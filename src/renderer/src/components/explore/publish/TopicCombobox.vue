@@ -86,14 +86,14 @@ const handleKeydown = (event: KeyboardEvent) => {
       v-if="open"
       id="new-message-topic-suggestions"
       role="listbox"
-      class="border-default bg-default absolute inset-x-0 top-full z-20 mt-1 rounded-[10px] border p-1 shadow-lg"
+      class="border-default bg-default absolute inset-x-0 top-full z-20 mt-1 rounded-md border p-1 shadow-lg"
     >
       <div
         v-for="(suggestion, index) in suggestions"
         :key="suggestion.path"
         role="option"
         :aria-selected="index === highlighted"
-        class="flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 font-mono text-xs"
+        class="flex h-8 cursor-pointer items-center gap-2 rounded-sm px-2.5 font-mono text-xs"
         :class="{ 'bg-primary/10': index === highlighted }"
         @mousedown.prevent="pick(suggestion.path)"
         @mouseenter="highlighted = index"

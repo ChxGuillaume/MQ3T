@@ -63,7 +63,7 @@ const chips = computed(() => [
       :aria-pressed="chip.pressed"
       color="neutral"
       variant="outline"
-      class="h-8 rounded-full px-3 text-xs"
+      class="h-8 px-3 text-xs"
       :class="
         chip.pressed
           ? 'bg-primary/10 text-primary ring-primary hover:bg-primary/10 font-bold'
@@ -74,7 +74,7 @@ const chips = computed(() => [
     <span class="text-muted text-xs">{{ countLabel }}</span>
     <div
       v-if="!exploreUiStore.filterFavorites"
-      class="bg-muted ml-auto flex gap-0.5 rounded-lg p-0.5"
+      class="bg-muted ml-auto flex gap-0.5 rounded-md p-0.5"
     >
       <UTooltip text="Tree">
         <UButton
@@ -84,7 +84,7 @@ const chips = computed(() => [
           variant="ghost"
           aria-label="Tree display"
           :aria-pressed="exploreUiStore.displayMode === 'tree'"
-          :class="exploreUiStore.displayMode === 'tree' ? 'bg-default text-primary' : 'text-muted'"
+          :class="exploreUiStore.displayMode === 'tree' ? 'bg-default text-primary rounded-sm' : 'text-muted rounded-sm'"
           @click="exploreUiStore.displayMode = 'tree'"
         />
       </UTooltip>
@@ -96,7 +96,7 @@ const chips = computed(() => [
           variant="ghost"
           aria-label="List display"
           :aria-pressed="exploreUiStore.displayMode === 'line'"
-          :class="exploreUiStore.displayMode === 'line' ? 'bg-default text-primary' : 'text-muted'"
+          :class="exploreUiStore.displayMode === 'line' ? 'bg-default text-primary rounded-sm' : 'text-muted rounded-sm'"
           @click="exploreUiStore.displayMode = 'line'"
         />
       </UTooltip>

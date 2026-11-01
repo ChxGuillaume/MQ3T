@@ -53,7 +53,7 @@ const siblings = computed(() => {
       v-for="sibling in siblings"
       :key="sibling.path"
       type="button"
-      class="flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-left text-[13px]"
+      class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-left text-[13px]"
       :class="sibling.path === topic ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-muted'"
       @click="emit('select', sibling.path)"
     >

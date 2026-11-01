@@ -109,7 +109,7 @@ const properties = computed(() => {
     ]"
   />
   <div v-else class="flex flex-col gap-3.5">
-    <div class="bg-muted overflow-hidden rounded-[10px]" :style="{ height: `${previewHeight}px` }">
+    <div class="bg-muted overflow-hidden rounded-lg" :style="{ height: `${previewHeight}px` }">
       <CodePreview
         :value="last.message"
         :language="last.dataType"
@@ -128,7 +128,7 @@ const properties = computed(() => {
         MQTT 5 properties
       </h2>
       <dl
-        class="border-default grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-lg border px-3 py-2 text-xs"
+        class="border-default grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-md border px-3 py-2 text-xs"
       >
         <template v-for="row in properties" :key="row.label">
           <dt class="text-muted">{{ row.label }}</dt>
@@ -153,7 +153,7 @@ const properties = computed(() => {
       </h2>
       <div
         v-if="!changes.length"
-        class="border-default text-muted flex items-center gap-2.5 rounded-lg border px-3 py-2 text-xs"
+        class="border-default text-muted flex items-center gap-2.5 rounded-md border px-3 py-2 text-xs"
       >
         Same value as the previous message
         <span class="ml-auto">{{ time(previous!.createdAt) }}</span>
@@ -161,7 +161,7 @@ const properties = computed(() => {
       <div
         v-for="(change, index) in changes.slice(0, MAX_CHANGES)"
         :key="change.path"
-        class="border-default flex items-center gap-2.5 rounded-lg border px-3 py-2"
+        class="border-default flex items-center gap-2.5 rounded-md border px-3 py-2"
       >
         <ChangeLine :change="change" class="min-w-0 flex-1 text-[13px]" />
         <span v-if="index === 0" class="text-muted shrink-0 text-xs">{{

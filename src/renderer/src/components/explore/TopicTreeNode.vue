@@ -69,10 +69,10 @@ const leafTone = computed(() => {
 })
 
 const containerClass = computed(() => {
-  if (props.depth === 0) return opened.value ? 'rounded-xl border border-default' : ''
+  if (props.depth === 0) return opened.value ? 'rounded-lg border border-default' : ''
   const bg = props.depth % 2 === 1 ? 'bg-muted' : 'bg-default'
 
-  return opened.value ? `${bg} rounded-[10px]` : ''
+  return opened.value ? `${bg} rounded-md` : ''
 })
 
 const headerClass = computed(() => {
@@ -82,12 +82,12 @@ const headerClass = computed(() => {
   if (opened.value) return [size, selected, 'rounded-[inherit]']
 
   if (props.depth === 0) {
-    return [size, selected || 'border border-default hover:bg-muted', 'rounded-[10px]']
+    return [size, selected || 'border border-default hover:bg-muted', 'rounded-lg']
   }
 
   const bg = props.depth % 2 === 1 ? 'bg-muted hover:bg-accented' : 'bg-default hover:bg-elevated'
 
-  return [size, selected || bg, 'rounded-lg']
+  return [size, selected || bg, 'rounded-md']
 })
 
 const handleHeaderClick = () => {

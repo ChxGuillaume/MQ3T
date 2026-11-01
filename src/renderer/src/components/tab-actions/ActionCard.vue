@@ -138,11 +138,11 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
 <template>
   <UContextMenu :items="menuItems" :disabled="noContextMenu">
     <article
-      class="border-default bg-default relative flex h-full flex-col gap-2.5 rounded-xl border p-3.5"
+      class="border-default bg-default relative flex h-full flex-col gap-2.5 rounded-lg border p-3.5"
     >
       <div class="flex items-start gap-2.5">
         <span
-          class="drag-handle border-default flex size-7 shrink-0 items-center justify-center rounded-[7px] border font-mono text-[11px] font-bold"
+          class="drag-handle border-default flex size-7 shrink-0 items-center justify-center rounded-sm border font-mono text-[11px] font-bold"
           :class="[tile.class, { 'cursor-grab': !noGrab }]"
         >
           {{ tile.glyph }}
@@ -164,7 +164,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
             <span
               v-for="(part, index) in topicParts(action.topic)"
               :key="index"
-              :class="{ 'bg-primary/10 rounded px-1 font-bold': part.wildcard }"
+              :class="{ 'bg-primary/10 rounded-xs px-1 font-bold': part.wildcard }"
             >
               {{ part.text }}
             </span>
@@ -183,7 +183,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
       </div>
 
       <pre
-        class="bg-muted m-0 line-clamp-4 overflow-hidden rounded-lg px-2.5 py-2 font-mono text-xs leading-[18px] break-all whitespace-pre-wrap"
+        class="bg-muted m-0 line-clamp-4 overflow-hidden rounded-md px-2.5 py-2 font-mono text-xs leading-[18px] break-all whitespace-pre-wrap"
         >{{ action.payload || ' ' }}</pre>
 
       <div class="mt-auto flex flex-wrap items-center gap-1.5">

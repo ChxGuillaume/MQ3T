@@ -186,7 +186,7 @@ defineExpose({ confirmLeave })
           v-for="sibling in siblings"
           :key="sibling.id"
           type="button"
-          class="flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
+          class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
           :class="
             sibling.id === actionId
               ? 'bg-primary/10 text-primary font-bold'
@@ -196,7 +196,7 @@ defineExpose({ confirmLeave })
         >
           <span
             aria-hidden="true"
-            class="border-default flex size-[22px] shrink-0 items-center justify-center rounded-md border font-mono text-[10px] font-bold"
+            class="border-default flex size-[22px] shrink-0 items-center justify-center rounded-sm border font-mono text-[10px] font-bold"
             :class="formatTile(sibling.payloadFormat).class"
           >
             {{ formatTile(sibling.payloadFormat).glyph }}
@@ -205,7 +205,7 @@ defineExpose({ confirmLeave })
         </button>
         <button
           type="button"
-          class="flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
+          class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
           :class="!actionId ? 'bg-primary/10 text-primary font-bold' : 'text-muted hover:bg-muted'"
           @click="actionId && leaveTo(() => emit('create'))"
         >

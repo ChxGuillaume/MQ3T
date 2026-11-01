@@ -52,7 +52,7 @@ const send = async () => {
 </script>
 
 <template>
-  <div class="border-default flex items-center gap-2.5 rounded-[10px] border px-3 py-2.5">
+  <div class="border-default flex items-center gap-2.5 rounded-lg border px-3 py-2.5">
     <TopicTypeTile :kind="kind" size="sm" />
     <div class="min-w-0 flex-1">
       <div class="truncate text-[13px] font-bold" :title="action.description || action.name">
@@ -64,7 +64,7 @@ const send = async () => {
           <template v-for="(part, index) in topicParts" :key="index">
             <span
               v-if="part === '+' || part === '#'"
-              class="bg-primary/10 text-primary rounded px-1 font-bold"
+              class="bg-primary/10 text-primary rounded-xs px-1 font-bold"
               >{{ part }}</span
             >
             <template v-else>{{ part }}</template>

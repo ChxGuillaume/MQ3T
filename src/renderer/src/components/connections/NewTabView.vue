@@ -56,7 +56,7 @@ const connections = computed<MqttConnection[]>({
         aria-label="Search connections"
         size="lg"
         class="w-[280px]"
-        :ui="{ base: 'h-[38px] rounded-[10px] text-[13px]' }"
+        :ui="{ base: 'h-[38px] text-[13px]' }"
       />
     </div>
 
@@ -75,7 +75,7 @@ const connections = computed<MqttConnection[]>({
       <template #footer>
         <button
           type="button"
-          class="border-default text-muted hover:text-default flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed text-sm font-semibold"
+          class="border-default text-muted hover:text-default flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-[1.5px] border-dashed text-sm font-semibold"
           @click="appStore.openConnectionEditor(null)"
         >
           <UIcon name="i-lucide-plus" class="size-[22px]" />

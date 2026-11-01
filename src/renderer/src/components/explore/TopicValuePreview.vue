@@ -58,7 +58,7 @@ const isShortText = computed(() => text.value.length <= 16 && !/\s/.test(text.va
       <span
         v-for="pair in json.pairs"
         :key="pair.key"
-        class="bg-default flex shrink-0 gap-1.5 rounded-md px-2 py-0.5 font-mono text-xs whitespace-nowrap"
+        class="bg-default flex shrink-0 gap-1.5 rounded-sm px-2 py-0.5 font-mono text-xs whitespace-nowrap"
       >
         <span class="text-muted">{{ pair.key }}</span>
         <span :class="pairClass(pair.kind)">{{ pair.value }}</span>

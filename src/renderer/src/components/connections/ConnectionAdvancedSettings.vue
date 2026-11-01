@@ -26,7 +26,7 @@ const removeUserProperty = (index: number) => {
   <div class="flex flex-col gap-[22px]">
     <section class="flex flex-col gap-2">
       <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Session</h2>
-      <div class="border-default divide-default divide-y overflow-hidden rounded-[14px] border">
+      <div class="border-default divide-default divide-y overflow-hidden rounded-lg border">
         <div class="flex flex-wrap items-center gap-3 px-[18px] py-3">
           <div class="min-w-0 flex-[1_1_240px]">
             <b class="block text-[13px] font-semibold">Clean session</b>
@@ -98,7 +98,7 @@ const removeUserProperty = (index: number) => {
       </div>
     </section>
 
-    <p v-if="!isMqtt5" class="bg-muted text-muted rounded-lg px-3 py-2 text-[13px]">
+    <p v-if="!isMqtt5" class="bg-muted text-muted rounded-md px-3 py-2 text-[13px]">
       Limits, session expiry and user properties need MQTT 5.0. Change the MQTT version in the
       General section to use them.
     </p>
@@ -113,7 +113,7 @@ const removeUserProperty = (index: number) => {
             MQTT 5
           </span>
         </h2>
-        <div class="border-default divide-default divide-y overflow-hidden rounded-[14px] border">
+        <div class="border-default divide-default divide-y overflow-hidden rounded-lg border">
           <div class="flex flex-wrap items-center gap-3 px-[18px] py-3">
             <div class="min-w-0 flex-[1_1_240px]">
               <b class="block text-[13px] font-semibold">Receive maximum</b>
@@ -193,7 +193,7 @@ const removeUserProperty = (index: number) => {
             @click="addUserProperty"
           />
         </div>
-        <div class="border-default overflow-hidden rounded-[14px] border">
+        <div class="border-default overflow-hidden rounded-lg border">
           <UTable
             :data="connection.properties.userProperties"
             :columns="userPropertiesColumns"

@@ -28,7 +28,7 @@ const tile = computed(() => {
   <span
     aria-hidden="true"
     class="border-default flex shrink-0 items-center justify-center border font-mono text-[11px] font-bold"
-    :class="[tile.color, size === 'sm' ? 'size-[26px] rounded-[7px]' : 'size-7 rounded-[7px]']"
+    :class="[tile.color, size === 'sm' ? 'size-[26px] rounded-sm' : 'size-7 rounded-sm']"
   >
     {{ tile.glyph }}
   </span>

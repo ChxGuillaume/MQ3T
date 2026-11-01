@@ -111,11 +111,11 @@ const removeEnum = (name: string) => {
     <div
       v-for="enumName in enumNames"
       :key="enumName.name"
-      class="border-default flex flex-col gap-2 rounded-xl border p-3"
+      class="border-default flex flex-col gap-2 rounded-lg border p-3"
     >
       <div class="flex items-center gap-2">
         <span
-          class="rounded-[5px] px-1.5 py-px font-mono font-bold"
+          class="rounded-xs px-1.5 py-px font-mono font-bold"
           :class="enumName.used ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning'"
         >
           {{ enumName.name }}
@@ -138,7 +138,7 @@ const removeEnum = (name: string) => {
         <span
           v-for="(option, index) in enumOptions[enumName.name] ?? []"
           :key="`${index}-${option}`"
-          class="border-default inline-flex h-7 items-center gap-1.5 rounded-full border pr-1.5 pl-2.5 text-xs"
+          class="border-default inline-flex h-7 items-center gap-1.5 rounded-md border pr-1.5 pl-2.5 text-xs"
         >
           <span :class="typeof option === 'number' ? 'text-code-num font-mono' : ''">
             {{ option }}
@@ -166,7 +166,7 @@ const removeEnum = (name: string) => {
         <button
           v-else
           type="button"
-          class="border-default text-muted hover:text-default inline-flex h-7 items-center rounded-full border border-dashed px-2.5 text-xs"
+          class="border-default text-muted hover:text-default inline-flex h-7 items-center rounded-md border border-dashed px-2.5 text-xs"
           @click="editing = enumName.name"
         >
           + Option
@@ -179,13 +179,13 @@ const removeEnum = (name: string) => {
       class="text-muted flex flex-wrap gap-x-3.5 gap-y-1.5 text-xs"
     >
       <span v-for="variable in simpleVariables" :key="`${variable.name}:${variable.label}`">
-        <span class="bg-primary/10 text-primary rounded-[5px] px-1.5 py-px font-mono font-bold">
+        <span class="bg-primary/10 text-primary rounded-xs px-1.5 py-px font-mono font-bold">
           {{ variable.name }}
         </span>
         {{ variable.label }}
       </span>
       <span v-if="hasUuid">
-        <span class="bg-primary/10 text-primary rounded-[5px] px-1.5 py-px font-mono font-bold">
+        <span class="bg-primary/10 text-primary rounded-xs px-1.5 py-px font-mono font-bold">
           uuid
         </span>
         new UUID each send

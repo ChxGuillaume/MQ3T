@@ -96,7 +96,7 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
 
     <div
       v-if="!noWildcard"
-      class="bg-muted -mt-1.5 flex flex-col gap-2 rounded-[10px] px-3 py-2.5 text-xs"
+      class="bg-muted -mt-1.5 flex flex-col gap-2 rounded-lg px-3 py-2.5 text-xs"
     >
       <div class="flex flex-wrap items-center gap-2">
         <b v-if="isWildcard && connectionId">
@@ -107,9 +107,9 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
           }}
         </b>
         <span class="text-muted">
-          <span class="bg-primary/10 text-primary rounded px-1 font-bold">+</span> stands for one
+          <span class="bg-primary/10 text-primary rounded-xs px-1 font-bold">+</span> stands for one
           level. <span class="font-mono">#</span> and a
-          <span class="bg-primary/10 text-primary rounded px-1 font-bold">+</span> at the end aren't
+          <span class="bg-primary/10 text-primary rounded-xs px-1 font-bold">+</span> at the end aren't
           allowed.
         </span>
       </div>
@@ -141,7 +141,7 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
 
     <div class="flex min-h-0 flex-1 flex-col gap-1.5">
       <span class="text-default text-sm font-semibold">Payload</span>
-      <div class="border-default overflow-hidden rounded-[10px] border" :class="editorClass">
+      <div class="border-default overflow-hidden rounded-md border" :class="editorClass">
         <CodeEditor
           v-if="showEditor"
           v-model="form.payload"
@@ -164,7 +164,7 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
     <UCollapsible
       v-if="isMqtt5"
       :default-open="hasMqtt5Values"
-      class="border-default rounded-xl border"
+      class="border-default rounded-lg border"
     >
       <button
         type="button"

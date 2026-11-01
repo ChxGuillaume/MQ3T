@@ -46,7 +46,7 @@ const handleSubmit = () => {
             v-for="target in targets"
             :key="target"
             type="button"
-            class="flex h-[34px] items-center rounded-lg px-2.5 text-left font-mono text-xs"
+            class="flex h-[34px] items-center rounded-md px-2.5 text-left font-mono text-xs"
             :class="target === topic ? 'bg-primary/10' : 'hover:bg-muted'"
             @click="topic = target"
             @dblclick="handleSubmit"

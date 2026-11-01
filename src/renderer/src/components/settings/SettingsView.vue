@@ -216,7 +216,7 @@ const licensesOpen = ref(false)
           v-for="section in sections"
           :key="section.id"
           type="button"
-          class="flex h-9 items-center rounded-lg px-3 text-left"
+          class="flex h-9 items-center rounded-md px-3 text-left"
           :class="
             activeSection === section.id
               ? 'bg-primary/10 text-primary font-bold'
@@ -232,7 +232,7 @@ const licensesOpen = ref(false)
       <div class="min-w-0 flex-[999_1_560px] space-y-7">
         <section data-section="app" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">App</h2>
-          <div class="border-default overflow-hidden rounded-[14px] border">
+          <div class="border-default overflow-hidden rounded-lg border">
             <SettingsRow title="Theme" description="System follows your OS setting.">
               <SegmentedControl v-model="theme" :items="themeItems" />
             </SettingsRow>
@@ -257,7 +257,7 @@ const licensesOpen = ref(false)
 
         <section data-section="explore" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Explore</h2>
-          <div class="border-default overflow-hidden rounded-[14px] border">
+          <div class="border-default overflow-hidden rounded-lg border">
             <SettingsRow title="Show activity" description="Highlight topics as messages arrive.">
               <USwitch v-model="showActivity" aria-label="Show activity" />
             </SettingsRow>
@@ -327,7 +327,7 @@ const licensesOpen = ref(false)
 
         <section data-section="actions" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Actions</h2>
-          <div class="border-default overflow-hidden rounded-[14px] border">
+          <div class="border-default overflow-hidden rounded-lg border">
             <SettingsRow
               title="Open the actions panel automatically"
               description="When a topic has saved actions, switch the publish panel to them."
@@ -351,7 +351,7 @@ const licensesOpen = ref(false)
 
         <section data-section="about" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">About</h2>
-          <div class="border-default overflow-hidden rounded-[14px] border">
+          <div class="border-default overflow-hidden rounded-lg border">
             <SettingsRow :title="`MQ3T ${appStore.appVersion}`" :description="updateStatusLabel">
               <div class="flex flex-wrap gap-2">
                 <UButton

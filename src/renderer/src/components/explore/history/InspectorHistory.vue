@@ -198,7 +198,7 @@ watch(
     />
 
     <template v-else>
-      <div role="list" class="border-default overflow-hidden rounded-[10px] border">
+      <div role="list" class="border-default overflow-hidden rounded-lg border">
         <button
           v-for="row in rows"
           :key="row.message.uid"
@@ -266,7 +266,7 @@ watch(
             @click="selected = undefined"
           />
         </div>
-        <div class="bg-muted h-64 overflow-hidden rounded-[10px]">
+        <div class="bg-muted h-64 overflow-hidden rounded-lg">
           <CodeDiffPreview
             v-if="settingsStore.selectedMessageCompare && latest && selected.uid !== latest.uid"
             :value="selected.message"

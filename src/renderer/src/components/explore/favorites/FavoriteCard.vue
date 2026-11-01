@@ -126,7 +126,7 @@ const messagesCount = computed(
 <template>
   <UContextMenu :items="menuItems">
     <article
-      class="bg-default flex cursor-pointer flex-col gap-3 rounded-xl border p-3.5 transition-colors"
+      class="bg-default flex cursor-pointer flex-col gap-3 rounded-lg border p-3.5 transition-colors"
       :class="age === 'now' ? 'border-primary' : 'border-default hover:border-accented'"
       @click="emit('open', topic)"
     >

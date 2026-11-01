@@ -318,7 +318,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
     <article
       v-bind="$attrs"
       class="border-default bg-default flex min-w-0 flex-col border"
-      :class="compact ? 'gap-2 rounded-[10px] p-3' : 'gap-3 rounded-xl p-4'"
+      :class="compact ? 'gap-2 rounded-lg p-3' : 'gap-3 rounded-lg p-4'"
     >
       <div
         v-if="showTitle && compact"
@@ -337,7 +337,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
         <UDropdownMenu v-if="showContextMenu" :items="menuItems" :content="{ align: 'end' }">
           <template #swatch-leading="{ item }">
             <span
-              class="size-3 shrink-0 rounded-[3px]"
+              class="size-3 shrink-0 rounded-xs"
               :style="{ background: (item as { swatch?: string }).swatch }"
             />
           </template>
@@ -358,7 +358,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
       >
         <span
           aria-hidden="true"
-          class="mt-1 size-2.5 shrink-0 rounded-[3px]"
+          class="mt-1 size-2.5 shrink-0 rounded-xs"
           :style="{ background: swatchColor }"
         />
         <div class="min-w-0 flex-1">
@@ -382,7 +382,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
         <UDropdownMenu v-if="showContextMenu" :items="menuItems" :content="{ align: 'end' }">
           <template #swatch-leading="{ item }">
             <span
-              class="size-3 shrink-0 rounded-[3px]"
+              class="size-3 shrink-0 rounded-xs"
               :style="{ background: (item as { swatch?: string }).swatch }"
             />
           </template>
@@ -425,7 +425,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
 
     <template #swatch-leading="{ item }">
       <span
-        class="size-3 shrink-0 rounded-[3px]"
+        class="size-3 shrink-0 rounded-xs"
         :style="{ background: (item as { swatch?: string }).swatch }"
       />
     </template>

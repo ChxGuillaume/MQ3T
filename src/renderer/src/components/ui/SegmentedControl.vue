@@ -36,9 +36,9 @@ const value = computed({
     :size="size === 'sm' ? 'xs' : 'sm'"
     :ui="{
       root: 'w-auto',
-      list: 'w-auto gap-0.5 rounded-[10px] bg-muted p-[3px]',
-      indicator: 'inset-y-[3px] rounded-lg bg-default shadow-none',
-      trigger: `grow-0 before:bg-default data-[state=active]:font-bold data-[state=active]:text-primary ${
+      list: 'w-auto gap-0.5 rounded-md bg-muted p-[3px]',
+      indicator: 'inset-y-[3px] rounded-sm bg-default shadow-none',
+      trigger: `grow-0 rounded-sm data-[state=active]:font-bold data-[state=active]:text-primary ${
         size === 'sm' ? 'h-[26px] px-2.5' : 'h-[30px] px-3.5 text-[13px]'
       }`
     }"

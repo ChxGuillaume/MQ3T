@@ -111,7 +111,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
 <template>
   <main v-if="connection" class="flex flex-wrap content-start gap-5 p-6">
     <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-5">
-      <div class="bg-muted flex flex-wrap items-center gap-4 rounded-[14px] p-5">
+      <div class="bg-muted flex flex-wrap items-center gap-4 rounded-lg p-5">
         <div class="min-w-60 flex-1">
           <div class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
             {{ brokerType === 'Unknown' ? 'Not detected from $SYS' : 'Detected from $SYS' }}
@@ -146,7 +146,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
 
       <div
         v-if="brokerType === 'Unknown'"
-        class="border-default text-muted flex flex-col gap-2 rounded-xl border p-4 text-[13px]"
+        class="border-default text-muted flex flex-col gap-2 rounded-lg border p-4 text-[13px]"
       >
         <p>
           MQ3T could not read broker details. Either this client lacks permission on the
@@ -169,7 +169,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
         <div
           v-for="stat in stats"
           :key="stat.label"
-          class="border-default flex flex-col gap-1.5 rounded-xl border p-4"
+          class="border-default flex flex-col gap-1.5 rounded-lg border p-4"
         >
           <span class="text-muted text-xs font-semibold">{{ stat.label }}</span>
           <span class="text-[26px] leading-[30px] font-bold">{{ stat.value }}</span>
@@ -179,7 +179,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
 
       <section v-if="clients && clientsBar" class="flex flex-col gap-2.5">
         <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Clients</h2>
-        <div class="border-default flex flex-col gap-2.5 rounded-xl border p-4">
+        <div class="border-default flex flex-col gap-2.5 rounded-lg border p-4">
           <div class="flex justify-between text-[13px]">
             <span>
               <b>{{ clients.connected }}</b> connected
@@ -207,7 +207,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
     </div>
 
     <aside class="flex min-w-0 flex-[1_1_340px] flex-col gap-5">
-      <section class="border-default flex flex-col gap-3 rounded-xl border p-4">
+      <section class="border-default flex flex-col gap-3 rounded-lg border p-4">
         <div class="flex items-center justify-between">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
             Subscriptions of this tab
@@ -226,7 +226,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
         <div
           v-for="(subscription, index) in connection.subscribedTopics"
           :key="`${subscription.topic}-${index}`"
-          class="bg-muted flex items-center gap-2 rounded-lg px-2.5 py-2"
+          class="bg-muted flex items-center gap-2 rounded-md px-2.5 py-2"
         >
           <span class="flex-1 truncate font-mono text-[13px] font-semibold">
             {{ subscription.topic }}
@@ -248,7 +248,7 @@ const openIssues = () => ElectronApi.openUrl('https://github.com/ChxGuillaume/MQ
         </div>
       </section>
 
-      <section class="border-default flex flex-col gap-2.5 rounded-xl border p-4 text-[13px]">
+      <section class="border-default flex flex-col gap-2.5 rounded-lg border p-4 text-[13px]">
         <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Session</h2>
         <div v-for="row in sessionRows" :key="row.k" class="flex justify-between gap-3">
           <span class="text-muted shrink-0">{{ row.k }}</span>

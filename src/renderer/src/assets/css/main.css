@@ -36,11 +36,17 @@
   --color-code-num: var(--code-num);
   --color-code-bin: var(--code-bin);
   --color-code-key: var(--ui-primary);
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
 }
 
 :root {
-  --ui-radius: 0.5rem;
-
   --ui-primary: #650164;
   --ui-secondary: #2c8500;
   --ui-success: #2f9e44;

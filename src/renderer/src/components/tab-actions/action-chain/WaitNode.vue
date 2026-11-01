@@ -69,7 +69,7 @@ const menuItems: ContextMenuItem[][] = [
   <UContextMenu :items="menuItems">
     <div class="relative">
       <div
-        class="flex h-12 min-w-[130px] items-center gap-2 rounded-xl px-3 text-[13px] font-bold whitespace-nowrap"
+        class="flex h-12 min-w-[130px] items-center gap-2 rounded-lg px-3 text-[13px] font-bold whitespace-nowrap"
         :class="
           data?.isRunning || selected
             ? 'bg-primary/10 text-primary ring-primary ring-2 ring-inset'

@@ -82,7 +82,7 @@ const time = (date: Date) =>
     <span
       v-for="filter in keyFilters"
       :key="filter"
-      class="border-default text-default inline-flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2 font-mono"
+      class="border-default text-default inline-flex items-center gap-1 rounded-md border py-0.5 pr-1 pl-2 font-mono"
     >
       {{ filter }}
       <UButton
@@ -103,13 +103,13 @@ const time = (date: Date) =>
       size="xs"
       variant="none"
       :search-input="{ placeholder: 'Key path, e.g. motors[*].current' }"
-      class="border-default text-muted w-auto rounded-full border border-dashed px-2"
+      class="border-default text-muted w-auto rounded-md border border-dashed px-2"
       :ui="{ trailing: 'hidden', content: 'min-w-64' }"
       @create="newKey = $event"
     />
   </div>
 
-  <div role="list" class="border-default overflow-hidden rounded-[10px] border">
+  <div role="list" class="border-default overflow-hidden rounded-lg border">
     <div
       v-for="entry in pageItems"
       :key="entry.message.uid"
@@ -167,7 +167,7 @@ const time = (date: Date) =>
       </div>
       <div
         v-if="expanded.has(entry.message.uid) && entry.previous"
-        class="bg-default mt-1 ml-6 h-60 overflow-hidden rounded-lg"
+        class="bg-default mt-1 ml-6 h-60 overflow-hidden rounded-md"
       >
         <CodeDiffPreview
           :value="entry.previous.message"
