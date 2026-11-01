@@ -24,6 +24,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     topicsLastMessage: {} as Record<string, Record<string, MqttMessage>>,
     subTopicsTopicsCount: {} as Record<string, Record<string, number>>,
     subTopicsMessagesCount: {} as Record<string, Record<string, number>>,
+    subTopicsLastMessageAt: {} as Record<string, Record<string, number>>,
     topicsStructure: {} as Record<string, MqttTopicStructure>,
     topicGroupOpened: {} as Record<string, Record<string, boolean>>,
     selectedConnection: '',
@@ -55,6 +56,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
     },
     getSubTopicsMessagesCount: (state) => (clientKey: string, topic: string) => {
       return state.subTopicsMessagesCount[clientKey]?.[topic] || 0
+    },
+    getSubTopicsLastMessageAt: (state) => (clientKey: string, topic: string) => {
+      return state.subTopicsLastMessageAt[clientKey]?.[topic] || 0
     },
     getTopicMessages:
       (state) =>
@@ -242,9 +246,14 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       let currentTopicPath = ''
 
       if (!this.subTopicsMessagesCount[clientKey]) this.subTopicsMessagesCount[clientKey] = {}
+      if (!this.subTopicsLastMessageAt[clientKey]) this.subTopicsLastMessageAt[clientKey] = {}
+
+      const receivedAt = mqttMessage.createdAt.getTime()
 
       for (const topicPart of topicParts) {
         currentTopicPath += `${topicPart}`
+
+        this.subTopicsLastMessageAt[clientKey][currentTopicPath] = receivedAt
 
         if (!this.subTopicsMessagesCount[clientKey][currentTopicPath]) {
           this.subTopicsMessagesCount[clientKey][currentTopicPath] = 1
@@ -314,7 +323,15 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       this.topicsLastMessage[clientKey] = {}
       this.subTopicsTopicsCount[clientKey] = {}
       this.subTopicsMessagesCount[clientKey] = {}
+      this.subTopicsLastMessageAt[clientKey] = {}
       this.topicsStructure[clientKey] = {}
+    },
+    clearTopicHistory(clientKey: string, topic: string) {
+      const messages = this.topicsMessages[clientKey]?.[topic]
+
+      if (!messages?.length) return
+
+      this.topicsMessages[clientKey][topic] = messages.slice(-1)
     },
     clearTopicsAndSubTopicsMessages(clientKey: string, topicToRemove: string) {
       const topics = Object.keys(this.subTopicsTopicsCount[clientKey]).filter((topic) => {
@@ -326,6 +343,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
         delete this.topicsLastMessage[clientKey][topic]
         delete this.subTopicsTopicsCount[clientKey][topic]
         delete this.subTopicsMessagesCount[clientKey][topic]
+        delete this.subTopicsLastMessageAt[clientKey]?.[topic]
       }
 
       this.clearTopicsAndSubTopicsStructure(clientKey, topicToRemove)

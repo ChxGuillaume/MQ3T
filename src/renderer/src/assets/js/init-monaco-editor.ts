@@ -18,7 +18,7 @@ monaco.editor.defineTheme('vs-dark-darker', {
   inherit: true,
   rules: [],
   colors: {
-    'editor.background': '#262626'
+    'editor.background': '#1f1f1f'
   }
 })
 

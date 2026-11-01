@@ -26,44 +26,14 @@ const handleClick = () => {
 </script>
 
 <template>
-  <div class="icon" :class="{ vertical, horizontal: !vertical }" @click="handleClick">
-    <q-icon v-if="!vertical" size="12px" name="fa-solid fa-ellipsis" />
-    <q-icon v-else size="12px" name="fa-solid fa-ellipsis-vertical" />
+  <div
+    class="bg-accented text-muted hover:text-default flex items-center justify-center rounded-full transition-colors"
+    :class="vertical ? 'h-8 w-3' : 'h-3 w-8'"
+    @click="handleClick"
+  >
+    <UIcon
+      :name="vertical ? 'i-lucide-grip-vertical' : 'i-lucide-grip-horizontal'"
+      class="size-3"
+    />
   </div>
 </template>
-
-<style scoped lang="less">
-.icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0.75rem;
-}
-
-.icon.horizontal {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  height: 12px;
-}
-
-.icon.vertical {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  display: flex;
-  width: 12px;
-}
-
-.body--light {
-  .icon {
-    background-color: #e5e5e5;
-    color: black;
-  }
-}
-
-.body--dark {
-  .icon {
-    background-color: #525252;
-    color: white;
-  }
-}
-</style>

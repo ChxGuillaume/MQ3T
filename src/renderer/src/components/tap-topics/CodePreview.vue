@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { GlyphLine, parseJsonForGlyphs } from '../../assets/js/parse-json-for-glyphs'
+import { useAppColorMode } from '@renderer/composables/useAppColorMode'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useDataGraphsStore } from '../../store/data-graphs'
 import { formatCode } from '../../assets/js/format-code'
 import LineChartCard from '../graphs/LineChartCard.vue'
 import * as monaco from 'monaco-editor'
-import { useQuasar } from 'quasar'
 import _ from 'lodash'
 
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
-
-const $q = useQuasar()
+const { isDark } = useAppColorMode()
 
 const props = defineProps<{
   connectionKey?: string
@@ -25,6 +24,7 @@ const props = defineProps<{
 
 const glyphMarginClass = 'code-preview-glyph'
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let glyphDecorations: monaco.editor.IEditorDecorationsCollection | null = null
 
 const monacoEditorRef = ref(null)
 
@@ -57,19 +57,17 @@ const decodePathFromClass = (index: string): string | undefined =>
   glyphsData.value[parseInt(index)]?.path
 
 const addGlyphs = (formatedValue: string) => {
-  if (props.hideGlyphs) return
+  if (props.hideGlyphs || !codeEditor) return
 
   glyphsData.value = parseJsonForGlyphs(formatedValue)
 
-  codeEditor?.createDecorationsCollection(
+  glyphDecorations?.clear()
+  glyphDecorations = codeEditor.createDecorationsCollection(
     glyphsData.value.map(({ lineNumber }, index) => ({
       range: new monaco.Range(lineNumber, 0, lineNumber, 0),
       options: {
-        glyphMarginClassName: [
-          glyphMarginClass,
-          `data-path---${index}`,
-          'fa-solid fa-chart-line'
-        ].join(' ')
+        glyphMarginClassName: [glyphMarginClass, `data-path---${index}`].join(' '),
+        glyphMarginHoverMessage: { value: 'Click to add to Graphs' }
       }
     }))
   )
@@ -84,15 +82,11 @@ watch(
   }
 )
 
-watch(
-  () => $q.dark.isActive,
-  (isDark) => {
-    if (!codeEditor) return
+watch(isDark, (dark) => {
+  if (!codeEditor) return
 
-    if (isDark) monaco.editor.setTheme('vs-dark-darker')
-    else monaco.editor.setTheme('vs-lighter')
-  }
-)
+  monaco.editor.setTheme(dark ? 'vs-dark-darker' : 'vs-lighter')
+})
 
 watch(
   () => props.language,
@@ -111,14 +105,17 @@ onMounted(() => {
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
     value: formatedValue,
     language: props.language || 'raw',
-    theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
+    theme: isDark.value ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
-    fontSize: 12,
+    fontSize: 13,
+    fontFamily: "Consolas, 'Courier New', ui-monospace, monospace",
     readOnly: true,
     lineNumbers: 'off',
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
+    renderLineHighlight: 'none',
+    padding: { top: 12, bottom: 12 },
     scrollbar: {
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6
@@ -161,7 +158,7 @@ onMounted(() => {
     const graphRect = myGraph.value?.getBoundingClientRect()
 
     if (!graphRect) return
-    if (graphRect.width === 0 || graphRect.width === 0) return
+    if (graphRect.width === 0) return
 
     x.value = rect.x - graphRect.width - 10
     y.value = rect.y + rect.height / 2 - graphRect.height / 2
@@ -183,6 +180,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  updatePreviewValue.cancel()
   if (codeEditor) codeEditor.dispose()
 })
 
@@ -203,19 +201,28 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
 </script>
 
 <template>
-  <div ref="monacoEditorRef" class="monaco-editor" :class="{ 'border-t': !hideTopBorder }" />
-  <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+  <div
+    ref="monacoEditorRef"
+    class="h-full w-full outline-0"
+    :class="{ 'border-default border-t': !hideTopBorder }"
+  />
+  <Transition
+    enter-active-class="transition-opacity duration-150"
+    leave-active-class="transition-opacity duration-150"
+    enter-from-class="opacity-0"
+    leave-to-class="opacity-0"
+  >
     <div
       v-if="!hideGlyphs && language === 'json'"
       v-show="showGraph || forceShowGraph"
       ref="myGraph"
-      class="fixed w-fit"
+      class="fixed z-50 w-fit"
       :style="{ left: `${x}px`, top: `${ySafe}px` }"
       @mouseenter="forceShowGraph = true"
       @mouseleave="forceShowGraph = false"
     >
       <line-chart-card
-        class="w-[500px]"
+        class="bg-default w-[500px] shadow-lg"
         :data-graph="{
           id: null,
           clientKey: props.connectionKey || mqttTopicsStore.selectedConnection,
@@ -225,57 +232,26 @@ const checkForGlyphElement = (element: HTMLElement | null): boolean => {
         }"
       >
         <template #bottom>
-          <div class="color-details mt-3 text-center">Click to add widget</div>
+          <div class="text-muted mt-3 text-center text-xs">Click to add to Graphs</div>
         </template>
       </line-chart-card>
     </div>
-  </transition>
+  </Transition>
 </template>
 
-<style lang="less">
+<style>
 .code-preview-glyph {
+  cursor: pointer;
   border-radius: 9999px;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-  font-size: 10px;
-}
-
-.body--dark {
-  .code-preview-glyph {
-    color: white;
-  }
-}
-
-.body--light {
-  .code-preview-glyph {
-    color: black;
-  }
+  background-color: var(--ui-text-dimmed);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v16a2 2 0 0 0 2 2h16'/%3E%3Cpath d='m19 9-5 5-4-4-3 3'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v16a2 2 0 0 0 2 2h16'/%3E%3Cpath d='m19 9-5 5-4-4-3 3'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+  transition: background-color 150ms;
 }
 
 .code-preview-glyph:hover {
-  cursor: pointer;
-  background-color: #75e67c;
-  color: black;
-}
-</style>
-
-<style scoped lang="less">
-.monaco-editor {
-  width: 100%;
-  outline-width: 0px;
-  height: 100%;
-}
-
-.body--light {
-  .monaco-editor {
-    border-color: rgb(0 0 0 / 0.2);
-  }
-}
-
-.body--dark {
-  .monaco-editor {
-    border-color: rgb(255 255 255 / 0.2);
-  }
+  background-color: var(--ui-primary);
 }
 </style>

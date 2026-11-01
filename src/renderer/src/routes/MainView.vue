@@ -20,7 +20,8 @@ import { useActionsStore } from '../store/actions'
 import SettingsView from '../components/settings/SettingsView.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
-import TabTopics from '../tabs/TabTopics.vue'
+import ExploreView from '../components/explore/ExploreView.vue'
+import { useExploreUiStore } from '../store/explore-ui'
 import { defineShortcuts, useToast } from '@nuxt/ui/composables'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -30,6 +31,7 @@ const dataGraphsStore = useDataGraphsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
+const exploreUiStore = useExploreUiStore()
 const toast = useToast()
 
 const { currentSection, openSection, openNewTab, toggleSettings } = useAppNavigation()
@@ -46,11 +48,23 @@ defineShortcuts({
   meta_3: () => openSection('graphs'),
   meta_4: () => openSection('broker'),
   meta_t: () => openNewTab(),
+  meta_n: () => openNewMessage(),
   'meta_,': () => toggleSettings()
 })
 
+const openNewMessage = () => {
+  if (appStore.view !== 'connection' || !mqttTopicsStore.selectedConnection) return
+
+  openSection('explore')
+  exploreUiStore.openNewMessage()
+}
+
 onMounted(() => {
   ElectronApi.initRenderer()
+
+  ElectronApi.handleRequestMqttMessages(() => {
+    ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
+  })
 
   ElectronApi.appVersion((_, value) => {
     appStore.setAppVersion(value)
@@ -133,7 +147,7 @@ watch(
       v-else-if="appStore.view === 'connection' && mqttTopicsStore.selectedConnection"
       class="flex min-h-0 flex-1 flex-col"
     >
-      <connection-toolbar @new-message="openSection('explore')" />
+      <connection-toolbar @new-message="openNewMessage" />
 
       <connection-lost-banner
         v-if="isConnectionLost"
@@ -142,7 +156,7 @@ watch(
 
       <div class="min-h-0 flex-1 overflow-auto" :class="{ 'opacity-55': isConnectionLost }">
         <keep-alive>
-          <tab-topics v-if="currentSection === 'explore'" />
+          <explore-view v-if="currentSection === 'explore'" />
           <tab-actions v-else-if="currentSection === 'actions'" />
           <graphs-section v-else-if="currentSection === 'graphs'" />
           <broker-view v-else-if="currentSection === 'broker'" />

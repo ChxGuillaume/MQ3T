@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue'
+import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
+import { useAppColorMode } from '@renderer/composables/useAppColorMode'
 import { validCode } from '../../assets/js/format-code'
 import * as monaco from 'monaco-editor'
-import { useQuasar } from 'quasar'
 import {
   unregisterCompletionProvider,
   registerCompletionProvider
@@ -16,8 +17,15 @@ export interface ICodeEditor {
   updateCodeEditorValue: (value: string) => void
 }
 
-const $q = useQuasar()
+const LANGUAGES = [
+  { label: 'Raw', value: 'raw' },
+  { label: 'JSON', value: 'json' },
+  { label: 'XML', value: 'xml' },
+  { label: 'YAML', value: 'yaml' }
+]
+
 const slots = useSlots()
+const { isDark } = useAppColorMode()
 
 const hasSlots = computed(() => !!slots['header-left'] || !!slots['header-right'])
 
@@ -28,9 +36,11 @@ const props = defineProps<{
   hideWarning?: boolean
   variableCompletion?: boolean
   dense?: boolean
+  hideOptions?: boolean
+  lineNumbers?: boolean
 }>()
 
-const emits = defineEmits(['update:modelValue', 'update:language'])
+const emits = defineEmits(['update:modelValue', 'update:language', 'submit'])
 
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
@@ -42,19 +52,20 @@ const updateCodeEditorValue = (value: string) => {
   emits('update:modelValue', value)
 }
 
-defineExpose({ updateCodeEditorValue })
+const handleFormatCode = () => {
+  codeEditor?.getAction('editor.action.formatDocument')?.run()
+}
 
-watch(
-  () => $q.dark.isActive,
-  (isDark) => {
-    if (!codeEditor) return
+defineExpose({ updateCodeEditorValue, formatCode: handleFormatCode })
 
-    if (isDark) monaco.editor.setTheme('vs-dark-darker')
-    else monaco.editor.setTheme('vs-lighter')
-  }
-)
+watch(isDark, (dark) => {
+  if (!codeEditor) return
+
+  monaco.editor.setTheme(dark ? 'vs-dark-darker' : 'vs-lighter')
+})
 
 const decoration = ref<string[]>([])
+
 onMounted(() => {
   if (!monacoEditorRef.value) return
 
@@ -63,18 +74,23 @@ onMounted(() => {
   codeEditor = monaco.editor.create(monacoEditorRef.value, {
     value: props.modelValue,
     language: props.language || 'raw',
-    theme: $q.dark.isActive ? 'vs-dark-darker' : 'vs-lighter',
+    theme: isDark.value ? 'vs-dark-darker' : 'vs-lighter',
     overviewRulerLanes: 0,
-    fontSize: parseInt(props.fontSize as string) || 12,
-    lineNumbers: 'off',
+    fontSize: parseInt(props.fontSize as string) || 13,
+    fontFamily: "Consolas, 'Courier New', ui-monospace, monospace",
+    lineNumbers: props.lineNumbers ? 'on' : 'off',
+    lineNumbersMinChars: 3,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
+    padding: { top: 12, bottom: 12 },
     scrollbar: {
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6
     }
   })
+
+  codeEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => emits('submit'))
 
   updateCodeEditorOptions(props.language || 'raw')
   updateDecorations()
@@ -98,6 +114,13 @@ const variableTypesGroupedDuplicates = computed(() => {
     (item, index, self) => self.findIndex((t) => t.name === item.name) !== index
   )
 })
+
+const duplicatesText = computed(
+  () =>
+    `Duplicated variable names: ${variableTypesGroupedDuplicates.value
+      .map((item) => `"${item.name}"`)
+      .join(', ')}`
+)
 
 const updateDecorations = () => {
   if (!codeEditor) return
@@ -177,162 +200,74 @@ const editorLanguage = computed({
   }
 })
 
-const handleFormatCode = () => {
-  codeEditor?.getAction('editor.action.formatDocument')?.run()
-}
-
 const valideCode = computed(() => {
   return validCode(props.modelValue, editorLanguage.value)
 })
 
 const editorStatus = computed(() => {
-  if (editorLanguage.value === 'raw') return 'raw'
-  if (!valideCode.value) return 'validation-error'
-  if (variableTypesGroupedDuplicates.value.length) return 'validation-warning'
+  if (editorLanguage.value === 'raw') return 'border-default'
+  if (!valideCode.value) return 'border-error/60'
+  if (variableTypesGroupedDuplicates.value.length) return 'border-warning/60'
 
-  return ''
+  return 'border-success/40'
 })
 </script>
 
 <template>
-  <div class="editor">
-    <div ref="monacoEditorRef" class="monaco-editor w-full grow" :class="editorStatus" />
-    <slot name="between" />
+  <div class="flex h-full flex-col gap-2">
     <div
-      class="options flex items-center p-3"
-      :class="{ 'py-1.5': dense, 'justify-between': hasSlots }"
+      v-if="!hideOptions"
+      class="flex flex-wrap items-center gap-2"
+      :class="{ 'justify-between': hasSlots }"
     >
       <slot name="header-left" />
       <div class="flex items-center gap-2" :class="hasSlots ? '' : 'w-full justify-between'">
-        <q-select
-          v-if="dense"
-          v-model="editorLanguage"
-          class="min-w-24"
-          dense
-          filled
-          options-dense
-          :options="[
-            { label: 'Raw', value: 'raw' },
-            { label: 'JSON', value: 'json' },
-            { label: 'XML', value: 'xml' },
-            { label: 'YAML', value: 'yaml' }
-          ]"
-          emit-value
-          map-options
-        />
-        <q-btn-toggle
-          v-else
-          v-model="editorLanguage"
-          toggle-color="primary"
-          unelevated
-          dense
-          padding="4px 12px"
-          :options="[
-            { label: 'Raw', value: 'raw' },
-            { label: 'JSON', value: 'json' },
-            { label: 'XML', value: 'xml' },
-            { label: 'YAML', value: 'yaml' }
-          ]"
-        />
-        <div v-if="!valideCode && !hideWarning" class="flex items-center select-none">
-          <q-icon class="mr-2" size="xs" name="fa-solid fa-exclamation-circle" color="red" />
-          <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
-          <q-tooltip v-else anchor="top middle" self="bottom middle">
-            Invalid {{ editorLanguage.toUpperCase() }} format
-          </q-tooltip>
-        </div>
-        <div
+        <USelect v-if="dense" v-model="editorLanguage" :items="LANGUAGES" size="sm" class="w-24" />
+        <SegmentedControl v-else v-model="editorLanguage" :items="LANGUAGES" size="sm" />
+        <UTooltip
+          v-if="!valideCode && !hideWarning"
+          :text="`Invalid ${editorLanguage.toUpperCase()} format`"
+        >
+          <span class="text-error flex items-center gap-1.5 text-xs select-none">
+            <UIcon name="i-lucide-circle-alert" class="size-4" />
+            <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
+          </span>
+        </UTooltip>
+        <UTooltip
           v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
-          class="flex items-center select-none"
+          :text="duplicatesText"
         >
-          <q-icon class="mr-2" size="xs" name="fa-solid fa-exclamation-triangle" color="yellow" />
-          <span v-if="!dense">Duplicate variables</span>
-          <q-tooltip anchor="top middle" self="bottom middle">
-            <div>
-              <div class="text-sm font-semibold">Variable duplicates</div>
-              <div class="text-xs">
-                The following variables names are duplicated: <br />
-                {{ variableTypesGroupedDuplicates.map((item) => `"${item.name}"`).join(', ') }}
-              </div>
-            </div>
-          </q-tooltip>
-        </div>
-        <q-btn
-          v-if="dense"
-          dense
-          color="primary"
-          :disable="editorLanguage === 'raw'"
-          @click="handleFormatCode"
-        >
-          <q-icon class="mx-2" size="16px" name="fa-solid fa-align-left" />
-          <q-tooltip anchor="top middle" self="bottom middle">Format</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-else
-          color="primary"
-          dense
-          padding="10px 12px"
-          :disable="editorLanguage === 'raw'"
-          @click="handleFormatCode"
-        >
-          <q-icon class="mr-2" size="xs" name="fa-solid fa-align-left" />
-          Format
-        </q-btn>
+          <span class="text-warning flex items-center gap-1.5 text-xs select-none">
+            <UIcon name="i-lucide-triangle-alert" class="size-4" />
+            <span v-if="!dense">Duplicate variables</span>
+          </span>
+        </UTooltip>
+        <UTooltip text="Format">
+          <UButton
+            icon="i-lucide-align-left"
+            :label="dense ? undefined : 'Format'"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            aria-label="Format"
+            :disabled="editorLanguage === 'raw'"
+            @click="handleFormatCode"
+          />
+        </UTooltip>
         <slot name="format-right" />
       </div>
       <slot name="header-right" />
     </div>
+    <slot name="between" />
+    <div
+      ref="monacoEditorRef"
+      class="min-h-0 w-full grow overflow-hidden rounded-[10px] border transition-colors"
+      :class="editorStatus"
+    />
   </div>
 </template>
 
-<style scoped lang="less">
-.body--light {
-  .monaco-editor.raw,
-  .options {
-    border-color: rgb(0 0 0 / 0.2);
-  }
-}
-
-.body--dark {
-  .monaco-editor.raw,
-  .options {
-    border-color: rgb(255 255 255 / 0.2);
-  }
-}
-
-.options {
-  border-top-width: 2px;
-}
-
-.editor {
-  display: flex;
-  height: 100%;
-  flex-direction: column-reverse;
-  overflow-y: auto;
-}
-
-.monaco-editor {
-  width: 100%;
-  overflow: auto;
-  border-top-width: 2px;
-  border-bottom-width: 2px;
-  border-color: rgb(34 197 94 / 0.4);
-  outline-width: 0;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-.monaco-editor.validation-error {
-  border-color: rgb(239 68 68 / 0.4);
-}
-
-.monaco-editor.validation-warning {
-  border-color: rgb(234 179 8 / 0.4);
-}
-</style>
-
-<style lang="less">
+<style>
 .mq3t-variable-highlight {
   text-decoration-line: underline;
 }
