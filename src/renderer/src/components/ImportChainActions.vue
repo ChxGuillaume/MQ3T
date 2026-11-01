@@ -5,12 +5,12 @@ import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { ExportChainActionsFile } from '../../../types/actions'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useQuasar } from 'quasar'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 const chainActionsStore = useChainActionsStore()
 const $q = useQuasar()
 
-const chainActions = ref<ExportChainActionsFile['chainActions']>([])
+const chainActions = shallowRef<ExportChainActionsFile['chainActions']>([])
 
 const importActionsDialogOpened = ref<boolean>(false)
 const connectionId = ref<string | undefined>()

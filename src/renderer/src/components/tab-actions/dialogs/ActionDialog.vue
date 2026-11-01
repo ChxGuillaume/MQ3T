@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getPayloadVariablesGrouped } from '@renderer/assets/js/actions-variables'
 import { useCopyClipboard } from '@renderer/composables/useCopyClipboard'
-import CodeEditor, { ICodeEditor } from '../../tap-topics/CodeEditor.vue'
+import CodeEditor from '../../tap-topics/CodeEditor.vue'
 import { useMqttConnectionsStore } from '../../../store/mqtt-connections'
 import { useSettingsStore } from '../../../store/settings-store'
 import { useActionsStore } from '../../../store/actions'
@@ -16,7 +16,6 @@ const actionsStore = useActionsStore()
 
 const { copy } = useCopyClipboard()
 
-const codeEditorRef = ref<ICodeEditor | null>(null)
 const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
@@ -306,7 +305,6 @@ watch(
             <div class="tw:mt-4 tw:h-[300px]">
               <code-editor
                 v-if="showEditor"
-                ref="codeEditorRef"
                 v-model:language="editorLanguage"
                 v-model="form.payload"
                 :variable-completion="variableCompletion"

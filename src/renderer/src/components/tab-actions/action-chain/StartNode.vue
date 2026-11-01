@@ -1,7 +1,7 @@
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
 
-const props = defineProps(['id'])
+defineProps(['id'])
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { MqttConnection, MqttConnectionStatus } from './mqtt-connection'
 import { TopicMessages } from './mqtt-topics'
-import { IClientPublishOptions } from 'mqtt/src/lib/client'
+import { IClientPublishOptions } from 'mqtt'
 import { DataGraph } from './data-graph'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'

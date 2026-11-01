@@ -4,7 +4,7 @@ import xmlFormat from 'xml-formatter'
 export const formatJson = (message: string) => {
   try {
     return JSON.stringify(JSON.parse(message), null, 4)
-  } catch (e) {
+  } catch {
     return message
   }
 }
@@ -15,7 +15,7 @@ export const formatXml = (message: string) => {
       indentation: '    ',
       collapseContent: true
     })
-  } catch (e) {
+  } catch {
     return message
   }
 }
@@ -25,7 +25,7 @@ export const formatYaml = (message: string) => {
     return stringify(parse(message), {
       indent: 4
     })
-  } catch (e) {
+  } catch {
     return message
   }
 }
@@ -45,7 +45,7 @@ export const validJson = (message: string): boolean => {
   try {
     JSON.parse(message)
     return true
-  } catch (e) {
+  } catch {
     return false
   }
 }
@@ -57,7 +57,7 @@ export const validXml = (message: string): boolean => {
       strictMode: true
     })
     return true
-  } catch (e) {
+  } catch {
     return false
   }
 }
@@ -65,7 +65,7 @@ export const validXml = (message: string): boolean => {
 export const validYaml = (message: string): boolean => {
   try {
     return !validJson(message) && parse(message) !== null
-  } catch (e) {
+  } catch {
     return false
   }
 }

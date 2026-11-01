@@ -1,5 +1,4 @@
-import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js'
-import 'monaco-editor/esm/vs/editor/editor.all.js'
+import 'monaco-editor/editor/contrib/wordHighlighter/browser/wordHighlighter.js'
 
 import { formatXml, formatYaml } from './format-code'
 import * as monaco from 'monaco-editor'

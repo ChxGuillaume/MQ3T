@@ -8,8 +8,7 @@ import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 type ConnectionListItem =
-  | { type: 'connection'; connection: MqttConnection }
-  | { type: 'add-connection' }
+  { type: 'connection'; connection: MqttConnection } | { type: 'add-connection' }
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const appStore = useAppStore()

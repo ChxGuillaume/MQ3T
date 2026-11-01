@@ -15,7 +15,6 @@ const emits = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const selectRef = ref<HTMLElement | null>(null)
 const selectFocused = ref(false)
 
 const rules = computed(() => {
@@ -75,7 +74,6 @@ const handleFilterConnections = (val: string, update: (cbFn: () => void) => void
 
 <template>
   <q-select
-    ref="selectRef"
     v-model="connectionValue"
     :options="sortedConnectionsFiltered"
     class="tw:max-h-[56px] tw:overflow-hidden"

@@ -131,11 +131,11 @@ const send = () => {
           class="color-details tw:mt-2"
           size="xs"
         >
-          <q-tooltip class="tw:whitespace-pre tw:text-sm" v-text="action.description" />
+          <q-tooltip class="tw:whitespace-pre tw:text-sm">{{ action.description }}</q-tooltip>
         </q-icon>
 
         <q-icon name="fa-solid fa-ranking-star" class="color-details tw:mt-2 tw:px-1" size="xs">
-          <q-tooltip class="tw:text-sm" v-text="`QoS ${action.qos}`" />
+          <q-tooltip class="tw:text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
         </q-icon>
 
         <q-icon
@@ -153,7 +153,7 @@ const send = () => {
           size="xs"
           @click="handleCopyPayload"
         >
-          <q-tooltip class="tw:text-sm" v-text="action.payload" />
+          <q-tooltip class="tw:text-sm">{{ action.payload }}</q-tooltip>
         </q-icon>
       </div>
       <q-btn color="primary" :disable="disableDisconnected || disableWildcard" @click="send">

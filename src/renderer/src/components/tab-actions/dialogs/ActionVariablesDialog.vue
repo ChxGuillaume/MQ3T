@@ -118,10 +118,11 @@ watch(
           case 'boolean':
             form.value[`${index}:${variable.full}`] = false
             break
-          case 'enum':
+          case 'enum': {
             const firstOption = props.action.enumOptions?.[variable.name]?.[0]
             form.value[`${index}:${variable.full}`] = firstOption !== undefined ? firstOption : ''
             break
+          }
         }
       })
     })

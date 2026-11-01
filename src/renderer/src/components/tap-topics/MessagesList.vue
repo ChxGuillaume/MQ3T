@@ -50,7 +50,7 @@ const formatMessage = (message: string) => {
   try {
     data = JSON.parse(message)
     data = JSON.stringify(data, null, 4)
-  } catch (e) {
+  } catch {
     /* empty */
   }
 

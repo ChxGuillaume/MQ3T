@@ -39,7 +39,7 @@ const isFinished = computed(() => {
       class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-around tw:gap-2 tw:px-1"
     >
       <q-icon name="fa-solid fa-exchange-alt" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="action.topic" />
+        <q-tooltip class="tw:text-sm">{{ action.topic }}</q-tooltip>
       </q-icon>
 
       <q-icon
@@ -48,11 +48,11 @@ const isFinished = computed(() => {
         class="color-details"
         size="xs"
       >
-        <q-tooltip class="tw:whitespace-pre tw:text-sm" v-text="action.description" />
+        <q-tooltip class="tw:whitespace-pre tw:text-sm">{{ action.description }}</q-tooltip>
       </q-icon>
 
       <q-icon name="fa-solid fa-ranking-star" class="color-details tw:px-1" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="`QoS ${action.qos}`" />
+        <q-tooltip class="tw:text-sm">{{ `QoS ${action.qos}` }}</q-tooltip>
       </q-icon>
 
       <q-icon v-if="action.retained" name="fa-solid fa-retweet" class="color-details" size="xs">
@@ -60,7 +60,7 @@ const isFinished = computed(() => {
       </q-icon>
 
       <q-icon name="fa-solid fa-file-lines" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="action.payload" />
+        <q-tooltip class="tw:text-sm">{{ action.payload }}</q-tooltip>
       </q-icon>
     </div>
     <div v-else class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-center">

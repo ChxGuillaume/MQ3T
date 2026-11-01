@@ -10,7 +10,7 @@ import { useSettingsStore } from '@renderer/store/settings-store'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { useActionsStore } from '@renderer/store/actions'
 import { Background } from '@vue-flow/background'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, Ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
 const props = defineProps<{
@@ -23,8 +23,8 @@ const mqttTopicsStore = useMqttTopicsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 
-const nodes = ref<ChainActionNode[]>([])
-const edges = ref<Edge[]>([])
+const nodes = ref([]) as Ref<ChainActionNode[]>
+const edges = ref([]) as Ref<Edge[]>
 
 const name = ref('Chain Action Name')
 const editName = ref(false)

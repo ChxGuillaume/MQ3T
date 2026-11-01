@@ -163,7 +163,7 @@ const readJsonFile = (filePath: string) => {
   if (fs.existsSync(filePath)) {
     try {
       return JSON.parse(fs.readFileSync(filePath).toString())
-    } catch (e) {
+    } catch {
       return undefined
     }
   }

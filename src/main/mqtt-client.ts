@@ -1,4 +1,4 @@
-import { IClientPublishOptions, OnMessageCallback } from 'mqtt/src/lib/client'
+import { IClientPublishOptions, OnMessageCallback } from 'mqtt'
 import { MqttConnection } from '../types/mqtt-connection'
 import mqtt, { IClientOptions } from 'mqtt'
 
