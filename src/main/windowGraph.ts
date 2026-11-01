@@ -16,8 +16,10 @@ const sendMessageToGraph = (channel: string, data?: any) => {
   graphWindow?.webContents.send(channel, data)
 }
 
-export const createGraphWindow = () => {
-  graphWindow = createWindow('/graph')
+export const createGraphWindow = (clientKey?: string) => {
+  graphWindow = createWindow(
+    clientKey ? `/graph?clientKey=${encodeURIComponent(clientKey)}` : '/graph'
+  )
 
   graphWindow.on('closed', () => {
     graphWindow = null
@@ -35,14 +37,21 @@ export const initGraphWindowHandlers = (window: BrowserWindow) => {
     event.returnValue = getWindowShown()
   })
 
-  ipcMain.on('show-graph-window', () => {
-    if (graphWindow) graphWindow.show()
-    else createGraphWindow()
+  ipcMain.on('show-graph-window', (_, clientKey?: string) => {
+    if (graphWindow) {
+      graphWindow.show()
+      graphWindow.focus()
+      if (clientKey) sendMessageToGraph('graph-window-connection', clientKey)
+    } else createGraphWindow(clientKey)
 
     sendMessageToMain('update-graph-window-shown', true)
   })
 
   ipcMain.on('hide-graph-window', () => graphWindow?.hide())
+
+  ipcMain.on('set-graph-window-always-on-top', (_, value: boolean) => {
+    graphWindow?.setAlwaysOnTop(value)
+  })
 
   ipcMain.on('transfer-mqtt-messages', (_, messages) => {
     sendMessageToGraph('load-mqtt-messages', messages)

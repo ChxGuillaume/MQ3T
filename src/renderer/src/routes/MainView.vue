@@ -16,7 +16,7 @@ import NewTabView from '../components/connections/NewTabView.vue'
 import BrokerView from '../components/broker/BrokerView.vue'
 import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
 import AppTitleBar from '../components/shell/AppTitleBar.vue'
-import GraphList from '../components/tap-topics/GraphList.vue'
+import GraphsSection from '../components/graphs/GraphsSection.vue'
 import { useAppNavigation } from '../composables/useAppNavigation'
 import { useActionsStore } from '../store/actions'
 import SettingsView from '../components/settings/SettingsView.vue'
@@ -146,9 +146,7 @@ watch(
         <keep-alive>
           <tab-topics v-if="currentSection === 'explore'" />
           <tab-actions v-else-if="currentSection === 'actions'" />
-          <div v-else-if="currentSection === 'graphs'" class="p-4">
-            <graph-list />
-          </div>
+          <graphs-section v-else-if="currentSection === 'graphs'" />
           <broker-view v-else-if="currentSection === 'broker'" />
         </keep-alive>
       </div>

@@ -90,6 +90,8 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
   if (mainWindow.isDestroyed()) return
 
   mainWindow.webContents.send(channel, ...args)
+
+  if (channel === 'mqtt-status') getGraphWindow()?.webContents.send(channel, ...args)
 }
 
 const createConnection = async (connection: MqttConnection) => {

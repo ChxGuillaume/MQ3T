@@ -1,63 +1,69 @@
 <script setup lang="ts">
-import { useDataGraphsStore } from '../../store/data-graphs'
-import LineChartCard from '../graphs/LineChartCard.vue'
+import LineChartCard from '@renderer/components/graphs/LineChartCard.vue'
+import { useDataGraphsStore } from '@renderer/store/data-graphs'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { DataGraph } from '../../../../types/data-graph'
 import draggable from 'vuedraggable'
 import { computed } from 'vue'
-import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+
+const props = withDefaults(
+  defineProps<{
+    clientKey?: string
+    compact?: boolean
+    timeWindow?: number
+    pausedAt?: number | null
+  }>(),
+  { clientKey: undefined, timeWindow: 0, pausedAt: null }
+)
 
 const dataGraphsStore = useDataGraphsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 
-const dragOptions = computed(() => {
-  return { animation: 200, group: 'topics-graph-list', ghostClass: 'ghost' }
+const connectionKey = computed(() => props.clientKey ?? mqttTopicsStore.selectedConnection)
+
+const graphs = computed<DataGraph[]>({
+  get: () => dataGraphsStore.dataGraph.filter((graph) => graph.clientKey === connectionKey.value),
+  set: (value) =>
+    dataGraphsStore.setDataGraphs([
+      ...dataGraphsStore.dataGraph.filter((graph) => graph.clientKey !== connectionKey.value),
+      ...value
+    ])
 })
 
-const graphs = computed({
-  get: () =>
-    dataGraphsStore.dataGraph.filter(
-      (graph) => graph.clientKey === mqttTopicsStore.selectedConnection
-    ),
-  set: (value) => dataGraphsStore.setDataGraphs(value)
-})
+const spanClass = (graph: DataGraph) => {
+  if (props.compact) return ''
+  if (graph.size === 'large') return '@[720px]:col-span-2'
+
+  return ''
+}
 </script>
 
 <template>
-  <draggable
-    v-model="graphs"
-    v-bind="dragOptions"
-    handle=".drag-handle"
-    class="graph-list"
-    item-key="clientKey"
-  >
-    <template #item="{ element }">
-      <line-chart-card :data-graph="element" show-title show-context-menu />
-    </template>
-  </draggable>
+  <div class="@container">
+    <draggable
+      v-model="graphs"
+      :animation="200"
+      handle=".drag-handle"
+      ghost-class="opacity-40"
+      item-key="id"
+      class="grid gap-3.5"
+      :class="
+        compact
+          ? 'grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-2.5'
+          : 'grid-cols-[repeat(auto-fill,minmax(340px,1fr))]'
+      "
+    >
+      <template #item="{ element }">
+        <line-chart-card
+          :class="spanClass(element)"
+          :data-graph="element"
+          :compact="compact"
+          :time-window="timeWindow"
+          :paused-at="pausedAt"
+          show-title
+          show-context-menu
+        />
+      </template>
+    </draggable>
+  </div>
 </template>
-
-<style scoped lang="less">
-.graph-list {
-  display: grid;
-  gap: 0.5rem;
-
-  .main-view & {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    @media (min-width: 1280px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    @media (min-width: 1536px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .graph-view & {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    @media (min-width: 1280px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    @media (min-width: 1920px) {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-  }
-}
-</style>
