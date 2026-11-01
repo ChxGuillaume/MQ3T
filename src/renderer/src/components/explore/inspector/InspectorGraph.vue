@@ -42,9 +42,16 @@ const fields = computed(() => {
   return numericPaths(parsed.value).slice(0, 200)
 })
 
+const ROOT_FIELD = '$root'
+
 const fieldItems = computed(() =>
-  fields.value.map((path) => ({ label: path || 'value', value: path }))
+  fields.value.map((path) => ({ label: path || 'value', value: path || ROOT_FIELD }))
 )
+
+const selectedField = computed({
+  get: () => field.value || ROOT_FIELD,
+  set: (value: string) => (field.value = value === ROOT_FIELD ? '' : value)
+})
 
 watch(
   fields,
@@ -128,7 +135,7 @@ const addToGraphs = () => {
     <div class="flex flex-wrap items-center gap-2">
       <UFormField label="Field" orientation="horizontal" :ui="{ label: 'text-xs text-muted' }">
         <USelect
-          v-model="field"
+          v-model="selectedField"
           :items="fieldItems"
           size="sm"
           aria-label="Field to plot"

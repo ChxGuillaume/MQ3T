@@ -41,13 +41,20 @@ const paths = computed(() => {
   }
 })
 
+const ROOT_PATH = '$root'
+
 const pathItems = computed(() =>
   paths.value.map((path) => ({
     label: dataPathLabel(path),
-    value: path,
+    value: path || ROOT_PATH,
     disabled: isGraphed(path)
   }))
 )
+
+const selectedPath = computed({
+  get: () => (dataPath.value === '' ? ROOT_PATH : dataPath.value),
+  set: (value?: string) => (dataPath.value = value === ROOT_PATH ? '' : value)
+})
 
 const isGraphed = (path: string) =>
   dataGraphsStore.dataGraph.some(
@@ -105,7 +112,7 @@ const submit = () => {
 
         <UFormField label="Field" help="Fields already graphed are disabled.">
           <USelectMenu
-            v-model="dataPath"
+            v-model="selectedPath"
             :items="pathItems"
             value-key="value"
             :disabled="!topic"

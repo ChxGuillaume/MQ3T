@@ -57,7 +57,7 @@ const enumItems = (options: (string | number)[]) =>
         <UCheckbox
           label="null"
           :model-value="values[field.key] === null"
-          :ui="{ label: 'text-xs text-muted font-normal' }"
+          :ui="{ root: 'items-center', label: 'text-xs text-muted font-normal' }"
           @update:model-value="toggleNull(field.key, !!$event, '')"
         />
       </template>
@@ -75,7 +75,7 @@ const enumItems = (options: (string | number)[]) =>
         <UCheckbox
           label="null"
           :model-value="values[field.key] === null"
-          :ui="{ label: 'text-xs text-muted font-normal' }"
+          :ui="{ root: 'items-center', label: 'text-xs text-muted font-normal' }"
           @update:model-value="toggleNull(field.key, !!$event, 0)"
         />
       </template>
@@ -95,7 +95,7 @@ const enumItems = (options: (string | number)[]) =>
           label="null"
           class="ml-auto"
           :model-value="values[field.key] === null"
-          :ui="{ label: 'text-xs text-muted font-normal' }"
+          :ui="{ root: 'items-center', label: 'text-xs text-muted font-normal' }"
           @update:model-value="toggleNull(field.key, !!$event, false)"
         />
       </template>
