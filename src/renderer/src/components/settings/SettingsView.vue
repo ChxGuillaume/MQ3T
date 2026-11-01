@@ -230,7 +230,7 @@ const licensesOpen = ref(false)
       </nav>
 
       <div class="flex min-w-0 flex-[999_1_560px] flex-col gap-7">
-        <section data-section="app" class="flex scroll-mt-8 flex-col gap-2.5">
+        <section data-section="app" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">App</h2>
           <div class="border-default overflow-hidden rounded-[14px] border">
             <SettingsRow title="Theme" description="System follows your OS setting.">
@@ -255,7 +255,7 @@ const licensesOpen = ref(false)
           </div>
         </section>
 
-        <section data-section="explore" class="flex scroll-mt-8 flex-col gap-2.5">
+        <section data-section="explore" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Explore</h2>
           <div class="border-default overflow-hidden rounded-[14px] border">
             <SettingsRow title="Show activity" description="Highlight topics as messages arrive.">
@@ -325,7 +325,7 @@ const licensesOpen = ref(false)
           </div>
         </section>
 
-        <section data-section="actions" class="flex scroll-mt-8 flex-col gap-2.5">
+        <section data-section="actions" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Actions</h2>
           <div class="border-default overflow-hidden rounded-[14px] border">
             <SettingsRow
@@ -349,7 +349,7 @@ const licensesOpen = ref(false)
           </div>
         </section>
 
-        <section data-section="about" class="flex scroll-mt-8 flex-col gap-2.5">
+        <section data-section="about" class="scroll-mt-8 space-y-2.5">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">About</h2>
           <div class="border-default overflow-hidden rounded-[14px] border">
             <SettingsRow :title="`MQ3T ${appStore.appVersion}`" :description="updateStatusLabel">
