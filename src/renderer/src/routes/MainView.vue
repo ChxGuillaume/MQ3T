@@ -8,7 +8,7 @@ import ImportActions from '../components/ImportActions.vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useSettingsStore } from '../store/settings-store'
-import UpdateAlerts from '../components/UpdateAlerts.vue'
+import UpdateDialog from '../components/settings/UpdateDialog.vue'
 import { ElectronApi } from '../assets/js/electron-api'
 import TabConnections from '../tabs/TabConnections.vue'
 import BrokerDetailsPanel from '../components/tap-topics/BrokerDetailsPanel.vue'
@@ -17,7 +17,7 @@ import AppTitleBar from '../components/shell/AppTitleBar.vue'
 import GraphList from '../components/tap-topics/GraphList.vue'
 import { useAppNavigation } from '../composables/useAppNavigation'
 import { useActionsStore } from '../store/actions'
-import TabSettings from '../tabs/TabSettings.vue'
+import SettingsView from '../components/settings/SettingsView.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
 import TabTopics from '../tabs/TabTopics.vue'
@@ -113,7 +113,7 @@ watch(
   <div class="main-view flex h-full flex-col">
     <app-title-bar />
 
-    <tab-settings v-if="appStore.view === 'settings'" class="min-h-0 flex-1" />
+    <settings-view v-if="appStore.view === 'settings'" class="min-h-0 flex-1" />
 
     <div
       v-else-if="appStore.view === 'connection' && mqttTopicsStore.selectedConnection"
@@ -135,7 +135,7 @@ watch(
 
     <tab-connections v-else class="min-h-0 flex-1 overflow-auto" />
   </div>
-  <update-alerts />
+  <update-dialog />
   <import-actions />
   <import-chain-actions />
   <import-actions-groups />

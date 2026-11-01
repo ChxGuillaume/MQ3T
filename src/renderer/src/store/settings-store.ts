@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import moment from 'moment'
 
 type ActivityAnimationType = 'laser' | 'topic-heat'
-type DefaultDataFormat = 'raw' | 'json' | 'xml'
+type DefaultDataFormat = 'raw' | 'json' | 'xml' | 'yaml'
 
 type SettingsStore = {
   showActivity: boolean
