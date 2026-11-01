@@ -1,18 +1,8 @@
-import monacoEditorPlugin, { IMonacoEditorOpts } from 'vite-plugin-monaco-editor'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import { quasar } from '@quasar/vite-plugin'
 import vue from '@vitejs/plugin-vue'
 import ui from '@nuxt/ui/vite'
 import { resolve } from 'path'
-
-const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
-  options: IMonacoEditorOpts
-) => any
-
-const monacoEditorPublicPath =
-  process.env.NODE_ENV === 'production'
-    ? './../../../app.asar.unpacked/resources/monaco-editor'
-    : undefined
 
 export default defineConfig({
   main: {
@@ -44,13 +34,6 @@ export default defineConfig({
       }),
       quasar({
         sassVariables: resolve('src/renderer/src/assets/css/quasar-variables.sass')
-      }),
-      monacoEditorPluginDefault({
-        globalAPI: true,
-        publicPath: monacoEditorPublicPath,
-        customDistPath: (_: string, __: string, base: string) => {
-          return `${base}/resources/monaco-editor`
-        }
       })
     ]
   }

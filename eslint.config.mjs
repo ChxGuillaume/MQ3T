@@ -4,7 +4,7 @@ import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescri
 import pluginVue from 'eslint-plugin-vue'
 
 export default defineConfigWithVueTs(
-  { ignores: ['**/node_modules', '**/dist', '**/out', 'resources/monaco-editor', '.claude'] },
+  { ignores: ['**/node_modules', '**/dist', '**/out', '.claude'] },
   electronToolkit,
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
