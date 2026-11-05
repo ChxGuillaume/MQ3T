@@ -681,7 +681,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
                   <div
                     role="button"
                     tabindex="0"
-                    class="group flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg pr-1 pl-2.5 text-[13px]"
+                    class="group flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-[13px]"
                     :class="navItemClass(element.id)"
                     :title="element.description"
                     v-bind="groupDropHandlers(element.id)"
@@ -695,20 +695,22 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
                     >
                       <UIcon name="i-lucide-link" class="text-muted size-3.5 shrink-0" />
                     </UTooltip>
-                    <span class="text-muted text-xs font-medium group-hover:hidden">
-                      {{ groupCount(element.id) }}
+                    <span class="flex shrink-0 items-center">
+                      <span class="text-muted text-xs font-medium group-hover:hidden">
+                        {{ groupCount(element.id) }}
+                      </span>
+                      <UDropdownMenu :items="groupMenuItems(element)" :content="{ align: 'start' }">
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
+                          icon="i-lucide-ellipsis"
+                          aria-label="Group options"
+                          class="-my-1 -mr-1.5 hidden group-hover:inline-flex"
+                          @click.stop
+                        />
+                      </UDropdownMenu>
                     </span>
-                    <UDropdownMenu :items="groupMenuItems(element)" :content="{ align: 'start' }">
-                      <UButton
-                        color="neutral"
-                        variant="ghost"
-                        size="xs"
-                        icon="i-lucide-ellipsis"
-                        aria-label="Group options"
-                        class="hidden group-hover:inline-flex"
-                        @click.stop
-                      />
-                    </UDropdownMenu>
                   </div>
                 </UContextMenu>
               </div>
