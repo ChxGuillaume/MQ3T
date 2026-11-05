@@ -72,14 +72,14 @@ export function useTabDragReorder(options: TabDragOptions) {
     return Math.min(Math.max(offset, minOffset), maxOffset)
   }
 
-  const targetIndexFor = (current: DragSession, draggedCenter: number) => {
+  const targetIndexFor = (current: DragSession, draggedLeft: number, draggedRight: number) => {
     let target = current.from
 
     current.rects.forEach((rect, index) => {
       const center = rect.left + rect.width / 2
 
-      if (index > current.from && draggedCenter > center) target = Math.max(target, index)
-      if (index < current.from && draggedCenter < center) target = Math.min(target, index)
+      if (index > current.from && draggedRight > center) target = Math.max(target, index)
+      if (index < current.from && draggedLeft < center) target = Math.min(target, index)
     })
 
     return target
@@ -115,7 +115,7 @@ export function useTabDragReorder(options: TabDragOptions) {
     const draggedRect = current.rects[current.from]
 
     current.items[current.from].style.transform = `translateX(${offset}px)`
-    current.to = targetIndexFor(current, draggedRect.left + draggedRect.width / 2 + offset)
+    current.to = targetIndexFor(current, draggedRect.left + offset, draggedRect.right + offset)
 
     shiftSiblings(current)
   }
