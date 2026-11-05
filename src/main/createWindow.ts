@@ -24,7 +24,7 @@ export const createWindow = (routePath = '/') => {
 
     titleBarStyle: 'hidden',
     ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
-    trafficLightPosition: { x: 16, y: 24 }
+    trafficLightPosition: { x: 16, y: 16 }
   }
 
   const window = new BrowserWindow(windowConfig)
