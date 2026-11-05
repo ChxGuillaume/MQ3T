@@ -57,11 +57,11 @@ const selectedItem = computed(() =>
     :placeholder="multiple ? 'Connections' : 'Connection'"
     :search-input="{ placeholder: 'Search connections' }"
   >
-    <template #leading>
-      <span v-if="selectedItem" class="size-2 rounded-full" :class="selectedItem.dot" />
+    <template v-if="selectedItem" #leading>
+      <span class="size-2 rounded-full" :class="selectedItem.dot" />
     </template>
     <template #item-leading="{ item }">
-      <span class="size-2 rounded-full" :class="item.dot" />
+      <span class="size-2 shrink-0 self-center rounded-full" :class="item.dot" />
     </template>
   </USelectMenu>
 </template>
