@@ -13,6 +13,20 @@ import {
 
 export type AppVersionCallback = (event: never, value: string) => void
 
+export type MenuCommand =
+  | 'settings'
+  | 'new-tab'
+  | 'temporary-connection'
+  | 'close-tab'
+  | 'next-tab'
+  | 'previous-tab'
+  | 'section:explore'
+  | 'section:actions'
+  | 'section:graphs'
+  | 'section:broker'
+
+export type MenuCommandCallback = (event: never, command: MenuCommand) => void
+
 export type MqttErrorCallback = (event: never, value: { clientKey: string; error: Error }) => void
 
 export type MqttMessageCallback = (
@@ -53,6 +67,7 @@ export type ElectronIpc = {
   checkForUpdates: () => void
   quitAndInstallUpdate: () => void
   appVersion: (callback: AppVersionCallback) => void
+  handleMenuCommand: (callback: MenuCommandCallback) => void
 
   saveMqttConnections: (connections: MqttConnection[]) => void
   saveActions: (actions: ConnectionsActionsFile) => void

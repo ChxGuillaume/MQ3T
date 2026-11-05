@@ -22,6 +22,7 @@ const api: ElectronIpc = {
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   quitAndInstallUpdate: () => ipcRenderer.send('quit-and-install-update'),
   appVersion: (callback) => ipcRenderer.on('app-version', callback as any),
+  handleMenuCommand: (callback) => ipcRenderer.on('menu-command', callback as any),
 
   saveMqttConnections: (connections) => ipcRenderer.send('save-mqtt-connections', connections),
   handleLoadMqttConnections: (callback) => ipcRenderer.on('load-mqtt-connections', callback as any),
