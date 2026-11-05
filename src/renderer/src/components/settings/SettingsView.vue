@@ -209,7 +209,7 @@ const licensesOpen = ref(false)
     <div class="mx-auto flex w-full max-w-[1080px] flex-wrap gap-6 px-6 py-8">
       <nav
         aria-label="Settings sections"
-        class="sticky top-0 flex max-w-[200px] flex-[1_1_180px] flex-col gap-0.5 self-start text-[13px]"
+        class="sticky top-8 flex max-w-[200px] flex-[1_1_180px] flex-col gap-0.5 self-start text-[13px]"
       >
         <h1 class="mb-3 ml-3 text-[22px] font-bold">Settings</h1>
         <button
