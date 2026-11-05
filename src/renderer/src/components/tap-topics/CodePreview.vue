@@ -4,6 +4,7 @@ import { useAppColorMode } from '@renderer/composables/useAppColorMode'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMqttTopicsStore } from '../../store/mqtt-topics'
 import { useDataGraphsStore } from '../../store/data-graphs'
+import { disableCommandPalette } from '../../assets/js/monaco-preview'
 import { formatCode } from '../../assets/js/format-code'
 import LineChartCard from '../graphs/LineChartCard.vue'
 import * as monaco from 'monaco-editor'
@@ -120,6 +121,7 @@ onMounted(() => {
     readOnly: true,
     lineNumbers: 'off',
     lineDecorationsWidth: 4,
+    contextmenu: false,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
@@ -131,6 +133,8 @@ onMounted(() => {
     },
     glyphMargin: false
   })
+
+  disableCommandPalette(codeEditor)
 
   if (props.language === 'json') addGlyphs(formatedValue)
 

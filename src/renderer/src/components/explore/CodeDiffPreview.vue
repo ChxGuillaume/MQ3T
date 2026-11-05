@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAppColorMode } from '@renderer/composables/useAppColorMode'
+import { disableCommandPalette } from '@renderer/assets/js/monaco-preview'
 import { formatCode } from '@renderer/assets/js/format-code'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
@@ -68,6 +69,7 @@ onMounted(() => {
     originalEditable: false,
     lineNumbers: 'off',
     glyphMargin: false,
+    contextmenu: false,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
@@ -80,6 +82,9 @@ onMounted(() => {
       horizontalScrollbarSize: 6
     }
   })
+
+  disableCommandPalette(diffEditor.getOriginalEditor())
+  disableCommandPalette(diffEditor.getModifiedEditor())
 
   updateModels()
 })
