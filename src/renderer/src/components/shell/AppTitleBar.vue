@@ -20,6 +20,21 @@ const isActive = (clientKey: string) =>
   appStore.view === 'connection' && selectedClientKey.value === clientKey
 
 const isMac = AppPlatform === 'darwin'
+
+const tabColorStyle = (labelColor?: string | null) =>
+  labelColor ? { '--tab-color': `var(--color-${labelColor}-500)` } : undefined
+
+const tabClass = (labelColor: string | null | undefined, active: boolean) => {
+  if (!labelColor) {
+    return active
+      ? 'border-default bg-default text-default font-semibold shadow-xs'
+      : 'text-muted hover:text-default hover:bg-elevated/60 border-transparent font-medium'
+  }
+
+  return active
+    ? 'border-[color-mix(in_oklab,var(--tab-color)_45%,transparent)] bg-[color-mix(in_oklab,var(--tab-color)_12%,var(--ui-bg))] text-default font-semibold shadow-xs'
+    : 'text-muted hover:text-default hover:bg-[color-mix(in_oklab,var(--tab-color)_10%,transparent)] border-transparent font-medium'
+}
 </script>
 
 <template>
@@ -40,16 +55,24 @@ const isMac = AppPlatform === 'darwin'
           role="tab"
           tabindex="0"
           :aria-selected="isActive(connection.clientKey)"
-          class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-3 text-[13px] transition-colors select-none"
-          :class="
-            isActive(connection.clientKey)
-              ? 'border-default bg-default text-default font-semibold shadow-xs'
-              : 'text-muted hover:text-default hover:bg-elevated/60 border-transparent font-medium'
-          "
+          class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
+          :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
+          :style="tabColorStyle(connection.labelColor)"
           @click="openConnection(connection.clientKey)"
           @keydown.enter="openConnection(connection.clientKey)"
           @auxclick.middle="closeConnection(connection.clientKey)"
         >
+          <span
+            class="h-4 w-[3px] shrink-0 rounded-full"
+            :class="
+              connection.labelColor
+                ? isActive(connection.clientKey)
+                  ? 'bg-(--tab-color)'
+                  : 'bg-(--tab-color) opacity-60'
+                : 'bg-transparent'
+            "
+            aria-hidden="true"
+          />
           <span
             class="size-2 shrink-0 rounded-full"
             :class="statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
