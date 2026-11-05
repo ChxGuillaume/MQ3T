@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { MqttConnection } from '../../../../types/mqtt-connection'
+import { ConnectionForm } from '../../assets/js/default-connection'
 import type { TableColumn } from '@nuxt/ui'
 import { computed } from 'vue'
 
-const connection = defineModel<Required<MqttConnection>>('connection', { required: true })
+const connection = defineModel<ConnectionForm>('connection', { required: true })
 
 const isMqtt5 = computed(() => connection.value.protocolVersion === 5)
 

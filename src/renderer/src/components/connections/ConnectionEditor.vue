@@ -278,6 +278,7 @@ const normalizedConnection = (): MqttConnection => {
 
   copy.subscribedTopics = copy.subscribedTopics.map((s) => ({ ...s, topic: s.topic.trim() }))
   copy.temporary = false
+  delete copy.actionsFrom
 
   return copy
 }
