@@ -229,6 +229,7 @@ defineExpose({ confirmLeave })
         class="border-default flex w-[360px] shrink-0 flex-col gap-[18px] overflow-auto border-l p-5"
       >
         <ActionVariablesPanel v-model:enum-options="form.enumOptions" :payload="form.payload" />
+        <USeparator />
         <ActionTryIt :form="form" :connection-id="connectionId" />
       </aside>
     </div>

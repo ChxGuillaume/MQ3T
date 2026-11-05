@@ -108,6 +108,7 @@ declare module 'vue' {
     UProgress: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Progress.vue')['default']
     USelect: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
     USelectMenu: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue')['default']
+    USeparator: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Separator.vue')['default']
     USlideover: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue')['default']
     USlider: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Slider.vue')['default']
     USplitter: typeof import('./../../node_modules/@nuxt/ui/dist/runtime/components/Splitter.vue')['default']

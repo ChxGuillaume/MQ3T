@@ -115,14 +115,15 @@ const removeEnum = (name: string) => {
     >
       <div class="flex items-center gap-2">
         <span
-          class="rounded-xs px-1.5 py-px font-mono font-bold"
+          class="min-w-0 truncate rounded-xs px-1.5 py-px font-mono font-bold"
           :class="enumName.used ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning'"
+          :title="enumName.name"
         >
           {{ enumName.name }}
         </span>
-        <span class="text-muted text-xs">list</span>
+        <span class="text-muted shrink-0 text-xs">list</span>
         <template v-if="!enumName.used">
-          <span class="text-warning text-xs">not in the payload</span>
+          <span class="text-warning shrink-0 text-xs">not in the payload</span>
           <UButton
             size="xs"
             color="neutral"
@@ -174,23 +175,30 @@ const removeEnum = (name: string) => {
       </div>
     </div>
 
-    <div
+    <ul
       v-if="simpleVariables.length || hasUuid"
-      class="text-muted flex flex-wrap gap-x-3.5 gap-y-1.5 text-xs"
+      class="border-default divide-default divide-y rounded-lg border text-xs"
     >
-      <span v-for="variable in simpleVariables" :key="`${variable.name}:${variable.label}`">
-        <span class="bg-primary/10 text-primary rounded-xs px-1.5 py-px font-mono font-bold">
+      <li
+        v-for="variable in simpleVariables"
+        :key="`${variable.name}:${variable.label}`"
+        class="flex h-9 items-center gap-2 px-3"
+      >
+        <span
+          class="bg-primary/10 text-primary min-w-0 truncate rounded-xs px-1.5 py-px font-mono font-bold"
+          :title="variable.name"
+        >
           {{ variable.name }}
         </span>
-        {{ variable.label }}
-      </span>
-      <span v-if="hasUuid">
+        <span class="text-muted ml-auto shrink-0">{{ variable.label }}</span>
+      </li>
+      <li v-if="hasUuid" class="flex h-9 items-center gap-2 px-3">
         <span class="bg-primary/10 text-primary rounded-xs px-1.5 py-px font-mono font-bold">
           uuid
         </span>
-        new UUID each send
-      </span>
-    </div>
+        <span class="text-muted ml-auto shrink-0">new UUID each send</span>
+      </li>
+    </ul>
     <p v-if="enumNames.length" class="text-dimmed text-[11px]">
       Numbers are stored as numbers. Wrap a value in quotes to keep it as text.
     </p>
