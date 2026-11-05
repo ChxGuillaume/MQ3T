@@ -147,7 +147,11 @@ const convertForm = reactive({
   topic: ''
 })
 
+const canSaveAsAction = computed(() => !mqttConnectionsStore.isTemporary(props.clientKey))
+
 const openConvert = (message?: MqttMessage, messageTopic?: string) => {
+  if (!canSaveAsAction.value) return
+
   convertForm.connectionId = props.clientKey
   convertForm.groupId = 'default'
   convertForm.title = ''
@@ -270,12 +274,14 @@ defineExpose({ load, openConvert })
       "
     >
       <UButton
+        v-if="canSaveAsAction"
         label="Save as action"
         color="neutral"
         variant="outline"
         :disabled="!topic"
         @click="openConvert()"
       />
+      <span v-else />
       <UTooltip
         :text="payloadError ? `Payload is not valid ${language.toUpperCase()}` : undefined"
         :disabled="!payloadError"

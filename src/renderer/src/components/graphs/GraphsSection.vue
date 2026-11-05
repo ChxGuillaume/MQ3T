@@ -6,6 +6,7 @@ import { graphTimeWindows } from '@renderer/assets/js/data-graph'
 import { useDataGraphsStore } from '@renderer/store/data-graphs'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { computed, ref } from 'vue'
 
 const mqttTopicsStore = useMqttTopicsStore()
@@ -16,6 +17,8 @@ const pausedAt = ref<number | null>(null)
 const addGraphOpen = ref(false)
 
 const clientKey = computed(() => mqttTopicsStore.selectedConnection)
+const mqttConnectionsStore = useMqttConnectionsStore()
+const canOpenWindow = computed(() => !mqttConnectionsStore.isTemporary(clientKey.value))
 
 const hasGraphs = computed(() =>
   dataGraphsStore.dataGraph.some((graph) => graph.clientKey === clientKey.value)
@@ -42,6 +45,7 @@ const togglePause = () => {
           @click="togglePause"
         />
         <UButton
+          v-if="canOpenWindow"
           icon="i-lucide-external-link"
           label="Open in window"
           color="neutral"

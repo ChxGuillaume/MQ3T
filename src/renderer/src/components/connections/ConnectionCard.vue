@@ -50,7 +50,12 @@ const items = computed(() => connectionItems(props.connection))
   <div class="flex min-w-0">
     <UContextMenu :items="items">
       <article
-        class="border-default bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-lg border p-4"
+        class="bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-lg border p-4"
+        :class="
+          connection.temporary
+            ? 'border-dashed border-[color-mix(in_oklab,var(--ui-warning)_55%,transparent)]'
+            : 'border-default'
+        "
       >
         <div class="flex items-center gap-3">
           <span
@@ -82,6 +87,14 @@ const items = computed(() => connectionItems(props.connection))
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
+          <UBadge
+            v-if="connection.temporary"
+            label="Temporary"
+            icon="i-lucide-timer"
+            color="warning"
+            variant="subtle"
+            class="rounded-full"
+          />
           <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
             {{ protocolVersionLabel(connection) }}
           </span>

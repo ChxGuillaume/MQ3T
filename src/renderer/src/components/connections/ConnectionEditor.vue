@@ -13,9 +13,14 @@ import { useAppStore } from '@renderer/store/app-store'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import type { FormError } from '@nuxt/ui'
 import { useToast } from '@nuxt/ui/composables'
+import {
+  ConnectionForm,
+  createDefaultConnection,
+  DEFAULT_PORTS,
+  emptyLastWill
+} from '@renderer/assets/js/default-connection'
 import { v4 as uuidV4 } from 'uuid'
 
-type ConnectionForm = Required<MqttConnection>
 type SectionId = 'general' | 'subs' | 'will' | 'adv'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -30,41 +35,7 @@ const { formatMqttUrl } = useMqttUrl()
 const formRef = useTemplateRef('formRef')
 const scrollRef = useTemplateRef<HTMLElement>('scrollRef')
 
-const emptyLastWill = (): ConnectionForm['lastWill'] => ({
-  topic: '',
-  qos: 0,
-  retain: false,
-  payload: ''
-})
-
-const defaultConnection = (): ConnectionForm => ({
-  clientKey: `connection-${uuidV4()}`,
-  name: '',
-  protocol: 'mqtt',
-  protocolVersion: 4,
-  hostname: '',
-  path: '/mqtt',
-  port: 1883,
-  clientId: `mq3t_${uuidV4()}`,
-  username: '',
-  password: '',
-  subscribedTopics: [
-    { topic: '$SYS/#', qos: 0 },
-    { topic: '#', qos: 0 }
-  ],
-  connectTimeout: 30,
-  reconnectPeriod: 1,
-  clean: true,
-  properties: {
-    requestResponseInformation: false,
-    requestProblemInformation: false,
-    userProperties: []
-  },
-  lastWill: emptyLastWill(),
-  labelColor: null
-})
-
-const form = ref<ConnectionForm>(defaultConnection())
+const form = ref<ConnectionForm>(createDefaultConnection())
 const willEnabled = ref(false)
 const advancedOpened = ref(false)
 const showPassword = ref(false)
@@ -75,7 +46,12 @@ const labelNameDraft = ref('')
 
 const isNew = computed(() => appStore.editingClientKey === null)
 
+const isSavingTemporary = computed(
+  () => !!appStore.editingClientKey && mqttConnectionsStore.isTemporary(appStore.editingClientKey)
+)
+
 const title = computed(() => {
+  if (isSavingTemporary.value) return 'Save temporary connection'
   if (form.value.name.trim()) return form.value.name
   return isNew.value ? 'New connection' : 'Edit connection'
 })
@@ -85,7 +61,7 @@ const load = () => {
     ? mqttConnectionsStore.getConnection(appStore.editingClientKey)
     : undefined
 
-  const base = defaultConnection()
+  const base = createDefaultConnection()
 
   if (!existing) {
     form.value = base
@@ -168,13 +144,6 @@ const qosItems: SegmentedItem<MqttTopicSubscription['qos']>[] = [
   { label: '1', value: 1 },
   { label: '2', value: 2 }
 ]
-
-const DEFAULT_PORTS: Record<ConnectionForm['protocol'], number> = {
-  mqtt: 1883,
-  mqtts: 8883,
-  ws: 8083,
-  wss: 8084
-}
 
 const handleProtocolChange = (protocol: ConnectionForm['protocol']) => {
   form.value.port = DEFAULT_PORTS[protocol]
@@ -308,6 +277,7 @@ const normalizedConnection = (): MqttConnection => {
   if (!willEnabled.value) copy.lastWill = emptyLastWill()
 
   copy.subscribedTopics = copy.subscribedTopics.map((s) => ({ ...s, topic: s.topic.trim() }))
+  copy.temporary = false
 
   return copy
 }
@@ -324,13 +294,18 @@ const persist = () => {
 const save = async () => {
   if (!(await ensureValid())) return
 
+  const wasTemporary = isSavingTemporary.value
   const connection = persist()
   const status = mqttConnectionsStore.connectionsStatus[connection.clientKey]
+  const isLive = status && status !== 'disconnected'
 
   toast.add({
     title: 'Connection saved',
-    description:
-      status && status !== 'disconnected' ? 'Reconnect to apply the changes.' : undefined,
+    description: wasTemporary
+      ? 'It will be kept after MQ3T closes, and actions are now available.'
+      : isLive
+        ? 'Reconnect to apply the changes.'
+        : undefined,
     color: 'success',
     icon: 'i-lucide-check'
   })
@@ -447,6 +422,13 @@ const testConnection = async () => {
         @click="appStore.closeConnectionEditor()"
       />
       <h1 class="truncate text-xl font-bold">{{ title }}</h1>
+      <UBadge
+        v-if="isSavingTemporary"
+        label="Temporary"
+        icon="i-lucide-timer"
+        color="warning"
+        variant="subtle"
+      />
       <div class="ml-auto flex gap-2">
         <UButton
           label="Test connection"
@@ -461,8 +443,21 @@ const testConnection = async () => {
           variant="outline"
           @click="appStore.closeConnectionEditor()"
         />
-        <UButton label="Save" color="neutral" variant="outline" @click="save" />
         <UButton
+          v-if="isSavingTemporary"
+          label="Save connection"
+          class="font-semibold"
+          @click="save"
+        />
+        <UButton
+          v-if="!isSavingTemporary"
+          label="Save"
+          color="neutral"
+          variant="outline"
+          @click="save"
+        />
+        <UButton
+          v-if="!isSavingTemporary"
           label="Save and connect"
           class="font-semibold"
           :loading="saving"

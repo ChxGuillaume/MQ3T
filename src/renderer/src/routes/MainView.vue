@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ImportActionsDialog from '@renderer/components/tab-actions/dialogs/ImportActionsDialog.vue'
+import QuickConnectDialog from '@renderer/components/connections/QuickConnectDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { computed, onMounted, watch } from 'vue'
@@ -49,6 +50,7 @@ defineShortcuts({
   meta_3: () => openSection('graphs'),
   meta_4: () => openSection('broker'),
   meta_t: () => openNewTab(),
+  meta_shift_t: () => appStore.openQuickConnect(),
   meta_n: () => openNewMessage(),
   'meta_,': () => toggleSettings(),
   meta_w: { usingInput: true, handler: () => closeCurrentTab() },
@@ -172,4 +174,5 @@ watch(
   </div>
   <update-dialog />
   <import-actions-dialog />
+  <quick-connect-dialog />
 </template>

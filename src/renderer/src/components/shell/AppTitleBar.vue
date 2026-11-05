@@ -6,6 +6,7 @@ import { useConnectionMenu } from '@renderer/composables/useConnectionMenu'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
 import { useAppStore } from '@renderer/store/app-store'
 import { useTabDragReorder } from '@renderer/composables/useTabDragReorder'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
@@ -33,6 +34,16 @@ const { draggingIndex, onPointerDown: onTabPointerDown } = useTabDragReorder({
   onDragStart: (index) => openConnection(openConnections.value[index].clientKey),
   onReorder: moveTab
 })
+
+const newTabMenuItems: DropdownMenuItem[] = [
+  { label: 'New tab', icon: 'i-lucide-plus', kbds: ['meta', 'T'], onSelect: () => openNewTab() },
+  {
+    label: 'Temporary connection',
+    icon: 'i-lucide-timer',
+    kbds: ['meta', 'shift', 'T'],
+    onSelect: () => appStore.openQuickConnect()
+  }
+]
 
 const isActive = (clientKey: string) =>
   appStore.view === 'connection' && selectedClientKey.value === clientKey
@@ -79,7 +90,13 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
             tabindex="0"
             :aria-selected="isActive(connection.clientKey)"
             class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
-            :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
+            :class="[
+              tabClass(connection.labelColor, isActive(connection.clientKey)),
+              {
+                'border-dashed border-[color-mix(in_oklab,var(--ui-warning)_55%,transparent)]!':
+                  connection.temporary
+              }
+            ]"
             :style="tabColorStyle(connection.labelColor)"
             @click="openConnection(connection.clientKey)"
             @keydown.enter="openConnection(connection.clientKey)"
@@ -103,7 +120,21 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
               "
               :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
             />
-            <span class="flex-1 truncate" :title="connection.name">{{ connection.name }}</span>
+            <UIcon
+              v-if="connection.temporary"
+              name="i-lucide-timer"
+              class="text-warning size-3.5 shrink-0"
+              aria-label="Temporary connection"
+            />
+            <span
+              class="flex-1 truncate"
+              :title="
+                connection.temporary
+                  ? `${connection.name} · Temporary connection, discarded when MQ3T closes`
+                  : connection.name
+              "
+              >{{ connection.name }}</span
+            >
             <UButton
               icon="i-lucide-x"
               size="xs"
@@ -127,16 +158,28 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
       </div>
     </nav>
 
-    <UTooltip text="New tab" :kbds="['meta', 'T']">
-      <UButton
-        icon="i-lucide-plus"
-        color="neutral"
-        variant="ghost"
-        aria-label="New tab"
-        class="text-muted [-webkit-app-region:no-drag]"
-        @click="openNewTab"
-      />
-    </UTooltip>
+    <div class="flex shrink-0 items-center [-webkit-app-region:no-drag]">
+      <UTooltip text="New tab" :kbds="['meta', 'T']">
+        <UButton
+          icon="i-lucide-plus"
+          color="neutral"
+          variant="ghost"
+          aria-label="New tab"
+          class="text-muted"
+          @click="openNewTab"
+        />
+      </UTooltip>
+      <UDropdownMenu :items="newTabMenuItems" :content="{ align: 'start' }">
+        <UButton
+          icon="i-lucide-chevron-down"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          aria-label="More ways to open a tab"
+          class="text-muted -ml-1 px-0.5"
+        />
+      </UDropdownMenu>
+    </div>
 
     <div class="flex-1" />
 
