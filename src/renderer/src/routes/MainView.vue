@@ -17,6 +17,7 @@ import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
 import AppTitleBar from '../components/shell/AppTitleBar.vue'
 import GraphsSection from '../components/graphs/GraphsSection.vue'
 import { useAppNavigation } from '../composables/useAppNavigation'
+import { emitMqttMessage } from '../composables/useMqttMessageBus'
 import { useActionsStore } from '../store/actions'
 import SettingsView from '../components/settings/SettingsView.vue'
 import { ConnectionSection, useAppStore } from '../store/app-store'
@@ -134,6 +135,7 @@ onMounted(() => {
 
   ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
     mqttTopicsStore.addMessage(clientKey, topic, message, packet)
+    emitMqttMessage({ clientKey, topic, message })
   })
 
   ElectronApi.handleLoadMqttConnections((_, connections) => {
