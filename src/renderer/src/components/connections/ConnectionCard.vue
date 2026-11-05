@@ -70,7 +70,15 @@ const items = computed(() => connectionItems(props.connection))
             {{ connectionInitials(connection.name) }}
           </span>
           <div class="min-w-0 flex-1" :class="{ 'drag-handle cursor-grab': draggable }">
-            <div class="truncate font-bold" :title="connection.name">{{ connection.name }}</div>
+            <div class="flex items-center gap-1.5">
+              <span class="truncate font-bold" :title="connection.name">{{ connection.name }}</span>
+              <UIcon
+                v-if="connection.temporary"
+                name="i-lucide-timer"
+                class="text-warning size-3.5 shrink-0"
+                aria-label="Temporary connection"
+              />
+            </div>
             <div class="text-muted truncate font-mono text-xs" :title="formatMqttUrl(connection)">
               {{ formatMqttUrl(connection) }}
             </div>
@@ -87,14 +95,6 @@ const items = computed(() => connectionItems(props.connection))
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <UBadge
-            v-if="connection.temporary"
-            label="Temporary"
-            icon="i-lucide-timer"
-            color="warning"
-            variant="subtle"
-            class="rounded-full"
-          />
           <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
             {{ protocolVersionLabel(connection) }}
           </span>
