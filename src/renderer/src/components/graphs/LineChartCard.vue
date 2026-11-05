@@ -18,6 +18,7 @@ import { useDataGraphsStore } from '@renderer/store/data-graphs'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { DataGraph } from '../../../../types/data-graph'
 import { CanvasRenderer } from 'echarts/renderers'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { computed, useTemplateRef, watch } from 'vue'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { LineChart } from 'echarts/charts'
@@ -49,6 +50,7 @@ const emit = defineEmits<{
 
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const route = useRoute()
 const { theme } = useChartTheme()
 
@@ -298,7 +300,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
           { label: 'CSV data', icon: 'i-lucide-file-spreadsheet', onSelect: exportCsv }
         ]
       },
-      ...(isGraphWindow.value
+      ...(isGraphWindow.value || mqttConnectionsStore.isTemporary(props.dataGraph.clientKey)
         ? []
         : [
             {

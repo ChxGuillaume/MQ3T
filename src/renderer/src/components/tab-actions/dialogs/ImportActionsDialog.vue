@@ -14,6 +14,7 @@ import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { validateAction } from '@renderer/assets/js/validate-action'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { useActionsStore } from '@renderer/store/actions'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import ConnectionSelect from '../../ConnectionSelect.vue'
 import { useToast } from '@nuxt/ui/composables'
 import { DEFAULT_GROUP } from '../action-utils'
@@ -26,6 +27,7 @@ type ImportGroup = { key: string; group?: ActionGroup; name: string; items: Impo
 
 const chainActionsStore = useChainActionsStore()
 const actionsStore = useActionsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const toast = useToast()
 
 const { selectedClientKey } = useAppNavigation()
@@ -223,7 +225,10 @@ const groupItems = computed(() => [
 ])
 
 const open = () => {
-  connectionId.value = selectedClientKey.value || connectionId.value
+  connectionId.value =
+    selectedClientKey.value && !mqttConnectionsStore.isTemporary(selectedClientKey.value)
+      ? selectedClientKey.value
+      : connectionId.value
   targetGroupId.value =
     fileType.value === 'groups'
       ? KEEP_GROUPS

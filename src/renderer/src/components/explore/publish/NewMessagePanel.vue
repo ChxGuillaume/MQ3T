@@ -2,6 +2,7 @@
 import PublishHistoryList, { SentMessage } from './PublishHistoryList.vue'
 import { useExploreUiStore } from '@renderer/store/explore-ui'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useToast } from '@nuxt/ui/composables'
 import { computed, useTemplateRef } from 'vue'
 import PublishForm from './PublishForm.vue'
@@ -9,6 +10,7 @@ import PublishForm from './PublishForm.vue'
 const props = defineProps<{ clientKey: string }>()
 
 const mqttTopicsStore = useMqttTopicsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const exploreUiStore = useExploreUiStore()
 const toast = useToast()
 
@@ -63,6 +65,7 @@ const loadSent = (item: SentMessage) => formRef.value?.load(item.message, item.t
       <PublishHistoryList
         :items="sent"
         show-topic
+        :can-convert="!mqttConnectionsStore.isTemporary(clientKey)"
         class="pb-4"
         @load="loadSent"
         @convert="formRef?.openConvert($event.message, $event.topic)"

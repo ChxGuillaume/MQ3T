@@ -14,7 +14,8 @@ export const useAppStore = defineStore('app', {
     editorAnchor: null as string | null,
     editorReturnView: 'new-tab' as AppView,
     appVersion: '',
-    isScrubbingTopics: false
+    isScrubbingTopics: false,
+    quickConnectOpen: false
   }),
   getters: {
     getSection:
@@ -45,6 +46,12 @@ export const useAppStore = defineStore('app', {
     },
     setAppVersion(version: string) {
       this.appVersion = version
+    },
+    openQuickConnect() {
+      this.quickConnectOpen = true
+    },
+    setQuickConnectOpen(open: boolean) {
+      this.quickConnectOpen = open
     },
     setIsScrubbingTopics(scrubbing: boolean) {
       this.isScrubbingTopics = scrubbing

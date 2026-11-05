@@ -8,7 +8,10 @@ export type SentMessage = { topic: string; message: MqttMessage }
 
 const COLLAPSED_COUNT = 5
 
-const props = defineProps<{ items: SentMessage[]; showTopic?: boolean }>()
+const props = withDefaults(
+  defineProps<{ items: SentMessage[]; showTopic?: boolean; canConvert?: boolean }>(),
+  { canConvert: true }
+)
 
 const emit = defineEmits<{
   load: [item: SentMessage]
@@ -48,7 +51,7 @@ const label = (item: SentMessage) => {
           {{ formatAge(now.getTime() - item.message.createdAt.getTime()) }}
         </span>
       </button>
-      <UTooltip text="Save as action">
+      <UTooltip v-if="canConvert" text="Save as action">
         <UButton
           icon="i-lucide-bookmark-plus"
           size="xs"
