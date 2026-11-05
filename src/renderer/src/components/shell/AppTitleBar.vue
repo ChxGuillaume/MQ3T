@@ -5,9 +5,8 @@ import { useAppNavigation } from '@renderer/composables/useAppNavigation'
 import { useConnectionMenu } from '@renderer/composables/useConnectionMenu'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
 import { useAppStore } from '@renderer/store/app-store'
-import { MqttConnection } from '../../../../types/mqtt-connection'
-import { computed } from 'vue'
-import draggable from 'vuedraggable'
+import { useTabDragReorder } from '@renderer/composables/useTabDragReorder'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const appStore = useAppStore()
@@ -16,17 +15,24 @@ const { selectedClientKey, openConnection, openNewTab, toggleSettings, closeConn
   useAppNavigation()
 const { connectionMenuItems } = useConnectionMenu()
 
-const openConnections = computed<MqttConnection[]>({
-  get: () => mqttConnectionsStore.getConnectionsWithStatus,
-  set: (connections) =>
-    mqttConnectionsStore.setTabOrder(connections.map((connection) => connection.clientKey))
-})
+const openConnections = computed(() => mqttConnectionsStore.getConnectionsWithStatus)
 
-const activateDraggedTab = ({ oldIndex }: { oldIndex: number }) => {
-  const connection = openConnections.value[oldIndex]
+const tabList = ref<HTMLElement | null>(null)
 
-  if (connection) openConnection(connection.clientKey)
+const moveTab = (from: number, to: number) => {
+  const clientKeys = openConnections.value.map((connection) => connection.clientKey)
+  const [moved] = clientKeys.splice(from, 1)
+
+  clientKeys.splice(to, 0, moved)
+  mqttConnectionsStore.setTabOrder(clientKeys)
 }
+
+const { draggingIndex, onPointerDown: onTabPointerDown } = useTabDragReorder({
+  container: tabList,
+  itemSelector: '[data-tab-item]',
+  onDragStart: (index) => openConnection(openConnections.value[index].clientKey),
+  onReorder: moveTab
+})
 
 const isActive = (clientKey: string) =>
   appStore.view === 'connection' && selectedClientKey.value === clientKey
@@ -54,78 +60,72 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
     class="border-default bg-chrome flex h-[46px] shrink-0 items-center gap-1 border-b [-webkit-app-region:drag]"
     :class="isMac ? 'pl-[92px]' : 'pl-3'"
   >
-    <draggable
-      v-model="openConnections"
-      tag="nav"
-      item-key="clientKey"
-      direction="horizontal"
-      :animation="150"
-      force-fallback
-      :fallback-tolerance="4"
-      ghost-class="tab-drag-ghost"
-      fallback-class="tab-drag-fallback"
+    <nav
+      ref="tabList"
       aria-label="Open connections"
       class="flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto [-webkit-app-region:no-drag]"
-      @start="activateDraggedTab"
     >
-      <template #item="{ element: connection }">
-        <div class="rounded-lg">
-          <UContextMenu :items="connectionMenuItems(connection, closeConnection)">
-            <div
-              role="tab"
-              tabindex="0"
-              :aria-selected="isActive(connection.clientKey)"
-              class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
-              :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
-              :style="tabColorStyle(connection.labelColor)"
-              @click="openConnection(connection.clientKey)"
-              @keydown.enter="openConnection(connection.clientKey)"
-              @auxclick.middle="closeConnection(connection.clientKey)"
-            >
-              <span
-                class="h-4 w-[3px] shrink-0 rounded-full"
-                :class="
-                  connection.labelColor
-                    ? isActive(connection.clientKey)
-                      ? 'bg-(--tab-color)'
-                      : 'bg-(--tab-color) opacity-60'
-                    : 'bg-transparent'
-                "
-                aria-hidden="true"
-              />
-              <span
-                class="size-2 shrink-0 rounded-full"
-                :class="
-                  statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))
-                "
-                :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
-              />
-              <span class="flex-1 truncate" :title="connection.name">{{ connection.name }}</span>
-              <UButton
-                icon="i-lucide-x"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                aria-label="Close tab"
-                class="text-muted rounded-md"
-                @click.stop="closeConnection(connection.clientKey)"
-              />
-            </div>
-          </UContextMenu>
-        </div>
-      </template>
+      <div
+        v-for="(connection, index) in openConnections"
+        :key="connection.clientKey"
+        data-tab-item
+        class="shrink-0 rounded-lg"
+        :class="{ 'shadow-lg [&_*]:cursor-grabbing': draggingIndex === index }"
+        @pointerdown="onTabPointerDown($event, index)"
+      >
+        <UContextMenu :items="connectionMenuItems(connection, closeConnection)">
+          <div
+            role="tab"
+            tabindex="0"
+            :aria-selected="isActive(connection.clientKey)"
+            class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
+            :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
+            :style="tabColorStyle(connection.labelColor)"
+            @click="openConnection(connection.clientKey)"
+            @keydown.enter="openConnection(connection.clientKey)"
+            @auxclick.middle="closeConnection(connection.clientKey)"
+          >
+            <span
+              class="h-4 w-[3px] shrink-0 rounded-full"
+              :class="
+                connection.labelColor
+                  ? isActive(connection.clientKey)
+                    ? 'bg-(--tab-color)'
+                    : 'bg-(--tab-color) opacity-60'
+                  : 'bg-transparent'
+              "
+              aria-hidden="true"
+            />
+            <span
+              class="size-2 shrink-0 rounded-full"
+              :class="
+                statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))
+              "
+              :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
+            />
+            <span class="flex-1 truncate" :title="connection.name">{{ connection.name }}</span>
+            <UButton
+              icon="i-lucide-x"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              aria-label="Close tab"
+              class="text-muted rounded-md"
+              @click.stop="closeConnection(connection.clientKey)"
+            />
+          </div>
+        </UContextMenu>
+      </div>
 
-      <template #footer>
-        <div
-          v-if="appStore.view === 'new-tab' && openConnections.length"
-          role="tab"
-          aria-selected="true"
-          class="border-default bg-default flex h-[34px] min-w-[170px] items-center rounded-lg border pl-3 text-[13px] font-semibold shadow-xs select-none"
-        >
-          New tab
-        </div>
-      </template>
-    </draggable>
+      <div
+        v-if="appStore.view === 'new-tab' && openConnections.length"
+        role="tab"
+        aria-selected="true"
+        class="border-default bg-default flex h-[34px] min-w-[170px] items-center rounded-lg border pl-3 text-[13px] font-semibold shadow-xs select-none"
+      >
+        New tab
+      </div>
+    </nav>
 
     <UTooltip text="New tab" :kbds="['meta', 'T']">
       <UButton
@@ -156,15 +156,3 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
     <div v-if="!isMac" class="w-[138px] shrink-0 self-stretch" />
   </header>
 </template>
-
-<style scoped>
-:deep(.tab-drag-ghost) {
-  opacity: 0.35;
-}
-
-:global(.tab-drag-fallback) {
-  opacity: 1 !important;
-  cursor: grabbing;
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.2);
-}
-</style>
