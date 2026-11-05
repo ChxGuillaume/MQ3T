@@ -145,7 +145,7 @@ watch(
     description="Received messages for this topic are kept here."
     variant="naked"
   />
-  <div v-else class="flex flex-col gap-3">
+  <div v-else class="flex min-h-full flex-col gap-3">
     <div class="flex flex-wrap items-center gap-2">
       <SegmentedControl v-if="isJsonObject" v-model="modeModel" :items="modeItems" size="sm" />
       <span class="text-muted text-xs">
@@ -234,7 +234,7 @@ watch(
         <HistoryPager v-if="settingsStore.messagesPagination" v-model="page" :pages="pages" />
       </div>
 
-      <section v-if="selected" class="flex flex-col gap-2">
+      <section v-if="selected" class="flex min-h-0 flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
             {{
@@ -266,19 +266,21 @@ watch(
             @click="selected = undefined"
           />
         </div>
-        <div class="bg-muted h-64 overflow-hidden rounded-lg">
-          <CodeDiffPreview
-            v-if="settingsStore.selectedMessageCompare && latest && selected.uid !== latest.uid"
-            :value="selected.message"
-            :modified-value="latest.message"
-            :language="selected.dataType"
-          />
-          <CodePreview
-            v-else
-            :value="selected.message"
-            :language="selected.dataType"
-            hide-top-border
-          />
+        <div class="bg-muted relative min-h-64 flex-1 overflow-hidden rounded-lg">
+          <div class="absolute inset-0">
+            <CodeDiffPreview
+              v-if="settingsStore.selectedMessageCompare && latest && selected.uid !== latest.uid"
+              :value="selected.message"
+              :modified-value="latest.message"
+              :language="selected.dataType"
+            />
+            <CodePreview
+              v-else
+              :value="selected.message"
+              :language="selected.dataType"
+              hide-top-border
+            />
+          </div>
         </div>
       </section>
     </template>
