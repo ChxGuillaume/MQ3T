@@ -40,7 +40,7 @@ const isMac = AppPlatform === 'darwin'
           role="tab"
           tabindex="0"
           :aria-selected="isActive(connection.clientKey)"
-          class="group flex h-[30px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-full border pr-1 pl-3 text-[13px] transition-colors select-none"
+          class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-3 text-[13px] transition-colors select-none"
           :class="
             isActive(connection.clientKey)
               ? 'border-default bg-default text-default font-semibold shadow-xs'
@@ -62,7 +62,7 @@ const isMac = AppPlatform === 'darwin'
             color="neutral"
             variant="ghost"
             aria-label="Close tab"
-            class="text-muted rounded-full"
+            class="text-muted rounded-md"
             @click.stop="closeConnection(connection.clientKey)"
           />
         </div>
@@ -72,7 +72,7 @@ const isMac = AppPlatform === 'darwin'
         v-if="appStore.view === 'new-tab' && openConnections.length"
         role="tab"
         aria-selected="true"
-        class="border-default bg-default flex h-[30px] min-w-[170px] items-center rounded-full border pl-3 text-[13px] font-semibold shadow-xs select-none"
+        class="border-default bg-default flex h-[34px] min-w-[170px] items-center rounded-lg border pl-3 text-[13px] font-semibold shadow-xs select-none"
       >
         New tab
       </div>
@@ -84,7 +84,7 @@ const isMac = AppPlatform === 'darwin'
         color="neutral"
         variant="ghost"
         aria-label="New tab"
-        class="text-muted rounded-full [-webkit-app-region:no-drag]"
+        class="text-muted [-webkit-app-region:no-drag]"
         @click="openNewTab"
       />
     </UTooltip>
