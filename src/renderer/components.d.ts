@@ -79,6 +79,7 @@ declare module 'vue' {
     SettingsView: typeof import('./src/components/settings/SettingsView.vue')['default']
     SiblingTopicsAside: typeof import('./src/components/explore/history/SiblingTopicsAside.vue')['default']
     SplitterIcon: typeof import('./src/components/SplitterIcon.vue')['default']
+    StableLabel: typeof import('./src/components/ui/StableLabel.vue')['default']
     StartNode: typeof import('./src/components/tab-actions/action-chain/StartNode.vue')['default']
     TopicCombobox: typeof import('./src/components/explore/publish/TopicCombobox.vue')['default']
     TopicInspector: typeof import('./src/components/explore/inspector/TopicInspector.vue')['default']

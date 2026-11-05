@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StableLabel from '@renderer/components/ui/StableLabel.vue'
 import { InspectorTab, useExploreUiStore } from '@renderer/store/explore-ui'
 import { computed } from 'vue'
 
@@ -39,7 +40,11 @@ const tab = computed<InspectorTab>({
         list: 'gap-[18px] border-b-0',
         trigger: 'px-0 font-medium data-[state=active]:font-bold'
       }"
-    />
+    >
+      <template #default="{ item }">
+        <StableLabel :text="item.label" />
+      </template>
+    </UTabs>
     <slot />
   </div>
 </template>

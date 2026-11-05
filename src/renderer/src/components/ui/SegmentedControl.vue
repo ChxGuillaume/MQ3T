@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="T extends string | number">
+import StableLabel from './StableLabel.vue'
 import { computed } from 'vue'
 
 export type SegmentedItem<V> = { label: string; value: V; icon?: string; disabled?: boolean }
@@ -42,5 +43,9 @@ const value = computed({
         size === 'sm' ? 'h-[26px] px-2.5' : 'h-[30px] px-3.5 text-[13px]'
       }`
     }"
-  />
+  >
+    <template #default="{ item }">
+      <StableLabel :text="item.label" />
+    </template>
+  </UTabs>
 </template>

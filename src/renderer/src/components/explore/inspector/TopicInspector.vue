@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StableLabel from '@renderer/components/ui/StableLabel.vue'
 import {
   byteSize,
   formatBytes,
@@ -224,7 +225,11 @@ const handlePublished = (topic: string) => {
             list: 'gap-[18px] border-default',
             trigger: 'px-0 font-medium data-[state=active]:font-bold'
           }"
-        />
+        >
+          <template #default="{ item }">
+            <StableLabel :text="item.label" />
+          </template>
+        </UTabs>
       </div>
 
       <div class="min-h-0 flex-1 overflow-auto px-5 py-4">
