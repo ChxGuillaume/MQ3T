@@ -19,7 +19,8 @@ import GraphsSection from '../components/graphs/GraphsSection.vue'
 import { useAppNavigation } from '../composables/useAppNavigation'
 import { useActionsStore } from '../store/actions'
 import SettingsView from '../components/settings/SettingsView.vue'
-import { useAppStore } from '../store/app-store'
+import { ConnectionSection, useAppStore } from '../store/app-store'
+import { MenuCommand } from '../../../types/electron-ipc-callbacks'
 import TabActions from '../tabs/TabActions.vue'
 import ExploreView from '../components/explore/ExploreView.vue'
 import { useExploreUiStore } from '../store/explore-ui'
@@ -58,6 +59,34 @@ defineShortcuts({
   ctrl_shift_tab: { usingInput: true, handler: () => cycleTab(-1) }
 })
 
+const runMenuCommand = (command: MenuCommand) => {
+  if (command.startsWith('section:')) {
+    openSection(command.slice('section:'.length) as ConnectionSection)
+    return
+  }
+
+  switch (command) {
+    case 'settings':
+      if (appStore.view !== 'settings') toggleSettings()
+      break
+    case 'new-tab':
+      openNewTab()
+      break
+    case 'temporary-connection':
+      appStore.openQuickConnect()
+      break
+    case 'close-tab':
+      closeCurrentTab()
+      break
+    case 'next-tab':
+      cycleTab(1)
+      break
+    case 'previous-tab':
+      cycleTab(-1)
+      break
+  }
+}
+
 const openNewMessage = () => {
   if (appStore.view !== 'connection' || !mqttTopicsStore.selectedConnection) return
 
@@ -71,6 +100,8 @@ onMounted(() => {
   ElectronApi.handleRequestMqttMessages(() => {
     ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
   })
+
+  ElectronApi.handleMenuCommand((_, command) => runMenuCommand(command))
 
   ElectronApi.appVersion((_, value) => {
     appStore.setAppVersion(value)
