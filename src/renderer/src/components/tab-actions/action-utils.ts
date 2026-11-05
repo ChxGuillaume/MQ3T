@@ -158,6 +158,67 @@ export const chainStepLabel = (node: ChainAction['nodes'][number]) => {
   }
 }
 
+const waitDurationMs = (node: ChainAction['nodes'][number]) => {
+  if (node.type !== 'wait') return 0
+
+  const duration = node.data?.duration || 500
+
+  return node.data?.durationType === 's' ? duration * 1000 : duration
+}
+
+export const formatChainDuration = (ms: number) => {
+  if (ms < 1000) return `${ms} ms`
+
+  const seconds = ms / 1000
+
+  if (seconds < 60) return `${Number(seconds.toFixed(1))} s`
+
+  const minutes = Math.floor(seconds / 60)
+  const rest = Math.round(seconds % 60)
+
+  return rest ? `${minutes} min ${rest} s` : `${minutes} min`
+}
+
+export const chainSummary = (chainAction: Pick<ChainAction, 'nodes' | 'edges'>) => {
+  const reachable = chainSteps(chainAction)
+  const reachableIds = new Set(reachable.map((node) => node.id))
+  const nodes = new Map(chainAction.nodes.map((node) => [node.id, node]))
+
+  const longestFrom = new Map<string, number>()
+  const visiting = new Set<string>()
+
+  const longestDuration = (id: string): number => {
+    if (longestFrom.has(id)) return longestFrom.get(id)!
+    if (visiting.has(id)) return 0
+
+    visiting.add(id)
+
+    const node = nodes.get(id)
+    const own = node ? waitDurationMs(node) : 0
+    const next = chainAction.edges
+      .filter((edge) => edge.source === id)
+      .reduce((max, edge) => Math.max(max, longestDuration(edge.target)), 0)
+
+    visiting.delete(id)
+    longestFrom.set(id, own + next)
+
+    return own + next
+  }
+
+  const actions = reachable.flatMap((node) => (node.type === 'action' ? [node] : []))
+
+  return {
+    actionCount: actions.length,
+    waitCount: reachable.filter((node) => node.type === 'wait').length,
+    topicCount: new Set(actions.map((node) => node.data?.action?.topic).filter(Boolean)).size,
+    durationMs: longestDuration('start'),
+    hasBranches: reachable.some(
+      (node) => chainAction.edges.filter((edge) => edge.source === node.id).length > 1
+    ),
+    unlinkedCount: chainAction.nodes.filter((node) => !reachableIds.has(node.id)).length
+  }
+}
+
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 

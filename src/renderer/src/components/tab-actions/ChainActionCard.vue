@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
-import { chainStepLabel, chainSteps } from './action-utils'
+import { chainSummary, formatChainDuration } from './action-utils'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
 import ProgressRing from './action-chain/ProgressRing.vue'
@@ -18,13 +18,21 @@ const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
 const { running, run } = useRunActionChain()
 
-const steps = computed(() =>
-  chainSteps(props.chainAction).map((node) => ({
-    id: node.id,
-    type: node.type,
-    label: chainStepLabel(node)
-  }))
-)
+const summary = computed(() => chainSummary(props.chainAction))
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
+
+const stats = computed(() => {
+  const { actionCount, waitCount, topicCount, durationMs, hasBranches } = summary.value
+
+  return [
+    { icon: 'i-lucide-send', label: plural(actionCount, 'action'), show: true },
+    { icon: 'i-lucide-hash', label: plural(topicCount, 'topic'), show: topicCount > 0 },
+    { icon: 'i-lucide-hourglass', label: plural(waitCount, 'wait'), show: waitCount > 0 },
+    { icon: 'i-lucide-timer', label: `~${formatChainDuration(durationMs)}`, show: durationMs > 0 },
+    { icon: 'i-lucide-git-fork', label: 'Parallel', show: hasBranches }
+  ].filter((stat) => stat.show)
+})
 
 const handleRun = () => {
   run(props.connectionId, props.chainAction.nodes, props.chainAction.edges)
@@ -52,21 +60,18 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
         >
           {{ chainAction.name }}
         </span>
-        <div class="flex items-center gap-1.5 overflow-hidden">
-          <template v-for="(step, index) in steps" :key="step.id">
-            <span
-              class="rounded-full px-2.5 py-1 text-xs whitespace-nowrap"
-              :class="{
-                'bg-primary text-inverted font-bold': step.type === 'start',
-                'border-default text-muted border border-dashed': step.type === 'wait',
-                'border-default bg-default border': step.type === 'action'
-              }"
-            >
-              {{ step.label }}
+        <div class="text-muted flex items-center gap-x-3 overflow-hidden text-xs whitespace-nowrap">
+          <span v-if="summary.actionCount === 0">No steps connected yet</span>
+          <template v-else>
+            <span v-for="stat in stats" :key="stat.icon" class="flex items-center gap-1">
+              <UIcon :name="stat.icon" class="size-3.5 shrink-0" />
+              {{ stat.label }}
             </span>
-            <span v-if="index < steps.length - 1" aria-hidden="true" class="text-muted">→</span>
           </template>
-          <span v-if="steps.length <= 1" class="text-muted text-xs">No steps connected yet</span>
+          <span v-if="summary.unlinkedCount" class="text-warning flex items-center gap-1">
+            <UIcon name="i-lucide-unlink" class="size-3.5 shrink-0" />
+            {{ summary.unlinkedCount }} unlinked
+          </span>
         </div>
       </div>
       <UButton
