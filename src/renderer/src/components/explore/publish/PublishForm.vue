@@ -216,7 +216,6 @@ defineExpose({ load, openConvert })
           v-model:language="language"
           hide-options
           hide-warning
-          line-numbers
           @submit="sendFromShortcut"
         />
       </div>
