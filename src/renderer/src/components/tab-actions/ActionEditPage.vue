@@ -217,7 +217,7 @@ defineExpose({ confirmLeave })
       <main class="flex min-w-0 flex-1 flex-col overflow-auto px-7 py-5">
         <ActionFields
           v-model="form"
-          class="flex-1"
+          class="flex-auto shrink-0"
           :connection-id="connectionId"
           :errors="errors"
           variable-completion
