@@ -277,8 +277,6 @@ watch(
             v-else
             :value="selected.message"
             :language="selected.dataType"
-            :topic-key="topic"
-            :connection-key="clientKey"
             hide-top-border
           />
         </div>

@@ -294,8 +294,6 @@ watch(
             <CodePreview
               :value="selected.message.message"
               :language="selected.message.dataType"
-              :topic-key="topic"
-              :connection-key="clientKey"
               hide-top-border
             />
           </div>

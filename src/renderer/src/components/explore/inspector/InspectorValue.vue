@@ -110,13 +110,7 @@ const properties = computed(() => {
   />
   <div v-else class="flex flex-col gap-3.5">
     <div class="bg-muted overflow-hidden rounded-lg" :style="{ height: `${previewHeight}px` }">
-      <CodePreview
-        :value="last.message"
-        :language="last.dataType"
-        :topic-key="topic"
-        :connection-key="clientKey"
-        hide-top-border
-      />
+      <CodePreview :value="last.message" :language="last.dataType" hide-top-border />
     </div>
 
     <p class="text-muted text-xs">

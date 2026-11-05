@@ -11,7 +11,7 @@ import {
 } from '@renderer/assets/js/data-graph'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { resolveCssColor, useChartTheme } from '@renderer/composables/useChartTheme'
-import { getDataFromPath } from '@renderer/assets/js/parse-json-for-glyphs'
+import { getDataFromPath } from '@renderer/assets/js/json-path'
 import { MqttMessage, useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { useDataGraphsStore } from '@renderer/store/data-graphs'
