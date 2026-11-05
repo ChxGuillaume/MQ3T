@@ -5,6 +5,7 @@ export type ExploreLayout = 'split' | 'history-full' | 'compare'
 export type HistoryMode = 'list' | 'changes'
 export type TopicDisplayMode = 'tree' | 'line'
 export type TopicListSortKey = 'topic' | 'msgs' | 'updated'
+export type PublishFormat = 'raw' | 'json' | 'xml' | 'yaml'
 
 export const useExploreUiStore = defineStore('explore-ui', {
   state: () => ({
@@ -20,7 +21,8 @@ export const useExploreUiStore = defineStore('explore-ui', {
     hideNoChange: false,
     keyFiltersByTopic: {} as Record<string, string[]>,
     tabByTopic: {} as Record<string, InspectorTab>,
-    publishDrafts: {} as Record<string, string>
+    publishDrafts: {} as Record<string, string>,
+    publishFormat: localStorage.getItem('publishFormat') as PublishFormat | null
   }),
   getters: {
     getTopicTab: (state) => (clientKey: string, topic: string) =>
@@ -42,6 +44,10 @@ export const useExploreUiStore = defineStore('explore-ui', {
     },
     setKeyFilters(clientKey: string, topic: string, filters: string[]) {
       this.keyFiltersByTopic[`${clientKey}:${topic}`] = filters
+    },
+    setPublishFormat(format: PublishFormat) {
+      this.publishFormat = format
+      localStorage.setItem('publishFormat', format)
     }
   }
 })

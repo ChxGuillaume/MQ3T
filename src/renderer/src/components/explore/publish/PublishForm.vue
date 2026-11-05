@@ -5,7 +5,7 @@ import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import CodeEditor from '@renderer/components/tap-topics/CodeEditor.vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
-import { useExploreUiStore } from '@renderer/store/explore-ui'
+import { PublishFormat, useExploreUiStore } from '@renderer/store/explore-ui'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { findCodeError } from '@renderer/assets/js/format-code'
 import { computed, nextTick, reactive, ref, useTemplateRef, watch } from 'vue'
@@ -13,8 +13,6 @@ import { useActionsStore } from '@renderer/store/actions'
 import { defineShortcuts } from '@nuxt/ui/composables'
 import TopicCombobox from './TopicCombobox.vue'
 import type { IClientPublishOptions } from 'mqtt'
-
-type PayloadFormat = 'raw' | 'json' | 'xml' | 'yaml'
 
 const props = defineProps<{ clientKey: string; mode: 'topic' | 'new' }>()
 
@@ -31,10 +29,10 @@ const actionsStore = useActionsStore()
 const editorRef = useTemplateRef('editorRef')
 
 const formats = [
-  { label: 'Raw', value: 'raw' as PayloadFormat },
-  { label: 'JSON', value: 'json' as PayloadFormat },
-  { label: 'XML', value: 'xml' as PayloadFormat },
-  { label: 'YAML', value: 'yaml' as PayloadFormat }
+  { label: 'Raw', value: 'raw' as PublishFormat },
+  { label: 'JSON', value: 'json' as PublishFormat },
+  { label: 'XML', value: 'xml' as PublishFormat },
+  { label: 'YAML', value: 'yaml' as PublishFormat }
 ]
 
 const qosItems = [
@@ -43,7 +41,10 @@ const qosItems = [
   { label: '2', value: 2 as const }
 ]
 
-const language = ref<PayloadFormat>(settingsStore.defaultDataFormat)
+const language = computed({
+  get: (): PublishFormat => exploreUiStore.publishFormat ?? settingsStore.defaultDataFormat,
+  set: (format: PublishFormat) => exploreUiStore.setPublishFormat(format)
+})
 const qos = ref<0 | 1 | 2>(0)
 const retain = ref(false)
 const responseTopic = ref('')
