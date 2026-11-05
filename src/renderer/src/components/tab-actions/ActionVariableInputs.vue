@@ -34,6 +34,13 @@ const toggleNull = (key: string, isNull: boolean, fallback: VariableValue) => {
 
 const enumValue = (key: string) => values.value[key] as string | number
 
+const segmentedLabelBudget = computed(() => (props.size === 'sm' ? 18 : 32))
+
+const fitsSegmented = (options: (string | number)[]) =>
+  options.length <= 4 &&
+  options.reduce<number>((total, option) => total + String(option).length, 0) <=
+    segmentedLabelBudget.value
+
 const enumItems = (options: (string | number)[]) =>
   options.map((option) => ({ label: String(option), value: option }))
 </script>
@@ -105,7 +112,7 @@ const enumItems = (options: (string | number)[]) =>
           No options defined for this list
         </span>
         <SegmentedControl
-          v-else-if="field.options.length <= 4"
+          v-else-if="fitsSegmented(field.options)"
           :model-value="enumValue(field.key)"
           :items="enumItems(field.options)"
           :size="size"
