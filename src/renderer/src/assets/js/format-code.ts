@@ -138,6 +138,10 @@ const xmlError = (message: string): CodeError | null => {
 }
 
 const yamlError = (message: string): CodeError | null => {
+  if (validJson(message)) {
+    return { message: 'This payload is JSON, switch the format to JSON', line: 1, column: 1 }
+  }
+
   try {
     parse(message)
     return null
