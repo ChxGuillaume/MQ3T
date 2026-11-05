@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends string | string[]">
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { statusDotClass } from '../composables/useConnectionStatus'
 import { MqttConnection } from '../../../types/mqtt-connection'
@@ -7,17 +7,19 @@ import { computed } from 'vue'
 const mqttConnectionsStore = useMqttConnectionsStore()
 
 const props = defineProps<{
-  modelValue: string
+  modelValue: T
   noRules?: boolean
+  multiple?: boolean
+  exclude?: string[]
 }>()
 
 const emits = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:modelValue': [value: T]
 }>()
 
-const connectionValue = computed<string>({
+const connectionValue = computed<T>({
   get: () => props.modelValue,
-  set: (value) => emits('update:modelValue', value || '')
+  set: (value) => emits('update:modelValue', (value || (props.multiple ? [] : '')) as T)
 })
 
 const sortedConnectionsFunc = (a: MqttConnection, b: MqttConnection) => {
@@ -32,7 +34,7 @@ const sortedConnectionsFunc = (a: MqttConnection, b: MqttConnection) => {
 
 const items = computed(() =>
   mqttConnectionsStore.savedConnections
-    .slice()
+    .filter((connection) => !props.exclude?.includes(connection.clientKey))
     .sort(sortedConnectionsFunc)
     .map((connection) => ({
       label: connection.name,
@@ -42,7 +44,7 @@ const items = computed(() =>
 )
 
 const selectedItem = computed(() =>
-  items.value.find((item) => item.value === connectionValue.value)
+  props.multiple ? undefined : items.value.find((item) => item.value === connectionValue.value)
 )
 </script>
 
@@ -50,8 +52,9 @@ const selectedItem = computed(() =>
   <USelectMenu
     v-model="connectionValue"
     :items="items"
+    :multiple="multiple"
     value-key="value"
-    placeholder="Connection"
+    :placeholder="multiple ? 'Connections' : 'Connection'"
     :search-input="{ placeholder: 'Search connections' }"
   >
     <template #leading>

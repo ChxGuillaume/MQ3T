@@ -1,5 +1,6 @@
 import { ChainAction, ConnectionsChainActions } from '../../../types/actions'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
+import { useActionsStore } from './actions'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 
@@ -8,19 +9,6 @@ export const useChainActionsStore = defineStore('chain-actions', {
     chainActions: {} as ConnectionsChainActions
   }),
   getters: {
-    getConnectionChainActions: (state) => (connectionId: string) => {
-      return state.chainActions[connectionId] || {}
-    },
-    getGroupChainActions: (state) => (connectionId: string, groupId: string) => {
-      return state.chainActions[connectionId]?.[groupId] || []
-    },
-    getGroupChainActionsRecord: (state) => (connectionId: string, groupId: string) => {
-      const record = state.chainActions[connectionId]
-
-      if (!record) return {}
-
-      return { [groupId]: record[groupId] }
-    },
     getChainAction: (state) => (chainActionId: string) => {
       for (const connectionId in state.chainActions) {
         for (const groupId in state.chainActions[connectionId]) {
@@ -36,6 +24,30 @@ export const useChainActionsStore = defineStore('chain-actions', {
     }
   },
   actions: {
+    storageKey(connectionId: string, groupId: string): string {
+      return useActionsStore().resolveGroupStorageKey(connectionId, groupId)
+    },
+    getConnectionChainActions(connectionId: string): Record<string, ChainAction[]> {
+      const sharedGroups = useActionsStore().getSharedGroupsForConnection(connectionId)
+
+      return {
+        ...(this.chainActions[connectionId] || {}),
+        ...Object.fromEntries(
+          sharedGroups.map((group) => [group.id, this.getGroupChainActions(connectionId, group.id)])
+        )
+      }
+    },
+    getGroupChainActions(connectionId: string, groupId: string): ChainAction[] {
+      return this.chainActions[this.storageKey(connectionId, groupId)]?.[groupId] || []
+    },
+    ensureGroupChainActions(connectionId: string, groupId: string): ChainAction[] {
+      const storageKey = this.storageKey(connectionId, groupId)
+
+      if (!this.chainActions[storageKey]) this.chainActions[storageKey] = {}
+      if (!this.chainActions[storageKey][groupId]) this.chainActions[storageKey][groupId] = []
+
+      return this.chainActions[storageKey][groupId]
+    },
     setChainActions(chainActions: ConnectionsChainActions) {
       this.chainActions = chainActions
     },
@@ -44,17 +56,16 @@ export const useChainActionsStore = defineStore('chain-actions', {
       groupId: string,
       chainActions: ChainAction[]
     ) {
-      if (!this.chainActions[connectionId]) this.chainActions[connectionId] = {}
+      const storageKey = this.storageKey(connectionId, groupId)
 
-      this.chainActions[connectionId][groupId] = chainActions
+      if (!this.chainActions[storageKey]) this.chainActions[storageKey] = {}
+
+      this.chainActions[storageKey][groupId] = chainActions
 
       this.saveChainActions()
     },
     addChainAction(connectionId: string, groupId: string, chainActions: Omit<ChainAction, 'id'>) {
-      if (!this.chainActions[connectionId]) this.chainActions[connectionId] = {}
-      if (!this.chainActions[connectionId][groupId]) this.chainActions[connectionId][groupId] = []
-
-      this.chainActions[connectionId][groupId].push({
+      this.ensureGroupChainActions(connectionId, groupId).push({
         ...chainActions,
         groupId: groupId,
         id: `chain-action-${uuidV4()}`
@@ -63,10 +74,7 @@ export const useChainActionsStore = defineStore('chain-actions', {
       this.saveChainActions()
     },
     copyChainAction(connectionId: string, groupId: string, chainAction: ChainAction) {
-      if (!this.chainActions[connectionId]) this.chainActions[connectionId] = {}
-      if (!this.chainActions[connectionId][groupId]) this.chainActions[connectionId][groupId] = []
-
-      this.chainActions[connectionId][groupId].push({
+      this.ensureGroupChainActions(connectionId, groupId).push({
         ...JSON.parse(JSON.stringify(chainAction)),
         id: `chain-action-${uuidV4()}`,
         groupId
@@ -75,50 +83,50 @@ export const useChainActionsStore = defineStore('chain-actions', {
       this.saveChainActions()
     },
     updateChainAction(connectionId: string, groupId: string, chainActions: ChainAction) {
-      if (!this.chainActions[connectionId]) return
-      if (!this.chainActions[connectionId][groupId]) return
-
-      const index = this.chainActions[connectionId][groupId].findIndex(
-        (a) => a.id === chainActions.id
-      )
+      const groupChainActions = this.getGroupChainActions(connectionId, groupId)
+      const index = groupChainActions.findIndex((a) => a.id === chainActions.id)
 
       if (index === -1) return
 
-      this.chainActions[connectionId][groupId][index] = chainActions
+      groupChainActions[index] = chainActions
 
       this.saveChainActions()
     },
     deleteChainAction(connectionId: string, groupId: string, chainActionId: string) {
-      if (!this.chainActions[connectionId]) return
-      if (!this.chainActions[connectionId][groupId]) return
-
-      const index = this.chainActions[connectionId][groupId].findIndex(
-        (a) => a.id === chainActionId
-      )
+      const groupChainActions = this.getGroupChainActions(connectionId, groupId)
+      const index = groupChainActions.findIndex((a) => a.id === chainActionId)
 
       if (index === -1) return
 
-      this.chainActions[connectionId][groupId].splice(index, 1)
+      groupChainActions.splice(index, 1)
 
       this.saveChainActions()
     },
     deleteGroupChainActions(connectionId: string, groupId: string, moveToDefault = true) {
-      if (!this.chainActions[connectionId]) return
-      if (!this.chainActions[connectionId][groupId]) return
+      const storageKey = this.storageKey(connectionId, groupId)
+      const groupChainActions = this.chainActions[storageKey]?.[groupId]
+
+      if (!groupChainActions) return
 
       if (moveToDefault) {
-        if (!this.chainActions[connectionId]['default']) {
-          this.chainActions[connectionId]['default'] = []
-        }
-
-        this.chainActions[connectionId]['default'].push(...this.chainActions[connectionId][groupId])
-
-        this.chainActions[connectionId]['default'].forEach((action) => {
-          action.groupId = 'default'
-        })
+        this.ensureGroupChainActions(connectionId, 'default').push(
+          ...groupChainActions.map((chainAction) => ({ ...chainAction, groupId: 'default' }))
+        )
       }
 
-      delete this.chainActions[connectionId][groupId]
+      delete this.chainActions[storageKey][groupId]
+
+      this.saveChainActions()
+    },
+    moveGroupChainActions(fromConnectionId: string, toConnectionId: string, groupId: string) {
+      const groupChainActions = this.chainActions[fromConnectionId]?.[groupId]
+
+      if (!groupChainActions) return
+
+      if (!this.chainActions[toConnectionId]) this.chainActions[toConnectionId] = {}
+
+      this.chainActions[toConnectionId][groupId] = groupChainActions
+      delete this.chainActions[fromConnectionId][groupId]
 
       this.saveChainActions()
     },

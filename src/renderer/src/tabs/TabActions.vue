@@ -2,6 +2,7 @@
 import SelectConnectionAndGroupDialog from '../components/tab-actions/dialogs/SelectConnectionAndGroupDialog.vue'
 import ActionsToDefaultGroupDialog from '../components/tab-actions/dialogs/ActionsToDefaultGroupDialog.vue'
 import SelectConnectionDialog from '../components/tab-actions/dialogs/SelectConnectionDialog.vue'
+import ShareActionGroupDialog from '../components/tab-actions/dialogs/ShareActionGroupDialog.vue'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
 import ChainActionCard from '../components/tab-actions/ChainActionCard.vue'
 import ActionEditPage from '../components/tab-actions/ActionEditPage.vue'
@@ -80,6 +81,20 @@ const groups = computed({
   get: () => actionsStore.getConnectionGroups(selectedConnection.value),
   set: (value) => actionsStore.setSelectedConnectionGroups(value)
 })
+
+const sharedConnectionNames = (groupId: string) =>
+  actionsStore
+    .getGroupConnectionIds(groupId)
+    .filter((id) => id !== selectedConnection.value)
+    .map((id) => mqttConnectionsStore.getConnection(id)?.name ?? id)
+
+const sharedGroupTitle = (groupId: string) =>
+  `Shared with ${sharedConnectionNames(groupId).join(', ')}`
+
+const isGroupDraggable = (event: { draggedContext: { element: ActionGroup } }) =>
+  !actionsStore
+    .getSharedGroupsForConnection(selectedConnection.value)
+    .some((g) => g.id === event.draggedContext.element.id)
 
 const currentGroup = computed<ActionGroup | undefined>(() => {
   if (selectedGroup.value === ALL_GROUPS) return undefined
@@ -277,7 +292,29 @@ const moveGroup = ref({
 
 const deleteGroupDialog = ref({ opened: false, groupId: '', actionCount: 0, chainActionCount: 0 })
 
+const shareGroupDialog = ref({ opened: false, group: undefined as ActionGroup | undefined })
+
+const handleUnshareGroup = (group: ActionGroup) => {
+  actionsStore.unshareGroupFromConnection(group.id, selectedConnection.value)
+
+  if (selectedGroup.value === group.id) selectGroup('default')
+}
+
 const handleDeleteGroup = async (groupId: string) => {
+  if (actionsStore.isSharedGroup(groupId)) {
+    const otherConnections = sharedConnectionNames(groupId)
+
+    const confirmed = await confirmModal.open({
+      title: `Delete “${actionsStore.findGroup(groupId)?.name}”?`,
+      description: `This group is shared with ${otherConnections.join(', ')}. Deleting it removes it from every connection.`,
+      confirmLabel: 'Delete everywhere',
+      confirmIcon: 'i-lucide-trash-2',
+      danger: true
+    }).result
+
+    if (!confirmed) return
+  }
+
   const actionCount = actionsStore.getConnectionGroupActions(
     selectedConnection.value,
     groupId
@@ -292,8 +329,8 @@ const handleDeleteGroup = async (groupId: string) => {
     return
   }
 
-  actionsStore.deleteActionGroup(groupId)
   chainActionsStore.deleteGroupChainActions(selectedConnection.value, groupId)
+  actionsStore.deleteActionGroup(groupId)
 
   if (selectedGroup.value === groupId) selectGroup('default')
 }
@@ -301,8 +338,8 @@ const handleDeleteGroup = async (groupId: string) => {
 const handleDeleteGroupDialog = (moveToDefault: boolean) => {
   const { groupId } = deleteGroupDialog.value
 
-  actionsStore.deleteActionGroup(groupId, moveToDefault)
   chainActionsStore.deleteGroupChainActions(selectedConnection.value, groupId, moveToDefault)
+  actionsStore.deleteActionGroup(groupId, moveToDefault)
 
   if (selectedGroup.value === groupId) selectGroup('default')
 }
@@ -362,10 +399,12 @@ const handleGroupExport = (groupId: string) => {
 
   if (!group) return
 
+  const { sharedWith: _, ...exportedGroup } = group
+
   exportJson('mq3t-group.json', {
     version: 1,
     type: 'groups',
-    groups: [group],
+    groups: [exportedGroup],
     actions: {
       [group.id]: actionsStore.getConnectionGroupActions(selectedConnection.value, groupId)
     },
@@ -379,8 +418,15 @@ const handleConnectionExport = () => {
   const allChainActions = clone(
     chainActionsStore.getConnectionChainActions(selectedConnection.value)
   )
-  const allActions = clone(actionsStore.actions[selectedConnection.value] || {})
-  const allGroups = [...actionsStore.getConnectionGroups(selectedConnection.value)]
+  const allActions = Object.fromEntries(
+    [DEFAULT_GROUP, ...actionsStore.getConnectionGroups(selectedConnection.value)].map((group) => [
+      group.id,
+      clone(actionsStore.getConnectionGroupActions(selectedConnection.value, group.id))
+    ])
+  )
+  const allGroups: ActionGroup[] = actionsStore
+    .getConnectionGroups(selectedConnection.value)
+    .map(({ sharedWith: _, ...group }) => group)
 
   if (allActions['default']?.length || allChainActions['default']?.length) {
     const groupId = `group-${uuidV4()}`
@@ -413,6 +459,7 @@ const handleImport = () => {
 
 const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
   const isDefault = group.id === 'default'
+  const isShared = !isDefault && actionsStore.isSharedGroup(group.id)
 
   return [
     isDefault
@@ -422,7 +469,21 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
             label: 'Edit',
             icon: 'i-lucide-pencil',
             onSelect: () => (groupDialog.value = { opened: true, group })
-          }
+          },
+          {
+            label: 'Share with connections…',
+            icon: 'i-lucide-link',
+            onSelect: () => (shareGroupDialog.value = { opened: true, group })
+          },
+          ...(isShared
+            ? [
+                {
+                  label: 'Remove from this connection',
+                  icon: 'i-lucide-unlink',
+                  onSelect: () => handleUnshareGroup(group)
+                }
+              ]
+            : [])
         ],
     [
       {
@@ -436,7 +497,7 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
             group: isDefault ? { id: 'default', name: 'Default Copy' } : group
           })
       },
-      ...(isDefault
+      ...(isDefault || isShared
         ? []
         : [
             {
@@ -610,6 +671,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
             :animation="200"
             group="groups"
             item-key="id"
+            :move="isGroupDraggable"
             ghost-class="opacity-40"
             class="flex flex-col gap-0.5"
           >
@@ -627,6 +689,12 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
                     @keydown.enter="selectGroup(element.id)"
                   >
                     <span class="min-w-0 flex-1 truncate text-left">{{ element.name }}</span>
+                    <UTooltip
+                      v-if="actionsStore.isSharedGroup(element.id)"
+                      :text="sharedGroupTitle(element.id)"
+                    >
+                      <UIcon name="i-lucide-link" class="text-muted size-3.5 shrink-0" />
+                    </UTooltip>
                     <span class="text-muted text-xs font-medium group-hover:hidden">
                       {{ groupCount(element.id) }}
                     </span>
@@ -683,7 +751,17 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
       <main class="flex min-w-0 flex-1 flex-col gap-[22px] overflow-auto px-6 py-5">
         <div class="flex flex-wrap items-end justify-between gap-3">
           <div class="min-w-0">
-            <h1 class="truncate text-2xl leading-[30px] font-bold">{{ pageTitle }}</h1>
+            <div class="flex min-w-0 items-center gap-2">
+              <h1 class="truncate text-2xl leading-[30px] font-bold">{{ pageTitle }}</h1>
+              <UBadge
+                v-if="currentGroup && actionsStore.isSharedGroup(currentGroup.id)"
+                color="neutral"
+                variant="subtle"
+                icon="i-lucide-link"
+                :label="sharedGroupTitle(currentGroup.id)"
+                class="shrink-0"
+              />
+            </div>
             <p v-if="pageDescription" class="text-muted mt-1 text-[13px]">{{ pageDescription }}</p>
           </div>
           <div class="flex gap-2">
@@ -814,6 +892,11 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
       :action-group="groupDialog.group"
       @create:action-group="actionsStore.addActionGroup($event)"
       @update:action-group="actionsStore.updateActionGroup($event)"
+    />
+    <ShareActionGroupDialog
+      v-model:opened="shareGroupDialog.opened"
+      :connection-id="selectedConnection"
+      :group="shareGroupDialog.group"
     />
     <SelectConnectionDialog
       v-model:opened="moveGroup.opened"
