@@ -103,7 +103,7 @@ const items = computed(() => connectionItems(props.connection))
           </span>
         </div>
 
-        <div class="border-default mt-auto flex items-center gap-3 border-t pt-3">
+        <div class="mt-auto flex items-center gap-3">
           <span
             class="flex min-w-0 items-center gap-2 text-xs leading-none font-semibold"
             :class="opened ? 'text-default' : 'text-muted'"
