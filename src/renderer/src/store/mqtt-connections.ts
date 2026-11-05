@@ -10,7 +10,8 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     connectionsStatus: {} as Record<string, MqttConnectionStatus>,
     connectedAt: {} as Record<string, number>,
     reconnectAttempts: {} as Record<string, number>,
-    lastErrors: {} as Record<string, string>
+    lastErrors: {} as Record<string, string>,
+    tabOrder: [] as string[]
   }),
   getters: {
     getConnection:
@@ -21,9 +22,10 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         )
       },
     getConnectionsWithStatus(): MqttConnection[] {
-      return this.connections.filter((connection) => {
-        return this.connectionsStatus[connection.clientKey]
-      })
+      return this.tabOrder
+        .filter((clientKey) => this.connectionsStatus[clientKey])
+        .map((clientKey) => this.getConnection(clientKey))
+        .filter((connection): connection is MqttConnection => !!connection)
     },
     getConnectionsFromClientKeyList: (state) => (clientKeyList: string[]) => {
       return state.connections.filter((connection) => {
@@ -67,6 +69,7 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       this.disconnectClient(clientKey)
 
       this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
+      this.removeFromTabOrder(clientKey)
 
       this.saveConnections()
     },
@@ -75,6 +78,8 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     },
     setConnectionStatus(clientKey: string, status: MqttConnectionStatus) {
       this.connectionsStatus[clientKey] = status
+
+      if (!this.tabOrder.includes(clientKey)) this.tabOrder.push(clientKey)
 
       if (status === 'connected') {
         this.connectedAt[clientKey] = Date.now()
@@ -100,6 +105,13 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       delete this.connectionsStatus[clientKey]
       delete this.reconnectAttempts[clientKey]
       delete this.lastErrors[clientKey]
+      this.removeFromTabOrder(clientKey)
+    },
+    setTabOrder(clientKeys: string[]) {
+      this.tabOrder = clientKeys
+    },
+    removeFromTabOrder(clientKey: string) {
+      this.tabOrder = this.tabOrder.filter((key) => key !== clientKey)
     },
     connectClient(clientKey: string) {
       const status = this.connectionsStatus[clientKey]
