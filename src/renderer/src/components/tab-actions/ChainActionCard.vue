@@ -23,14 +23,51 @@ const summary = computed(() => chainSummary(props.chainAction))
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 const stats = computed(() => {
-  const { actionCount, waitCount, topicCount, durationMs, hasBranches } = summary.value
+  const { actionCount, waitCount, topicCount, durationMs, hasBranches, unlinkedCount } =
+    summary.value
+  const duration = `~${formatChainDuration(durationMs)}`
 
   return [
-    { icon: 'i-lucide-send', label: plural(actionCount, 'action'), show: true },
-    { icon: 'i-lucide-hash', label: plural(topicCount, 'topic'), show: topicCount > 0 },
-    { icon: 'i-lucide-hourglass', label: plural(waitCount, 'wait'), show: waitCount > 0 },
-    { icon: 'i-lucide-timer', label: `~${formatChainDuration(durationMs)}`, show: durationMs > 0 },
-    { icon: 'i-lucide-git-fork', label: 'Parallel', show: hasBranches }
+    {
+      icon: 'i-lucide-send',
+      short: String(actionCount),
+      label: plural(actionCount, 'action'),
+      show: true
+    },
+    {
+      icon: 'i-lucide-hash',
+      short: String(topicCount),
+      label: plural(topicCount, 'topic'),
+      show: topicCount > 0
+    },
+    {
+      icon: 'i-lucide-hourglass',
+      short: String(waitCount),
+      label: plural(waitCount, 'wait'),
+      show: waitCount > 0
+    },
+    {
+      icon: 'i-lucide-timer',
+      short: duration,
+      label: duration,
+      tooltip: 'Estimated duration',
+      show: durationMs > 0
+    },
+    {
+      icon: 'i-lucide-git-fork',
+      short: '',
+      label: 'Parallel',
+      tooltip: 'Runs branches in parallel',
+      show: hasBranches
+    },
+    {
+      icon: 'i-lucide-unlink',
+      short: String(unlinkedCount),
+      label: `${unlinkedCount} unlinked`,
+      tooltip: plural(unlinkedCount, 'step') + ' not connected to start',
+      warning: true,
+      show: unlinkedCount > 0
+    }
   ].filter((stat) => stat.show)
 })
 
@@ -60,18 +97,21 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
         >
           {{ chainAction.name }}
         </span>
-        <div class="text-muted flex items-center gap-x-3 overflow-hidden text-xs whitespace-nowrap">
-          <span v-if="summary.actionCount === 0">No steps connected yet</span>
-          <template v-else>
-            <span v-for="stat in stats" :key="stat.icon" class="flex items-center gap-1">
-              <UIcon :name="stat.icon" class="size-3.5 shrink-0" />
-              {{ stat.label }}
+        <div class="@container min-w-0">
+          <div class="text-muted flex items-center gap-x-2.5 text-xs whitespace-nowrap @sm:gap-x-3">
+            <span v-if="summary.actionCount === 0 && !summary.unlinkedCount">
+              No steps connected yet
             </span>
-          </template>
-          <span v-if="summary.unlinkedCount" class="text-warning flex items-center gap-1">
-            <UIcon name="i-lucide-unlink" class="size-3.5 shrink-0" />
-            {{ summary.unlinkedCount }} unlinked
-          </span>
+            <template v-else>
+              <UTooltip v-for="stat in stats" :key="stat.icon" :text="stat.tooltip ?? stat.label">
+                <span class="flex items-center gap-1" :class="{ 'text-warning': stat.warning }">
+                  <UIcon :name="stat.icon" class="size-3.5 shrink-0" />
+                  <span v-if="stat.short" class="@sm:hidden">{{ stat.short }}</span>
+                  <span class="hidden @sm:inline">{{ stat.label }}</span>
+                </span>
+              </UTooltip>
+            </template>
+          </div>
         </div>
       </div>
       <UButton
