@@ -90,7 +90,7 @@ const openFromFavorites = (topic: string) => {
       :items="splitterItems"
       auto-save-id="mq3t-explore-splitter"
       class="min-h-0 flex-1"
-      :ui="{ panel: 'min-w-0 flex-col' }"
+      :ui="{ panel: 'min-w-0 flex-col', handle: 'w-px bg-(--ui-border)' }"
     >
       <template #tree>
         <section aria-label="Topic explorer" class="flex h-full min-w-0 flex-1 flex-col">
@@ -111,13 +111,13 @@ const openFromFavorites = (topic: string) => {
         <NewMessagePanel
           v-if="exploreUiStore.newMessageOpened"
           :client-key="clientKey"
-          class="border-default h-full border-l"
+          class="h-full"
         />
         <TopicInspector
           v-else
           :client-key="clientKey"
           :topic="mqttTopicsStore.selectedTopic"
-          class="border-default h-full border-l"
+          class="h-full"
           @select="revealTopic"
         />
       </template>
