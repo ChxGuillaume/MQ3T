@@ -48,6 +48,7 @@ const updatePreviewValue = _.debounce(
     codeEditor?.setValue(formatedValue)
 
     if (props.language === 'json') addGlyphs(formatedValue)
+    else clearGlyphs()
   },
   250,
   { leading: true, trailing: true, maxWait: 250 }
@@ -56,11 +57,18 @@ const updatePreviewValue = _.debounce(
 const decodePathFromClass = (index: string): string | undefined =>
   glyphsData.value[parseInt(index)]?.path
 
+const clearGlyphs = () => {
+  glyphsData.value = []
+  glyphDecorations?.clear()
+  codeEditor?.updateOptions({ glyphMargin: false })
+}
+
 const addGlyphs = (formatedValue: string) => {
   if (props.hideGlyphs || !codeEditor) return
 
   glyphsData.value = parseJsonForGlyphs(formatedValue)
 
+  codeEditor.updateOptions({ glyphMargin: glyphsData.value.length > 0 })
   glyphDecorations?.clear()
   glyphDecorations = codeEditor.createDecorationsCollection(
     glyphsData.value.map(({ lineNumber }, index) => ({
@@ -111,6 +119,7 @@ onMounted(() => {
     fontFamily: "Consolas, 'Courier New', ui-monospace, monospace",
     readOnly: true,
     lineNumbers: 'off',
+    lineDecorationsWidth: 4,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
@@ -120,7 +129,7 @@ onMounted(() => {
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6
     },
-    glyphMargin: !props.hideGlyphs
+    glyphMargin: false
   })
 
   if (props.language === 'json') addGlyphs(formatedValue)

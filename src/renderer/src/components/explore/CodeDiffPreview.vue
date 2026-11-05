@@ -67,6 +67,7 @@ onMounted(() => {
     readOnly: true,
     originalEditable: false,
     lineNumbers: 'off',
+    glyphMargin: false,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
