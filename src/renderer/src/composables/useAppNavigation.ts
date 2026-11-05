@@ -36,6 +36,8 @@ export function useAppNavigation() {
   }
 
   const openNewTab = () => {
+    if (selectedClientKey.value) appStore.clientKeyBeforeNewTab = selectedClientKey.value
+
     mqttTopicsStore.selectedConnection = ''
     appStore.setView('new-tab')
   }
@@ -66,9 +68,22 @@ export function useAppNavigation() {
     else appStore.setView('new-tab')
   }
 
+  const closeNewTab = () => {
+    const openKeys = mqttConnectionsStore.getConnectionsWithStatus.map((c) => c.clientKey)
+    const previousKey = appStore.clientKeyBeforeNewTab
+
+    if (!openKeys.length) return
+
+    openConnection(
+      previousKey && openKeys.includes(previousKey) ? previousKey : openKeys[openKeys.length - 1]
+    )
+  }
+
   const closeCurrentTab = () => {
     if (appStore.view === 'connection' && selectedClientKey.value) {
       closeConnection(selectedClientKey.value)
+    } else if (appStore.view === 'new-tab') {
+      closeNewTab()
     } else if (appStore.view === 'settings') {
       toggleSettings()
     }
