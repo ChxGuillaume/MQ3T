@@ -236,3 +236,5 @@ fabric.properties
 
 *.dist.yml
 **/.DS_Store
+src/renderer/auto-imports.d.ts
+src/renderer/components.d.ts
