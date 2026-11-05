@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { formatTile, isWildcardTopic, topicParts, wildcardTargets } from './action-utils'
+import {
+  formatTile,
+  hasGeneratedUuid,
+  isWildcardTopic,
+  topicParts,
+  variableFields,
+  wildcardTargets
+} from './action-utils'
 import type { ContextMenuItem, DropdownMenuItem } from '@nuxt/ui'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { useActionSend } from '@renderer/composables/useActionSend'
@@ -8,6 +15,15 @@ import { Action } from '../../../../types/actions'
 import { computed } from 'vue'
 
 const MAX_TARGETS = 8
+const MAX_ENUM_CHIPS = 6
+
+const VARIABLE_TYPES = {
+  string: { icon: 'i-lucide-type', label: 'text' },
+  number: { icon: 'i-lucide-hash', label: 'number' },
+  boolean: { icon: 'i-lucide-toggle-left', label: 'boolean' },
+  enum: { icon: 'i-lucide-list', label: 'list' },
+  uuidV4: { icon: 'i-lucide-fingerprint', label: 'generated' }
+} as const
 
 const props = defineProps<{
   action: Action
@@ -30,12 +46,6 @@ const tile = computed(() => formatTile(props.action.payloadFormat))
 
 const isWildcard = computed(() => isWildcardTopic(props.action.topic))
 
-const enumSummary = (name: string) => {
-  const options = props.action.enumOptions?.[name]
-
-  return options?.length ? `${name}: ${options.join(' · ')}` : name
-}
-
 const VARIABLE_REGEX = /\$(?:s|n|b|enum)\$([a-zA-Z0-9_ -]+)\$|\$uuid\$v4\$/g
 
 const payloadSegments = computed(() => {
@@ -55,13 +65,27 @@ const payloadSegments = computed(() => {
 })
 
 const variables = computed(() => {
-  const names = new Set<string>()
+  const seen = new Set<string>()
+  const rows: {
+    key: string
+    name: string
+    type: keyof typeof VARIABLE_TYPES
+    options: (string | number)[]
+  }[] = []
 
-  for (const match of props.action.payload.matchAll(VARIABLE_REGEX)) {
-    if (match[1]) names.add(match[1])
+  for (const field of variableFields(props.action)) {
+    const key = `${field.type}:${field.name}`
+
+    if (seen.has(key)) continue
+    seen.add(key)
+    rows.push({ key, name: field.name, type: field.type, options: field.options })
   }
 
-  return Array.from(names).map(enumSummary)
+  if (hasGeneratedUuid(props.action.payload)) {
+    rows.push({ key: 'uuid', name: 'uuid', type: 'uuidV4', options: [] })
+  }
+
+  return rows
 })
 
 const targets = computed(() => {
@@ -219,21 +243,68 @@ const menuItems = computed<ContextMenuItem[][]>(() => {
           </template>
           <template v-if="variables.length">
             <span class="text-dimmed">·</span>
-            <UTooltip :content="{ side: 'top', align: 'start' }" :ui="{ content: 'h-auto py-1.5' }">
-              <span class="text-primary flex min-w-0 items-center gap-1 font-semibold">
+            <UPopover
+              mode="hover"
+              :open-delay="150"
+              :content="{ side: 'top', align: 'start' }"
+              :ui="{ content: 'w-72 p-0' }"
+            >
+              <span
+                class="text-primary flex min-w-0 cursor-default items-center gap-1 font-semibold"
+              >
                 <UIcon name="i-lucide-variable" class="size-3.5 shrink-0" />
                 <span class="truncate">
                   {{ variables.length }} variable{{ variables.length === 1 ? '' : 's' }}
                 </span>
               </span>
               <template #content>
-                <ul class="flex max-w-72 flex-col gap-0.5 py-0.5">
-                  <li v-for="variable in variables" :key="variable" class="truncate">
-                    {{ variable }}
+                <div class="border-default flex items-center border-b px-3 py-2">
+                  <span class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
+                    Variables
+                  </span>
+                  <span class="text-dimmed ml-auto text-xs">{{ variables.length }}</span>
+                </div>
+                <ul class="divide-default flex max-h-72 flex-col divide-y overflow-y-auto text-xs">
+                  <li
+                    v-for="variable in variables"
+                    :key="variable.key"
+                    class="flex flex-col gap-1.5 px-3 py-2"
+                  >
+                    <div class="flex min-w-0 items-center gap-2">
+                      <UIcon
+                        :name="VARIABLE_TYPES[variable.type].icon"
+                        class="text-muted size-3.5 shrink-0"
+                      />
+                      <span class="truncate font-mono font-semibold" :title="variable.name">
+                        {{ variable.name }}
+                      </span>
+                      <span class="text-muted ml-auto shrink-0">
+                        {{ VARIABLE_TYPES[variable.type].label }}
+                      </span>
+                    </div>
+                    <div v-if="variable.type === 'enum'" class="flex flex-wrap gap-1 pl-5.5">
+                      <span
+                        v-for="option in variable.options.slice(0, MAX_ENUM_CHIPS)"
+                        :key="String(option)"
+                        class="border-default max-w-full truncate rounded-sm border px-1.5 py-px"
+                        :class="typeof option === 'number' ? 'text-code-num font-mono' : ''"
+                      >
+                        {{ option }}
+                      </span>
+                      <span
+                        v-if="variable.options.length > MAX_ENUM_CHIPS"
+                        class="text-muted self-center"
+                      >
+                        +{{ variable.options.length - MAX_ENUM_CHIPS }}
+                      </span>
+                      <span v-if="!variable.options.length" class="text-warning">
+                        No options defined
+                      </span>
+                    </div>
                   </li>
                 </ul>
               </template>
-            </UTooltip>
+            </UPopover>
           </template>
           <template v-if="isWildcard && !disableWildcard">
             <span class="text-dimmed">·</span>
