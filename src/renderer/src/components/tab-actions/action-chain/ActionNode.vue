@@ -40,7 +40,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
 <template>
   <UContextMenu :items="menuItems">
     <div
-      class="bg-default flex w-[220px] items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-[opacity,box-shadow]"
+      class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
       :class="[
         selected || data?.isRunning ? 'border-primary ring-primary ring-1' : 'border-default',
         { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished }
