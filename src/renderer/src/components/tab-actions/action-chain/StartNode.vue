@@ -1,12 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
 
-const props = defineProps(['id'])
+defineProps<{ id: string; selected?: boolean }>()
 </script>
 
 <template>
-  <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:text-lg">
-    <q-icon name="fa-solid fa-flag-checkered" />
+  <div
+    class="bg-primary text-inverted flex h-10 items-center rounded-lg px-4 text-[13px] font-bold"
+    :class="{ 'ring-primary/40 ring-4': selected }"
+  >
     Start
   </div>
 

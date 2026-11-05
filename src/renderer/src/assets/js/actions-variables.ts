@@ -62,3 +62,16 @@ export const getPayloadVariablesCount = (payload: string) => {
     .map((item) => item.variables)
     .flat().length
 }
+
+export const maskActionVariables = (payload: string) =>
+  actionsVariablesArray.reduce(
+    (result, variable) =>
+      result.replace(variable.regex, (match) => {
+        const open = match.startsWith('"') ? '"' : ''
+        const close = match.length > 1 && match.endsWith('"') ? '"' : ''
+        const filler = open || close ? 'x' : '1'
+
+        return open + filler.repeat(match.length - open.length - close.length) + close
+      }),
+    payload
+  )

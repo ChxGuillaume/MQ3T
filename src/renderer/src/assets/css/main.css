@@ -1,0 +1,139 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+@import './highlight.css';
+
+@source '../../';
+@source inline(
+  '{border,bg}-{slate,gray,zinc,neutral,stone,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}'
+);
+
+@theme static {
+  --font-sans: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Cascadia Mono', monospace;
+
+  --breakpoint-3xl: 120rem;
+
+  --color-plum-50: #fdf4fd;
+  --color-plum-100: #fae8fa;
+  --color-plum-200: #f5d0f4;
+  --color-plum-300: #edaaec;
+  --color-plum-400: #e675e4;
+  --color-plum-500: #d248cf;
+  --color-plum-600: #b02dac;
+  --color-plum-700: #91228c;
+  --color-plum-800: #7a1c76;
+  --color-plum-900: #650164;
+  --color-plum-950: #3f003e;
+
+  --color-accent: #e675e4;
+  --color-tertiary: #f0ad4e;
+}
+
+@theme inline {
+  --color-chrome: var(--ui-bg-elevated);
+  --color-code-sym: var(--code-sym);
+  --color-code-str: var(--code-str);
+  --color-code-num: var(--code-num);
+  --color-code-bin: var(--code-bin);
+  --color-code-key: var(--ui-primary);
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+}
+
+:root {
+  --ui-primary: #650164;
+  --ui-secondary: #2c8500;
+  --ui-success: #2f9e44;
+  --ui-warning: #b57f00;
+  --ui-error: #d32f2f;
+
+  --ui-bg: #ffffff;
+  --ui-bg-muted: #f5f5f5;
+  --ui-bg-elevated: #efeff1;
+  --ui-bg-accented: #e8e8ea;
+  --ui-bg-inverted: #1a1a1a;
+
+  --ui-border: #dcdcdc;
+  --ui-border-muted: #e8e8e8;
+  --ui-border-accented: #c4c4c4;
+  --ui-border-inverted: #1a1a1a;
+
+  --ui-text: #1a1a1a;
+  --ui-text-highlighted: #000000;
+  --ui-text-toned: #333333;
+  --ui-text-muted: #666666;
+  --ui-text-dimmed: #8a8a8a;
+  --ui-text-inverted: #ffffff;
+
+  --code-sym: #3f6a88;
+  --code-str: #7d5646;
+  --code-num: #25700a;
+  --code-bin: #8a5a00;
+}
+
+.dark {
+  --ui-primary: #e675e4;
+  --ui-secondary: #75e67c;
+  --ui-success: #4caf50;
+  --ui-warning: #ffd54f;
+  --ui-error: #ff6b6b;
+
+  --ui-bg: #121212;
+  --ui-bg-muted: #1f1f1f;
+  --ui-bg-elevated: #1a1a1a;
+  --ui-bg-accented: #2a2a2a;
+  --ui-bg-inverted: #f2f2f2;
+
+  --ui-border: #333333;
+  --ui-border-muted: #2a2a2a;
+  --ui-border-accented: #454545;
+  --ui-border-inverted: #f2f2f2;
+
+  --ui-text: #f2f2f2;
+  --ui-text-highlighted: #ffffff;
+  --ui-text-toned: #d4d4d4;
+  --ui-text-muted: #a3a3a3;
+  --ui-text-dimmed: #7a7a7a;
+  --ui-text-inverted: #121212;
+
+  --code-sym: #75b9e6;
+  --code-str: #d69d85;
+  --code-num: #75e67c;
+  --code-bin: #e8b964;
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--ui-border-accented);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--ui-text-dimmed);
+  }
+
+  body {
+    @apply bg-default text-default font-sans text-sm antialiased;
+  }
+}

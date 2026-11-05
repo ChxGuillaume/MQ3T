@@ -1,23 +1,15 @@
 <script setup lang="ts">
-import { useHighlightTheme } from '@renderer/composables/useHighlightTheme'
+import { useAppColorMode } from '@renderer/composables/useAppColorMode'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
-import { onBeforeMount, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import { watch } from 'vue'
 
-const $q = useQuasar()
+const { isDark } = useAppColorMode()
 
-useHighlightTheme()
-
-watch(
-  () => $q.dark.isActive,
-  (isDark) => ElectronApi.darkMode(isDark)
-)
-
-onBeforeMount(() => ElectronApi.darkMode($q.dark.isActive))
+watch(isDark, (value) => ElectronApi.darkMode(value), { immediate: true })
 </script>
 
 <template>
-  <router-view />
+  <UApp :toaster="{ position: 'bottom-center', duration: 2500 }">
+    <router-view />
+  </UApp>
 </template>
-
-<style lang="less"></style>

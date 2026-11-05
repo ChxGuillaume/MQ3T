@@ -90,6 +90,8 @@ const sendMessageToRenderer = (channel: string, ...args: any[]) => {
   if (mainWindow.isDestroyed()) return
 
   mainWindow.webContents.send(channel, ...args)
+
+  if (channel === 'mqtt-status') getGraphWindow()?.webContents.send(channel, ...args)
 }
 
 const createConnection = async (connection: MqttConnection) => {
@@ -163,7 +165,7 @@ const readJsonFile = (filePath: string) => {
   if (fs.existsSync(filePath)) {
     try {
       return JSON.parse(fs.readFileSync(filePath).toString())
-    } catch (e) {
+    } catch {
       return undefined
     }
   }

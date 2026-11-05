@@ -16,6 +16,7 @@ hljs.registerLanguage('yaml', yaml)
 type Props = {
   code: string
   language?: 'json' | 'xml' | 'yaml' | 'raw'
+  block?: boolean
 }
 
 const props = defineProps<Props>()
@@ -23,7 +24,7 @@ const props = defineProps<Props>()
 const messageSize = computed(() => props.code.length)
 
 const showFormatedCode = computed(
-  () => props.language !== 'raw' && messageSize.value < MAX_CODE_LENGTH
+  () => !!props.language && props.language !== 'raw' && messageSize.value < MAX_CODE_LENGTH
 )
 
 const codeTextRef = ref<HTMLElement>()
@@ -31,7 +32,7 @@ const codeTextRef = ref<HTMLElement>()
 const updateElementHighlight = () => {
   if (!props.language || props.language === 'raw') return
 
-  const code = formatCode(props.code, props.language)
+  const code = props.block ? formatCode(props.code, props.language) : props.code
 
   if (codeTextRef.value) {
     codeTextRef.value.innerHTML = hljs.highlight(code, { language: props.language }).value
@@ -41,11 +42,11 @@ const updateElementHighlight = () => {
 watch(
   [() => props.code, () => props.language],
   () => {
-    if (!props.language || props.language === 'raw') return
-
-    updateElementHighlight()
+    if (!showFormatedCode.value) return
 
     nextTick(() => {
+      updateElementHighlight()
+
       if (!codeTextRef.value) return
 
       codeTextRef.value.querySelectorAll('span.hljs-number').forEach((el) => {
@@ -63,24 +64,32 @@ watch(
 
 onMounted(() => updateElementHighlight())
 
-const getRawCode = () => {
+const rawCode = computed(() => {
   if (props.code.length > MAX_RAW_CODE_LENGTH) {
-    return `${props.code.slice(0, MAX_RAW_CODE_LENGTH)}... (truncated)`
-  } else return props.code
-}
+    return `${props.code.slice(0, MAX_RAW_CODE_LENGTH)}… (truncated)`
+  }
+
+  return props.code
+})
+
+const tokenClasses =
+  '[&_.hljs-attr]:text-code-key [&_.hljs-name]:text-code-key [&_.hljs-string]:text-code-str [&_.hljs-number]:text-code-num [&_.hljs-literal]:text-code-sym [&_.hljs-keyword]:text-code-sym [&_.hljs-punctuation]:text-default'
 </script>
 
 <template>
-  <span v-if="showFormatedCode" ref="codeTextRef" class="code-text" />
-  <span v-else class="code-text" v-text="getRawCode()" />
+  <component
+    :is="block ? 'pre' : 'span'"
+    v-if="showFormatedCode"
+    ref="codeTextRef"
+    class="font-mono"
+    :class="[tokenClasses, block ? 'break-all whitespace-pre-wrap' : 'truncate']"
+  />
+  <component
+    :is="block ? 'pre' : 'span'"
+    v-else
+    class="font-mono"
+    :class="block ? 'break-all whitespace-pre-wrap' : 'truncate'"
+  >
+    {{ rawCode }}
+  </component>
 </template>
-
-<style scoped lang="less">
-.code-text {
-  margin-left: 0.25rem;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.75rem;
-  line-height: 1rem;
-}
-</style>

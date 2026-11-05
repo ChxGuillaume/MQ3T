@@ -1,124 +1,84 @@
-<script setup>
-import { computed, ref } from 'vue'
-import { Handle, Position, useVueFlow } from '@vue-flow/core'
-import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.vue'
-import NodeIcon from '@renderer/components/tab-actions/action-chain/NodeIcon.vue'
+<script setup lang="ts">
+import { Handle, Position } from '@vue-flow/core'
+import type { ContextMenuItem } from '@nuxt/ui'
+import { formatTile } from '../action-utils'
+import { Action } from '../../../../../types/actions'
+import ProgressRing from './ProgressRing.vue'
+import { computed } from 'vue'
 
-const props = defineProps(['id', 'data', 'connectionId'])
-defineEmits(['copy', 'remove'])
+const props = defineProps<{
+  id: string
+  data: { action?: Action; isRunning?: boolean; isFinished?: boolean }
+  selected?: boolean
+  dimmed?: boolean
+}>()
 
-const { updateNodeData } = useVueFlow()
+const emit = defineEmits<{ edit: []; copy: []; remove: [] }>()
 
-const actionDialogOpened = ref(false)
+const action = computed(() => props.data?.action)
 
-const action = computed({
-  get: () => props.data.action,
-  set: (action) => updateNodeData(props.id, { action })
-})
+const tile = computed(() => formatTile(action.value?.payloadFormat))
 
-const isRunning = computed(() => {
-  return props.data.isRunning
-})
-
-const isFinished = computed(() => {
-  return props.data.isFinished
-})
+const menuItems = computed<ContextMenuItem[][]>(() => [
+  [
+    {
+      label: action.value ? 'Edit' : 'Set up',
+      icon: 'i-lucide-pencil',
+      onSelect: () => emit('edit')
+    },
+    {
+      label: 'Duplicate',
+      icon: 'i-lucide-copy',
+      disabled: !action.value,
+      onSelect: () => emit('copy')
+    }
+  ],
+  [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => emit('remove') }]
+])
 </script>
 
 <template>
-  <div class="tw:flex tw:h-full tw:w-full tw:flex-col tw:justify-around tw:p-1">
-    <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:text-lg">
-      <node-icon :is-running="isRunning" :is-finished="isFinished" icon="fa-solid fa-paper-plane" />
-      Action
-    </div>
-
-    <q-separator />
-
+  <UContextMenu :items="menuItems">
     <div
-      v-if="action"
-      class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-around tw:gap-2 tw:px-1"
+      class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
+      :class="[
+        selected || data?.isRunning ? 'border-primary ring-primary ring-1' : 'border-default',
+        { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished }
+      ]"
     >
-      <q-icon name="fa-solid fa-exchange-alt" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="action.topic" />
-      </q-icon>
-
-      <q-icon
-        v-if="action.description"
-        name="fa-solid fa-info-circle"
-        class="color-details"
-        size="xs"
+      <span
+        class="border-default flex size-7 shrink-0 items-center justify-center rounded-sm border font-mono text-[11px] font-bold"
+        :class="tile.class"
       >
-        <q-tooltip class="tw:whitespace-pre tw:text-sm" v-text="action.description" />
-      </q-icon>
-
-      <q-icon name="fa-solid fa-ranking-star" class="color-details tw:px-1" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="`QoS ${action.qos}`" />
-      </q-icon>
-
-      <q-icon v-if="action.retained" name="fa-solid fa-retweet" class="color-details" size="xs">
-        <q-tooltip class="tw:text-sm">Retained</q-tooltip>
-      </q-icon>
-
-      <q-icon name="fa-solid fa-file-lines" class="color-details tw:cursor-pointer" size="xs">
-        <q-tooltip class="tw:text-sm" v-text="action.payload" />
-      </q-icon>
+        {{ tile.glyph }}
+      </span>
+      <div v-if="action" class="min-w-0 flex-1 text-left">
+        <div class="truncate text-[13px] font-bold">{{ action.name || 'Action' }}</div>
+        <div class="text-muted truncate font-mono text-[11px]" :title="action.topic">
+          {{ action.topic }}
+        </div>
+      </div>
+      <div v-else class="flex min-w-0 flex-1 items-center">
+        <UButton
+          size="xs"
+          color="primary"
+          variant="soft"
+          icon="i-lucide-wrench"
+          label="Set up"
+          class="nodrag"
+          @click.stop="emit('edit')"
+        />
+      </div>
+      <ProgressRing v-if="data?.isRunning" class="text-primary shrink-0" />
+      <UIcon
+        v-else-if="data?.isFinished"
+        name="i-lucide-check"
+        class="text-success size-[18px] shrink-0"
+        aria-label="Sent"
+      />
     </div>
-    <div v-else class="tw:flex tw:min-h-[28px] tw:items-center tw:justify-center">
-      <q-btn size="sm" color="accent" flat class="tw:px-2" @click="actionDialogOpened = true">
-        <q-icon name="fa-solid fa-wrench" class="tw:mr-2" size="16px" />
-        Setup
-      </q-btn>
-    </div>
-  </div>
+  </UContextMenu>
 
-  <q-menu context-menu>
-    <q-list dense>
-      <q-item v-close-popup class="tw:text-blue-500" clickable @click="actionDialogOpened = true">
-        <q-item-section>
-          <div>
-            <q-icon name="fa-solid fa-edit" class="tw:mr-2" />
-            Edit
-          </div>
-        </q-item-section>
-      </q-item>
-
-      <q-item
-        v-close-popup
-        :disable="!action"
-        class="tw:text-amber-500"
-        clickable
-        @click="$emit('copy')"
-      >
-        <q-item-section>
-          <div class="tw:flex tw:items-center tw:gap-2">
-            <q-icon name="fa-solid fa-copy" class="tw:mr-2" />
-            Copy
-          </div>
-        </q-item-section>
-      </q-item>
-
-      <q-item v-close-popup class="tw:text-red-500" clickable @click="$emit('remove')">
-        <q-item-section>
-          <div class="tw:flex tw:items-center tw:gap-2">
-            <q-icon name="fa-solid fa-trash" class="tw:mr-2" />
-            Delete
-          </div>
-        </q-item-section>
-      </q-item>
-    </q-list>
-  </q-menu>
-
-  <action-dialog
-    v-model:opened="actionDialogOpened"
-    :edit-mode="!!action"
-    :action="action"
-    :connection-id="connectionId"
-    no-wildcard
-    no-title
-    @create:action="action = $event"
-    @update:action="action = $event"
-  />
-
-  <Handle type="source" :position="Position.Right" />
   <Handle type="target" :position="Position.Left" />
+  <Handle type="source" :position="Position.Right" />
 </template>

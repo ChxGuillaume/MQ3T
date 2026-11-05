@@ -1,23 +1,28 @@
 <script setup lang="ts">
-import ImportChainActions from '@renderer/components/ImportChainActions.vue'
-import ImportActionsGroups from '../components/ImportActionsGroups.vue'
+import ImportActionsDialog from '@renderer/components/tab-actions/dialogs/ImportActionsDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
-import { computed, onMounted, onUnmounted, watch } from 'vue'
-import ImportActions from '../components/ImportActions.vue'
+import { computed, onMounted, watch } from 'vue'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { useDataGraphsStore } from '../store/data-graphs'
 import { useSettingsStore } from '../store/settings-store'
-import UpdateAlerts from '../components/UpdateAlerts.vue'
+import UpdateDialog from '../components/settings/UpdateDialog.vue'
 import { ElectronApi } from '../assets/js/electron-api'
-import TabConnections from '../tabs/TabConnections.vue'
+import ConnectionLostBanner from '../components/connections/ConnectionLostBanner.vue'
+import ConnectionEditor from '../components/connections/ConnectionEditor.vue'
+import NewTabView from '../components/connections/NewTabView.vue'
+import BrokerView from '../components/broker/BrokerView.vue'
+import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
+import AppTitleBar from '../components/shell/AppTitleBar.vue'
+import GraphsSection from '../components/graphs/GraphsSection.vue'
+import { useAppNavigation } from '../composables/useAppNavigation'
 import { useActionsStore } from '../store/actions'
-import TabSettings from '../tabs/TabSettings.vue'
+import SettingsView from '../components/settings/SettingsView.vue'
 import { useAppStore } from '../store/app-store'
 import TabActions from '../tabs/TabActions.vue'
-import TabTopics from '../tabs/TabTopics.vue'
-import AppBar from '../components/AppBar.vue'
-import { useQuasar } from 'quasar'
+import ExploreView from '../components/explore/ExploreView.vue'
+import { useExploreUiStore } from '../store/explore-ui'
+import { defineShortcuts, useToast } from '@nuxt/ui/composables'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -26,61 +31,40 @@ const dataGraphsStore = useDataGraphsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
+const exploreUiStore = useExploreUiStore()
+const toast = useToast()
 
-const currentTab = computed({
-  get: () => appStore.currentTab,
-  set: (val) => {
-    appStore.setCurrentTab(val)
-  }
+const { currentSection, openSection, openNewTab, toggleSettings } = useAppNavigation()
+
+const isConnectionLost = computed(() => {
+  const status = mqttConnectionsStore.getConnectionStatus(mqttTopicsStore.selectedConnection)
+
+  return status === 'disconnected' || status === 'reconnecting'
 })
 
-const $q = useQuasar()
+defineShortcuts({
+  meta_1: () => openSection('explore'),
+  meta_2: () => openSection('actions'),
+  meta_3: () => openSection('graphs'),
+  meta_4: () => openSection('broker'),
+  meta_t: () => openNewTab(),
+  meta_n: () => openNewMessage(),
+  'meta_,': () => toggleSettings()
+})
 
-const handleKeyUp = (event: KeyboardEvent) => {
-  if (event.ctrlKey) {
-    switch (event.key) {
-      case '1':
-        currentTab.value = 'topics'
-        break
-      case '2':
-        currentTab.value = 'actions'
-        break
-      case '4':
-        currentTab.value = 'settings'
-        break
-      case '5':
-        currentTab.value = 'connections'
-        break
-    }
-  }
+const openNewMessage = () => {
+  if (appStore.view !== 'connection' || !mqttTopicsStore.selectedConnection) return
+
+  openSection('explore')
+  exploreUiStore.openNewMessage()
 }
 
-watch(
-  () => $q.dark.isActive,
-  (value) => {
-    const classDark = 'dark'
-
-    if (value) document.documentElement.classList.add(classDark)
-    else document.documentElement.classList.remove(classDark)
-  }
-)
-
 onMounted(() => {
-  const storedTheme = localStorage.getItem('darkMode')
-
-  switch (storedTheme) {
-    case 'true':
-      $q.dark.set(true)
-      break
-    case 'false':
-      $q.dark.set(false)
-      break
-    default:
-      $q.dark.set('auto')
-      break
-  }
-
   ElectronApi.initRenderer()
+
+  ElectronApi.handleRequestMqttMessages(() => {
+    ElectronApi.transferMqttMessages(JSON.parse(JSON.stringify(mqttTopicsStore.topicsMessages)))
+  })
 
   ElectronApi.appVersion((_, value) => {
     appStore.setAppVersion(value)
@@ -93,14 +77,17 @@ onMounted(() => {
   ElectronApi.handleMqttError((event, value) => {
     console.error(event, value)
 
+    mqttConnectionsStore.setConnectionError(value.clientKey, value.error.message)
+
     const connection = mqttConnectionsStore.getConnection(value.clientKey)
 
     if (!connection) return
 
-    $q.notify({
-      message: `[${connection.name}]`,
-      caption: value.error.message,
-      type: 'negative'
+    toast.add({
+      title: connection.name,
+      description: value.error.message,
+      color: 'error',
+      icon: 'i-lucide-circle-alert'
     })
   })
 
@@ -130,8 +117,6 @@ onMounted(() => {
 
   dataGraphsStore.initStore()
   settingsStore.initStore()
-
-  window.addEventListener('keyup', handleKeyUp)
 })
 
 // TODO: This is kept as a counter mesure due to the refactoring of the application,
@@ -144,60 +129,43 @@ watch(
     actionsStore.selectedConnection = clientKey
   }
 )
-
-onUnmounted(() => {
-  window.removeEventListener('keyup', handleKeyUp)
-})
 </script>
 
 <template>
-  <div class="main-view tw:grid tw:h-full tw:grid-rows-[auto_1fr]">
-    <app-bar v-model="currentTab" />
-    <div class="tw:flex tw:content-between tw:overflow-auto">
-      <div class="tw:grow">
-        <q-tab-panels v-model="currentTab" class="tw:h-full tw:bg-transparent" vertical keep-alive>
-          <q-tab-panel class="tw:p-0" name="topics">
-            <tab-topics />
-          </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="actions">
-            <tab-actions />
-          </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="settings">
-            <tab-settings />
-          </q-tab-panel>
-          <q-tab-panel class="tw:p-0" name="connections">
-            <tab-connections />
-          </q-tab-panel>
-        </q-tab-panels>
+  <div class="main-view flex h-full flex-col">
+    <app-title-bar />
+
+    <settings-view v-if="appStore.view === 'settings'" class="min-h-0 flex-1" />
+
+    <connection-editor
+      v-else-if="appStore.view === 'connection-editor'"
+      :key="appStore.editingClientKey ?? 'new'"
+      class="min-h-0 flex-1"
+    />
+
+    <div
+      v-else-if="appStore.view === 'connection' && mqttTopicsStore.selectedConnection"
+      class="flex min-h-0 flex-1 flex-col"
+    >
+      <connection-toolbar @new-message="openNewMessage" />
+
+      <connection-lost-banner
+        v-if="isConnectionLost"
+        :client-key="mqttTopicsStore.selectedConnection"
+      />
+
+      <div class="min-h-0 flex-1 overflow-auto" :class="{ 'opacity-55': isConnectionLost }">
+        <keep-alive>
+          <explore-view v-if="currentSection === 'explore'" />
+          <tab-actions v-else-if="currentSection === 'actions'" />
+          <graphs-section v-else-if="currentSection === 'graphs'" />
+          <broker-view v-else-if="currentSection === 'broker'" />
+        </keep-alive>
       </div>
     </div>
+
+    <new-tab-view v-else class="min-h-0 flex-1 overflow-auto" />
   </div>
-  <update-alerts />
-  <import-actions />
-  <import-chain-actions />
-  <import-actions-groups />
+  <update-dialog />
+  <import-actions-dialog />
 </template>
-
-<style lang="less">
-@import '../assets/css/styles.less';
-
-.nav-bar-left {
-  border-right-width: 1px;
-  min-width: 135px;
-  width: 135px;
-}
-
-.body--light {
-  .nav-bar-left {
-    border-color: rgb(0 0 0 / 0.1);
-    background-color: #f4f4f5;
-  }
-}
-
-.body--dark {
-  .nav-bar-left {
-    border-color: rgb(255 255 255 / 0.1);
-    background-color: #171717;
-  }
-}
-</style>

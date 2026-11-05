@@ -32,6 +32,9 @@ export const useFavoriteTopicsStore = defineStore('favorite-topics', {
     },
     removeFavoriteTopic(clientId: string, topic: string) {
       this.favoriteTopics.get(clientId)?.delete(topic)
+    },
+    reorderFavoriteTopics(clientId: string, topics: string[]) {
+      this.favoriteTopics.set(clientId, new Map(topics.map((topic) => [topic, true])))
     }
   }
 })

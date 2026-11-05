@@ -3,20 +3,21 @@ import SelectConnectionAndGroupDialog from '../components/tab-actions/dialogs/Se
 import ActionsToDefaultGroupDialog from '../components/tab-actions/dialogs/ActionsToDefaultGroupDialog.vue'
 import SelectConnectionDialog from '../components/tab-actions/dialogs/SelectConnectionDialog.vue'
 import ActionGroupDialog from '../components/tab-actions/dialogs/ActionGroupDialog.vue'
-import ChainActionScreen from '@renderer/components/tab-actions/ChainActionScreen.vue'
-import ChainActionCard from '@renderer/components/tab-actions/ChainActionCard.vue'
-import ActionDialog from '../components/tab-actions/dialogs/ActionDialog.vue'
-import ActionGroupCard from '../components/tab-actions/ActionGroupCard.vue'
-import { useChainActionsStore } from '@renderer/store/chain-actions'
-import { useMqttConnectionsStore } from '../store/mqtt-connections'
+import ChainActionCard from '../components/tab-actions/ChainActionCard.vue'
+import ActionEditPage from '../components/tab-actions/ActionEditPage.vue'
+import ConfirmDialog from '../components/tab-actions/dialogs/ConfirmDialog.vue'
+import ChainEditor from '../components/tab-actions/ChainEditor.vue'
+import { clone, DEFAULT_GROUP } from '../components/tab-actions/action-utils'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
-import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
-import SplitterIcon from '../components/SplitterIcon.vue'
+import { useMqttConnectionsStore } from '../store/mqtt-connections'
+import { useChainActionsStore } from '../store/chain-actions'
+import { useOverlay, useToast } from '@nuxt/ui/composables'
+import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { ElectronApi } from '../assets/js/electron-api'
-import { useAppStore } from '@renderer/store/app-store'
+import type { ContextMenuItem } from '@nuxt/ui'
 import { useActionsStore } from '../store/actions'
+import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
-import { computed, ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import {
   Action,
@@ -27,208 +28,359 @@ import {
   ExportChainActionsFile
 } from '../../../types/actions'
 
+type View =
+  | { kind: 'list' }
+  | { kind: 'action'; groupId: string; actionId?: string }
+  | { kind: 'chain'; groupId: string; chainId?: string }
+
+const ALL_GROUPS = 'all'
+
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
-const appStore = useAppStore()
+const overlay = useOverlay()
+const toast = useToast()
 
-const actionGroupDialogOpened = ref<boolean>(false)
-const actionDialogOpened = ref<boolean>(false)
-const splitterModel = ref<number>(400)
+const confirmModal = overlay.create(ConfirmDialog)
 
-const editActionGroup = ref<ActionGroup | undefined>()
-const editAction = ref<Action | undefined>()
-
-const moveActionCurrentGroupId = ref<string>('default')
-const moveActionDialogOpened = ref<boolean>(false)
-const moveActionConnectionId = ref<string | undefined>()
-const moveActionActionId = ref<string | undefined>()
-const moveActionGroupId = ref<string>('default')
-const moveActionType = ref<'copy' | 'move'>('copy')
-
-const moveChainActionCurrentGroupId = ref<string>('default')
-const moveChainActionDialogOpened = ref<boolean>(false)
-const moveChainActionConnectionId = ref<string | undefined>()
-const moveChainActionChainActionId = ref<string | undefined>()
-const moveChainActionGroupId = ref<string>('default')
-const moveChainActionType = ref<'copy' | 'move'>('copy')
-
-const moveOrCopyActionGroup = ref({
-  dialogOpened: false,
-  type: 'copy' as 'copy' | 'move',
-  connectionId: '',
-  actionGroup: undefined as ActionGroup | undefined
-})
-
-const deleteGroupActionDialog = ref({
-  dialogOpened: false,
-  chainActionCount: 0,
-  actionCount: 0,
-  groupId: ''
-})
-
-const tab = ref<string>('list')
-
-const isDraggingAction = ref<boolean>(false)
-
-const clone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj))
-
-const handleMoveAction = () => {
-  if (!moveActionConnectionId.value || !moveActionActionId.value || !moveActionGroupId.value) return
-
-  const action = actionsStore.getAction(moveActionActionId.value)
-
-  if (!action) return
-
-  actionsStore.addActionToConnectionGroup(
-    action,
-    moveActionConnectionId.value,
-    moveActionGroupId.value
-  )
-
-  if (moveActionType.value === 'move') {
-    actionsStore.deleteActionFromConnectionGroup(
-      moveActionActionId.value,
-      moveActionConnectionId.value,
-      moveActionCurrentGroupId.value
-    )
-  }
-}
-
-const handleMoveChainAction = () => {
-  if (
-    !moveChainActionConnectionId.value ||
-    !moveChainActionChainActionId.value ||
-    !moveChainActionGroupId.value
-  ) {
-    return
-  }
-
-  const chainAction = chainActionsStore.getChainAction(moveChainActionChainActionId.value)
-
-  if (!chainAction) return
-
-  chainActionsStore.copyChainAction(
-    moveChainActionConnectionId.value,
-    moveChainActionGroupId.value,
-    chainAction
-  )
-
-  if (moveChainActionType.value === 'move') {
-    chainActionsStore.deleteChainAction(
-      moveChainActionConnectionId.value,
-      moveChainActionCurrentGroupId.value,
-      moveChainActionChainActionId.value
-    )
-  }
-}
+const view = ref<View>({ kind: 'list' })
+const search = ref('')
+const selectedGroup = ref<string>(actionsStore.selectedActionGroup || 'default')
 
 const selectedConnection = computed(() => mqttTopicsStore.selectedConnection)
 
-const selectedConnectionStatus = computed(() => {
-  return mqttConnectionsStore.getConnectionStatus(selectedConnection.value)
+const isDisconnected = computed(
+  () => mqttConnectionsStore.getConnectionStatus(selectedConnection.value) !== 'connected'
+)
+
+const isRealGroup = computed(() => selectedGroup.value !== ALL_GROUPS)
+
+const targetGroupId = computed(() => (isRealGroup.value ? selectedGroup.value : 'default'))
+
+const selectGroup = (groupId: string) => {
+  selectedGroup.value = groupId
+  search.value = ''
+
+  if (groupId !== ALL_GROUPS) actionsStore.setSelectedActionGroup(groupId)
+}
+
+watch(selectedConnection, () => {
+  view.value = { kind: 'list' }
+
+  const exists =
+    selectedGroup.value === ALL_GROUPS ||
+    selectedGroup.value === 'default' ||
+    !!actionsStore.getConnectionGroup(selectedConnection.value, selectedGroup.value)
+
+  selectGroup(exists ? selectedGroup.value : ALL_GROUPS)
 })
 
-const selectedActionGroup = computed({
-  get: () => actionsStore.selectedActionGroup,
-  set: (value) => actionsStore.setSelectedActionGroup(value)
+const groups = computed({
+  get: () => actionsStore.getConnectionGroups(selectedConnection.value),
+  set: (value) => actionsStore.setSelectedConnectionGroups(value)
 })
 
-const actions = computed({
-  get: () => actionsStore.selectedConnectionGroupActions,
-  set: (value) => actionsStore.setSelectedConnectionGroupActions(value)
+const currentGroup = computed<ActionGroup | undefined>(() => {
+  if (selectedGroup.value === ALL_GROUPS) return undefined
+  if (selectedGroup.value === 'default') return DEFAULT_GROUP
+
+  return actionsStore.getConnectionGroup(selectedConnection.value, selectedGroup.value)
 })
 
-const chainActions = computed({
-  get: () =>
-    chainActionsStore.getGroupChainActions(selectedConnection.value, selectedActionGroup.value),
+const groupCount = (groupId: string) =>
+  actionsStore.getConnectionGroupActions(selectedConnection.value, groupId).length +
+  chainActionsStore.getGroupChainActions(selectedConnection.value, groupId).length
+
+const totalCount = computed(
+  () =>
+    actionsStore.getConnectionActions(selectedConnection.value).length +
+    Object.values(chainActionsStore.getConnectionChainActions(selectedConnection.value)).flat()
+      .length
+)
+
+const groupActions = computed({
+  get: () => actionsStore.getConnectionGroupActions(selectedConnection.value, selectedGroup.value),
+  set: (value) => {
+    actionsStore.setSelectedActionGroup(selectedGroup.value)
+    actionsStore.setSelectedConnectionGroupActions(value)
+  }
+})
+
+const groupChains = computed({
+  get: () => chainActionsStore.getGroupChainActions(selectedConnection.value, selectedGroup.value),
   set: (value) =>
     chainActionsStore.setConnectionGroupChainActions(
       selectedConnection.value,
-      selectedActionGroup.value,
+      selectedGroup.value,
       value
     )
 })
 
-const groups = computed({
-  get: () => actionsStore.selectedConnectionGroups,
-  set: (value) => actionsStore.setSelectedConnectionGroups(value)
+const normalizedSearch = computed(() => search.value.trim().toLowerCase())
+
+const matchesSearch = (...values: (string | undefined)[]) =>
+  !normalizedSearch.value ||
+  values.some((value) => value?.toLowerCase().includes(normalizedSearch.value))
+
+const visibleActions = computed(() => {
+  const list = isRealGroup.value
+    ? groupActions.value
+    : actionsStore.getConnectionActions(selectedConnection.value)
+
+  return list.filter((a) => matchesSearch(a.name, a.topic, a.description))
 })
 
-const dragOptions = computed(() => {
-  return { animation: 200, group: 'actions', ghostClass: 'ghost' }
+const visibleChains = computed(() => {
+  const list = isRealGroup.value
+    ? groupChains.value
+    : Object.values(chainActionsStore.getConnectionChainActions(selectedConnection.value)).flat()
+
+  return list.filter((c) => matchesSearch(c.name))
 })
 
-const handleImport = () => {
-  ElectronApi.importData([{ name: 'JSON', extensions: ['json'] }])
+const canReorder = computed(() => isRealGroup.value && !normalizedSearch.value)
+
+const sortableActions = computed({
+  get: () => (canReorder.value ? groupActions.value : visibleActions.value),
+  set: (value) => {
+    if (canReorder.value) groupActions.value = value
+  }
+})
+
+const sortableChains = computed({
+  get: () => (canReorder.value ? groupChains.value : visibleChains.value),
+  set: (value) => {
+    if (canReorder.value) groupChains.value = value
+  }
+})
+
+const findAction = (actionId: string): Action | undefined =>
+  actionsStore.getConnectionActions(selectedConnection.value).find((a) => a.id === actionId)
+
+const openAction = (action?: Action) => {
+  view.value = {
+    kind: 'action',
+    groupId: action?.groupId ?? targetGroupId.value,
+    actionId: action?.id
+  }
+}
+
+const openChain = (chain?: ChainAction) => {
+  view.value = { kind: 'chain', groupId: chain?.groupId ?? targetGroupId.value, chainId: chain?.id }
+}
+
+const editingChain = computed(() =>
+  view.value.kind === 'chain' && view.value.chainId
+    ? (chainActionsStore.getChainAction(view.value.chainId) ?? undefined)
+    : undefined
+)
+
+const openSibling = (actionId?: string) => {
+  if (view.value.kind === 'action') view.value = { ...view.value, actionId }
+}
+
+const backToList = () => {
+  view.value = { kind: 'list' }
+}
+
+const handleDeleteAction = async (action: Action) => {
+  const confirmed = await confirmModal.open({
+    title: `Delete “${action.name}”?`,
+    description: 'This action will be removed from the group.',
+    confirmLabel: 'Delete',
+    confirmIcon: 'i-lucide-trash-2',
+    danger: true
+  }).result
+
+  if (!confirmed) return
+
+  actionsStore.deleteActionFromConnectionGroup(action.id, selectedConnection.value, action.groupId)
+}
+
+const handleDeleteChain = async (chain: ChainAction) => {
+  const confirmed = await confirmModal.open({
+    title: `Delete “${chain.name}”?`,
+    description: 'This chain will be removed from the group.',
+    confirmLabel: 'Delete',
+    confirmIcon: 'i-lucide-trash-2',
+    danger: true
+  }).result
+
+  if (!confirmed) return
+
+  chainActionsStore.deleteChainAction(selectedConnection.value, chain.groupId, chain.id)
+}
+
+const moveAction = ref({
+  opened: false,
+  type: 'copy' as 'copy' | 'move',
+  kind: 'action' as 'action' | 'chain',
+  id: '',
+  fromGroupId: 'default',
+  connectionId: '',
+  groupId: 'default'
+})
+
+const openMoveDialog = (
+  kind: 'action' | 'chain',
+  type: 'copy' | 'move',
+  item: { id: string; groupId: string }
+) => {
+  moveAction.value = {
+    opened: true,
+    type,
+    kind,
+    id: item.id,
+    fromGroupId: item.groupId,
+    connectionId: selectedConnection.value,
+    groupId: item.groupId
+  }
+}
+
+const handleMoveAction = () => {
+  const { kind, type, id, fromGroupId, connectionId, groupId } = moveAction.value
+
+  if (!connectionId || !groupId) return
+
+  if (kind === 'action') {
+    const action = findAction(id)
+
+    if (!action) return
+
+    actionsStore.addActionToConnectionGroup(action, connectionId, groupId)
+
+    if (type === 'move') {
+      actionsStore.deleteActionFromConnectionGroup(id, selectedConnection.value, fromGroupId)
+    }
+  } else {
+    const chain = chainActionsStore.getChainAction(id)
+
+    if (!chain) return
+
+    chainActionsStore.copyChainAction(connectionId, groupId, chain)
+
+    if (type === 'move') {
+      chainActionsStore.deleteChainAction(selectedConnection.value, fromGroupId, id)
+    }
+  }
+}
+
+const groupDialog = ref({ opened: false, group: undefined as ActionGroup | undefined })
+
+const moveGroup = ref({
+  opened: false,
+  type: 'copy' as 'copy' | 'move',
+  connectionId: '',
+  group: undefined as ActionGroup | undefined
+})
+
+const deleteGroupDialog = ref({ opened: false, groupId: '', actionCount: 0, chainActionCount: 0 })
+
+const handleDeleteGroup = async (groupId: string) => {
+  const actionCount = actionsStore.getConnectionGroupActions(
+    selectedConnection.value,
+    groupId
+  ).length
+  const chainActionCount = chainActionsStore.getGroupChainActions(
+    selectedConnection.value,
+    groupId
+  ).length
+
+  if (actionCount || chainActionCount) {
+    deleteGroupDialog.value = { opened: true, groupId, actionCount, chainActionCount }
+    return
+  }
+
+  actionsStore.deleteActionGroup(groupId)
+  chainActionsStore.deleteGroupChainActions(selectedConnection.value, groupId)
+
+  if (selectedGroup.value === groupId) selectGroup('default')
+}
+
+const handleDeleteGroupDialog = (moveToDefault: boolean) => {
+  const { groupId } = deleteGroupDialog.value
+
+  actionsStore.deleteActionGroup(groupId, moveToDefault)
+  chainActionsStore.deleteGroupChainActions(selectedConnection.value, groupId, moveToDefault)
+
+  if (selectedGroup.value === groupId) selectGroup('default')
+}
+
+const handleMoveOrCopyGroup = () => {
+  const { connectionId, group, type } = moveGroup.value
+
+  if (!connectionId || !group) return
+
+  const groupCopy = clone(group)
+  const currentConnectionId = selectedConnection.value
+
+  const chains = clone(chainActionsStore.getGroupChainActions(currentConnectionId, groupCopy.id))
+  const actions = clone(actionsStore.getConnectionGroupActions(currentConnectionId, groupCopy.id))
+
+  const newGroup = actionsStore.addActionGroupToConnection(groupCopy, connectionId)
+
+  for (const chain of chains) chainActionsStore.addChainAction(connectionId, newGroup.id, chain)
+  for (const action of actions)
+    actionsStore.addActionToConnectionGroup(action, connectionId, newGroup.id)
+
+  if (type === 'move') {
+    chainActionsStore.deleteGroupChainActions(currentConnectionId, groupCopy.id, false)
+    actionsStore.deleteActionGroupFromConnection(currentConnectionId, groupCopy.id)
+
+    if (selectedGroup.value === groupCopy.id) selectGroup('default')
+  }
+}
+
+const exportJson = (fileName: string, data: unknown) => {
+  ElectronApi.exportData(fileName, JSON.stringify(clone(data)), [
+    { name: 'JSON', extensions: ['json'] }
+  ])
 }
 
 const handleChainActionsExport = (groupId: string) => {
-  const data = {
+  exportJson('mq3t-chain-actions.json', {
     version: 1,
     type: 'chain-actions',
     chainActions: chainActionsStore.getGroupChainActions(selectedConnection.value, groupId)
-  } as ExportChainActionsFile
-
-  ElectronApi.exportData('mq3t-chain-actions.json', JSON.stringify(clone(data)), [
-    { name: 'JSON', extensions: ['json'] }
-  ])
+  } as ExportChainActionsFile)
 }
 
 const handleActionsExport = (groupId: string) => {
-  const data = {
+  exportJson('mq3t-actions.json', {
     version: 1,
     type: 'actions',
-    actions: actionsStore.getSelectedConnectionGroupActions(groupId)
-  } as ExportActionsFile
-
-  ElectronApi.exportData('mq3t-actions.json', JSON.stringify(clone(data)), [
-    { name: 'JSON', extensions: ['json'] }
-  ])
+    actions: actionsStore.getConnectionGroupActions(selectedConnection.value, groupId)
+  } as ExportActionsFile)
 }
 
 const handleGroupExport = (groupId: string) => {
-  let group: ActionGroup | undefined
-
-  if (groupId === 'default') {
-    group = { id: `group-${uuidV4()}`, name: 'Exported Default' }
-  } else {
-    group = actionsStore.getConnectionGroup(selectedConnection.value, groupId)
-  }
-
-  const actionsRecord = actionsStore.getConnectionGroupActionsRecord(
-    selectedConnection.value,
-    groupId
-  )
-
-  const chainActions = chainActionsStore.getGroupChainActionsRecord(
-    selectedConnection.value,
-    groupId
-  )
+  const group =
+    groupId === 'default'
+      ? { id: `group-${uuidV4()}`, name: 'Exported Default' }
+      : actionsStore.getConnectionGroup(selectedConnection.value, groupId)
 
   if (!group) return
 
-  const data = {
+  exportJson('mq3t-group.json', {
     version: 1,
     type: 'groups',
     groups: [group],
-    actions: actionsRecord,
-    chainActions: chainActions
-  } as ExportGroupsFile
-
-  ElectronApi.exportData('mq3t-group.json', JSON.stringify(clone(data)), [
-    { name: 'JSON', extensions: ['json'] }
-  ])
+    actions: {
+      [group.id]: actionsStore.getConnectionGroupActions(selectedConnection.value, groupId)
+    },
+    chainActions: {
+      [group.id]: chainActionsStore.getGroupChainActions(selectedConnection.value, groupId)
+    }
+  } as ExportGroupsFile)
 }
 
 const handleConnectionExport = () => {
   const allChainActions = clone(
     chainActionsStore.getConnectionChainActions(selectedConnection.value)
   )
-
-  const allActions = clone(actionsStore.selectedConnectionGroupActionsRecord)
-  const allGroups = [...actionsStore.selectedConnectionGroups]
+  const allActions = clone(actionsStore.actions[selectedConnection.value] || {})
+  const allGroups = [...actionsStore.getConnectionGroups(selectedConnection.value)]
 
   if (allActions['default']?.length || allChainActions['default']?.length) {
     const groupId = `group-${uuidV4()}`
@@ -236,550 +388,457 @@ const handleConnectionExport = () => {
     allGroups.push({ id: groupId, name: 'Exported Default' })
 
     if (allActions['default']) {
-      allActions[groupId] = allActions['default'].map((action) => {
-        return { ...action, groupId }
-      })
-
+      allActions[groupId] = allActions['default'].map((action) => ({ ...action, groupId }))
       delete allActions['default']
     }
 
     if (allChainActions['default']) {
-      allChainActions[groupId] = allChainActions['default'].map((chainAction) => {
-        return { ...chainAction, groupId }
-      })
-
+      allChainActions[groupId] = allChainActions['default'].map((chain) => ({ ...chain, groupId }))
       delete allChainActions['default']
     }
   }
 
-  const data = {
+  exportJson('mq3t-groups-actions.json', {
     version: 1,
     type: 'groups',
     groups: allGroups,
     actions: allActions,
     chainActions: allChainActions
-  } as ExportGroupsFile
-
-  ElectronApi.exportData('mq3t-groups-actions.json', JSON.stringify(clone(data)), [
-    { name: 'JSON', extensions: ['json'] }
-  ])
+  } as ExportGroupsFile)
 }
 
-const handleDeleteGroup = (groupId: string) => {
-  const actionsCount = actionsStore.getSelectedConnectionGroupActions(groupId).length
-  const chainActionsCount = chainActionsStore.getGroupChainActions(
-    selectedConnection.value,
-    groupId
-  ).length
+const handleImport = () => {
+  ElectronApi.importData([{ name: 'JSON', extensions: ['json'] }])
+}
 
-  if (actionsCount === 0 && chainActionsCount === 0) {
-    actionsStore.deleteActionGroup(groupId)
-    chainActionsStore.deleteGroupChainActions(selectedConnection.value, groupId)
-    return
+const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
+  const isDefault = group.id === 'default'
+
+  return [
+    isDefault
+      ? []
+      : [
+          {
+            label: 'Edit',
+            icon: 'i-lucide-pencil',
+            onSelect: () => (groupDialog.value = { opened: true, group })
+          }
+        ],
+    [
+      {
+        label: 'Copy to connection…',
+        icon: 'i-lucide-copy',
+        onSelect: () =>
+          (moveGroup.value = {
+            opened: true,
+            type: 'copy',
+            connectionId: selectedConnection.value,
+            group: isDefault ? { id: 'default', name: 'Default Copy' } : group
+          })
+      },
+      ...(isDefault
+        ? []
+        : [
+            {
+              label: 'Move to connection…',
+              icon: 'i-lucide-arrow-right-left',
+              onSelect: () =>
+                (moveGroup.value = {
+                  opened: true,
+                  type: 'move',
+                  connectionId: selectedConnection.value,
+                  group
+                })
+            }
+          ])
+    ],
+    [
+      {
+        label: 'Export group',
+        icon: 'i-lucide-upload',
+        onSelect: () => handleGroupExport(group.id)
+      },
+      {
+        label: 'Export actions',
+        icon: 'i-lucide-upload',
+        onSelect: () => handleActionsExport(group.id)
+      },
+      {
+        label: 'Export chains',
+        icon: 'i-lucide-upload',
+        onSelect: () => handleChainActionsExport(group.id)
+      }
+    ],
+    isDefault
+      ? []
+      : [
+          {
+            label: 'Delete',
+            icon: 'i-lucide-trash-2',
+            color: 'error' as const,
+            onSelect: () => handleDeleteGroup(group.id)
+          }
+        ]
+  ].filter((section) => section.length)
+}
+
+const dropTarget = ref<string | null>(null)
+const draggingItem = ref(false)
+
+const handleItemDragStart = (event: DragEvent, id: string) => {
+  event.dataTransfer?.setData('actionId', id)
+  draggingItem.value = true
+}
+
+const handleGroupDrop = (event: DragEvent, groupId: string) => {
+  dropTarget.value = null
+  draggingItem.value = false
+
+  const id = event.dataTransfer?.getData('actionId')
+
+  if (!id) return
+
+  if (id.startsWith('chain-action-')) {
+    const chain = chainActionsStore.getChainAction(id)
+
+    if (!chain || chain.groupId === groupId) return
+
+    chainActionsStore.copyChainAction(selectedConnection.value, groupId, chain)
+    chainActionsStore.deleteChainAction(selectedConnection.value, chain.groupId, chain.id)
+  } else {
+    const action = findAction(id)
+
+    if (!action || action.groupId === groupId) return
+
+    actionsStore.addActionToConnectionGroup(action, selectedConnection.value, groupId)
+    actionsStore.deleteActionFromConnectionGroup(id, selectedConnection.value, action.groupId)
   }
 
-  deleteGroupActionDialog.value.dialogOpened = true
-  deleteGroupActionDialog.value.groupId = groupId
-
-  deleteGroupActionDialog.value.chainActionCount = chainActionsCount
-  deleteGroupActionDialog.value.actionCount = actionsCount
+  toast.add({ title: 'Moved', icon: 'i-lucide-folder-input', duration: 1200 })
 }
 
-const handleDeleteGroupDialog = (moveToDefault: boolean) => {
-  actionsStore.deleteActionGroup(deleteGroupActionDialog.value.groupId, moveToDefault)
-  chainActionsStore.deleteGroupChainActions(
-    selectedConnection.value,
-    deleteGroupActionDialog.value.groupId,
-    moveToDefault
-  )
-}
+const groupDropHandlers = (groupId: string) => ({
+  onDragenter: (event: DragEvent) => {
+    if (!event.dataTransfer?.types.includes('actionid')) return
+    event.preventDefault()
+    dropTarget.value = groupId
+  },
+  onDragover: (event: DragEvent) => {
+    if (event.dataTransfer?.types.includes('actionid')) event.preventDefault()
+  },
+  onDragleave: () => {
+    if (dropTarget.value === groupId) dropTarget.value = null
+  },
+  onDrop: (event: DragEvent) => handleGroupDrop(event, groupId)
+})
 
-const handleDropped = (id: string, groupId: string) => {
-  if (id.startsWith('action-')) {
-    handleActionDropped(id, groupId)
-  } else if (id.startsWith('chain-action-')) {
-    handleChainActionDropped(id, groupId)
-  }
-}
+const navItemClass = (groupId: string) => [
+  dropTarget.value === groupId
+    ? 'bg-success/15 text-success ring-success ring-1 ring-inset'
+    : selectedGroup.value === groupId
+      ? 'bg-primary/10 text-primary font-bold'
+      : 'hover:bg-muted font-medium'
+]
 
-const handleActionDropped = (actionId: string, groupId: string) => {
-  const action = actionsStore.getAction(actionId)
+const pageTitle = computed(() => currentGroup.value?.name ?? 'All actions')
 
-  if (!action) return
+const pageDescription = computed(() => {
+  if (!currentGroup.value) return 'Every action and chain on this connection'
+  if (currentGroup.value.id === 'default') return 'Actions that are not in a group'
+  return currentGroup.value.description
+})
 
-  actionsStore.addActionToConnectionGroup(action, selectedConnection.value, groupId)
-  actionsStore.deleteActionFromConnectionGroup(actionId, selectedConnection.value, action.groupId)
-}
-
-const handleChainActionDropped = (chainActionId: string, groupId: string) => {
-  const chainAction = chainActionsStore.getChainAction(chainActionId)
-
-  if (!chainAction) return
-
-  chainActionsStore.copyChainAction(selectedConnection.value, groupId, chainAction)
-  chainActionsStore.deleteChainAction(selectedConnection.value, chainAction.groupId, chainAction.id)
-}
-
-const handleMoveOrCopyActionGroup = (actionGroup: ActionGroup, action: 'copy' | 'move') => {
-  moveOrCopyActionGroup.value.connectionId = selectedConnection.value
-
-  moveOrCopyActionGroup.value.type = action
-  moveOrCopyActionGroup.value.actionGroup = actionGroup
-
-  moveOrCopyActionGroup.value.dialogOpened = true
-}
-
-const handleMoveOrCopyActionGroupDialog = () => {
-  if (!moveOrCopyActionGroup.value.connectionId || !moveOrCopyActionGroup.value.actionGroup) return
-
-  const actionGroupCopy = clone(moveOrCopyActionGroup.value.actionGroup)
-  const currentConnectionId = selectedConnection.value
-  const connectionId = moveOrCopyActionGroup.value.connectionId
-
-  const chainActions = clone(
-    chainActionsStore.getGroupChainActions(selectedConnection.value, actionGroupCopy.id)
-  )
-  const actions = clone(actionsStore.getSelectedConnectionGroupActions(actionGroupCopy.id))
-
-  const newActionGroup = actionsStore.addActionGroupToConnection(actionGroupCopy, connectionId)
-
-  for (const chainAction of chainActions) {
-    chainActionsStore.addChainAction(connectionId, newActionGroup.id, chainAction)
-  }
-
-  for (const action of actions) {
-    actionsStore.addActionToConnectionGroup(action, connectionId, newActionGroup.id)
-  }
-
-  if (moveOrCopyActionGroup.value.type === 'move') {
-    chainActionsStore.deleteGroupChainActions(currentConnectionId, actionGroupCopy.id, false)
-    actionsStore.deleteActionGroupFromConnection(currentConnectionId, actionGroupCopy.id)
-  }
-}
-
-const handleStartDrag = (ev: DragEvent, actionId: string) => {
-  ev.dataTransfer?.setData('actionId', actionId)
-}
-
-const chainActionEdit = ref<ChainAction | undefined>()
+const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.value.length)
 </script>
 
 <template>
-  <div class="tw:grid tw:h-full tw:max-h-full tw:grid-rows-[auto_1fr]">
-    <div
-      class="text-weight-medium tw:flex tw:justify-between tw:bg-neutral-200 tw:p-2 tw:dark:bg-neutral-800"
-    >
-      <div class="tw:w-[120px]">
-        <q-btn
-          size="xs"
-          class="tw:bg-white tw:hover:bg-neutral-200 tw:dark:bg-neutral-700"
-          flat
-          @click="appStore.setCurrentTab('topics')"
-        >
-          <div class="tw:flex tw:place-items-center tw:gap-2">
-            <q-icon name="fa-solid fa-arrow-left" size="10px" />
-            <span class="tw:text-[0.65rem] tw:leading-0">Back</span>
-          </div>
-        </q-btn>
-      </div>
+  <div class="h-full min-h-0">
+    <ActionEditPage
+      v-if="view.kind === 'action'"
+      :connection-id="selectedConnection"
+      :group-id="view.groupId"
+      :action-id="view.actionId"
+      @back="backToList"
+      @open="openSibling"
+      @create="openSibling()"
+    />
 
-      <div class="tw:bg-neutral-200 tw:text-center tw:dark:bg-neutral-800">Actions</div>
+    <ChainEditor
+      v-else-if="view.kind === 'chain'"
+      :key="view.chainId ?? 'new'"
+      :connection-id="selectedConnection"
+      :group-id="view.groupId"
+      :chain-action="editingChain"
+      @back="backToList"
+    />
 
-      <div class="tw:flex tw:w-[120px] tw:justify-end">
-        <q-btn size="xs" class="tw:bg-primary tw:text-white" flat>
-          <div class="tw:flex tw:place-items-center tw:gap-2">
-            <q-icon name="fa-solid fa-plus" size="10px" />
-            <span class="tw:text-[0.65rem] tw:leading-0">Create</span>
-          </div>
+    <div v-else class="flex h-full min-h-0">
+      <nav
+        aria-label="Action groups"
+        class="border-default flex w-[260px] shrink-0 flex-col gap-0.5 border-r px-3 py-4"
+      >
+        <div class="text-muted px-2.5 pb-2 text-[11px] font-semibold tracking-[0.1em] uppercase">
+          Groups
+        </div>
 
-          <q-menu anchor="bottom right" self="top right" :offset="[0, 5]">
-            <q-list dense>
-              <q-item v-close-popup clickable @click="actionDialogOpened = true">
-                <q-item-section>
-                  <div>
-                    <q-icon class="tw:mr-2" name="fa-solid fa-paper-plane" />
-                    Action
-                  </div>
-                </q-item-section>
-              </q-item>
-              <q-item v-close-popup clickable @click="tab = 'chain-action'">
-                <q-item-section>
-                  <div>
-                    <q-icon class="tw:mr-2" name="fa-solid fa-diagram-project" />
-                    Chain Action
-                  </div>
-                </q-item-section>
-              </q-item>
-              <q-item v-close-popup clickable @click="actionGroupDialogOpened = true">
-                <q-item-section>
-                  <div>
-                    <q-icon class="tw:mr-2" name="fa-solid fa-layer-group" />
-                    Group
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
-      </div>
-    </div>
-    <q-tab-panels
-      v-model="tab"
-      class="tw:h-full tw:bg-transparent"
-      animated
-      vertical
-      transition-prev="jump-up"
-      transition-next="jump-down"
-    >
-      <q-tab-panel class="tw:p-0" name="list">
-        <q-splitter
-          v-model="splitterModel"
-          class="tw:h-full tw:max-h-full"
-          :limits="[400, 500]"
-          unit="px"
-          reverse
-        >
-          <template #before>
-            <div class="tw:grid tw:h-full" style="grid-template-rows: auto auto 1fr">
-              <div class="tw:relative">
-                <transition
-                  appear
-                  enter-active-class="animated fadeIn"
-                  leave-active-class="animated fadeOut"
-                >
+        <div class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-auto">
+          <button
+            type="button"
+            class="flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
+            :class="navItemClass(ALL_GROUPS)"
+            @click="selectGroup(ALL_GROUPS)"
+          >
+            <span class="flex-1 text-left">All</span>
+            <span class="text-muted text-xs font-medium">{{ totalCount }}</span>
+          </button>
+
+          <UContextMenu :items="groupMenuItems(DEFAULT_GROUP)">
+            <button
+              type="button"
+              class="group flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
+              :class="navItemClass('default')"
+              v-bind="groupDropHandlers('default')"
+              @click="selectGroup('default')"
+            >
+              <span class="flex-1 text-left">Default</span>
+              <span class="text-muted text-xs font-medium">{{ groupCount('default') }}</span>
+            </button>
+          </UContextMenu>
+
+          <draggable
+            v-model="groups"
+            :animation="200"
+            group="groups"
+            item-key="id"
+            ghost-class="opacity-40"
+            class="flex flex-col gap-0.5"
+          >
+            <template #item="{ element }">
+              <div>
+                <UContextMenu :items="groupMenuItems(element)">
                   <div
-                    v-if="selectedConnection && !actions.length && !chainActions.length"
-                    class="tw:absolute tw:right-28 tw:top-4 tw:flex tw:gap-4"
+                    role="button"
+                    tabindex="0"
+                    class="group flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg pr-1 pl-2.5 text-[13px]"
+                    :class="navItemClass(element.id)"
+                    :title="element.description"
+                    v-bind="groupDropHandlers(element.id)"
+                    @click="selectGroup(element.id)"
+                    @keydown.enter="selectGroup(element.id)"
                   >
-                    <div class="tw:mt-3 tw:-rotate-2 tw:text-center">
-                      <h2 class="tw:text-xl">You don't have any Action yet?</h2>
-                      <h3 class="color-details tw:text-sm">Feel free to create one here!</h3>
-                    </div>
+                    <span class="min-w-0 flex-1 truncate text-left">{{ element.name }}</span>
+                    <span class="text-muted text-xs font-medium group-hover:hidden">
+                      {{ groupCount(element.id) }}
+                    </span>
+                    <UDropdownMenu :items="groupMenuItems(element)" :content="{ align: 'start' }">
+                      <UButton
+                        color="neutral"
+                        variant="ghost"
+                        size="xs"
+                        icon="i-lucide-ellipsis"
+                        aria-label="Group options"
+                        class="hidden group-hover:inline-flex"
+                        @click.stop
+                      />
+                    </UDropdownMenu>
                   </div>
-                </transition>
-                <div
-                  v-if="!selectedConnection || (!actions.length && !chainActions.length)"
-                  class="tw:absolute tw:right-12 tw:top-4 tw:flex tw:gap-4"
-                  :class="[
-                    { 'no-connection-selected': !selectedConnection },
-                    { 'no-actions': selectedConnection }
-                  ]"
-                >
-                  <q-icon
-                    name="fa-solid fa-reply"
-                    size="xl"
-                    class="create-action-arrow tw:rotate-145 tw:text-primary"
-                  />
-                </div>
-
-                <h1 v-if="actions.length" class="tw:px-4 tw:pt-4 tw:text-xl tw:font-bold">
-                  Actions
-                </h1>
-
-                <draggable
-                  v-if="actions.length"
-                  v-model="actions"
-                  v-bind="dragOptions"
-                  group="actions"
-                  handle=".drag-handle"
-                  class="actions-cards-grid tw:relative tw:gap-4 tw:overflow-auto tw:p-4"
-                  item-key="clientKey"
-                >
-                  <template #item="{ element: action }">
-                    <q-intersection
-                      class="tw:h-[135px]"
-                      @dragstart="handleStartDrag($event, action.id)"
-                    >
-                      <action-card
-                        :key="action.id"
-                        :action="action"
-                        :connection-id="selectedConnection"
-                        :disable-disconnected="selectedConnectionStatus !== 'connected'"
-                        :disable-wildcard="action.topic.includes('#') || action.topic.includes('+')"
-                        @edit="
-                          () => {
-                            editAction = action
-                            actionDialogOpened = true
-                          }
-                        "
-                        @delete="actionsStore.deleteAction(action.id)"
-                        @copy="
-                          () => {
-                            moveActionCurrentGroupId = selectedActionGroup
-                            moveActionDialogOpened = true
-                            moveActionActionId = action.id
-                            moveActionType = 'copy'
-                          }
-                        "
-                        @move="
-                          () => {
-                            moveActionCurrentGroupId = selectedActionGroup
-                            moveActionDialogOpened = true
-                            moveActionActionId = action.id
-                            moveActionType = 'move'
-                          }
-                        "
-                      />
-                    </q-intersection>
-                  </template>
-                </draggable>
-
-                <q-separator v-if="actions.length && chainActions.length" />
-
-                <h1 v-if="chainActions.length" class="tw:px-4 tw:pt-4 tw:text-xl tw:font-bold">
-                  Chain Actions
-                </h1>
-
-                <draggable
-                  v-if="chainActions.length"
-                  v-model="chainActions"
-                  v-bind="dragOptions"
-                  group="chain-actions"
-                  handle=".drag-handle"
-                  class="actions-cards-grid tw:relative tw:gap-4 tw:overflow-auto tw:p-4"
-                  item-key="clientKey"
-                >
-                  <template #item="{ element: chainAction }">
-                    <q-intersection
-                      class="tw:h-[114px]"
-                      @dragstart="handleStartDrag($event, chainAction.id)"
-                    >
-                      <chain-action-card
-                        :key="chainAction.id"
-                        :connection-id="selectedConnection"
-                        :chain-action="chainAction"
-                        :disable="selectedConnectionStatus !== 'connected'"
-                        @copy="
-                          () => {
-                            moveChainActionCurrentGroupId = selectedActionGroup
-                            moveChainActionDialogOpened = true
-                            moveChainActionChainActionId = chainAction.id
-                            moveChainActionType = 'copy'
-                          }
-                        "
-                        @move="
-                          () => {
-                            moveChainActionCurrentGroupId = selectedActionGroup
-                            moveChainActionDialogOpened = true
-                            moveChainActionChainActionId = chainAction.id
-                            moveChainActionType = 'move'
-                          }
-                        "
-                        @edit="
-                          () => {
-                            chainActionEdit = chainAction
-                            tab = 'chain-action'
-                          }
-                        "
-                        @delete="
-                          chainActionsStore.deleteChainAction(
-                            selectedConnection,
-                            selectedActionGroup,
-                            chainAction.id
-                          )
-                        "
-                      />
-                    </q-intersection>
-                  </template>
-                </draggable>
+                </UContextMenu>
               </div>
+            </template>
+          </draggable>
+
+          <button
+            type="button"
+            class="text-muted hover:bg-muted hover:text-default flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
+            @click="groupDialog = { opened: true, group: undefined }"
+          >
+            <UIcon name="i-lucide-plus" class="size-3.5" />
+            New group
+          </button>
+        </div>
+
+        <div class="mt-3 flex gap-1.5 px-1">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-download"
+            label="Import"
+            block
+            class="flex-1"
+            @click="handleImport"
+          />
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-upload"
+            label="Export"
+            block
+            class="flex-1"
+            :disabled="!selectedConnection"
+            @click="handleConnectionExport"
+          />
+        </div>
+      </nav>
+
+      <main class="flex min-w-0 flex-1 flex-col gap-[22px] overflow-auto px-6 py-5">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div class="min-w-0">
+            <h1 class="truncate text-2xl leading-[30px] font-bold">{{ pageTitle }}</h1>
+            <p v-if="pageDescription" class="text-muted mt-1 text-[13px]">{{ pageDescription }}</p>
+          </div>
+          <div class="flex gap-2">
+            <UInput
+              v-model="search"
+              icon="i-lucide-search"
+              placeholder="Search actions"
+              class="w-[220px]"
+            />
+            <UButton
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-workflow"
+              label="New chain"
+              @click="openChain()"
+            />
+            <UButton
+              color="primary"
+              variant="outline"
+              icon="i-lucide-plus"
+              label="New action"
+              class="font-semibold"
+              @click="openAction()"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="isEmpty"
+          class="border-default flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-14 text-center"
+        >
+          <UIcon
+            :name="normalizedSearch ? 'i-lucide-search-x' : 'i-lucide-send'"
+            class="text-muted size-8"
+          />
+          <template v-if="normalizedSearch">
+            <h2 class="font-bold">No match for “{{ search }}”</h2>
+            <p class="text-muted text-[13px]">Try another name or topic.</p>
+          </template>
+          <template v-else>
+            <h2 class="font-bold">No actions here yet</h2>
+            <p class="text-muted max-w-sm text-[13px]">
+              Actions are saved messages you can send in one click. Chains run several of them in
+              order.
+            </p>
+            <div class="flex gap-2">
+              <UButton color="neutral" variant="outline" label="New chain" @click="openChain()" />
+              <UButton label="New action" class="font-semibold" @click="openAction()" />
             </div>
           </template>
+        </div>
 
-          <template #separator>
-            <splitter-icon vertical @click:double="splitterModel = 400" />
-          </template>
-
-          <template #after>
-            <q-card class="tw:grid tw:h-full tw:grid-rows-[1fr_auto_auto]" square flat>
-              <div class="tw:flex tw:flex-col tw:gap-2 tw:overflow-auto tw:p-3">
-                <draggable
-                  v-model="groups"
-                  v-bind="dragOptions"
-                  group="groups"
-                  handle=".drag-handle"
-                  class="tw:relative tw:flex tw:flex-col tw:gap-2 tw:overflow-auto"
-                  item-key="id"
-                  @start="isDraggingAction = true"
-                  @end="isDraggingAction = false"
-                >
-                  <template #item="{ element }">
-                    <action-group-card
-                      :key="element.id"
-                      :title="element.name"
-                      :description="element.description"
-                      :active="selectedActionGroup === element.id"
-                      :disable-drop-zone="isDraggingAction"
-                      @edit="
-                        () => {
-                          editActionGroup = element
-                          actionGroupDialogOpened = true
-                        }
-                      "
-                      @delete="handleDeleteGroup(element.id)"
-                      @action:dropped="handleDropped($event, element.id)"
-                      @export:chain-actions="handleChainActionsExport(element.id)"
-                      @export:actions="handleActionsExport(element.id)"
-                      @export:group="handleGroupExport(element.id)"
-                      @click.stop="selectedActionGroup = element.id"
-                      @copy="handleMoveOrCopyActionGroup(element, 'copy')"
-                      @move="handleMoveOrCopyActionGroup(element, 'move')"
-                    />
-                  </template>
-                </draggable>
-                <action-group-card
-                  v-if="selectedConnection"
-                  cant-modify
-                  not-movable
-                  not-draggable
-                  title="Default"
-                  description="This action group cannot be deleted."
-                  :active="selectedActionGroup === 'default'"
-                  :disable-drop-zone="isDraggingAction"
-                  @action:dropped="handleDropped($event, 'default')"
-                  @export:chain-actions="handleChainActionsExport('default')"
-                  @export:actions="handleActionsExport('default')"
-                  @export:group="handleGroupExport('default')"
-                  @click.stop="selectedActionGroup = 'default'"
-                  @copy="
-                    handleMoveOrCopyActionGroup({ id: 'default', name: 'Default Copy' }, 'copy')
-                  "
+        <section v-if="visibleChains.length" class="flex flex-col gap-2.5">
+          <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Chains</h2>
+          <draggable
+            v-model="sortableChains"
+            :disabled="!canReorder"
+            :animation="200"
+            group="chain-actions"
+            handle=".drag-handle"
+            item-key="id"
+            ghost-class="opacity-40"
+            class="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-3"
+            @end="draggingItem = false"
+          >
+            <template #item="{ element: chain }">
+              <div
+                :draggable="canReorder ? undefined : 'true'"
+                @dragstart="handleItemDragStart($event, chain.id)"
+                @dragend="draggingItem = false"
+              >
+                <ChainActionCard
+                  :chain-action="chain"
+                  :connection-id="selectedConnection"
+                  :disable="isDisconnected"
+                  @edit="openChain(chain)"
+                  @copy="openMoveDialog('chain', 'copy', chain)"
+                  @move="openMoveDialog('chain', 'move', chain)"
+                  @delete="handleDeleteChain(chain)"
                 />
               </div>
-              <q-separator />
-              <div class="tw:flex">
-                <q-btn flat square class="tw:w-full tw:text-teal-500" @click="handleImport">
-                  <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-download" />
-                  Import
-                </q-btn>
-                <q-separator vertical />
-                <q-btn
-                  flat
-                  square
-                  class="tw:w-full tw:text-teal-500"
-                  :disable="!selectedConnection"
-                  @click="handleConnectionExport"
-                >
-                  <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-upload" />
-                  Export
-                </q-btn>
+            </template>
+          </draggable>
+        </section>
+
+        <section v-if="visibleActions.length" class="flex flex-col gap-2.5">
+          <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Actions</h2>
+          <draggable
+            v-model="sortableActions"
+            :disabled="!canReorder"
+            :animation="200"
+            group="actions"
+            handle=".drag-handle"
+            item-key="id"
+            ghost-class="opacity-40"
+            class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3"
+            @end="draggingItem = false"
+          >
+            <template #item="{ element: action }">
+              <div
+                :draggable="canReorder ? undefined : 'true'"
+                @dragstart="handleItemDragStart($event, action.id)"
+                @dragend="draggingItem = false"
+              >
+                <ActionCard
+                  :action="action"
+                  :connection-id="selectedConnection"
+                  :disable-disconnected="isDisconnected"
+                  @edit="openAction(action)"
+                  @copy="openMoveDialog('action', 'copy', action)"
+                  @move="openMoveDialog('action', 'move', action)"
+                  @delete="handleDeleteAction(action)"
+                />
               </div>
-            </q-card>
-          </template>
-        </q-splitter>
-      </q-tab-panel>
-      <q-tab-panel class="tw:p-0" name="chain-action">
-        <chain-action-screen
-          :chain-action="chainActionEdit"
-          @back="
-            () => {
-              chainActionEdit = undefined
-              tab = 'list'
-            }
-          "
-        />
-      </q-tab-panel>
-    </q-tab-panels>
+            </template>
+          </draggable>
+        </section>
+
+        <p v-if="!isEmpty && draggingItem" class="text-muted text-center text-xs">
+          Drop on a group on the left to move it there.
+        </p>
+      </main>
+    </div>
+
+    <ActionGroupDialog
+      v-model:opened="groupDialog.opened"
+      :edit-mode="!!groupDialog.group"
+      :action-group="groupDialog.group"
+      @create:action-group="actionsStore.addActionGroup($event)"
+      @update:action-group="actionsStore.updateActionGroup($event)"
+    />
+    <SelectConnectionDialog
+      v-model:opened="moveGroup.opened"
+      v-model:connection-id="moveGroup.connectionId"
+      :title="moveGroup.type === 'copy' ? 'Copy group' : 'Move group'"
+      :description="`“${moveGroup.group?.name}” and everything in it.`"
+      :action-title="moveGroup.type === 'copy' ? 'Copy' : 'Move'"
+      :action-icon="moveGroup.type === 'copy' ? 'i-lucide-copy' : 'i-lucide-arrow-right-left'"
+      @input="handleMoveOrCopyGroup"
+    />
+    <SelectConnectionAndGroupDialog
+      v-model:opened="moveAction.opened"
+      v-model:connection-id="moveAction.connectionId"
+      v-model:group-id="moveAction.groupId"
+      :title="`${moveAction.type === 'copy' ? 'Copy' : 'Move'} ${moveAction.kind === 'chain' ? 'chain' : 'action'}`"
+      :action-title="moveAction.type === 'copy' ? 'Copy' : 'Move'"
+      :action-icon="moveAction.type === 'copy' ? 'i-lucide-copy' : 'i-lucide-arrow-right-left'"
+      @input="handleMoveAction"
+    />
+    <ActionsToDefaultGroupDialog
+      v-model:opened="deleteGroupDialog.opened"
+      :action-count="deleteGroupDialog.actionCount"
+      :chain-actions-count="deleteGroupDialog.chainActionCount"
+      @actions:move="handleDeleteGroupDialog(true)"
+      @actions:delete="handleDeleteGroupDialog(false)"
+    />
   </div>
-
-  <action-dialog
-    v-model:opened="actionDialogOpened"
-    variable-completion
-    :edit-mode="!!editAction"
-    :action="editAction"
-    :connection-id="selectedConnection"
-    @create:action="actionsStore.addAction($event)"
-    @update:action="actionsStore.updateSelectedActionGroupAction($event)"
-    @close="editAction = undefined"
-  />
-  <action-group-dialog
-    v-model:opened="actionGroupDialogOpened"
-    :edit-mode="!!editActionGroup"
-    :action-group="editActionGroup"
-    @create:action-group="actionsStore.addActionGroup($event)"
-    @update:action-group="actionsStore.updateActionGroup($event)"
-    @close="editActionGroup = undefined"
-  />
-  <select-connection-dialog
-    v-model:opened="moveOrCopyActionGroup.dialogOpened"
-    v-model:connection-id="moveOrCopyActionGroup.connectionId"
-    :title="moveOrCopyActionGroup.type === 'copy' ? 'Copy Group' : 'Move Group'"
-    :action-title="moveOrCopyActionGroup.type === 'copy' ? 'Copy' : 'Move'"
-    :action-icon="
-      moveOrCopyActionGroup.type === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'
-    "
-    @input="handleMoveOrCopyActionGroupDialog"
-  />
-  <select-connection-and-group-dialog
-    v-model:connection-id="moveActionConnectionId"
-    v-model:opened="moveActionDialogOpened"
-    v-model:group-id="moveActionGroupId"
-    :title="moveActionType === 'copy' ? 'Copy Action' : 'Move Action'"
-    :action-title="moveActionType === 'copy' ? 'Copy' : 'Move'"
-    :action-icon="moveActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
-    @input="handleMoveAction"
-  />
-  <select-connection-and-group-dialog
-    v-model:connection-id="moveChainActionConnectionId"
-    v-model:opened="moveChainActionDialogOpened"
-    v-model:group-id="moveChainActionGroupId"
-    :title="moveChainActionType === 'copy' ? 'Copy Chain Action' : 'Move Chain Action'"
-    :action-title="moveChainActionType === 'copy' ? 'Copy' : 'Move'"
-    :action-icon="moveChainActionType === 'copy' ? 'fa-solid fa-copy' : 'fa-solid fa-right-left'"
-    @input="handleMoveChainAction"
-  />
-  <actions-to-default-group-dialog
-    v-model:opened="deleteGroupActionDialog.dialogOpened"
-    :chain-actions-count="deleteGroupActionDialog.chainActionCount"
-    :action-count="deleteGroupActionDialog.actionCount"
-    @actions:move="handleDeleteGroupDialog(true)"
-    @actions:delete="handleDeleteGroupDialog(false)"
-  />
 </template>
-
-<style scoped lang="less">
-@keyframes noConnectionIconAnimation {
-  0% {
-    transform: rotate(125deg) translateY(0px);
-  }
-  50% {
-    transform: rotate(135deg) translateY(0px) translateX(-10px);
-  }
-  100% {
-    transform: rotate(125deg) translateY(0px);
-  }
-}
-
-@keyframes noActionsIconAnimation {
-  0% {
-    transform: rotate(65deg) translateY(0px);
-  }
-  50% {
-    transform: rotate(75deg) translateY(0px) translateX(-10px);
-  }
-  100% {
-    transform: rotate(65deg) translateY(0px);
-  }
-}
-
-.no-connection-selected .create-action-arrow {
-  animation: noConnectionIconAnimation 1s infinite;
-  transform-origin: center center;
-}
-
-.no-actions .create-action-arrow {
-  animation: noActionsIconAnimation 1s infinite;
-  transform-origin: center center;
-}
-
-.actions-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  @media (min-width: 1280px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 1536px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-</style>

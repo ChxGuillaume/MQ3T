@@ -1,9 +1,16 @@
-import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js'
-import 'monaco-editor/esm/vs/editor/editor.all.js'
+import 'monaco-editor/editor/contrib/wordHighlighter/browser/wordHighlighter.js'
 
 import { formatXml, formatYaml } from './format-code'
 import * as monaco from 'monaco-editor'
 import { IRange } from 'monaco-editor'
+import EditorWorker from 'monaco-editor/editor/editor.worker?worker'
+import JsonWorker from 'monaco-editor/language/json/json.worker?worker'
+
+self.MonacoEnvironment = {
+  getWorker: (_, label) => (label === 'json' ? new JsonWorker() : new EditorWorker())
+}
+
+monaco.json.jsonDefaults.setDiagnosticsOptions({ validate: false })
 
 monaco.editor.defineTheme('vs-lighter', {
   base: 'vs',
@@ -19,7 +26,7 @@ monaco.editor.defineTheme('vs-dark-darker', {
   inherit: true,
   rules: [],
   colors: {
-    'editor.background': '#262626'
+    'editor.background': '#1f1f1f'
   }
 })
 

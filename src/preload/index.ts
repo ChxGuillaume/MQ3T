@@ -62,8 +62,13 @@ const api: ElectronIpc = {
   handleGraphWindowShown: (callback) =>
     ipcRenderer.on('update-graph-window-shown', callback as any),
 
+  handleGraphWindowConnection: (callback) =>
+    ipcRenderer.on('graph-window-connection', callback as any),
+
   showGraphWindow: () => ipcRenderer.send('show-graph-window'),
+  openGraphWindow: (clientKey) => ipcRenderer.send('show-graph-window', clientKey),
   hideGraphWindow: () => ipcRenderer.send('hide-graph-window'),
+  setGraphWindowAlwaysOnTop: (value) => ipcRenderer.send('set-graph-window-always-on-top', value),
 
   transferMqttMessages: (messages) => ipcRenderer.send('transfer-mqtt-messages', messages),
   requestMqttMessages: () => ipcRenderer.send('request-mqtt-messages'),

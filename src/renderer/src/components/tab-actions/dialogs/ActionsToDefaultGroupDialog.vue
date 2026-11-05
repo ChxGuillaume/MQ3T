@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { QForm } from 'quasar'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   opened: boolean
   actionCount: number
   chainActionsCount: number
@@ -13,6 +13,17 @@ const emits = defineEmits<{
   'actions:move': []
   close: []
 }>()
+
+const content = computed(() =>
+  [
+    props.actionCount ? `${props.actionCount} action${props.actionCount > 1 ? 's' : ''}` : '',
+    props.chainActionsCount
+      ? `${props.chainActionsCount} chain${props.chainActionsCount > 1 ? 's' : ''}`
+      : ''
+  ]
+    .filter(Boolean)
+    .join(' and ')
+)
 
 const handleCloseForm = () => {
   emits('close')
@@ -31,51 +42,34 @@ const handleMoveActions = () => {
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="tw:w-[550px]">
-      <q-card-section>
-        <q-form ref="formRef" class="tw:grid tw:gap-2">
-          <h2 class="tw:mb-2 tw:text-xl">Move Actions</h2>
-          <p class="color-details">
-            You have
-            <span v-if="actionCount" class="tw:text-white">{{ actionCount }} actions</span>
+  <UModal
+    :open="opened"
+    title="Delete group"
+    :ui="{ content: 'sm:max-w-lg', footer: 'justify-end' }"
+    @update:open="!$event && handleCloseForm()"
+  >
+    <template #body>
+      <p class="text-muted text-sm">
+        This group still holds <b class="text-default">{{ content }}</b
+        >. Move them to the Default group, or delete them with the group?
+      </p>
+    </template>
 
-            <span v-if="actionCount && chainActionsCount" class="tw:mx-1">and</span>
-
-            <span v-if="chainActionsCount" class="tw:text-white">
-              {{ chainActionsCount }} chain actions
-            </span>
-
-            in the group you are deleting.
-
-            <br />
-
-            Do you want to move them to the default group?
-          </p>
-        </q-form>
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn color="red" flat @click="handleDeleteActions">
-          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-trash" />
-          Delete
-        </q-btn>
-        <q-btn color="primary" @click="handleMoveActions">
-          <q-icon class="tw:mr-2" size="xs" name="fa-solid fa-paper-plane" />
-          Move
-        </q-btn>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+    <template #footer>
+      <UButton color="neutral" variant="outline" label="Cancel" @click="handleCloseForm" />
+      <UButton
+        color="error"
+        variant="soft"
+        icon="i-lucide-trash-2"
+        label="Delete all"
+        @click="handleDeleteActions"
+      />
+      <UButton
+        icon="i-lucide-folder-input"
+        label="Move to Default"
+        class="font-semibold"
+        @click="handleMoveActions"
+      />
+    </template>
+  </UModal>
 </template>
-
-<style scoped lang="less">
-.action-description {
-  resize: none;
-}
-</style>
-
-<style lang="less">
-.action-description textarea {
-  resize: none !important;
-}
-</style>

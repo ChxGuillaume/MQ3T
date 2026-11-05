@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ActionGroup } from '../../../../../types/actions'
+import { DEFAULT_GROUP } from '../../tab-actions/action-utils'
 import ConnectionSelect from '../../ConnectionSelect.vue'
 import { useActionsStore } from '../../../store/actions'
-import { computed, ref } from 'vue'
-import { QForm } from 'quasar'
+import { computed, ref, watch } from 'vue'
 
 const actionsStore = useActionsStore()
-
-const formRef = ref<QForm | null>(null)
 
 const props = defineProps<{
   title: string
@@ -30,34 +27,31 @@ const emits = defineEmits<{
   close: []
 }>()
 
-const rules = {
-  groupId: [(val) => !!val || 'Group is required'],
-  title: [(val) => !!val || 'Title is required']
-}
+const errors = ref<{ connection?: string; title?: string }>({})
 
-const validateForm = async () => {
-  return await formRef.value?.validate()
-}
+const icon = computed(() =>
+  props.actionIcon?.startsWith('i-') ? props.actionIcon : 'i-lucide-plus'
+)
 
-const groups = computed(() => actionsStore.getConnectionGroups(props.connectionId!))
-
-const groupList = computed(() => {
-  return [{ id: 'default', name: 'Default' } as ActionGroup, ...groups.value]
-})
-
-const formGroup = computed(() => {
-  return groupList.value?.find((g) => g.id === props.groupId)
-})
+const groupItems = computed(() =>
+  [DEFAULT_GROUP, ...actionsStore.getConnectionGroups(props.connectionId || '')].map((g) => ({
+    label: g.name,
+    value: g.id
+  }))
+)
 
 const handleCloseForm = () => {
   emits('close')
   emits('update:opened', false)
 }
 
-const handleSelect = async () => {
-  const valid = await validateForm()
+const handleSelect = () => {
+  errors.value = {
+    connection: props.connectionId ? undefined : 'Connection is required',
+    title: props.formTitle ? undefined : 'Title is required'
+  }
 
-  if (!valid) return
+  if (errors.value.connection || errors.value.title) return
 
   emits('input')
   handleCloseForm()
@@ -85,48 +79,44 @@ const formDescriptionModel = computed<string>({
   get: () => props.formDescription || '',
   set: (value) => emits('update:formDescription', value)
 })
+
+watch(
+  () => props.opened,
+  () => (errors.value = {})
+)
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" :model-value="opened" @hide="handleCloseForm">
-    <q-card flat class="tw:min-w-[400px]">
-      <q-card-section>
-        <q-form ref="formRef" class="tw:grid tw:gap-2">
-          <h2 class="tw:mb-2 tw:text-xl">{{ title }}</h2>
-          <connection-select v-model="connectionIdModel" class="tw:w-[370px]" />
-          <q-select
-            v-model="groupIdModel"
-            :options="groupList"
-            label="Group"
-            emit-value
-            filled
-            option-value="id"
-            option-label="name"
-            :display-value="formGroup?.name"
-            :rules="rules.groupId"
-          />
-          <q-input v-model="formTitleModel" filled label="Title" :rules="rules.title" />
-          <q-input
-            v-model="formDescriptionModel"
-            filled
-            label="Description"
-            type="textarea"
-            rows="3"
-            class="action-description"
-          />
-        </q-form>
-      </q-card-section>
-      <q-card-actions align="right">
-        <div class="tw:flex tw:gap-2">
-          <q-btn flat label="Cancel" @click="handleCloseForm" />
-          <q-btn color="primary" @click="handleSelect">
-            <q-icon class="tw:mr-2" size="xs" :name="actionIcon" />
-            {{ actionTitle }}
-          </q-btn>
+  <UModal
+    :open="opened"
+    :title="title"
+    description="Save this message as a reusable action."
+    :ui="{ content: 'sm:max-w-md', footer: 'justify-end' }"
+    @update:open="!$event && handleCloseForm()"
+  >
+    <template #body>
+      <form class="flex flex-col gap-4" @submit.prevent="handleSelect">
+        <div class="grid grid-cols-2 gap-3">
+          <UFormField label="Connection" :error="errors.connection" required>
+            <ConnectionSelect v-model="connectionIdModel" class="w-full" />
+          </UFormField>
+          <UFormField label="Group">
+            <USelect v-model="groupIdModel" :items="groupItems" class="w-full" />
+          </UFormField>
         </div>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
+        <UFormField label="Title" :error="errors.title" required>
+          <UInput v-model="formTitleModel" class="w-full" autofocus />
+        </UFormField>
+        <UFormField label="Description">
+          <UTextarea v-model="formDescriptionModel" class="w-full" :rows="3" autoresize />
+        </UFormField>
+        <button type="submit" class="hidden" />
+      </form>
+    </template>
 
-<style scoped lang="less"></style>
+    <template #footer>
+      <UButton color="neutral" variant="outline" label="Cancel" @click="handleCloseForm" />
+      <UButton :icon="icon" :label="actionTitle" class="font-semibold" @click="handleSelect" />
+    </template>
+  </UModal>
+</template>

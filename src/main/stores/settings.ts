@@ -12,7 +12,7 @@ const settingsFilePath = path.join(configFolder, 'settings.json')
 const ensureConfigFolder = () => {
   try {
     fs.mkdirSync(configFolder, { recursive: true })
-  } catch (e) {
+  } catch {
     /* empty */
   }
 }
@@ -23,7 +23,7 @@ const readSettingsFromDisk = (): Settings | undefined => {
     const data = fs.readFileSync(settingsFilePath).toString()
 
     return JSON.parse(data)
-  } catch (e) {
+  } catch {
     return undefined
   }
 }
@@ -31,7 +31,7 @@ const readSettingsFromDisk = (): Settings | undefined => {
 const writeSettingsToDisk = (data: Settings) => {
   try {
     fs.writeFileSync(settingsFilePath, JSON.stringify(data))
-  } catch (e) {
+  } catch {
     /* empty */
   }
 }

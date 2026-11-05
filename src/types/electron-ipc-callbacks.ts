@@ -1,7 +1,7 @@
 import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { MqttConnection, MqttConnectionStatus } from './mqtt-connection'
 import { TopicMessages } from './mqtt-topics'
-import { IClientPublishOptions } from 'mqtt/src/lib/client'
+import { IClientPublishOptions } from 'mqtt'
 import { DataGraph } from './data-graph'
 import FileFilter = Electron.FileFilter
 import { IPublishPacket } from 'mqtt'
@@ -93,8 +93,12 @@ export type ElectronIpc = {
   getGraphWindowShown: () => boolean
   handleGraphWindowShown: (callback: (event: never, value: boolean) => void) => void
 
+  handleGraphWindowConnection: (callback: (event: never, clientKey: string) => void) => void
+
   showGraphWindow: () => void
+  openGraphWindow: (clientKey: string) => void
   hideGraphWindow: () => void
+  setGraphWindowAlwaysOnTop: (value: boolean) => void
 
   transferMqttMessages: (messages: TopicMessages) => void
   requestMqttMessages: () => void

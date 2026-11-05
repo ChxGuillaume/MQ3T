@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import ActionCardContextMenu from '@renderer/components/tab-actions/ActionCardContextMenu.vue'
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { chainSummary, formatChainDuration } from './action-utils'
+import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
+import ProgressRing from './action-chain/ProgressRing.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -12,106 +14,131 @@ const props = defineProps<{
   disable?: boolean
 }>()
 
-defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
+const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
 const { running, run } = useRunActionChain()
 
-const waitActionCount = computed(() => {
-  return props.chainAction.nodes.filter((node) => node.type === 'wait').length
+const summary = computed(() => chainSummary(props.chainAction))
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
+
+const stats = computed(() => {
+  const { actionCount, waitCount, topicCount, durationMs, hasBranches, unlinkedCount } =
+    summary.value
+  const duration = `~${formatChainDuration(durationMs)}`
+
+  return [
+    {
+      icon: 'i-lucide-send',
+      short: String(actionCount),
+      label: plural(actionCount, 'action'),
+      show: true
+    },
+    {
+      icon: 'i-lucide-hash',
+      short: String(topicCount),
+      label: plural(topicCount, 'topic'),
+      show: topicCount > 0
+    },
+    {
+      icon: 'i-lucide-hourglass',
+      short: String(waitCount),
+      label: plural(waitCount, 'wait'),
+      show: waitCount > 0
+    },
+    {
+      icon: 'i-lucide-timer',
+      short: duration,
+      label: duration,
+      tooltip: 'Estimated duration',
+      show: durationMs > 0
+    },
+    {
+      icon: 'i-lucide-git-fork',
+      short: '',
+      label: 'Parallel',
+      tooltip: 'Runs branches in parallel',
+      show: hasBranches
+    },
+    {
+      icon: 'i-lucide-unlink',
+      short: String(unlinkedCount),
+      label: `${unlinkedCount} unlinked`,
+      tooltip: plural(unlinkedCount, 'step') + ' not connected to start',
+      warning: true,
+      show: unlinkedCount > 0
+    }
+  ].filter((stat) => stat.show)
 })
 
-const actionCount = computed(() => {
-  return props.chainAction.nodes.filter((node) => node.type === 'action').length
-})
+const handleRun = () => {
+  run(props.connectionId, props.chainAction.nodes, props.chainAction.edges)
+  emit('send')
+}
+
+const menuItems = computed<ContextMenuItem[][]>(() => [
+  [{ label: 'Edit', icon: 'i-lucide-pencil', onSelect: () => emit('edit') }],
+  [
+    { label: 'Copy to…', icon: 'i-lucide-copy', onSelect: () => emit('copy') },
+    { label: 'Move to…', icon: 'i-lucide-arrow-right-left', onSelect: () => emit('move') }
+  ],
+  [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => emit('delete') }]
+])
 </script>
 
 <template>
-  <q-card flat class="chain-action-card tw:h-fit tw:p-4">
-    <div class="tw:flex tw:justify-between">
-      <h2
-        class="truncate-hover-one-line drag-handle tw:w-full tw:text-lg"
-        :class="{ 'tw:cursor-grab': !noGrab }"
-        :title="chainAction.name"
-      >
-        {{ chainAction.name }}
-      </h2>
-      <q-btn
-        v-if="!noContextMenu"
-        class="tw:ml-2"
-        icon="fa-solid fa-ellipsis-vertical"
-        flat
-        round
-        size="sm"
-      >
-        <action-card-context-menu
-          @edit="$emit('edit')"
-          @copy="$emit('copy')"
-          @move="$emit('move')"
-          @delete="$emit('delete')"
-        />
-      </q-btn>
-    </div>
-    <div class="tw:mt-4 tw:flex tw:select-none tw:justify-between">
-      <div class="tw:flex tw:gap-4">
-        <div class="color-details tw:flex tw:items-center tw:gap-1.5">
-          <span class="tw:text-lg">{{ waitActionCount }}</span>
-          <q-icon name="fa-solid fa-clock" size="xs" />
-          <q-tooltip class="tw:whitespace-pre tw:text-sm">Wait Nodes</q-tooltip>
-        </div>
-
-        <div class="color-details tw:flex tw:items-center tw:gap-1.5">
-          <span class="tw:text-lg">{{ actionCount }}</span>
-          <q-icon name="fa-solid fa-paper-plane" size="xs" />
-          <q-tooltip class="tw:whitespace-pre tw:text-sm">Action Nodes</q-tooltip>
+  <UContextMenu :items="menuItems" :disabled="noContextMenu">
+    <div class="bg-muted flex min-w-0 items-center gap-3.5 rounded-lg px-4 py-3.5">
+      <div class="flex min-w-0 flex-1 flex-col gap-2.5">
+        <span
+          class="drag-handle truncate font-bold"
+          :class="{ 'cursor-grab': !noGrab }"
+          :title="chainAction.name"
+        >
+          {{ chainAction.name }}
+        </span>
+        <div class="@container min-w-0">
+          <div class="text-muted flex items-center gap-x-2.5 text-xs whitespace-nowrap @sm:gap-x-3">
+            <span v-if="summary.actionCount === 0 && !summary.unlinkedCount">
+              No steps connected yet
+            </span>
+            <template v-else>
+              <UTooltip v-for="stat in stats" :key="stat.icon" :text="stat.tooltip ?? stat.label">
+                <span class="flex items-center gap-1" :class="{ 'text-warning': stat.warning }">
+                  <UIcon :name="stat.icon" class="size-3.5 shrink-0" />
+                  <span v-if="stat.short" class="@sm:hidden">{{ stat.short }}</span>
+                  <span class="hidden @sm:inline">{{ stat.label }}</span>
+                </span>
+              </UTooltip>
+            </template>
+          </div>
         </div>
       </div>
-      <q-btn
-        :disable="running || disable"
-        color="primary"
-        @click="run(connectionId, chainAction.nodes, chainAction.edges)"
-      >
-        <q-circular-progress
-          v-if="running"
-          color="white"
-          indeterminate
-          class="tw:mr-2"
-          size="18px"
-          :thickness="0.5"
-        />
-        <q-icon v-else class="tw:mr-2" size="xs" name="fa-solid fa-play" />
-        Run
-        <q-tooltip v-if="disable" class="tw:bg-primary tw:text-sm tw:text-white">
-          Connection is not active.
-        </q-tooltip>
-      </q-btn>
+      <UButton
+        v-if="!noContextMenu"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-pencil"
+        aria-label="Edit chain"
+        @click="emit('edit')"
+      />
+      <UDropdownMenu v-if="!noContextMenu" :items="menuItems" :content="{ align: 'end' }">
+        <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis" aria-label="More" />
+      </UDropdownMenu>
+      <UTooltip :text="disable ? 'Connection is not active' : undefined" :disabled="!disable">
+        <UButton
+          size="sm"
+          label="Run"
+          class="font-semibold"
+          :icon="running ? undefined : 'i-lucide-play'"
+          :disabled="running || disable"
+          @click="handleRun"
+        >
+          <template v-if="running" #leading>
+            <ProgressRing :size="14" />
+          </template>
+        </UButton>
+      </UTooltip>
     </div>
-
-    <action-card-context-menu
-      v-if="!noContextMenu"
-      context-menu
-      anchor="bottom left"
-      self="top left"
-      @edit="$emit('edit')"
-      @copy="$emit('copy')"
-      @move="$emit('move')"
-      @delete="$emit('delete')"
-    />
-  </q-card>
+  </UContextMenu>
 </template>
-
-<style scoped lang="less">
-.truncate-hover-one-line {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  text-overflow: ellipsis;
-  word-break: break-all;
-}
-
-.body--light {
-  .chain-action-card {
-    background-color: #f5f5f5;
-  }
-}
-</style>

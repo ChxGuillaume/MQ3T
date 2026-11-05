@@ -5,8 +5,8 @@ import { BrowserWindow, ipcMain, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import path from 'path'
 
-const DARK_MODE = { height: 40, color: '#121212', symbolColor: '#E675E4' }
-const LIGHT_MODE = { height: 40, color: '#FFFFFF', symbolColor: '#650164' }
+const DARK_MODE = { height: 46, color: '#1a1a1a', symbolColor: '#a3a3a3' }
+const LIGHT_MODE = { height: 46, color: '#efeff1', symbolColor: '#666666' }
 
 export const createWindow = (routePath = '/') => {
   const windowConfig: Electron.BrowserWindowConstructorOptions = {
@@ -24,7 +24,7 @@ export const createWindow = (routePath = '/') => {
 
     titleBarStyle: 'hidden',
     ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
-    trafficLightPosition: { x: 12, y: 12 }
+    trafficLightPosition: { x: 16, y: 16 }
   }
 
   const window = new BrowserWindow(windowConfig)
