@@ -10,6 +10,7 @@ export const useAppStore = defineStore('app', {
     view: 'new-tab' as AppView,
     sectionByConnection: {} as Record<string, ConnectionSection>,
     editingClientKey: null as string | null,
+    clientKeyBeforeNewTab: null as string | null,
     editorAnchor: null as string | null,
     editorReturnView: 'new-tab' as AppView,
     appVersion: '',

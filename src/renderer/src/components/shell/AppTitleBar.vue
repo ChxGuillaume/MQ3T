@@ -5,7 +5,8 @@ import { useAppNavigation } from '@renderer/composables/useAppNavigation'
 import { useConnectionMenu } from '@renderer/composables/useConnectionMenu'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
 import { useAppStore } from '@renderer/store/app-store'
-import { computed } from 'vue'
+import { useTabDragReorder } from '@renderer/composables/useTabDragReorder'
+import { computed, ref } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const appStore = useAppStore()
@@ -15,6 +16,23 @@ const { selectedClientKey, openConnection, openNewTab, toggleSettings, closeConn
 const { connectionMenuItems } = useConnectionMenu()
 
 const openConnections = computed(() => mqttConnectionsStore.getConnectionsWithStatus)
+
+const tabList = ref<HTMLElement | null>(null)
+
+const moveTab = (from: number, to: number) => {
+  const clientKeys = openConnections.value.map((connection) => connection.clientKey)
+  const [moved] = clientKeys.splice(from, 1)
+
+  clientKeys.splice(to, 0, moved)
+  mqttConnectionsStore.setTabOrder(clientKeys)
+}
+
+const { draggingIndex, onPointerDown: onTabPointerDown } = useTabDragReorder({
+  container: tabList,
+  itemSelector: '[data-tab-item]',
+  onDragStart: (index) => openConnection(openConnections.value[index].clientKey),
+  onReorder: moveTab
+})
 
 const isActive = (clientKey: string) =>
   appStore.view === 'connection' && selectedClientKey.value === clientKey
@@ -43,53 +61,61 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
     :class="isMac ? 'pl-[92px]' : 'pl-3'"
   >
     <nav
+      ref="tabList"
       aria-label="Open connections"
       class="flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto [-webkit-app-region:no-drag]"
     >
-      <UContextMenu
-        v-for="connection in openConnections"
+      <div
+        v-for="(connection, index) in openConnections"
         :key="connection.clientKey"
-        :items="connectionMenuItems(connection, closeConnection)"
+        data-tab-item
+        class="shrink-0 rounded-lg"
+        :class="{ 'shadow-lg [&_*]:cursor-grabbing': draggingIndex === index }"
+        @pointerdown="onTabPointerDown($event, index)"
       >
-        <div
-          role="tab"
-          tabindex="0"
-          :aria-selected="isActive(connection.clientKey)"
-          class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
-          :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
-          :style="tabColorStyle(connection.labelColor)"
-          @click="openConnection(connection.clientKey)"
-          @keydown.enter="openConnection(connection.clientKey)"
-          @auxclick.middle="closeConnection(connection.clientKey)"
-        >
-          <span
-            class="h-4 w-[3px] shrink-0 rounded-full"
-            :class="
-              connection.labelColor
-                ? isActive(connection.clientKey)
-                  ? 'bg-(--tab-color)'
-                  : 'bg-(--tab-color) opacity-60'
-                : 'bg-transparent'
-            "
-            aria-hidden="true"
-          />
-          <span
-            class="size-2 shrink-0 rounded-full"
-            :class="statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
-            :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
-          />
-          <span class="flex-1 truncate" :title="connection.name">{{ connection.name }}</span>
-          <UButton
-            icon="i-lucide-x"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            aria-label="Close tab"
-            class="text-muted rounded-md"
-            @click.stop="closeConnection(connection.clientKey)"
-          />
-        </div>
-      </UContextMenu>
+        <UContextMenu :items="connectionMenuItems(connection, closeConnection)">
+          <div
+            role="tab"
+            tabindex="0"
+            :aria-selected="isActive(connection.clientKey)"
+            class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
+            :class="tabClass(connection.labelColor, isActive(connection.clientKey))"
+            :style="tabColorStyle(connection.labelColor)"
+            @click="openConnection(connection.clientKey)"
+            @keydown.enter="openConnection(connection.clientKey)"
+            @auxclick.middle="closeConnection(connection.clientKey)"
+          >
+            <span
+              class="h-4 w-[3px] shrink-0 rounded-full"
+              :class="
+                connection.labelColor
+                  ? isActive(connection.clientKey)
+                    ? 'bg-(--tab-color)'
+                    : 'bg-(--tab-color) opacity-60'
+                  : 'bg-transparent'
+              "
+              aria-hidden="true"
+            />
+            <span
+              class="size-2 shrink-0 rounded-full"
+              :class="
+                statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))
+              "
+              :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
+            />
+            <span class="flex-1 truncate" :title="connection.name">{{ connection.name }}</span>
+            <UButton
+              icon="i-lucide-x"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              aria-label="Close tab"
+              class="text-muted rounded-md"
+              @click.stop="closeConnection(connection.clientKey)"
+            />
+          </div>
+        </UContextMenu>
+      </div>
 
       <div
         v-if="appStore.view === 'new-tab' && openConnections.length"
