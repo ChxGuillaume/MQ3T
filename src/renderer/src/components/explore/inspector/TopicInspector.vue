@@ -47,7 +47,7 @@ const tabs = [
   { label: 'Value', value: 'value' },
   { label: 'History', value: 'history' },
   { label: 'Graph', value: 'graph' },
-  { label: 'Publish here', value: 'publish' }
+  { label: 'Publish', value: 'publish' }
 ]
 
 const tab = computed<InspectorTab>({

@@ -100,7 +100,7 @@ const properties = computed(() => {
     variant="naked"
     :actions="[
       {
-        label: 'Publish here',
+        label: 'Publish',
         icon: 'i-lucide-send',
         color: 'neutral',
         variant: 'outline',
