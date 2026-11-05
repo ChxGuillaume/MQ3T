@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue'
 import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { useAppColorMode } from '@renderer/composables/useAppColorMode'
-import { validCode } from '../../assets/js/format-code'
+import { findCodeError } from '../../assets/js/format-code'
 import * as monaco from 'monaco-editor'
 import {
   unregisterCompletionProvider,
@@ -10,11 +10,13 @@ import {
 } from '@renderer/assets/js/init-monaco-editor'
 import {
   getPayloadVariablesGrouped,
-  actionsVariablesArray
+  actionsVariablesArray,
+  maskActionVariables
 } from '@renderer/assets/js/actions-variables'
 
 export interface ICodeEditor {
   updateCodeEditorValue: (value: string) => void
+  revealError: () => void
 }
 
 const LANGUAGES = [
@@ -44,6 +46,9 @@ const emits = defineEmits(['update:modelValue', 'update:language', 'submit'])
 
 const monacoEditorRef = ref(null)
 let codeEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let errorGlyph: monaco.editor.IEditorDecorationsCollection | null = null
+
+const FORMAT_MARKER_OWNER = 'mq3t-format'
 
 const updateCodeEditorValue = (value: string) => {
   if (!codeEditor) return
@@ -56,7 +61,17 @@ const handleFormatCode = () => {
   codeEditor?.getAction('editor.action.formatDocument')?.run()
 }
 
-defineExpose({ updateCodeEditorValue, formatCode: handleFormatCode })
+const revealError = () => {
+  if (!codeEditor || !codeError.value) return
+
+  const { line, column } = codeError.value
+
+  codeEditor.revealLineInCenter(line)
+  codeEditor.setPosition({ lineNumber: line, column })
+  codeEditor.focus()
+}
+
+defineExpose({ updateCodeEditorValue, formatCode: handleFormatCode, revealError })
 
 watch(isDark, (dark) => {
   if (!codeEditor) return
@@ -92,8 +107,11 @@ onMounted(() => {
 
   codeEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => emits('submit'))
 
+  errorGlyph = codeEditor.createDecorationsCollection()
+
   updateCodeEditorOptions(props.language || 'raw')
   updateDecorations()
+  updateErrorMarkers()
 
   codeEditor.onDidChangeModelContent(() => {
     emits('update:modelValue', codeEditor!.getValue())
@@ -180,6 +198,8 @@ watch(
 const updateCodeEditorOptions = (language: string) => {
   if (!codeEditor) return
 
+  codeEditor.updateOptions({ glyphMargin: language !== 'raw' })
+
   switch (language) {
     case 'yaml':
       codeEditor.updateOptions({ quickSuggestions: { strings: true } })
@@ -200,13 +220,58 @@ const editorLanguage = computed({
   }
 })
 
-const valideCode = computed(() => {
-  return validCode(props.modelValue, editorLanguage.value)
+const codeError = computed(() => {
+  if (editorLanguage.value === 'raw') return null
+
+  const source = props.variableCompletion ? maskActionVariables(props.modelValue) : props.modelValue
+
+  return findCodeError(source, editorLanguage.value)
 })
+
+const updateErrorMarkers = () => {
+  const model = codeEditor?.getModel()
+
+  if (!model) return
+
+  const error = codeError.value
+
+  if (!error) {
+    monaco.editor.setModelMarkers(model, FORMAT_MARKER_OWNER, [])
+    errorGlyph?.clear()
+    return
+  }
+
+  const line = Math.min(Math.max(error.line, 1), model.getLineCount())
+  const lineEnd = model.getLineMaxColumn(line)
+  const column = Math.min(Math.max(error.column, 1), lineEnd)
+
+  monaco.editor.setModelMarkers(model, FORMAT_MARKER_OWNER, [
+    {
+      severity: monaco.MarkerSeverity.Error,
+      message: error.message,
+      startLineNumber: line,
+      startColumn: column,
+      endLineNumber: line,
+      endColumn: Math.max(column + 1, lineEnd)
+    }
+  ])
+
+  errorGlyph?.set([
+    {
+      range: new monaco.Range(line, 1, line, 1),
+      options: {
+        glyphMarginClassName: 'mq3t-error-glyph',
+        glyphMarginHoverMessage: { value: error.message }
+      }
+    }
+  ])
+}
+
+watch(codeError, updateErrorMarkers)
 
 const editorStatus = computed(() => {
   if (editorLanguage.value === 'raw') return 'border-default'
-  if (!valideCode.value) return 'border-error/60'
+  if (codeError.value) return 'border-error'
   if (variableTypesGroupedDuplicates.value.length) return 'border-warning/60'
 
   return 'border-success/40'
@@ -225,16 +290,7 @@ const editorStatus = computed(() => {
         <USelect v-if="dense" v-model="editorLanguage" :items="LANGUAGES" size="sm" class="w-24" />
         <SegmentedControl v-else v-model="editorLanguage" :items="LANGUAGES" size="sm" />
         <UTooltip
-          v-if="!valideCode && !hideWarning"
-          :text="`Invalid ${editorLanguage.toUpperCase()} format`"
-        >
-          <span class="text-error flex items-center gap-1.5 text-xs select-none">
-            <UIcon name="i-lucide-circle-alert" class="size-4" />
-            <span v-if="!dense">Invalid {{ editorLanguage.toUpperCase() }} format</span>
-          </span>
-        </UTooltip>
-        <UTooltip
-          v-else-if="variableTypesGroupedDuplicates.length && !hideWarning"
+          v-if="variableTypesGroupedDuplicates.length && !hideWarning"
           :text="duplicatesText"
         >
           <span class="text-warning flex items-center gap-1.5 text-xs select-none">
@@ -264,11 +320,33 @@ const editorStatus = computed(() => {
       class="min-h-0 w-full grow overflow-hidden rounded-md border transition-colors"
       :class="editorStatus"
     />
+    <button
+      v-if="codeError"
+      type="button"
+      class="text-error bg-error/10 hover:bg-error/15 flex min-w-0 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors"
+      :title="codeError.message"
+      @click="revealError"
+    >
+      <UIcon name="i-lucide-circle-alert" class="size-3.5 shrink-0" />
+      <span class="shrink-0 font-semibold">
+        Invalid {{ editorLanguage.toUpperCase() }} · line {{ codeError.line }}, col
+        {{ codeError.column }}
+      </span>
+      <span class="truncate">{{ codeError.message }}</span>
+    </button>
   </div>
 </template>
 
 <style>
 .mq3t-variable-highlight {
   text-decoration-line: underline;
+}
+
+.mq3t-error-glyph {
+  background-color: var(--ui-error);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' x2='12' y1='8' y2='12'/%3E%3Cline x1='12' x2='12.01' y1='16' y2='16'/%3E%3C/svg%3E")
+    center / 14px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' x2='12' y1='8' y2='12'/%3E%3Cline x1='12' x2='12.01' y1='16' y2='16'/%3E%3C/svg%3E")
+    center / 14px no-repeat;
 }
 </style>

@@ -7,6 +7,7 @@ import CodeEditor from '@renderer/components/tap-topics/CodeEditor.vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
 import { useExploreUiStore } from '@renderer/store/explore-ui'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
+import { findCodeError } from '@renderer/assets/js/format-code'
 import { computed, nextTick, reactive, ref, useTemplateRef, watch } from 'vue'
 import { useActionsStore } from '@renderer/store/actions'
 import { defineShortcuts } from '@nuxt/ui/composables'
@@ -73,6 +74,10 @@ const propertiesSet = computed(
 
 const canPublish = computed(() => !!topic.value && !/[+#]/.test(topic.value))
 
+const payloadError = computed(() =>
+  language.value === 'raw' ? null : findCodeError(payload.value, language.value)
+)
+
 const send = () => {
   if (!canPublish.value) return
   if (Date.now() - lastSentAt < 250) return
@@ -101,8 +106,17 @@ const send = () => {
   emit('published', topic.value)
 }
 
+const sendFromShortcut = () => {
+  if (payloadError.value) {
+    editorRef.value?.revealError()
+    return
+  }
+
+  send()
+}
+
 defineShortcuts({
-  meta_enter: { usingInput: true, handler: send }
+  meta_enter: { usingInput: true, handler: sendFromShortcut }
 })
 
 const load = (message: MqttMessage, messageTopic?: string) => {
@@ -203,7 +217,7 @@ defineExpose({ load, openConvert })
           hide-options
           hide-warning
           line-numbers
-          @submit="send"
+          @submit="sendFromShortcut"
         />
       </div>
     </div>
@@ -262,10 +276,21 @@ defineExpose({ load, openConvert })
         :disabled="!topic"
         @click="openConvert()"
       />
-      <UButton icon="i-lucide-send" :disabled="!canPublish" class="font-semibold" @click="send">
-        Send
-        <span class="text-xs font-medium opacity-80">Ctrl+Enter</span>
-      </UButton>
+      <UTooltip
+        :text="payloadError ? `Payload is not valid ${language.toUpperCase()}` : undefined"
+        :disabled="!payloadError"
+      >
+        <UButton
+          :icon="payloadError ? 'i-lucide-triangle-alert' : 'i-lucide-send'"
+          :color="payloadError ? 'warning' : 'primary'"
+          :disabled="!canPublish"
+          class="font-semibold"
+          @click="send"
+        >
+          {{ payloadError ? 'Send anyway' : 'Send' }}
+          <span v-if="!payloadError" class="text-xs font-medium opacity-80">Ctrl+Enter</span>
+        </UButton>
+      </UTooltip>
     </div>
 
     <ConvertToActionDialog

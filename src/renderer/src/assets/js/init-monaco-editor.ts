@@ -10,6 +10,8 @@ self.MonacoEnvironment = {
   getWorker: (_, label) => (label === 'json' ? new JsonWorker() : new EditorWorker())
 }
 
+monaco.json.jsonDefaults.setDiagnosticsOptions({ validate: false })
+
 monaco.editor.defineTheme('vs-lighter', {
   base: 'vs',
   inherit: true,
