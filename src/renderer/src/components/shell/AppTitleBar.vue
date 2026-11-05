@@ -25,7 +25,7 @@ const isMac = AppPlatform === 'darwin'
 <template>
   <header
     class="border-default bg-chrome flex h-[46px] shrink-0 items-end gap-1 border-b pt-2 [-webkit-app-region:drag]"
-    :class="isMac ? 'pl-[84px]' : 'pl-3'"
+    :class="isMac ? 'pl-[92px]' : 'pl-3'"
   >
     <nav
       aria-label="Open connections"

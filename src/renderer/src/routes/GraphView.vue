@@ -94,7 +94,7 @@ onMounted(() => {
   <div class="graph-view flex h-full flex-col overflow-hidden">
     <header
       class="border-default bg-chrome flex h-[46px] shrink-0 items-center gap-2 border-b [-webkit-app-region:drag]"
-      :class="isMac ? 'pl-[84px]' : 'pl-3'"
+      :class="isMac ? 'pl-[92px]' : 'pl-3'"
     >
       <span class="text-highlighted text-[13px] font-bold">Graphs</span>
 
