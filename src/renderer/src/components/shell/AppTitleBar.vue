@@ -24,12 +24,12 @@ const isMac = AppPlatform === 'darwin'
 
 <template>
   <header
-    class="border-default bg-chrome flex h-[46px] shrink-0 items-end gap-1 border-b pt-2 [-webkit-app-region:drag]"
+    class="border-default bg-chrome flex h-[46px] shrink-0 items-center gap-1 border-b [-webkit-app-region:drag]"
     :class="isMac ? 'pl-[92px]' : 'pl-3'"
   >
     <nav
       aria-label="Open connections"
-      class="flex min-w-0 [scrollbar-width:none] items-end gap-1 overflow-x-auto [-webkit-app-region:no-drag]"
+      class="flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto [-webkit-app-region:no-drag]"
     >
       <UContextMenu
         v-for="connection in openConnections"
@@ -40,11 +40,11 @@ const isMac = AppPlatform === 'darwin'
           role="tab"
           tabindex="0"
           :aria-selected="isActive(connection.clientKey)"
-          class="group -mb-px flex h-[38px] max-w-60 min-w-[190px] cursor-pointer items-center gap-2 rounded-t-md border border-b-0 pr-1.5 pl-3.5 text-[13px] select-none"
+          class="group flex h-[30px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-full border pr-1 pl-3 text-[13px] transition-colors select-none"
           :class="
             isActive(connection.clientKey)
-              ? 'border-default bg-default text-default font-semibold'
-              : 'text-muted hover:text-default border-transparent font-medium'
+              ? 'border-default bg-default text-default font-semibold shadow-xs'
+              : 'text-muted hover:text-default hover:bg-elevated/60 border-transparent font-medium'
           "
           @click="openConnection(connection.clientKey)"
           @keydown.enter="openConnection(connection.clientKey)"
@@ -62,7 +62,7 @@ const isMac = AppPlatform === 'darwin'
             color="neutral"
             variant="ghost"
             aria-label="Close tab"
-            class="text-muted"
+            class="text-muted rounded-full"
             @click.stop="closeConnection(connection.clientKey)"
           />
         </div>
@@ -72,7 +72,7 @@ const isMac = AppPlatform === 'darwin'
         v-if="appStore.view === 'new-tab' && openConnections.length"
         role="tab"
         aria-selected="true"
-        class="border-default bg-default -mb-px flex h-[38px] min-w-[190px] items-center rounded-t-md border border-b-0 pl-3.5 text-[13px] font-semibold select-none"
+        class="border-default bg-default flex h-[30px] min-w-[170px] items-center rounded-full border pl-3 text-[13px] font-semibold shadow-xs select-none"
       >
         New tab
       </div>
@@ -84,7 +84,7 @@ const isMac = AppPlatform === 'darwin'
         color="neutral"
         variant="ghost"
         aria-label="New tab"
-        class="text-muted mb-0.5 [-webkit-app-region:no-drag]"
+        class="text-muted rounded-full [-webkit-app-region:no-drag]"
         @click="openNewTab"
       />
     </UTooltip>
@@ -98,7 +98,7 @@ const isMac = AppPlatform === 'darwin'
         variant="ghost"
         aria-label="Settings"
         :aria-pressed="appStore.view === 'settings'"
-        class="mr-2 mb-1 shrink-0 [-webkit-app-region:no-drag]"
+        class="mr-2 shrink-0 [-webkit-app-region:no-drag]"
         :class="appStore.view === 'settings' ? 'bg-primary/10 text-primary' : 'text-muted'"
         @click="toggleSettings"
       />
