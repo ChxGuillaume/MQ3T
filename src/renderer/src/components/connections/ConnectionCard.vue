@@ -101,28 +101,31 @@ const items = computed(() => connectionItems(props.connection))
           <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
             {{ subscriptionsLabel }}
           </span>
+        </div>
+
+        <div class="border-default mt-auto flex items-center gap-3 border-t pt-3">
           <span
-            class="ml-1 flex items-center gap-1.5 text-xs font-semibold"
+            class="flex min-w-0 items-center gap-2 text-xs leading-none font-semibold"
             :class="opened ? 'text-default' : 'text-muted'"
           >
             <span
-              class="size-2 rounded-full"
+              class="size-2 shrink-0 rounded-full"
               :class="opened ? statusDotClass(status) : 'bg-(--ui-text-muted)'"
             />
-            {{ stateLabel }}
+            <span class="truncate">{{ stateLabel }}</span>
           </span>
           <UButton
             v-if="opened"
             label="Go to tab"
             color="neutral"
             variant="outline"
-            class="ml-auto font-semibold"
+            class="ml-auto shrink-0 font-semibold"
             @click="openConnection(connection.clientKey)"
           />
           <UButton
             v-else
             label="Connect"
-            class="ml-auto font-semibold"
+            class="ml-auto shrink-0 font-semibold"
             @click="openConnection(connection.clientKey)"
           />
         </div>
