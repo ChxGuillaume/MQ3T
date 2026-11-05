@@ -27,7 +27,9 @@ export default defineConfig({
         },
         icon: {
           clientBundle: {
-            scan: true
+            scan: {
+              globInclude: ['**/*.{vue,ts}']
+            }
           }
         }
       })
