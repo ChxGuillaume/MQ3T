@@ -391,6 +391,9 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
           .filter((subTopic) => subTopic.startsWith(topic + '/'))
           .forEach((subTopic) => (this.topicGroupOpened[clientKey][subTopic] = false))
       }
+    },
+    collapseAllTopicGroups(clientKey: string) {
+      this.topicGroupOpened[clientKey] = {}
     }
   }
 })

@@ -17,7 +17,7 @@ const exploreUiStore = useExploreUiStore()
 
 const treeRef = useTemplateRef('treeRef')
 
-const topicsCount = ref(0)
+const topicsCount = ref({ matched: 0, total: 0 })
 
 const clientKey = computed(() => mqttTopicsStore.selectedConnection)
 
@@ -30,7 +30,10 @@ const countLabel = computed(() => {
     return `${favoritesCount.value} ${favoritesCount.value === 1 ? 'favorite' : 'favorites'} · drag to reorder`
   }
 
-  return `${topicsCount.value.toLocaleString()} ${topicsCount.value === 1 ? 'topic' : 'topics'}`
+  const { matched, total } = topicsCount.value
+  const label = `${total.toLocaleString()} ${total === 1 ? 'topic' : 'topics'}`
+
+  return matched === total ? label : `${matched.toLocaleString()} of ${label}`
 })
 
 const splitterItems = [
@@ -91,8 +94,16 @@ const openFromFavorites = (topic: string) => {
     >
       <template #tree>
         <section aria-label="Topic explorer" class="flex h-full min-w-0 flex-1 flex-col">
-          <ExploreFilterBar :count-label="countLabel" />
-          <TopicTree ref="treeRef" :client-key="clientKey" @count="topicsCount = $event" />
+          <ExploreFilterBar
+            :count-label="countLabel"
+            @collapse-all="treeRef?.collapseAll()"
+            @reveal-selected="treeRef?.revealSelected()"
+          />
+          <TopicTree
+            ref="treeRef"
+            :client-key="clientKey"
+            @count="(matched, total) => (topicsCount = { matched, total })"
+          />
         </section>
       </template>
 

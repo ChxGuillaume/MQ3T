@@ -3,8 +3,6 @@ import { toRaw } from 'vue'
 
 export type PayloadKind = 'json' | 'number' | 'text' | 'boolean' | 'binary' | 'empty'
 
-export type PreviewPair = { key: string; value: string; kind: PayloadKind | 'null' | 'nested' }
-
 export const MAX_PARSE_LENGTH = 16384
 
 export const isBinaryPayload = (message: string) => {
@@ -147,38 +145,114 @@ export const compactValue = (value: unknown, max = 40): string => {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
-const valueKind = (value: unknown): PreviewPair['kind'] => {
-  if (value === null) return 'null'
-  if (typeof value === 'number') return 'number'
-  if (typeof value === 'boolean') return 'boolean'
-  if (typeof value === 'string') return 'text'
+export type InlineTokenKind = 'key' | 'str' | 'num' | 'sym' | 'punct' | 'tag' | 'text'
 
-  return 'nested'
+export type InlineToken = { text: string; kind: InlineTokenKind }
+
+const jsonTokens = (value: unknown, depth: number, out: InlineToken[]) => {
+  if (value === null || typeof value === 'boolean') {
+    out.push({ text: String(value), kind: 'sym' })
+  } else if (typeof value === 'number') {
+    out.push({ text: String(value), kind: 'num' })
+  } else if (typeof value === 'string') {
+    out.push({ text: JSON.stringify(value), kind: 'str' })
+  } else if (typeof value !== 'object') {
+    out.push({ text: String(value), kind: 'text' })
+  } else if (depth > 2) {
+    out.push({ text: Array.isArray(value) ? '[…]' : '{…}', kind: 'punct' })
+  } else if (Array.isArray(value)) {
+    out.push({ text: '[', kind: 'punct' })
+    value.forEach((item, index) => {
+      if (index) out.push({ text: ', ', kind: 'punct' })
+      jsonTokens(item, depth + 1, out)
+    })
+    out.push({ text: ']', kind: 'punct' })
+  } else {
+    const entries = Object.entries(value as Record<string, unknown>)
+
+    if (!entries.length) {
+      out.push({ text: '{}', kind: 'punct' })
+      return
+    }
+
+    out.push({ text: '{ ', kind: 'punct' })
+    entries.forEach(([key, v], index) => {
+      if (index) out.push({ text: ', ', kind: 'punct' })
+      out.push({ text: key, kind: 'key' }, { text: ': ', kind: 'punct' })
+      jsonTokens(v, depth + 1, out)
+    })
+    out.push({ text: ' }', kind: 'punct' })
+  }
 }
 
-export const previewPairs = (value: unknown, count = 2) => {
-  if (value === null || typeof value !== 'object') return { pairs: [], more: 0 }
+const XML_TOKEN = /(<\/?)([\w:.-]+)|([\w:.-]+)(=)("[^"]*"|'[^']*')|(\/?>)|(\s+)|([^<>]+)/g
 
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [`[${index}]`, item] as const)
-    : Object.entries(value as Record<string, unknown>)
+const xmlTokens = (message: string, out: InlineToken[]) => {
+  const compact = message
+    .replace(/<\?[\s\S]*?\?>|<!--[\s\S]*?-->/g, '')
+    .replace(/>\s+</g, '><')
+    .replace(/\s+/g, ' ')
+    .trim()
 
-  const primitives = entries.filter(([, v]) => v === null || typeof v !== 'object')
-  const nested = entries.filter(([, v]) => v !== null && typeof v === 'object')
-  const shown = [...primitives, ...nested].slice(0, count)
+  let inTag = false
 
-  const pairs: PreviewPair[] = shown.map(([key, v]) => ({
-    key,
-    kind: valueKind(v),
-    value:
-      v !== null && typeof v === 'object'
-        ? Array.isArray(v)
-          ? `[${v.length}]`
-          : `{${Object.keys(v).length}}`
-        : compactValue(v, 24)
-  }))
+  for (const match of compact.matchAll(XML_TOKEN)) {
+    const [, open, name, attr, equals, attrValue, close, space, rest] = match
 
-  return { pairs, more: entries.length - shown.length }
+    if (open) {
+      inTag = true
+      out.push({ text: open, kind: 'punct' }, { text: name, kind: 'tag' })
+    } else if (attr && inTag) {
+      out.push(
+        { text: attr, kind: 'key' },
+        { text: equals, kind: 'punct' },
+        { text: attrValue, kind: 'str' }
+      )
+    } else if (close) {
+      inTag = false
+      out.push({ text: close, kind: 'punct' })
+    } else if (space) {
+      out.push({ text: space, kind: 'text' })
+    } else {
+      out.push({ text: rest ?? match[0], kind: inTag ? 'key' : 'text' })
+    }
+  }
+}
+
+const truncateTokens = (tokens: InlineToken[], max: number) => {
+  if (tokens.reduce((total, token) => total + token.text.length, 0) <= max) return tokens
+
+  const result: InlineToken[] = []
+  let length = 0
+
+  for (const token of tokens) {
+    if (length + token.text.length < max) {
+      result.push(token)
+      length += token.text.length
+      continue
+    }
+
+    result.push({ text: `${token.text.slice(0, max - length - 1)}…`, kind: token.kind })
+    break
+  }
+
+  return result
+}
+
+export const inlineJsonTokens = (value: unknown, max = 80) => {
+  const tokens: InlineToken[] = []
+
+  jsonTokens(value, 0, tokens)
+
+  return truncateTokens(tokens, max)
+}
+
+export const inlineXmlTokens = (message: string, max = 80) => {
+  const tokens: InlineToken[] = []
+
+  xmlTokens(message.slice(0, max * 8), tokens)
+
+  return truncateTokens(tokens, max)
 }
 
 export const firstNumericPath = (value: unknown): string | null => {
