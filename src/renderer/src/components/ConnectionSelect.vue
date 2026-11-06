@@ -53,6 +53,7 @@ const selectedItem = computed(() =>
     v-model="connectionValue"
     :items="items"
     :multiple="multiple"
+    :leading="!!selectedItem"
     value-key="value"
     :placeholder="multiple ? 'Connections' : 'Connection'"
     :search-input="{ placeholder: 'Search connections' }"
