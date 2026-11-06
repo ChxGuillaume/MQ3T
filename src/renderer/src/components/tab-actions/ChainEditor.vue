@@ -8,9 +8,9 @@ import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import ChainStepTopicDialog from './dialogs/ChainStepTopicDialog.vue'
 import { useChainActionsStore } from '@renderer/store/chain-actions'
-import { useOverlay, useToast } from '@nuxt/ui/composables'
+import { defineShortcuts, useOverlay, useToast } from '@nuxt/ui/composables'
 import { useSettingsStore } from '@renderer/store/settings-store'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onDeactivated, onMounted, ref, watch } from 'vue'
 import ActionNode from './action-chain/ActionNode.vue'
 import StartNode from './action-chain/StartNode.vue'
 import WaitNode from './action-chain/WaitNode.vue'
@@ -436,6 +436,28 @@ const handleBack = async () => {
   emit('back')
 }
 
+const active = ref(true)
+onActivated(() => (active.value = true))
+onDeactivated(() => (active.value = false))
+
+defineShortcuts({
+  meta_enter: {
+    usingInput: true,
+    handler: () => {
+      if (active.value && !running.value && isConnected.value) handleRun()
+    }
+  },
+  escape: () => {
+    if (active.value && running.value) stop()
+  },
+  meta_s: {
+    usingInput: true,
+    handler: () => {
+      if (active.value && !running.value) save()
+    }
+  }
+})
+
 onMounted(async () => {
   if (props.chainAction) {
     addNodes(clone(props.chainAction.nodes))
@@ -499,18 +521,19 @@ onMounted(async () => {
       </span>
 
       <div class="ml-auto flex gap-2">
-        <UButton
-          v-if="running"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-square"
-          label="Stop"
-          @click="stop"
-        />
+        <UTooltip v-if="running" text="Stop" :kbds="['escape']">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-square"
+            label="Stop"
+            @click="stop"
+          />
+        </UTooltip>
         <UTooltip
           v-else
-          :text="isConnected ? undefined : 'Connection is not active'"
-          :disabled="isConnected"
+          :text="isConnected ? 'Run chain' : 'Connection is not active'"
+          :kbds="isConnected ? ['meta', 'enter'] : undefined"
         >
           <UButton
             color="neutral"
