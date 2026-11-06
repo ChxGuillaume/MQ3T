@@ -18,6 +18,7 @@ import WaitMessageNode from './action-chain/WaitMessageNode.vue'
 import WaitMessageSettings from './action-chain/WaitMessageSettings.vue'
 import ConditionNode from './action-chain/ConditionNode.vue'
 import ConditionSettings from './action-chain/ConditionSettings.vue'
+import ChainRepeatSettings from './action-chain/ChainRepeatSettings.vue'
 import { chainCapturedNames, chainVariableSource } from '@renderer/composables/chain-runner'
 import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
@@ -63,7 +64,7 @@ const {
   findNode
 } = useVueFlow()
 
-const { running, run, stop, log, progress } = useRunActionChain({
+const { running, run, stop, log, progress, iteration } = useRunActionChain({
   onNodeState: (nodeId, state) => updateNodeData(nodeId, state)
 })
 
@@ -71,6 +72,7 @@ const { promptVariables } = useChainVariablesPrompt()
 
 const chainId = ref(props.chainAction?.id)
 const name = ref(props.chainAction?.name ?? 'New chain')
+const repeat = ref(props.chainAction?.repeat ? clone(props.chainAction.repeat) : undefined)
 const editingName = ref(!props.chainAction)
 const savedSnapshot = ref('')
 
@@ -95,6 +97,7 @@ const trackPadMode = computed({
 
 const serialize = () => ({
   name: name.value,
+  repeat: repeat.value,
   nodes: nodes.value.map((node) => {
     const {
       isRunning: _r,
@@ -347,7 +350,13 @@ watch([nodeStatusKey, running], () => {
 })
 
 const statusLabel = computed(() => {
-  if (running.value) return `Running · step ${progress.value.current} of ${progress.value.total}`
+  if (running.value) {
+    const { current, total } = iteration.value
+    const runLabel =
+      total === 1 ? '' : total === 0 ? `Run ${current} · ` : `Run ${current}/${total} · `
+
+    return `Running · ${runLabel}step ${progress.value.current} of ${progress.value.total}`
+  }
   if (log.value.some((entry) => entry.state === 'stopped')) return 'Stopped'
   if (log.value.some((entry) => entry.state === 'failed')) return 'Failed'
   if (log.value.length) return 'Finished'
@@ -400,7 +409,8 @@ const save = () => {
   if (existing) {
     chainActionsStore.updateChainAction(props.connectionId, existing.groupId, {
       ...existing,
-      ...clone(data)
+      ...clone(data),
+      repeat: data.repeat ? clone(data.repeat) : undefined
     })
   } else {
     chainActionsStore.addChainAction(props.connectionId, props.groupId, {
@@ -921,6 +931,13 @@ onMounted(async () => {
           Select a step to edit it. Connect steps by dragging from a step's right handle to the next
           one.
         </p>
+
+        <template v-if="!selectedNode">
+          <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
+            Chain settings
+          </div>
+          <ChainRepeatSettings v-model="repeat" />
+        </template>
 
         <template v-if="log.length">
           <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">

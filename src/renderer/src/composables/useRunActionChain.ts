@@ -38,13 +38,15 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
   const running = ref(false)
   const log = ref<ChainRunLogEntry[]>([])
   const outcome = ref<ChainRunOutcome>()
+  const iteration = ref({ current: 1, total: 1 })
 
   let currentRun: ChainRun | undefined
   let clearTimer: ReturnType<typeof setTimeout> | undefined
 
   const hooks = {
     onNodeState: options.onNodeState,
-    onLog: (entries: ChainRunLogEntry[]) => (log.value = entries)
+    onLog: (entries: ChainRunLogEntry[]) => (log.value = entries),
+    onIteration: (current: number, total: number) => (iteration.value = { current, total })
   }
 
   const steps = computed(() =>
@@ -87,5 +89,5 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
 
   onBeforeUnmount(() => clearTimeout(clearTimer))
 
-  return { running, run, stop, log, progress, outcome }
+  return { running, run, stop, log, progress, outcome, iteration }
 }
