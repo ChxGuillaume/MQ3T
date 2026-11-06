@@ -79,4 +79,8 @@ const menuItems: ContextMenuItem[][] = [
 .chain-canvas .vue-flow__handle.condition-handle-false {
   top: 67%;
 }
+.chain-canvas .vue-flow__handle.condition-handle-true::before,
+.chain-canvas .vue-flow__handle.condition-handle-false::before {
+  inset: -6px;
+}
 </style>
