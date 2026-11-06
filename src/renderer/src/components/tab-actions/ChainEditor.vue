@@ -161,8 +161,29 @@ onConnect((params) => {
   addEdges({ ...params, animated: true })
 })
 
+const reaches = (from: string, to: string) => {
+  const queue = [from]
+  const seen = new Set<string>()
+
+  while (queue.length) {
+    const id = queue.shift()!
+
+    if (id === to) return true
+    if (seen.has(id)) continue
+
+    seen.add(id)
+
+    for (const edge of edges.value) if (edge.source === id) queue.push(edge.target)
+  }
+
+  return false
+}
+
 const isValid = (connection: Connection) =>
-  !edges.value.some((edge) => edge.target === connection.target)
+  connection.source !== connection.target &&
+  connection.target !== 'start' &&
+  !edges.value.some((edge) => edge.target === connection.target) &&
+  !reaches(connection.target, connection.source)
 
 const nextPosition = () => {
   const selected = getSelectedNodes.value[0]

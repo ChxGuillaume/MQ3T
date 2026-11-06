@@ -98,10 +98,13 @@ export const conditionSubject = (
 
 export const evaluateCondition = (condition: Partial<ConditionNodeData>, subject: unknown) => {
   const expected = condition.value ?? ''
+  const missing = subject === undefined || subject === null
+
+  if (missing && condition.operator !== 'exists') return condition.operator === 'not-equals'
 
   switch (condition.operator) {
     case 'exists':
-      return subject !== undefined && subject !== null
+      return !missing
     case 'not-equals':
       return asText(subject) !== expected
     case 'contains':

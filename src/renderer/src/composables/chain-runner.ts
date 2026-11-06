@@ -61,7 +61,7 @@ export type RunContext = {
   wait: (ms: number) => Promise<void>
   waitForMessage: (
     accepts: (message: BusMessage) => boolean,
-    since: number,
+    afterSequence: number,
     timeoutMs: number
   ) => Promise<BusMessage | undefined>
   setNodeState: (nodeId: string, state: ChainNodeState) => void
@@ -70,7 +70,7 @@ export type RunContext = {
   simulation?: ChainSimulation
 }
 
-export type StepInfo = { armedAt: number }
+export type StepInfo = { messagesAfter: number }
 
 export type NodeExecutor = (
   node: ChainActionNode,
@@ -224,7 +224,7 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   } else {
     context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + timeoutMs })
 
-    received = await context.waitForMessage(accepts, step.armedAt, timeoutMs)
+    received = await context.waitForMessage(accepts, step.messagesAfter, timeoutMs)
   }
 
   if (context.isStopped()) return
@@ -317,13 +317,15 @@ export const runChain = (
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]))
   const outgoing = new Map<string, Edge[]>()
   const pendingWaits = new Set<() => void>()
-  const messageBuffer: BusMessage[] = []
+  const messageBuffer: { sequence: number; message: BusMessage }[] = []
   const messageListeners = new Set<(message: BusMessage) => void>()
+  let messageSequence = 0
 
   const unsubscribe = onMqttMessage((message) => {
     if (message.clientKey !== connectionId) return
 
-    messageBuffer.push(message)
+    messageSequence++
+    messageBuffer.push({ sequence: messageSequence, message })
     if (messageBuffer.length > MESSAGE_BUFFER_SIZE) messageBuffer.shift()
 
     for (const listener of Array.from(messageListeners)) listener(message)
@@ -378,12 +380,12 @@ export const runChain = (
       pendingWaits.add(finish)
     })
 
-  const waitForMessage: RunContext['waitForMessage'] = (accepts, since, timeoutMs) => {
+  const waitForMessage: RunContext['waitForMessage'] = (accepts, afterSequence, timeoutMs) => {
     const buffered = messageBuffer.find(
-      (message) => message.receivedAt >= since && accepts(message)
+      (entry) => entry.sequence > afterSequence && accepts(entry.message)
     )
 
-    if (buffered) return Promise.resolve(buffered)
+    if (buffered) return Promise.resolve(buffered.message)
 
     return new Promise((resolve) => {
       const finish = (message?: BusMessage) => {
@@ -416,7 +418,9 @@ export const runChain = (
     simulation: options.simulate
   }
 
-  const followEdges = async (nodeId: string, handle: string | void, armedAt: number) => {
+  let visited = new Set<string>()
+
+  const followEdges = async (nodeId: string, handle: string | void, messagesAfter: number) => {
     const edges = (outgoing.get(nodeId) ?? []).filter(
       (edge) => !handle || edge.sourceHandle === handle
     )
@@ -425,13 +429,15 @@ export const runChain = (
       edges.map(async (edge) => {
         const next = nodes.get(edge.target)
 
-        if (next) await executeNode(next, armedAt)
+        if (next) await executeNode(next, messagesAfter)
       })
     )
   }
 
-  const executeNode = async (node: ChainActionNode, armedAt: number): Promise<void> => {
-    if (stopped) return
+  const executeNode = async (node: ChainActionNode, messagesAfter: number): Promise<void> => {
+    if (stopped || visited.has(node.id)) return
+
+    visited.add(node.id)
 
     setNodeState(node.id, { ...resetNodeState, isRunning: true })
     patchLog(node.id, { state: 'active', time: Date.now() })
@@ -439,7 +445,7 @@ export const runChain = (
     let handle: string | void
 
     try {
-      handle = await nodeExecutors[node.type ?? '']?.(node, context, { armedAt })
+      handle = await nodeExecutors[node.type ?? '']?.(node, context, { messagesAfter })
     } catch (error) {
       if (stopped) return
 
@@ -466,11 +472,12 @@ export const runChain = (
       text: doneText(node, handle, !!options.simulate)
     })
 
-    await followEdges(node.id, handle, Date.now())
+    await followEdges(node.id, handle, messageSequence)
   }
 
   const runIteration = async (iteration: number) => {
     context.iteration = iteration
+    visited = new Set()
     log = initialLog(iteration)
 
     for (const node of graph.nodes) setNodeState(node.id, resetNodeState)
@@ -478,7 +485,7 @@ export const runChain = (
     hooks.onIteration?.(iteration, repeatCount)
     publishLog()
 
-    await followEdges('start', undefined, Date.now())
+    await followEdges('start', undefined, messageSequence)
   }
 
   const runIterations = async () => {

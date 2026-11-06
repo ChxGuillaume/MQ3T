@@ -72,9 +72,15 @@ export const layoutChain = (
   const centerY = new Map<string, number>()
   let cursor = 0
 
+  const placing = new Set<string>()
+
   const place = (id: string): number => {
+    if (centerY.has(id)) return centerY.get(id)!
+
+    placing.add(id)
+
     const node = byId.get(id)!
-    const kids = children.get(id) ?? []
+    const kids = (children.get(id) ?? []).filter((kid) => !placing.has(kid) && !centerY.has(kid))
 
     if (!kids.length) {
       const center = cursor + node.height / 2
@@ -99,6 +105,7 @@ export const layoutChain = (
   const startCenterOffset = startNode ? startNode.height / 2 : 0
 
   for (const root of roots) place(root.id)
+  for (const node of nodes) place(node.id)
 
   const startCenter = startNode ? (centerY.get('start') ?? 0) : 0
   const positions = new Map<string, LayoutPosition>()
