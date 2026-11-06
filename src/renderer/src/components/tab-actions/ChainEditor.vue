@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Connection, ConnectionMode, Edge, GraphNode, useVueFlow, VueFlow } from '@vue-flow/core'
-import { formatRunLogTime, useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { useRunActionChain } from '@renderer/composables/useRunActionChain'
 import { useChainVariablesPrompt } from '@renderer/composables/useChainVariablesPrompt'
 import { Action, ChainAction, ChainActionNode } from '../../../../types/actions'
 import { clone, DEFAULT_GROUP, formatTile, isWildcardTopic, variableFields } from './action-utils'
@@ -19,6 +19,9 @@ import WaitMessageSettings from './action-chain/WaitMessageSettings.vue'
 import ConditionNode from './action-chain/ConditionNode.vue'
 import ConditionSettings from './action-chain/ConditionSettings.vue'
 import ChainRepeatSettings from './action-chain/ChainRepeatSettings.vue'
+import ChainRunHistory from './action-chain/ChainRunHistory.vue'
+import ChainRunLog from './action-chain/ChainRunLog.vue'
+import { useChainRunHistoryStore } from '@renderer/store/chain-run-history'
 import { chainCapturedNames, chainVariableSource } from '@renderer/composables/chain-runner'
 import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
@@ -44,6 +47,7 @@ const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const overlay = useOverlay()
 const toast = useToast()
+const historyStore = useChainRunHistoryStore()
 
 const confirmModal = overlay.create(ConfirmDialog)
 const topicModal = overlay.create(ChainStepTopicDialog)
@@ -72,6 +76,12 @@ const { promptVariables } = useChainVariablesPrompt()
 
 const chainId = ref(props.chainAction?.id)
 const name = ref(props.chainAction?.name ?? 'New chain')
+const logTab = ref<'run' | 'history'>('history')
+
+const historyCount = computed(() =>
+  chainId.value ? historyStore.getChainRuns(chainId.value).length : 0
+)
+
 const repeat = ref(props.chainAction?.repeat ? clone(props.chainAction.repeat) : undefined)
 const editingName = ref(!props.chainAction)
 const savedSnapshot = ref('')
@@ -363,30 +373,14 @@ const statusLabel = computed(() => {
   return ''
 })
 
-const logDotClass = (state: string) => {
-  switch (state) {
-    case 'done':
-      return 'bg-success'
-    case 'active':
-      return 'bg-primary'
-    case 'stopped':
-      return 'bg-warning'
-    case 'failed':
-      return 'bg-error'
-    case 'skipped':
-      return 'border-2 border-dashed border-muted'
-    default:
-      return 'border-2 border-muted'
-  }
-}
-
 const handleRun = async () => {
   const graph = serialize()
   const variables = await promptVariables(name.value, graph, props.connectionId)
 
   if (!variables) return
 
-  run(props.connectionId, graph, { variables })
+  logTab.value = 'run'
+  run(props.connectionId, graph, { variables, chainId: chainId.value })
 }
 
 const save = () => {
@@ -939,26 +933,18 @@ onMounted(async () => {
           <ChainRepeatSettings v-model="repeat" />
         </template>
 
-        <template v-if="log.length">
-          <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
-            This run
-          </div>
-          <ol class="flex flex-col gap-0.5 text-[13px]">
-            <li
-              v-for="entry in log"
-              :key="entry.id"
-              class="border-default flex items-center gap-2.5 border-b px-1 py-2"
-            >
-              <span class="size-2.5 shrink-0 rounded-full" :class="logDotClass(entry.state)" />
-              <span class="min-w-0 flex-1 truncate" :title="entry.reason">
-                {{ entry.text }}
-                <span v-if="entry.reason" class="text-error block truncate text-xs">
-                  {{ entry.reason }}
-                </span>
-              </span>
-              <span class="text-muted text-xs">{{ formatRunLogTime(entry) }}</span>
-            </li>
-          </ol>
+        <template v-if="log.length || historyCount">
+          <SegmentedControl
+            v-model="logTab"
+            size="sm"
+            class="mt-2.5 self-start"
+            :items="[
+              { label: 'This run', value: 'run', disabled: !log.length },
+              { label: `History (${historyCount})`, value: 'history', disabled: !historyCount }
+            ]"
+          />
+          <ChainRunLog v-if="logTab === 'run' && log.length" :entries="log" />
+          <ChainRunHistory v-else-if="chainId" :chain-id="chainId" />
         </template>
       </aside>
     </div>
