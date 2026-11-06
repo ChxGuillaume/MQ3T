@@ -34,11 +34,13 @@ import ActionDialog from './dialogs/ActionDialog.vue'
 import PayloadPreview from './PayloadPreview.vue'
 import { resolveNodeAction } from './chain-node-action'
 import { layoutChain } from './chain-layout'
+import { buildExampleChain, EXAMPLE_TOUR } from './example-chain'
 import {
   dryRunUpstream,
   findSampleMessage,
   isTopicSubscribed,
   previewCondition,
+  simulatedReplyFor,
   stepIssues,
   VariableOrigin
 } from './chain-step-help'
@@ -85,7 +87,7 @@ const {
   findNode
 } = useVueFlow()
 
-const { running, run, stop, log, progress, iteration } = useRunActionChain({
+const { running, simulating, run, stop, log, progress, iteration } = useRunActionChain({
   onNodeState: (nodeId, state) => updateNodeData(nodeId, state)
 })
 
@@ -526,7 +528,7 @@ const statusLabel = computed(() => {
     const runLabel =
       total === 1 ? '' : total === 0 ? `Run ${current} · ` : `Run ${current}/${total} · `
 
-    return `Running · ${runLabel}step ${progress.value.current} of ${progress.value.total}`
+    return `${simulating.value ? 'Simulating' : 'Running'} · ${runLabel}step ${progress.value.current} of ${progress.value.total}`
   }
   if (log.value.some((entry) => entry.state === 'stopped')) return 'Stopped'
   if (log.value.some((entry) => entry.state === 'failed')) return 'Failed'
@@ -559,6 +561,59 @@ const handleRun = async () => {
 
   logTab.value = 'run'
   run(props.connectionId, graph, { variables, chainId: chainId.value })
+}
+
+const replyFor = (data: Partial<WaitMessageNodeData>) => simulatedReplyFor(data, sampleFor(data))
+
+const autoReplyFor = (data: Partial<WaitMessageNodeData>) =>
+  simulatedReplyFor({ ...data, simulatedReply: '' }, sampleFor(data))
+
+const handleSimulate = async () => {
+  const graph = serialize()
+  const variables = await promptVariables(name.value, graph, props.connectionId)
+
+  if (!variables) return
+
+  logTab.value = 'run'
+  run(props.connectionId, graph, { variables, simulate: { replyFor } })
+}
+
+const showTour = ref(false)
+
+const isEmptyCanvas = computed(() => nodes.value.length <= 1)
+
+const loadExample = async () => {
+  if (!isEmptyCanvas.value) {
+    const confirmed = await confirmModal.open({
+      title: 'Replace this chain with the example?',
+      description: 'The steps on the canvas are removed. Nothing is saved until you press Save.',
+      confirmLabel: 'Load example',
+      danger: true
+    }).result
+
+    if (!confirmed) return
+  }
+
+  const example = buildExampleChain()
+
+  removeNodes(nodes.value.filter((node) => node.id !== 'start').map((node) => node.id))
+
+  const start = findNode('start')
+  const exampleStart = example.nodes.find((node) => node.id === 'start')
+
+  if (start && exampleStart) start.position = { ...exampleStart.position }
+
+  addNodes(clone(example.nodes.filter((node) => node.id !== 'start')))
+  addEdges(clone(example.edges))
+
+  if (!chainId.value || name.value === 'New chain') name.value = example.name
+
+  repeat.value = clone(example.repeat)
+  editingName.value = false
+  showTour.value = true
+
+  await nextTick()
+  fitView({ duration: 300 })
 }
 
 const save = () => {
@@ -722,6 +777,16 @@ onMounted(async () => {
             @click="handleRun"
           />
         </UTooltip>
+        <UTooltip v-if="!running" text="Play the chain on the canvas without sending anything">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-flask-conical"
+            label="Simulate"
+            :disabled="isEmptyCanvas"
+            @click="handleSimulate"
+          />
+        </UTooltip>
         <UButton label="Save" class="font-semibold" :disabled="running" @click="save" />
       </div>
     </header>
@@ -850,6 +915,29 @@ onMounted(async () => {
           snap-to-grid
         >
           <Background :gap="20" :size="1.2" pattern-color="var(--ui-border-accented)" />
+
+          <div
+            v-if="isEmptyCanvas && !running"
+            class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6"
+          >
+            <div
+              class="border-default bg-default pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm"
+            >
+              <UIcon name="i-lucide-workflow" class="text-primary size-8" />
+              <h3 class="text-base font-bold">Build your first chain</h3>
+              <p class="text-muted text-sm leading-[1.5]">
+                Drag steps from the left onto the canvas and connect them from Start. Not sure where
+                to begin? Load an example that uses every kind of step, then press Simulate to watch
+                it run without sending anything.
+              </p>
+              <UButton
+                icon="i-lucide-sparkles"
+                label="Load the example chain"
+                class="font-semibold"
+                @click="loadExample"
+              />
+            </div>
+          </div>
 
           <template #node-start="nodeProps">
             <StartNode :id="nodeProps.id" :selected="nodeProps.selected" />
@@ -1033,6 +1121,7 @@ onMounted(async () => {
             :sample="selectedSample"
             :known-topics="knownTopics"
             :subscribed="selectedSubscribed"
+            :auto-reply="autoReplyFor(selectedNode.data ?? {})"
             @update="updateNodeData(selectedNode.id, $event)"
           />
           <div class="flex gap-2">
@@ -1147,6 +1236,44 @@ onMounted(async () => {
           Select a step to edit it. Connect steps by dragging from a step's right handle to the next
           one.
         </p>
+
+        <div
+          v-if="showTour && !selectedNode"
+          class="border-primary/30 bg-primary/5 flex flex-col gap-2.5 rounded-lg border p-3"
+        >
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-sparkles" class="text-primary size-4" />
+            <span class="text-sm font-bold">About this example</span>
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-x"
+              aria-label="Hide the example tour"
+              class="ml-auto"
+              @click="showTour = false"
+            />
+          </div>
+          <div v-for="item in EXAMPLE_TOUR" :key="item.title" class="flex gap-2 text-xs">
+            <UIcon :name="item.icon" class="text-muted mt-0.5 size-3.5 shrink-0" />
+            <span>
+              <b>{{ item.title }}.</b>
+              <span class="text-muted"> {{ item.text }}</span>
+            </span>
+          </div>
+          <UButton
+            size="sm"
+            icon="i-lucide-flask-conical"
+            label="Simulate it"
+            class="self-start font-semibold"
+            :disabled="running"
+            @click="handleSimulate"
+          />
+          <span class="text-muted text-xs">
+            Click any step to see how it's set up. Simulate plays the chain on the canvas with
+            example replies, so you don't need a broker.
+          </span>
+        </div>
 
         <template v-if="!selectedNode">
           <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
