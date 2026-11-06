@@ -25,6 +25,7 @@ export const formatRunLogTime = (entry: ChainRunLogEntry) => {
   if (entry.state === 'active') return 'now'
   if (entry.state === 'pending') return 'pending'
   if (entry.state === 'stopped') return 'stopped'
+  if (entry.state === 'skipped') return 'skipped'
 
   return entry.time ? formatTime(entry.time) : ''
 }
@@ -46,7 +47,9 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
     onLog: (entries: ChainRunLogEntry[]) => (log.value = entries)
   }
 
-  const steps = computed(() => log.value.filter((entry) => entry.id !== 'start'))
+  const steps = computed(() =>
+    log.value.filter((entry) => entry.id !== 'start' && entry.state !== 'skipped')
+  )
 
   const progress = computed(() => {
     const total = steps.value.length
