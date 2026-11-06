@@ -133,15 +133,14 @@ const VARIABLE_TOKENS: Record<VariableField['type'], string> = {
 export type NamedVariableValues = Record<string, VariableValue>
 
 export const mergedVariableSource = (
-  sources: VariableSource[],
-  excludedNames: Set<string> = new Set()
+  sources: (VariableSource & { excludedNames?: Set<string> })[]
 ): VariableSource => {
   const types = new Map<string, VariableField['type']>()
   const enumOptions: Record<string, (string | number)[]> = {}
 
   for (const source of sources) {
     for (const field of variableFields(source)) {
-      if (excludedNames.has(field.name) || types.has(field.name)) continue
+      if (source.excludedNames?.has(field.name) || types.has(field.name)) continue
 
       types.set(field.name, field.type)
 
@@ -164,6 +163,30 @@ export const namedVariableValues = (
 ): NamedVariableValues =>
   Object.fromEntries(variableFields(source).map((field) => [field.name, values[field.key]]))
 
+const coerceVariable = (value: VariableValue, type: VariableField['type']): VariableValue => {
+  if (value === null) return null
+
+  switch (type) {
+    case 'string':
+      return typeof value === 'string' ? value : JSON.stringify(value)
+    case 'number': {
+      if (typeof value === 'number') return value
+
+      const number = Number(value)
+
+      return value !== '' && Number.isFinite(number) ? number : value
+    }
+    case 'boolean':
+      if (typeof value === 'boolean') return value
+      if (value === 'true') return true
+      if (value === 'false') return false
+
+      return Boolean(value)
+    default:
+      return value
+  }
+}
+
 export const keyedVariableValues = (
   source: VariableSource,
   named: Map<string, VariableValue>
@@ -173,7 +196,9 @@ export const keyedVariableValues = (
   return Object.fromEntries(
     variableFields(source).map((field) => [
       field.key,
-      named.has(field.name) ? named.get(field.name)! : defaults[field.key]
+      named.has(field.name)
+        ? coerceVariable(named.get(field.name)!, field.type)
+        : defaults[field.key]
     ])
   )
 }
