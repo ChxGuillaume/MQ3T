@@ -9,13 +9,16 @@ import { computed } from 'vue'
 const props = defineProps<{
   id: string
   data: { action?: Action; isRunning?: boolean; isFinished?: boolean; isFailed?: boolean }
+  action?: Action
+  linked?: boolean
+  missing?: boolean
   selected?: boolean
   dimmed?: boolean
 }>()
 
 const emit = defineEmits<{ edit: []; copy: []; remove: [] }>()
 
-const action = computed(() => props.data?.action)
+const action = computed(() => props.action ?? props.data?.action)
 
 const tile = computed(() => formatTile(action.value?.payloadFormat))
 
@@ -42,7 +45,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
     <div
       class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
       :class="[
-        data?.isFailed
+        data?.isFailed || missing
           ? 'border-error ring-error ring-1'
           : selected || data?.isRunning
             ? 'border-primary ring-primary ring-1'
@@ -57,7 +60,21 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
         {{ tile.glyph }}
       </span>
       <div v-if="action" class="min-w-0 flex-1 text-left">
-        <div class="truncate text-[13px] font-bold">{{ action.name || 'Action' }}</div>
+        <div class="flex items-center gap-1 text-[13px] font-bold">
+          <UIcon
+            v-if="missing"
+            name="i-lucide-unlink"
+            class="text-error size-3 shrink-0"
+            aria-label="Linked action deleted"
+          />
+          <UIcon
+            v-else-if="linked"
+            name="i-lucide-link"
+            class="text-muted size-3 shrink-0"
+            aria-label="Linked to saved action"
+          />
+          <span class="truncate">{{ action.name || 'Action' }}</span>
+        </div>
         <div class="text-muted truncate font-mono text-[11px]" :title="action.topic">
           {{ action.topic }}
         </div>
