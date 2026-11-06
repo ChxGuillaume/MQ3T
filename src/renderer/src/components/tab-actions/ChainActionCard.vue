@@ -6,7 +6,7 @@ import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
 import ProgressRing from './action-chain/ProgressRing.vue'
 import { useToast } from '@nuxt/ui/composables'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
   chainAction: ChainAction
@@ -18,7 +18,9 @@ const props = defineProps<{
 
 const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
-const { running, run, stop, progress, iteration } = useRunActionChain()
+const { running, run, stop, progress, iteration } = useRunActionChain({
+  key: () => props.chainAction.id
+})
 const toast = useToast()
 const { promptVariables } = useChainVariablesPrompt()
 
@@ -83,7 +85,21 @@ const stats = computed(() => {
   ].filter((stat) => stat.show)
 })
 
+const starting = ref(false)
+
 const handleRun = async () => {
+  if (starting.value || running.value) return
+
+  starting.value = true
+
+  try {
+    await startRun()
+  } finally {
+    starting.value = false
+  }
+}
+
+const startRun = async () => {
   const variables = await promptVariables(
     props.chainAction.name,
     props.chainAction,
@@ -201,7 +217,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
           label="Run"
           class="font-semibold"
           icon="i-lucide-play"
-          :disabled="disable"
+          :disabled="disable || starting"
           @click="handleRun"
         />
       </UTooltip>
