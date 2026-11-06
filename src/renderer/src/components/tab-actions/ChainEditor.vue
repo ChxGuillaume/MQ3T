@@ -948,6 +948,7 @@ onMounted(async () => {
               :pan-activation-key-code="!trackPadMode ? 'Shift' : null"
               :connection-mode="ConnectionMode.Strict"
               :is-valid-connection="isValid"
+              :connection-radius="32"
               :pan-on-scroll="trackPadMode"
               :snap-grid="[10, 10]"
               :min-zoom="0.5"
@@ -1384,6 +1385,13 @@ onMounted(async () => {
   border-radius: 9999px;
   border: 2px solid var(--ui-bg);
   background: var(--ui-border-accented);
+}
+
+.chain-canvas .vue-flow__handle::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 9999px;
 }
 
 .chain-canvas .vue-flow__node.selected .vue-flow__handle,
