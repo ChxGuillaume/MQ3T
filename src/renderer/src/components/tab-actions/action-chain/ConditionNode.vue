@@ -3,6 +3,7 @@ import { Handle, Position } from '@vue-flow/core'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { ConditionNodeData } from '../../../../../types/actions'
 import { describeCondition } from '../chain-message'
+import StepIssueBadge from './StepIssueBadge.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -13,6 +14,7 @@ const props = defineProps<{
     isFailed?: boolean
   }
   selected?: boolean
+  issues?: string[]
   dimmed?: boolean
 }>()
 
@@ -41,6 +43,7 @@ const menuItems: ContextMenuItem[][] = [
         { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished && !data?.isFailed }
       ]"
     >
+      <StepIssueBadge :issues="issues ?? []" />
       <span
         class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
       >

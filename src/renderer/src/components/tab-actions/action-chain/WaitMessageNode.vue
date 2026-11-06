@@ -4,6 +4,7 @@ import { Handle, Position } from '@vue-flow/core'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { WaitMessageNodeData } from '../../../../../types/actions'
 import ProgressRing from './ProgressRing.vue'
+import StepIssueBadge from './StepIssueBadge.vue'
 
 const props = defineProps<{
   id: string
@@ -15,6 +16,7 @@ const props = defineProps<{
     waitEndsAt?: number
   }
   selected?: boolean
+  issues?: string[]
   dimmed?: boolean
 }>()
 
@@ -66,7 +68,7 @@ const menuItems: ContextMenuItem[][] = [
   <UContextMenu :items="menuItems">
     <div class="relative">
       <div
-        class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border border-dashed px-3 transition-[opacity,box-shadow]"
+        class="bg-default relative flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border border-dashed px-3 transition-[opacity,box-shadow]"
         :class="[
           data?.isFailed
             ? 'border-error ring-error ring-1'
@@ -76,6 +78,7 @@ const menuItems: ContextMenuItem[][] = [
           { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished && !data?.isFailed }
         ]"
       >
+        <StepIssueBadge :issues="issues ?? []" />
         <span
           class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
         >
