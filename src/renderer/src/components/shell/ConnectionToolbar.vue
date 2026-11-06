@@ -25,7 +25,11 @@ const isTemporary = computed(() => !!connection.value?.temporary)
 
 const sections = computed<SegmentedItem<ConnectionSection>[]>(() => [
   { label: 'Explore', value: 'explore' },
-  { label: 'Actions', value: 'actions', disabled: isTemporary.value },
+  {
+    label: 'Actions',
+    value: 'actions',
+    disabled: isTemporary.value && !connection.value?.actionsFrom
+  },
   { label: 'Graphs', value: 'graphs' },
   { label: 'Broker', value: 'broker' }
 ])

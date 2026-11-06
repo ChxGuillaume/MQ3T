@@ -51,6 +51,14 @@ const selectedGroup = ref<string>(actionsStore.selectedActionGroup || 'default')
 
 const selectedConnection = computed(() => mqttTopicsStore.selectedConnection)
 
+const isReadonly = computed(() => mqttConnectionsStore.isTemporary(selectedConnection.value))
+
+const actionsSourceName = computed(() => {
+  const sourceId = actionsStore.resolveActionsConnection(selectedConnection.value)
+
+  return mqttConnectionsStore.getConnection(sourceId)?.name ?? sourceId
+})
+
 const isDisconnected = computed(
   () => mqttConnectionsStore.getConnectionStatus(selectedConnection.value) !== 'connected'
 )
@@ -154,7 +162,7 @@ const visibleChains = computed(() => {
   return list.filter((c) => matchesSearch(c.name))
 })
 
-const canReorder = computed(() => isRealGroup.value && !normalizedSearch.value)
+const canReorder = computed(() => isRealGroup.value && !normalizedSearch.value && !isReadonly.value)
 
 const sortableActions = computed({
   get: () => (canReorder.value ? groupActions.value : visibleActions.value),
@@ -461,6 +469,18 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
   const isDefault = group.id === 'default'
   const isShared = !isDefault && actionsStore.isSharedGroup(group.id)
 
+  if (isReadonly.value) {
+    return [
+      [
+        {
+          label: 'Export group',
+          icon: 'i-lucide-upload',
+          onSelect: () => handleGroupExport(group.id)
+        }
+      ]
+    ]
+  }
+
   return [
     isDefault
       ? []
@@ -671,6 +691,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
             :animation="200"
             group="groups"
             item-key="id"
+            :disabled="isReadonly"
             :move="isGroupDraggable"
             ghost-class="opacity-40"
             class="flex flex-col gap-0.5"
@@ -718,6 +739,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
           </draggable>
 
           <button
+            v-if="!isReadonly"
             type="button"
             class="text-muted hover:bg-muted hover:text-default flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px]"
             @click="groupDialog = { opened: true, group: undefined }"
@@ -729,6 +751,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
 
         <div class="mt-3 flex gap-1.5 px-1">
           <UButton
+            v-if="!isReadonly"
             color="neutral"
             variant="outline"
             icon="i-lucide-download"
@@ -765,6 +788,10 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
               />
             </div>
             <p v-if="pageDescription" class="text-muted mt-1 text-[13px]">{{ pageDescription }}</p>
+            <p v-if="isReadonly" class="text-muted mt-1 flex items-center gap-1.5 text-[13px]">
+              <UIcon name="i-lucide-lock" class="size-3.5" />
+              Read-only: actions from {{ actionsSourceName }}, sent on this temporary connection.
+            </p>
           </div>
           <div class="flex gap-2">
             <UInput
@@ -774,6 +801,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
               class="w-[220px]"
             />
             <UButton
+              v-if="!isReadonly"
               color="neutral"
               variant="outline"
               icon="i-lucide-workflow"
@@ -781,6 +809,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
               @click="openChain()"
             />
             <UButton
+              v-if="!isReadonly"
               color="primary"
               variant="outline"
               icon="i-lucide-plus"
@@ -809,7 +838,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
               Actions are saved messages you can send in one click. Chains run several of them in
               order.
             </p>
-            <div class="flex gap-2">
+            <div v-if="!isReadonly" class="flex gap-2">
               <UButton color="neutral" variant="outline" label="New chain" @click="openChain()" />
               <UButton label="New action" class="font-semibold" @click="openAction()" />
             </div>
@@ -831,13 +860,15 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
           >
             <template #item="{ element: chain }">
               <div
-                :draggable="canReorder ? undefined : 'true'"
+                :draggable="canReorder || isReadonly ? undefined : 'true'"
                 @dragstart="handleItemDragStart($event, chain.id)"
                 @dragend="draggingItem = false"
               >
                 <ChainActionCard
                   :chain-action="chain"
                   :connection-id="selectedConnection"
+                  :no-context-menu="isReadonly"
+                  :no-grab="isReadonly"
                   :disable="isDisconnected"
                   @edit="openChain(chain)"
                   @copy="openMoveDialog('chain', 'copy', chain)"
@@ -864,7 +895,7 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
           >
             <template #item="{ element: action }">
               <div
-                :draggable="canReorder ? undefined : 'true'"
+                :draggable="canReorder || isReadonly ? undefined : 'true'"
                 @dragstart="handleItemDragStart($event, action.id)"
                 @dragend="draggingItem = false"
               >
@@ -872,7 +903,9 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
                   :action="action"
                   :connection-id="selectedConnection"
                   :disable-disconnected="isDisconnected"
-                  @edit="openAction(action)"
+                  :no-context-menu="isReadonly"
+                  :no-grab="isReadonly"
+                  @edit="!isReadonly && openAction(action)"
                   @copy="openMoveDialog('action', 'copy', action)"
                   @move="openMoveDialog('action', 'move', action)"
                   @delete="handleDeleteAction(action)"

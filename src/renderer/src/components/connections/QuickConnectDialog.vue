@@ -3,6 +3,8 @@ import SegmentedControl, { SegmentedItem } from '@renderer/components/ui/Segment
 import { createDefaultConnection, DEFAULT_PORTS } from '@renderer/assets/js/default-connection'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useAppNavigation } from '@renderer/composables/useAppNavigation'
+import ConnectionSelect from '@renderer/components/ConnectionSelect.vue'
+import { useActionsStore } from '@renderer/store/actions'
 import { MqttConnection } from '../../../../types/mqtt-connection'
 import { useAppStore } from '@renderer/store/app-store'
 import { computed, ref, watch } from 'vue'
@@ -11,6 +13,7 @@ import { v4 as uuidV4 } from 'uuid'
 type Protocol = MqttConnection['protocol']
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const actionsStore = useActionsStore()
 const appStore = useAppStore()
 
 const { openConnection } = useAppNavigation()
@@ -41,7 +44,8 @@ const freshForm = () => ({
   protocolVersion: 4 as 3 | 4 | 5,
   clientId: `mq3t_${uuidV4()}`,
   clean: true,
-  topics: '#'
+  topics: '#',
+  actionsFrom: ''
 })
 
 const form = ref(freshForm())
@@ -157,8 +161,11 @@ const connect = () => {
     password: form.value.password,
     clientId: form.value.clientId.trim() || `mq3t_${uuidV4()}`,
     clean: form.value.clean,
-    subscribedTopics: subscribedTopics()
+    subscribedTopics: subscribedTopics(),
+    actionsFrom: form.value.actionsFrom || undefined
   })
+
+  if (form.value.actionsFrom) actionsStore.cacheConnectionTopics(clientKey)
 
   open.value = false
   openConnection(clientKey)
@@ -175,7 +182,7 @@ const connect = () => {
     </template>
 
     <template #description>
-      Not saved: it's discarded when MQ3T closes, and actions aren't available.
+      Not saved: it's discarded when MQ3T closes. Actions can be borrowed from a saved connection.
     </template>
 
     <template #body>
@@ -276,6 +283,12 @@ const connect = () => {
                 <UInput v-model="form.topics" placeholder="#" class="w-full" />
               </UFormField>
               <USwitch v-model="form.clean" label="Clean session" />
+              <UFormField
+                label="Use actions from"
+                description="Send another connection's actions from here (read-only)"
+              >
+                <ConnectionSelect v-model="form.actionsFrom" class="w-full" />
+              </UFormField>
             </div>
           </template>
         </UCollapsible>
