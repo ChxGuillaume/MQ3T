@@ -42,6 +42,7 @@ export type ActionGroup = {
   id: GroupId
   name: string
   description?: string
+  sharedWith?: ConnectionId[]
 }
 
 export type ConnectionsActions = Record<ConnectionId, Record<GroupId, Action[]>>

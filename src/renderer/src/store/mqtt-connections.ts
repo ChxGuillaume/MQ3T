@@ -1,5 +1,6 @@
 import { MqttConnection, MqttConnectionStatus } from '../../../types/mqtt-connection'
 import { ElectronApi } from '../assets/js/electron-api'
+import { useActionsStore } from './actions'
 import { defineStore } from 'pinia'
 
 const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
@@ -75,6 +76,7 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     },
     removeConnection(clientKey: string) {
       this.disconnectClient(clientKey)
+      useActionsStore().removeConnectionFromSharing(clientKey)
 
       this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
       this.removeFromTabOrder(clientKey)
