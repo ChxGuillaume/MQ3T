@@ -1,4 +1,4 @@
-import { MessageMatch } from '../../../../types/actions'
+import { ConditionNodeData, ConditionOperator, MessageMatch } from '../../../../types/actions'
 import { VariableValue } from './action-utils'
 
 export const matchesTopicFilter = (filter: string, topic: string) => {
@@ -73,4 +73,61 @@ export const messageMatches = (match: MessageMatch, message: string) => {
     default:
       return true
   }
+}
+
+export const CONDITION_OPERATORS: { label: string; value: ConditionOperator; symbol: string }[] = [
+  { label: 'Equals', value: 'equals', symbol: '=' },
+  { label: 'Does not equal', value: 'not-equals', symbol: '≠' },
+  { label: 'Contains', value: 'contains', symbol: '∋' },
+  { label: 'Greater than', value: 'gt', symbol: '>' },
+  { label: 'Less than', value: 'lt', symbol: '<' },
+  { label: 'Exists', value: 'exists', symbol: '∃' }
+]
+
+export const conditionSubject = (
+  condition: Partial<ConditionNodeData>,
+  variables: Map<string, VariableValue>,
+  lastMessage?: string
+): unknown => {
+  if (condition.source === 'message') {
+    return lastMessage === undefined ? undefined : readMessagePath(lastMessage, condition.path)
+  }
+
+  return condition.name ? variables.get(condition.name) : undefined
+}
+
+export const evaluateCondition = (condition: Partial<ConditionNodeData>, subject: unknown) => {
+  const expected = condition.value ?? ''
+
+  switch (condition.operator) {
+    case 'exists':
+      return subject !== undefined && subject !== null
+    case 'not-equals':
+      return asText(subject) !== expected
+    case 'contains':
+      return asText(subject).includes(expected)
+    case 'gt':
+    case 'lt': {
+      const left = Number(subject)
+      const right = Number(expected)
+
+      if (subject === null || subject === '' || !Number.isFinite(left) || !Number.isFinite(right)) {
+        return false
+      }
+
+      return condition.operator === 'gt' ? left > right : left < right
+    }
+    default:
+      return asText(subject) === expected
+  }
+}
+
+export const describeCondition = (condition: Partial<ConditionNodeData>) => {
+  const subject =
+    condition.source === 'message' ? condition.path || '$' : condition.name || 'variable'
+  const operator = CONDITION_OPERATORS.find((item) => item.value === condition.operator)
+
+  if (condition.operator === 'exists') return `${subject} exists`
+
+  return `${subject} ${operator?.symbol ?? '='} ${condition.value ?? ''}`.trim()
 }

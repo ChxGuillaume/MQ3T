@@ -45,7 +45,18 @@ export type WaitMessageNodeData = {
 }
 export type WaitMessageNode = Node<WaitMessageNodeData, Empty, 'wait-message'>
 
-export type ChainActionNode = StartNode | ActionNode | WaitNode | WaitMessageNode
+export type ConditionOperator = 'equals' | 'not-equals' | 'contains' | 'gt' | 'lt' | 'exists'
+
+export type ConditionNodeData = {
+  source: 'variable' | 'message'
+  name?: string
+  path?: string
+  operator: ConditionOperator
+  value?: string
+}
+export type ConditionNode = Node<ConditionNodeData, Empty, 'condition'>
+
+export type ChainActionNode = StartNode | ActionNode | WaitNode | WaitMessageNode | ConditionNode
 
 export type ChainAction = {
   id: string
