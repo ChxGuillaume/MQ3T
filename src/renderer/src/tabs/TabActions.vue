@@ -12,6 +12,7 @@ import { clone, DEFAULT_GROUP } from '../components/tab-actions/action-utils'
 import ActionCard from '../components/tab-actions/ActionCard.vue'
 import { useMqttConnectionsStore } from '../store/mqtt-connections'
 import { useChainActionsStore } from '../store/chain-actions'
+import { useChainRunHistoryStore } from '@renderer/store/chain-run-history'
 import { useOverlay, useToast } from '@nuxt/ui/composables'
 import { useMqttTopicsStore } from '../store/mqtt-topics'
 import { ElectronApi } from '../assets/js/electron-api'
@@ -38,6 +39,7 @@ const ALL_GROUPS = 'all'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
+const chainRunHistoryStore = useChainRunHistoryStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const actionsStore = useActionsStore()
 const overlay = useOverlay()
@@ -233,6 +235,7 @@ const handleDeleteChain = async (chain: ChainAction) => {
   if (!confirmed) return
 
   chainActionsStore.deleteChainAction(selectedConnection.value, chain.groupId, chain.id)
+  chainRunHistoryStore.clearChainRuns(chain.id)
 }
 
 const moveAction = ref({
@@ -271,7 +274,9 @@ const handleMoveAction = () => {
 
     if (!action) return
 
-    actionsStore.addActionToConnectionGroup(action, connectionId, groupId)
+    actionsStore.addActionToConnectionGroup(action, connectionId, groupId, {
+      keepId: type === 'move'
+    })
 
     if (type === 'move') {
       actionsStore.deleteActionFromConnectionGroup(id, selectedConnection.value, fromGroupId)
@@ -281,7 +286,7 @@ const handleMoveAction = () => {
 
     if (!chain) return
 
-    chainActionsStore.copyChainAction(connectionId, groupId, chain)
+    chainActionsStore.copyChainAction(connectionId, groupId, chain, { keepId: type === 'move' })
 
     if (type === 'move') {
       chainActionsStore.deleteChainAction(selectedConnection.value, fromGroupId, id)
@@ -584,15 +589,21 @@ const handleGroupDrop = (event: DragEvent, groupId: string) => {
 
     if (!chain || chain.groupId === groupId) return
 
-    chainActionsStore.copyChainAction(selectedConnection.value, groupId, chain)
-    chainActionsStore.deleteChainAction(selectedConnection.value, chain.groupId, chain.id)
+    const fromGroupId = chain.groupId
+
+    chainActionsStore.copyChainAction(selectedConnection.value, groupId, chain, { keepId: true })
+    chainActionsStore.deleteChainAction(selectedConnection.value, fromGroupId, chain.id)
   } else {
     const action = findAction(id)
 
     if (!action || action.groupId === groupId) return
 
-    actionsStore.addActionToConnectionGroup(action, selectedConnection.value, groupId)
-    actionsStore.deleteActionFromConnectionGroup(id, selectedConnection.value, action.groupId)
+    const fromGroupId = action.groupId
+
+    actionsStore.addActionToConnectionGroup(action, selectedConnection.value, groupId, {
+      keepId: true
+    })
+    actionsStore.deleteActionFromConnectionGroup(id, selectedConnection.value, fromGroupId)
   }
 
   toast.add({ title: 'Moved', icon: 'i-lucide-folder-input', duration: 1200 })
