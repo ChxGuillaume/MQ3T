@@ -1,17 +1,18 @@
-import { chainStepLabel, chainSteps } from '@renderer/components/tab-actions/action-utils'
-import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
-import { ElectronApi } from '@renderer/assets/js/electron-api'
-import { ChainActionNode } from '../../../types/actions'
-import { Edge, Node, useVueFlow } from '@vue-flow/core'
-import { IClientPublishOptions } from 'mqtt'
-import { computed, ref } from 'vue'
+import {
+  ChainNodeState,
+  ChainRun,
+  ChainRunGraph,
+  ChainRunLogEntry,
+  ChainRunOptions,
+  ChainRunOutcome,
+  clearNodeStates,
+  runChain
+} from './chain-runner'
+import { computed, onBeforeUnmount, ref } from 'vue'
 
-export type ChainRunLogEntry = {
-  id: string
-  text: string
-  state: 'done' | 'active' | 'pending' | 'stopped'
-  time?: number
-}
+export type { ChainRunLogEntry } from './chain-runner'
+
+const CLEAR_STATUS_DELAY = 4000
 
 const formatTime = (time: number) => {
   const date = new Date(time)
@@ -28,18 +29,22 @@ export const formatRunLogTime = (entry: ChainRunLogEntry) => {
   return entry.time ? formatTime(entry.time) : ''
 }
 
-export function useRunActionChain() {
-  const { updateNodeData } = useVueFlow()
+type UseRunActionChainOptions = {
+  onNodeState?: (nodeId: string, state: ChainNodeState) => void
+}
 
+export function useRunActionChain(options: UseRunActionChainOptions = {}) {
   const running = ref(false)
   const log = ref<ChainRunLogEntry[]>([])
+  const outcome = ref<ChainRunOutcome>()
 
-  const _connectionId = ref<string>()
-  const _nodes = new Map<string, Node>()
-  const _edges = new Map<string, Edge[]>()
-  const _clearTimeout = ref<ReturnType<typeof setTimeout>>()
-  const _waits = new Set<() => void>()
-  let _stopped = false
+  let currentRun: ChainRun | undefined
+  let clearTimer: ReturnType<typeof setTimeout> | undefined
+
+  const hooks = {
+    onNodeState: options.onNodeState,
+    onLog: (entries: ChainRunLogEntry[]) => (log.value = entries)
+  }
 
   const steps = computed(() => log.value.filter((entry) => entry.id !== 'start'))
 
@@ -50,187 +55,34 @@ export function useRunActionChain() {
     return { total, done, current: Math.min(total, done + 1) }
   })
 
-  const _wait = (ms: number) =>
-    new Promise<void>((resolve) => {
-      const finish = () => {
-        clearTimeout(timeout)
-        _waits.delete(finish)
-        resolve()
-      }
-      const timeout = setTimeout(finish, ms)
-
-      _waits.add(finish)
-    })
-
-  const _setLog = (id: string, patch: Partial<ChainRunLogEntry>) => {
-    log.value = log.value.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
-  }
-
-  const _actionLabel = (node: Node) =>
-    node.type === 'wait'
-      ? `Wait ${node.data?.duration || 0} ${node.data?.durationType || 'ms'}`
-      : chainStepLabel(node as ChainActionNode)
-
-  const run = (connectionId: string, nodes: Node[], edges: Edge[]) => {
+  const run = async (
+    connectionId: string,
+    graph: ChainRunGraph,
+    runOptions: ChainRunOptions = {}
+  ): Promise<ChainRunOutcome | undefined> => {
     if (running.value) return
 
+    clearTimeout(clearTimer)
+
     running.value = true
-    _stopped = false
+    outcome.value = undefined
+    currentRun = runChain(graph, connectionId, hooks, runOptions)
 
-    _connectionId.value = connectionId
+    const result = await currentRun.done
 
-    _nodes.clear()
-    _edges.clear()
+    running.value = false
+    outcome.value = result
+    currentRun = undefined
 
-    clearTimeout(_clearTimeout.value)
+    if (result === 'stopped') clearNodeStates(graph, hooks)
+    else clearTimer = setTimeout(() => clearNodeStates(graph, hooks), CLEAR_STATUS_DELAY)
 
-    for (const node of nodes) {
-      _nodes.set(node.id, node)
-
-      updateNodeData(node.id, {
-        isRunning: false,
-        isFinished: false
-      })
-    }
-
-    for (const edge of edges) {
-      if (!_edges.has(edge.source)) _edges.set(edge.source, [])
-
-      _edges.get(edge.source)?.push(edge)
-    }
-
-    log.value = [
-      { id: 'start', text: 'Started', state: 'done', time: Date.now() },
-      ...chainSteps({ nodes: nodes as ChainActionNode[], edges })
-        .filter((node) => node.type !== 'start')
-        .map((node) => ({ id: node.id, text: _actionLabel(node), state: 'pending' as const }))
-    ]
-
-    const startEdges = _edges.get('start') || []
-
-    Promise.allSettled(
-      startEdges.map(async (edge) => {
-        const startNode = _nodes.get(edge.target)
-
-        if (startNode) await _executeNode(startNode)
-      })
-    ).finally(() => {
-      running.value = false
-
-      if (_stopped) {
-        log.value = log.value.map((entry) =>
-          entry.state === 'active' || entry.state === 'pending'
-            ? { ...entry, state: 'stopped' }
-            : entry
-        )
-        _clearNodeStatus(nodes)
-        return
-      }
-
-      _clearTimeout.value = setTimeout(() => _clearNodeStatus(nodes), 4000)
-    })
+    return result
   }
 
-  const stop = () => {
-    if (!running.value) return
+  const stop = () => currentRun?.stop()
 
-    _stopped = true
+  onBeforeUnmount(() => clearTimeout(clearTimer))
 
-    for (const finish of Array.from(_waits)) finish()
-  }
-
-  const _executeNode = async (node: Node) => {
-    if (_stopped) return
-
-    updateNodeData(node.id, {
-      isRunning: true,
-      isFinished: false
-    })
-    _setLog(node.id, { state: 'active', time: Date.now() })
-
-    switch (node.type) {
-      case 'action':
-        await _executeActionNode(node)
-        break
-      case 'wait':
-        await _executeWaitNode(node)
-        break
-    }
-
-    if (_stopped) return
-
-    updateNodeData(node.id, {
-      isRunning: false,
-      isFinished: true
-    })
-    _setLog(node.id, {
-      state: 'done',
-      time: Date.now(),
-      text: node.type === 'action' ? `${_actionLabel(node)} sent` : _actionLabel(node)
-    })
-
-    const edges = _edges.get(node.id) || []
-
-    await Promise.allSettled(
-      edges.map(async (edge) => {
-        const nextNode = _nodes.get(edge.target)
-
-        if (nextNode) await _executeNode(nextNode)
-      })
-    )
-  }
-
-  const _executeWaitNode = async (node: Node) => {
-    const duration = node.data?.duration || 500
-    const durationType = node.data?.durationType || 'ms'
-    const calculatedDuration = duration * (durationType === 's' ? 1000 : 1)
-
-    const startedAt = Date.now()
-
-    updateNodeData(node.id, {
-      waitStartedAt: startedAt,
-      waitEndsAt: startedAt + calculatedDuration
-    })
-    _setLog(node.id, { text: `Waiting ${duration} ${durationType}` })
-
-    await _wait(calculatedDuration)
-  }
-
-  const _executeActionNode = async (node: Node) => {
-    if (!_connectionId.value) return
-    if (!node.data.action) return
-
-    const action = node.data.action
-    const options: IClientPublishOptions = {
-      retain: action.retained,
-      qos: action.qos
-    }
-
-    const isMqtt5 =
-      useMqttConnectionsStore().getConnection(_connectionId.value)?.protocolVersion === 5
-
-    if (isMqtt5 && (action.responseTopic || action.correlationData)) {
-      options.properties = {}
-
-      if (action.responseTopic) options.properties.responseTopic = action.responseTopic
-      if (action.correlationData) {
-        options.properties.correlationData = action.correlationData as unknown as Buffer
-      }
-    }
-
-    ElectronApi.sendMqttMessage(_connectionId.value, action.topic, action.payload, options)
-  }
-
-  const _clearNodeStatus = (nodes: Node[]) => {
-    for (const node of nodes) {
-      updateNodeData(node.id, {
-        isRunning: false,
-        isFinished: false,
-        waitStartedAt: undefined,
-        waitEndsAt: undefined
-      })
-    }
-  }
-
-  return { running, run, stop, log, progress }
+  return { running, run, stop, log, progress, outcome }
 }
