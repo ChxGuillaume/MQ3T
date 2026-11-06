@@ -14,6 +14,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import ActionNode from './action-chain/ActionNode.vue'
 import StartNode from './action-chain/StartNode.vue'
 import WaitNode from './action-chain/WaitNode.vue'
+import WaitMessageNode from './action-chain/WaitMessageNode.vue'
+import WaitMessageSettings from './action-chain/WaitMessageSettings.vue'
 import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
 import ActionDialog from './dialogs/ActionDialog.vue'
@@ -141,7 +143,7 @@ const nextPosition = () => {
 }
 
 const addStep = (
-  type: 'action' | 'wait',
+  type: ChainActionNode['type'],
   data: Record<string, unknown>,
   position = nextPosition()
 ) => {
@@ -166,6 +168,13 @@ const addActionStep = async (action: Action, position?: { x: number; y: number }
 
   addStep('action', { action: copy, actionId: action.id, topicOverride }, position)
 }
+
+const addWaitMessageStep = (position?: { x: number; y: number }) =>
+  addStep(
+    'wait-message',
+    { topic: '', timeout: 5, timeoutUnit: 's', match: { kind: 'any' }, captures: [] },
+    position
+  )
 
 const addWaitStep = (position?: { x: number; y: number }) =>
   addStep('wait', { duration: 500, durationType: 'ms' }, position)
@@ -193,6 +202,7 @@ const handleCanvasDrop = (event: DragEvent) => {
   const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
 
   if (payload.type === 'wait') addWaitStep(position)
+  if (payload.type === 'wait-message') addWaitMessageStep(position)
   if (payload.type === 'custom') addStep('action', {}, position)
   if (payload.type === 'action') {
     const action = paletteActions.value.find((a) => a.id === payload.actionId)
@@ -527,6 +537,20 @@ onMounted(async () => {
           </span>
           Custom message
         </button>
+        <button
+          type="button"
+          draggable="true"
+          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-md border border-dashed p-2 text-[13px] font-semibold"
+          @dragstart="handlePaletteDragStart($event, { type: 'wait-message' })"
+          @click="addWaitMessageStep()"
+        >
+          <span
+            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
+          >
+            <UIcon name="i-lucide-radio" class="size-3.5" />
+          </span>
+          Wait for message
+        </button>
 
         <div
           class="text-muted px-1.5 pt-2.5 pb-1 text-[11px] font-semibold tracking-[0.1em] uppercase"
@@ -616,6 +640,17 @@ onMounted(async () => {
               @remove="removeNodes([nodeProps.id])"
             />
           </template>
+
+          <template #node-wait-message="nodeProps">
+            <WaitMessageNode
+              :id="nodeProps.id"
+              :data="nodeProps.data"
+              :selected="nodeProps.selected"
+              :dimmed="running"
+              @copy="duplicateNode(nodeProps.id)"
+              @remove="removeNodes([nodeProps.id])"
+            />
+          </template>
         </VueFlow>
 
         <div
@@ -676,6 +711,32 @@ onMounted(async () => {
               ]"
             />
           </div>
+          <div class="flex gap-2">
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-copy"
+              label="Duplicate"
+              @click="duplicateNode(selectedNode.id)"
+            />
+            <UButton
+              size="sm"
+              color="error"
+              variant="ghost"
+              icon="i-lucide-trash-2"
+              label="Delete"
+              @click="removeNodes([selectedNode.id])"
+            />
+          </div>
+        </template>
+
+        <template v-else-if="selectedNode?.type === 'wait-message'">
+          <h2 class="text-base font-bold">Wait for message</h2>
+          <WaitMessageSettings
+            :data="selectedNode.data ?? {}"
+            @update="updateNodeData(selectedNode.id, $event)"
+          />
           <div class="flex gap-2">
             <UButton
               size="sm"

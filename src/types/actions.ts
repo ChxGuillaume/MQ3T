@@ -28,7 +28,24 @@ export type ActionNode = Node<ActionNodeData, Empty, 'action'>
 export type WaitNodeData = { duration: number; durationType: 'ms' | 's' }
 export type WaitNode = Node<WaitNodeData, Empty, 'wait'>
 
-export type ChainActionNode = StartNode | ActionNode | WaitNode
+export type MessageMatch = {
+  kind: 'any' | 'equals' | 'contains' | 'path'
+  path?: string
+  value?: string
+}
+
+export type MessageCapture = { name: string; path: string }
+
+export type WaitMessageNodeData = {
+  topic: string
+  timeout: number
+  timeoutUnit: 'ms' | 's'
+  match: MessageMatch
+  captures: MessageCapture[]
+}
+export type WaitMessageNode = Node<WaitMessageNodeData, Empty, 'wait-message'>
+
+export type ChainActionNode = StartNode | ActionNode | WaitNode | WaitMessageNode
 
 export type ChainAction = {
   id: string
