@@ -9,6 +9,7 @@ const props = defineProps<{
   opened: boolean
   title: string
   description?: string
+  exclude?: string[]
 }>()
 
 const emits = defineEmits<{
@@ -56,7 +57,7 @@ watch(
   >
     <template #body>
       <UFormField label="Connection" :error="connectionError" required>
-        <ConnectionSelect v-model="connectionIdModel" class="w-full" />
+        <ConnectionSelect v-model="connectionIdModel" :exclude="exclude" class="w-full" />
       </UFormField>
     </template>
 

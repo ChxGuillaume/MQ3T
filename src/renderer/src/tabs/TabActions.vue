@@ -307,12 +307,6 @@ const deleteGroupDialog = ref({ opened: false, groupId: '', actionCount: 0, chai
 
 const shareGroupDialog = ref({ opened: false, group: undefined as ActionGroup | undefined })
 
-const handleUnshareGroup = (group: ActionGroup) => {
-  actionsStore.unshareGroupFromConnection(group.id, selectedConnection.value)
-
-  if (selectedGroup.value === group.id) selectGroup('default')
-}
-
 const handleDeleteGroup = async (groupId: string) => {
   if (actionsStore.isSharedGroup(groupId)) {
     const otherConnections = sharedConnectionNames(groupId)
@@ -357,10 +351,51 @@ const handleDeleteGroupDialog = (moveToDefault: boolean) => {
   if (selectedGroup.value === groupId) selectGroup('default')
 }
 
+const connectionName = (connectionId: string) =>
+  mqttConnectionsStore.getConnection(connectionId)?.name ?? connectionId
+
+const moveGroupExcludedConnections = computed(() => {
+  const { group, type } = moveGroup.value
+
+  if (type !== 'move' || !group) return []
+
+  const connectionIds = actionsStore.getGroupConnectionIds(group.id)
+
+  return connectionIds.length === 1 ? connectionIds : []
+})
+
+const handleMoveGroup = async (group: ActionGroup, connectionId: string) => {
+  const leftConnections = actionsStore
+    .getGroupConnectionIds(group.id)
+    .filter((id) => id !== connectionId)
+    .map(connectionName)
+
+  const confirmed = await confirmModal.open({
+    title: `Move “${group.name}” to ${connectionName(connectionId)}?`,
+    description: `Its actions and chains will no longer be available on ${leftConnections.join(', ')}.`,
+    confirmLabel: 'Move',
+    confirmIcon: 'i-lucide-arrow-right-left'
+  }).result
+
+  if (!confirmed) return
+
+  actionsStore.moveGroupToConnection(group.id, connectionId)
+
+  if (connectionId !== selectedConnection.value && selectedGroup.value === group.id) {
+    selectGroup('default')
+  }
+}
+
 const handleMoveOrCopyGroup = () => {
   const { connectionId, group, type } = moveGroup.value
 
   if (!connectionId || !group) return
+
+  if (type === 'move') {
+    handleMoveGroup(group, connectionId)
+
+    return
+  }
 
   const groupCopy = clone(group)
   const currentConnectionId = selectedConnection.value
@@ -373,13 +408,6 @@ const handleMoveOrCopyGroup = () => {
   for (const chain of chains) chainActionsStore.addChainAction(connectionId, newGroup.id, chain)
   for (const action of actions)
     actionsStore.addActionToConnectionGroup(action, connectionId, newGroup.id)
-
-  if (type === 'move') {
-    chainActionsStore.deleteGroupChainActions(currentConnectionId, groupCopy.id, false)
-    actionsStore.deleteActionGroupFromConnection(currentConnectionId, groupCopy.id)
-
-    if (selectedGroup.value === groupCopy.id) selectGroup('default')
-  }
 }
 
 const exportJson = (fileName: string, data: unknown) => {
@@ -472,8 +500,6 @@ const handleImport = () => {
 
 const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
   const isDefault = group.id === 'default'
-  const isShared = !isDefault && actionsStore.isSharedGroup(group.id)
-
   if (isReadonly.value) {
     return [
       [
@@ -499,16 +525,7 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
             label: 'Share with connections…',
             icon: 'i-lucide-link',
             onSelect: () => (shareGroupDialog.value = { opened: true, group })
-          },
-          ...(isShared
-            ? [
-                {
-                  label: 'Remove from this connection',
-                  icon: 'i-lucide-unlink',
-                  onSelect: () => handleUnshareGroup(group)
-                }
-              ]
-            : [])
+          }
         ],
     [
       {
@@ -522,7 +539,7 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
             group: isDefault ? { id: 'default', name: 'Default Copy' } : group
           })
       },
-      ...(isDefault || isShared
+      ...(isDefault
         ? []
         : [
             {
@@ -532,7 +549,7 @@ const groupMenuItems = (group: ActionGroup): ContextMenuItem[][] => {
                 (moveGroup.value = {
                   opened: true,
                   type: 'move',
-                  connectionId: selectedConnection.value,
+                  connectionId: '',
                   group
                 })
             }
@@ -947,8 +964,13 @@ const isEmpty = computed(() => !visibleActions.value.length && !visibleChains.va
     <SelectConnectionDialog
       v-model:opened="moveGroup.opened"
       v-model:connection-id="moveGroup.connectionId"
-      :title="moveGroup.type === 'copy' ? 'Copy group' : 'Move group'"
-      :description="`“${moveGroup.group?.name}” and everything in it.`"
+      :title="moveGroup.type === 'copy' ? 'Copy group' : 'Move group to…'"
+      :description="
+        moveGroup.type === 'copy'
+          ? `“${moveGroup.group?.name}” and everything in it.`
+          : `Pick the connection “${moveGroup.group?.name}” and everything in it should belong to.`
+      "
+      :exclude="moveGroupExcludedConnections"
       :action-title="moveGroup.type === 'copy' ? 'Copy' : 'Move'"
       :action-icon="moveGroup.type === 'copy' ? 'i-lucide-copy' : 'i-lucide-arrow-right-left'"
       @input="handleMoveOrCopyGroup"
