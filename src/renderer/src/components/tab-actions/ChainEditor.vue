@@ -2,7 +2,12 @@
 import { Connection, ConnectionMode, Edge, GraphNode, useVueFlow, VueFlow } from '@vue-flow/core'
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
 import { useChainVariablesPrompt } from '@renderer/composables/useChainVariablesPrompt'
-import { Action, ChainAction, ChainActionNode } from '../../../../types/actions'
+import {
+  Action,
+  ChainAction,
+  ChainActionNode,
+  WaitMessageNodeData
+} from '../../../../types/actions'
 import { clone, DEFAULT_GROUP, formatTile, isWildcardTopic, variableFields } from './action-utils'
 import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
@@ -22,13 +27,23 @@ import ChainRepeatSettings from './action-chain/ChainRepeatSettings.vue'
 import ChainRunHistory from './action-chain/ChainRunHistory.vue'
 import ChainRunLog from './action-chain/ChainRunLog.vue'
 import { useChainRunHistoryStore } from '@renderer/store/chain-run-history'
-import { chainCapturedNames, chainVariableSource } from '@renderer/composables/chain-runner'
+import { chainVariableSource } from '@renderer/composables/chain-runner'
 import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
 import ActionDialog from './dialogs/ActionDialog.vue'
 import PayloadPreview from './PayloadPreview.vue'
 import { resolveNodeAction } from './chain-node-action'
 import { layoutChain } from './chain-layout'
+import {
+  dryRunUpstream,
+  findSampleMessage,
+  isTopicSubscribed,
+  previewCondition,
+  stepIssues,
+  VariableOrigin
+} from './chain-step-help'
+import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { chainSteps } from './action-utils'
 import { Background } from '@vue-flow/background'
 import { v4 as uuidV4 } from 'uuid'
 
@@ -43,6 +58,7 @@ const props = defineProps<{
 const emit = defineEmits<{ back: [] }>()
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const mqttTopicsStore = useMqttTopicsStore()
 const chainActionsStore = useChainActionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
@@ -332,16 +348,116 @@ const tidyLayout = async () => {
   fitView({ duration: 300 })
 }
 
-const knownVariableNames = computed(() => {
-  if (selectedNode.value?.type !== 'condition') return []
+const graphNodes = computed(
+  () => new Map(nodes.value.map((node) => [node.id, node as ChainActionNode]))
+)
 
+const knownTopics = computed(() => mqttTopicsStore.getConnectionTopics(props.connectionId))
+
+const subscriptions = computed(() =>
+  (mqttConnectionsStore.getConnection(props.connectionId)?.subscribedTopics ?? []).map(
+    (subscription) => subscription.topic
+  )
+)
+
+const sampleFor = (data: Partial<WaitMessageNodeData>) =>
+  findSampleMessage(data, knownTopics.value, (topic) =>
+    mqttTopicsStore.getTopicLastMessage(props.connectionId, topic)
+  )
+
+const variableOrigins = computed<VariableOrigin[]>(() => {
   const graph = { nodes: nodes.value as ChainActionNode[], edges: edges.value }
   const { source } = chainVariableSource(graph, props.connectionId)
+  const origins = new Map<string, VariableOrigin>()
 
-  return Array.from(
-    new Set([...variableFields(source).map((field) => field.name), ...chainCapturedNames(graph)])
-  )
+  for (const node of nodes.value) {
+    if (node.type !== 'wait-message') continue
+
+    for (const capture of node.data?.captures ?? []) {
+      if (capture.name && !origins.has(capture.name)) {
+        origins.set(capture.name, { name: capture.name, origin: 'captured', stepId: node.id })
+      }
+    }
+  }
+
+  for (const field of variableFields(source)) {
+    if (!origins.has(field.name)) origins.set(field.name, { name: field.name, origin: 'asked' })
+  }
+
+  return Array.from(origins.values())
 })
+
+const stepTopic = (stepId?: string) => {
+  const node = graphNodes.value.get(stepId ?? '')
+
+  return node?.type === 'wait-message' ? node.data?.topic : undefined
+}
+
+const conditionVariables = computed(() =>
+  variableOrigins.value.map((origin) => ({
+    name: origin.name,
+    description:
+      origin.origin === 'asked'
+        ? 'asked when the chain runs'
+        : `saved by Wait for ${stepTopic(origin.stepId) || 'message'}`
+  }))
+)
+
+const nodeIssues = computed(
+  () =>
+    new Map(
+      nodes.value.map((node) => [
+        node.id,
+        stepIssues(node as ChainActionNode, {
+          edges: edges.value,
+          nodes: graphNodes.value,
+          origins: variableOrigins.value,
+          subscriptions: subscriptions.value,
+          actionMissing: nodeAction(node.id).missing
+        })
+      ])
+    )
+)
+
+const issuesOf = (id: string) => nodeIssues.value.get(id) ?? []
+
+const selectedDryRun = computed(() =>
+  selectedNode.value?.type === 'condition'
+    ? dryRunUpstream(selectedNode.value.id, graphNodes.value, edges.value, sampleFor)
+    : undefined
+)
+
+const conditionPreview = computed(() =>
+  selectedNode.value?.type === 'condition' && selectedDryRun.value
+    ? previewCondition(selectedNode.value.data ?? {}, selectedDryRun.value, variableOrigins.value)
+    : { kind: 'unknown' as const }
+)
+
+const selectedSample = computed(() => {
+  if (selectedNode.value?.type === 'wait-message') return sampleFor(selectedNode.value.data ?? {})
+  if (selectedNode.value?.type === 'condition') return selectedDryRun.value?.lastMessage
+
+  return undefined
+})
+
+const selectedSubscribed = computed(() => {
+  const topic = selectedNode.value?.data?.topic
+
+  return !topic || isTopicSubscribed(topic, subscriptions.value)
+})
+
+const describeStep = (node: ChainActionNode) => {
+  switch (node.type) {
+    case 'action':
+      return nodeAction(node.id).action?.name || 'Message step'
+    case 'wait-message':
+      return 'Wait for message'
+    case 'condition':
+      return 'Condition'
+    default:
+      return 'Step'
+  }
+}
 
 const selectedAction = computed(() =>
   selectedNode.value ? nodeAction(selectedNode.value.id) : undefined
@@ -367,18 +483,40 @@ const nodeStatusKey = computed(() =>
     .join('|')
 )
 
-watch([nodeStatusKey, running], () => {
-  const status = new Map(nodes.value.map((node) => [node.id, node.data ?? {}]))
+const edgeKey = computed(() =>
+  edges.value.map((edge) => `${edge.id}:${edge.sourceHandle ?? ''}`).join('|')
+)
+
+const BRANCH_LABEL_COLORS: Record<string, string> = {
+  true: 'var(--ui-success)',
+  false: 'var(--ui-error)'
+}
+
+watch([nodeStatusKey, running, edgeKey], () => {
+  const nodeData = new Map(nodes.value.map((node) => [node.id, node.data ?? {}]))
 
   for (const edge of edges.value) {
     const source =
       edge.source === 'start'
         ? { isFinished: running.value || log.value.length > 0 }
-        : status.get(edge.source)
-    const target = status.get(edge.target)
+        : nodeData.get(edge.source)
+    const target = nodeData.get(edge.target)
     const reached = target?.isRunning || target?.isFinished
 
-    edge.class = source?.isFinished && reached ? 'is-done' : running.value ? 'is-pending' : ''
+    const status = source?.isFinished && reached ? 'is-done' : running.value ? 'is-pending' : ''
+    const branchColor = BRANCH_LABEL_COLORS[edge.sourceHandle ?? '']
+
+    edge.class = [status, branchColor ? `branch-${edge.sourceHandle}` : '']
+      .filter(Boolean)
+      .join(' ')
+
+    if (branchColor) {
+      edge.label = edge.sourceHandle ?? ''
+      edge.labelStyle = { fill: branchColor, fontWeight: 700, fontSize: '11px' }
+      edge.labelBgStyle = { fill: 'var(--ui-bg)' }
+      edge.labelBgPadding = [6, 3]
+      edge.labelBgBorderRadius = 4
+    }
   }
 })
 
@@ -396,8 +534,25 @@ const statusLabel = computed(() => {
   return ''
 })
 
+const confirmIncompleteSteps = async (graph: ReturnType<typeof serialize>) => {
+  const problems = chainSteps(graph).flatMap((node) =>
+    issuesOf(node.id).map((issue) => `${describeStep(node)}: ${issue}`)
+  )
+
+  if (!problems.length) return true
+
+  return !!(await confirmModal.open({
+    title: `${problems.length} thing${problems.length === 1 ? '' : 's'} to fix before running`,
+    description: problems.join(' · '),
+    confirmLabel: 'Run anyway',
+    confirmIcon: 'i-lucide-play'
+  }).result)
+}
+
 const handleRun = async () => {
   const graph = serialize()
+
+  if (!(await confirmIncompleteSteps(graph))) return
   const variables = await promptVariables(name.value, graph, props.connectionId)
 
   if (!variables) return
@@ -704,6 +859,7 @@ onMounted(async () => {
             <ActionNode
               :id="nodeProps.id"
               :data="nodeProps.data"
+              :issues="issuesOf(nodeProps.id)"
               :action="nodeAction(nodeProps.id).action"
               :linked="nodeAction(nodeProps.id).linked"
               :missing="nodeAction(nodeProps.id).missing"
@@ -729,6 +885,7 @@ onMounted(async () => {
             <ConditionNode
               :id="nodeProps.id"
               :data="nodeProps.data"
+              :issues="issuesOf(nodeProps.id)"
               :selected="nodeProps.selected"
               :dimmed="running"
               @copy="duplicateNode(nodeProps.id)"
@@ -740,6 +897,7 @@ onMounted(async () => {
             <WaitMessageNode
               :id="nodeProps.id"
               :data="nodeProps.data"
+              :issues="issuesOf(nodeProps.id)"
               :selected="nodeProps.selected"
               :dimmed="running"
               @copy="duplicateNode(nodeProps.id)"
@@ -839,8 +997,12 @@ onMounted(async () => {
         <template v-else-if="selectedNode?.type === 'condition'">
           <h2 class="text-base font-bold">Condition</h2>
           <ConditionSettings
+            :key="selectedNode.id"
             :data="selectedNode.data ?? {}"
-            :variable-names="knownVariableNames"
+            :variables="conditionVariables"
+            :preview="conditionPreview"
+            :sample="selectedSample"
+            :has-message-step="!!selectedDryRun?.hasMessageStep"
             @update="updateNodeData(selectedNode.id, $event)"
           />
           <div class="flex gap-2">
@@ -866,7 +1028,11 @@ onMounted(async () => {
         <template v-else-if="selectedNode?.type === 'wait-message'">
           <h2 class="text-base font-bold">Wait for message</h2>
           <WaitMessageSettings
+            :key="selectedNode.id"
             :data="selectedNode.data ?? {}"
+            :sample="selectedSample"
+            :known-topics="knownTopics"
+            :subscribed="selectedSubscribed"
             @update="updateNodeData(selectedNode.id, $event)"
           />
           <div class="flex gap-2">
@@ -1049,6 +1215,14 @@ onMounted(async () => {
 
 .chain-canvas .vue-flow__edge.is-pending .vue-flow__edge-path {
   stroke: var(--ui-border);
+}
+
+.chain-canvas .vue-flow__edge.branch-true:not(.is-done):not(.is-pending) .vue-flow__edge-path {
+  stroke: color-mix(in oklab, var(--ui-success) 70%, transparent);
+}
+
+.chain-canvas .vue-flow__edge.branch-false:not(.is-done):not(.is-pending) .vue-flow__edge-path {
+  stroke: color-mix(in oklab, var(--ui-error) 70%, transparent);
 }
 
 .chain-canvas .vue-flow__connection-path {
