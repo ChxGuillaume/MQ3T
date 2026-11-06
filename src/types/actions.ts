@@ -22,7 +22,7 @@ type Empty = Record<string, never>
 
 export type StartNode = Node<Empty, Empty, 'start'>
 
-export type ActionNodeData = { action: Action }
+export type ActionNodeData = { action?: Action; actionId?: string; topicOverride?: string }
 export type ActionNode = Node<ActionNodeData, Empty, 'action'>
 
 export type WaitNodeData = { duration: number; durationType: 'ms' | 's' }

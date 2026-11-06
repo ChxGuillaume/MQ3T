@@ -8,9 +8,10 @@ export function useChainVariablesPrompt() {
 
   const promptVariables = async (
     chainName: string,
-    graph: ChainRunGraph
+    graph: ChainRunGraph,
+    connectionId: string
   ): Promise<NamedVariableValues | null> => {
-    const { source, hasUuid } = chainVariableSource(graph)
+    const { source, hasUuid } = chainVariableSource(graph, connectionId)
 
     if (!source.payload) return {}
 
