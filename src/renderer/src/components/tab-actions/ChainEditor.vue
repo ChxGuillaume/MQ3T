@@ -28,6 +28,7 @@ import ConfirmDialog from './dialogs/ConfirmDialog.vue'
 import ActionDialog from './dialogs/ActionDialog.vue'
 import PayloadPreview from './PayloadPreview.vue'
 import { resolveNodeAction } from './chain-node-action'
+import { layoutChain } from './chain-layout'
 import { Background } from '@vue-flow/background'
 import { v4 as uuidV4 } from 'uuid'
 
@@ -308,6 +309,28 @@ const refreshLinkedSnapshots = () => {
 }
 
 const selectedNode = computed(() => getSelectedNodes.value[0])
+
+const tidyLayout = async () => {
+  const start = findNode('start')
+  const positions = layoutChain(
+    nodes.value.map((node) => ({
+      id: node.id,
+      width: node.dimensions.width,
+      height: node.dimensions.height
+    })),
+    edges.value,
+    { origin: start ? { ...start.position } : undefined }
+  )
+
+  for (const node of nodes.value) {
+    const position = positions.get(node.id)
+
+    if (position) node.position = position
+  }
+
+  await nextTick()
+  fitView({ duration: 300 })
+}
 
 const knownVariableNames = computed(() => {
   if (selectedNode.value?.type !== 'condition') return []
@@ -758,6 +781,16 @@ onMounted(async () => {
             aria-label="Fit view"
             @click="fitView()"
           />
+          <UTooltip text="Tidy up the layout">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-wand-sparkles"
+              aria-label="Tidy up the layout"
+              :disabled="nodes.length < 2"
+              @click="tidyLayout"
+            />
+          </UTooltip>
         </div>
       </main>
 
