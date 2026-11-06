@@ -24,9 +24,19 @@ const parseJson = (message: string): unknown => {
   }
 }
 
+const unescapeKey = (key: string) => key.replace(/\\(.)/g, '$1')
+
 export const pathTokens = (path: string) =>
-  Array.from(path.replace(/^\$/, '').matchAll(/\[(\d+)\]|\[["']([^"']+)["']\]|([^.[\]]+)/g)).map(
-    (match) => match[1] ?? match[2] ?? match[3]
+  Array.from(
+    path
+      .replace(/^\$/, '')
+      .matchAll(/\[(\d+)\]|\["((?:[^"\\]|\\.)*)"\]|\['((?:[^'\\]|\\.)*)'\]|([^.[\]]+)/g)
+  ).map(
+    (match) =>
+      match[1] ??
+      (match[2] !== undefined ? unescapeKey(match[2]) : undefined) ??
+      (match[3] !== undefined ? unescapeKey(match[3]) : undefined) ??
+      match[4]
   )
 
 export const readMessagePath = (message: string, path = ''): unknown => {
@@ -98,10 +108,13 @@ export const conditionSubject = (
 
 export const evaluateCondition = (condition: Partial<ConditionNodeData>, subject: unknown) => {
   const expected = condition.value ?? ''
+  const missing = subject === undefined || subject === null
+
+  if (missing && condition.operator !== 'exists') return condition.operator === 'not-equals'
 
   switch (condition.operator) {
     case 'exists':
-      return subject !== undefined && subject !== null
+      return !missing
     case 'not-equals':
       return asText(subject) !== expected
     case 'contains':
@@ -157,7 +170,7 @@ const MAX_PATH_DEPTH = 5
 const MAX_PATH_OPTIONS = 300
 
 const keySegment = (key: string) =>
-  /^[A-Za-z_$][\w$]*$/.test(key) ? `.${key}` : `["${key.replace(/"/g, '\\"')}"]`
+  /^[A-Za-z_$][\w$]*$/.test(key) ? `.${key}` : `["${key.replace(/[\\"]/g, '\\$&')}"]`
 
 export const listMessagePaths = (message: string): MessagePathOption[] => {
   let root: unknown

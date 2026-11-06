@@ -1,6 +1,7 @@
 import { ChainAction, ConnectionsChainActions } from '../../../types/actions'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { useActionsStore } from './actions'
+import { detachUnresolvedLinks } from '@renderer/components/tab-actions/chain-node-action'
 import { v4 as uuidV4 } from 'uuid'
 import { defineStore } from 'pinia'
 
@@ -68,17 +69,25 @@ export const useChainActionsStore = defineStore('chain-actions', {
     },
     addChainAction(connectionId: string, groupId: string, chainActions: Omit<ChainAction, 'id'>) {
       this.ensureGroupChainActions(connectionId, groupId).push({
-        ...chainActions,
+        ...detachUnresolvedLinks(chainActions, connectionId),
         groupId: groupId,
         id: `chain-action-${uuidV4()}`
       })
 
       this.saveChainActions()
     },
-    copyChainAction(connectionId: string, groupId: string, chainAction: ChainAction) {
+    copyChainAction(
+      connectionId: string,
+      groupId: string,
+      chainAction: ChainAction,
+      { keepId = false }: { keepId?: boolean } = {}
+    ) {
       this.ensureGroupChainActions(connectionId, groupId).push({
-        ...JSON.parse(JSON.stringify(chainAction)),
-        id: `chain-action-${uuidV4()}`,
+        ...detachUnresolvedLinks(
+          JSON.parse(JSON.stringify(chainAction)) as ChainAction,
+          connectionId
+        ),
+        id: keepId ? chainAction.id : `chain-action-${uuidV4()}`,
         groupId
       })
 

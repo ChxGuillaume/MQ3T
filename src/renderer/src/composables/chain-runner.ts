@@ -16,7 +16,8 @@ import {
   toVariableValue,
   conditionSubject,
   describeCondition,
-  evaluateCondition
+  evaluateCondition,
+  friendlyPath
 } from '@renderer/components/tab-actions/chain-message'
 import { resolveNodeAction } from '@renderer/components/tab-actions/chain-node-action'
 import {
@@ -55,13 +56,12 @@ export type ChainRunGraph = Pick<ChainAction, 'nodes' | 'edges' | 'repeat'>
 export type RunContext = {
   connectionId: string
   variables: Map<string, VariableValue>
-  lastMessage?: BusMessage
   iteration: number
   isStopped: () => boolean
   wait: (ms: number) => Promise<void>
   waitForMessage: (
     accepts: (message: BusMessage) => boolean,
-    since: number,
+    afterSequence: number,
     timeoutMs: number
   ) => Promise<BusMessage | undefined>
   setNodeState: (nodeId: string, state: ChainNodeState) => void
@@ -70,7 +70,7 @@ export type RunContext = {
   simulation?: ChainSimulation
 }
 
-export type StepInfo = { armedAt: number }
+export type StepInfo = { messagesAfter: number; lastMessage?: BusMessage }
 
 export type NodeExecutor = (
   node: ChainActionNode,
@@ -131,7 +131,7 @@ const exampleTopic = (filter: string) =>
 const executeWait: NodeExecutor = async (node, context) => {
   if (node.type !== 'wait') return
 
-  const duration = node.data?.duration || 500
+  const duration = Math.max(0, Number(node.data?.duration ?? 500) || 0)
   const durationType = node.data?.durationType || 'ms'
   const realMs = duration * (durationType === 's' ? 1000 : 1)
   const ms = context.simulation ? Math.min(realMs, SIMULATED_MAX_WAIT_MS) : realMs
@@ -167,6 +167,12 @@ const executeAction: NodeExecutor = async (node, context) => {
 
   const { topic, payload } = resolveActionVariables(action, context.variables)
 
+  if (!topic || /[+#]/.test(topic)) {
+    throw new ChainStepError(
+      `Can't publish to “${topic}”: a topic can't be empty or contain + or #`
+    )
+  }
+
   context.setLogDetail(node.id, `${topic}  ${payload}`)
 
   if (context.simulation) {
@@ -178,6 +184,7 @@ const executeAction: NodeExecutor = async (node, context) => {
 }
 
 const MESSAGE_BUFFER_SIZE = 500
+const MIN_REPEAT_INTERVAL_MS = 100
 
 const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   if (node.type !== 'wait-message') return
@@ -186,7 +193,7 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
 
   if (!topic) throw new ChainStepError('Step has no topic to listen on')
 
-  const timeoutValue = timeout || 5
+  const timeoutValue = Math.max(0, Number(timeout ?? 5) || 0)
   const unit = timeoutUnit || 's'
   const timeoutMs = timeoutValue * (unit === 's' ? 1000 : 1)
   const startedAt = Date.now()
@@ -224,7 +231,7 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   } else {
     context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + timeoutMs })
 
-    received = await context.waitForMessage(accepts, step.armedAt, timeoutMs)
+    received = await context.waitForMessage(accepts, step.messagesAfter, timeoutMs)
   }
 
   if (context.isStopped()) return
@@ -232,29 +239,34 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
     throw new ChainStepError(`No matching message within ${timeoutValue} ${unit}`)
   }
 
-  context.lastMessage = received
+  step.lastMessage = received
   context.setLogDetail(node.id, received.message)
 
   for (const capture of captures ?? []) {
     if (!capture.name) continue
 
-    context.variables.set(
-      capture.name,
-      toVariableValue(readMessagePath(received.message, capture.path))
-    )
+    const value = readMessagePath(received.message, capture.path)
+
+    if (value === undefined) {
+      throw new ChainStepError(
+        `The reply has no “${friendlyPath(capture.path) || 'payload'}” field to save as “${capture.name}”`
+      )
+    }
+
+    context.variables.set(capture.name, toVariableValue(value))
   }
 }
 
-const executeCondition: NodeExecutor = async (node, context) => {
+const executeCondition: NodeExecutor = async (node, context, step) => {
   if (node.type !== 'condition') return
 
   const condition: Partial<ConditionNodeData> = node.data ?? {}
 
-  if (condition.source === 'message' && !context.lastMessage) {
+  if (condition.source === 'message' && !step.lastMessage) {
     throw new ChainStepError('No message has been received yet')
   }
 
-  const subject = conditionSubject(condition, context.variables, context.lastMessage?.message)
+  const subject = conditionSubject(condition, context.variables, step.lastMessage?.message)
 
   context.setLogDetail(
     node.id,
@@ -279,24 +291,45 @@ export const chainActions = (graph: ChainRunGraph, connectionId: string): Action
     return action && !missing ? [action] : []
   })
 
-export const chainCapturedNames = (graph: ChainRunGraph) =>
-  new Set(
-    graph.nodes.flatMap((node) =>
-      node.type === 'wait-message'
-        ? (node.data?.captures ?? []).map((capture) => capture.name).filter(Boolean)
-        : []
-    )
-  )
+const capturedBefore = (nodeId: string, graph: ChainRunGraph) => {
+  const parents = new Map(graph.edges.map((edge) => [edge.target, edge.source]))
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]))
+  const names = new Set<string>()
+  const seen = new Set<string>()
+  let current = parents.get(nodeId)
+
+  while (current && !seen.has(current)) {
+    seen.add(current)
+
+    const node = nodes.get(current)
+
+    if (node?.type === 'wait-message') {
+      for (const capture of node.data?.captures ?? []) if (capture.name) names.add(capture.name)
+    }
+
+    current = parents.get(current)
+  }
+
+  return names
+}
 
 export const chainVariableSource = (graph: ChainRunGraph, connectionId: string) => {
   const actions = chainActions(graph, connectionId)
-  const sources = actions.flatMap((action) => [
-    action,
-    { payload: action.topic, payloadFormat: 'raw' as const }
-  ])
+  const sources = chainSteps(graph).flatMap((node) => {
+    const { action, missing } = resolveNodeAction(node, connectionId)
+
+    if (!action || missing) return []
+
+    const excludedNames = capturedBefore(node.id, graph)
+
+    return [
+      { ...action, excludedNames },
+      { payload: action.topic, payloadFormat: 'raw' as const, excludedNames }
+    ]
+  })
 
   return {
-    source: mergedVariableSource(sources, chainCapturedNames(graph)),
+    source: mergedVariableSource(sources),
     hasUuid: actions.some((action) => hasGeneratedUuid(action.payload))
   }
 }
@@ -317,13 +350,15 @@ export const runChain = (
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]))
   const outgoing = new Map<string, Edge[]>()
   const pendingWaits = new Set<() => void>()
-  const messageBuffer: BusMessage[] = []
+  const messageBuffer: { sequence: number; message: BusMessage }[] = []
   const messageListeners = new Set<(message: BusMessage) => void>()
+  let messageSequence = 0
 
   const unsubscribe = onMqttMessage((message) => {
     if (message.clientKey !== connectionId) return
 
-    messageBuffer.push(message)
+    messageSequence++
+    messageBuffer.push({ sequence: messageSequence, message })
     if (messageBuffer.length > MESSAGE_BUFFER_SIZE) messageBuffer.shift()
 
     for (const listener of Array.from(messageListeners)) listener(message)
@@ -338,9 +373,14 @@ export const runChain = (
     outgoing.get(edge.source)!.push(edge)
   }
 
-  const repeatCount = Math.max(0, Math.floor(graph.repeat?.count ?? 1))
-  const repeatIntervalMs =
-    (graph.repeat?.interval ?? 0) * (graph.repeat?.intervalUnit === 's' ? 1000 : 1)
+  const requestedCount = graph.repeat?.count ?? 1
+  const requestedInterval = Number(graph.repeat?.interval ?? 0)
+  const repeatCount = Number.isInteger(requestedCount) && requestedCount >= 0 ? requestedCount : 1
+  const repeatIntervalMs = Math.max(
+    MIN_REPEAT_INTERVAL_MS,
+    (Number.isFinite(requestedInterval) && requestedInterval > 0 ? requestedInterval : 0) *
+      (graph.repeat?.intervalUnit === 's' ? 1000 : 1)
+  )
 
   const iterationLabel = (iteration: number) => {
     if (repeatCount === 1) return 'Started'
@@ -378,12 +418,12 @@ export const runChain = (
       pendingWaits.add(finish)
     })
 
-  const waitForMessage: RunContext['waitForMessage'] = (accepts, since, timeoutMs) => {
+  const waitForMessage: RunContext['waitForMessage'] = (accepts, afterSequence, timeoutMs) => {
     const buffered = messageBuffer.find(
-      (message) => message.receivedAt >= since && accepts(message)
+      (entry) => entry.sequence > afterSequence && accepts(entry.message)
     )
 
-    if (buffered) return Promise.resolve(buffered)
+    if (buffered) return Promise.resolve(buffered.message)
 
     return new Promise((resolve) => {
       const finish = (message?: BusMessage) => {
@@ -416,7 +456,14 @@ export const runChain = (
     simulation: options.simulate
   }
 
-  const followEdges = async (nodeId: string, handle: string | void, armedAt: number) => {
+  let visited = new Set<string>()
+
+  const followEdges = async (
+    nodeId: string,
+    handle: string | void,
+    messagesAfter: number,
+    lastMessage?: BusMessage
+  ) => {
     const edges = (outgoing.get(nodeId) ?? []).filter(
       (edge) => !handle || edge.sourceHandle === handle
     )
@@ -425,21 +472,28 @@ export const runChain = (
       edges.map(async (edge) => {
         const next = nodes.get(edge.target)
 
-        if (next) await executeNode(next, armedAt)
+        if (next) await executeNode(next, messagesAfter, lastMessage)
       })
     )
   }
 
-  const executeNode = async (node: ChainActionNode, armedAt: number): Promise<void> => {
-    if (stopped) return
+  const executeNode = async (
+    node: ChainActionNode,
+    messagesAfter: number,
+    lastMessage?: BusMessage
+  ): Promise<void> => {
+    if (stopped || visited.has(node.id)) return
+
+    visited.add(node.id)
 
     setNodeState(node.id, { ...resetNodeState, isRunning: true })
     patchLog(node.id, { state: 'active', time: Date.now() })
 
     let handle: string | void
+    const step: StepInfo = { messagesAfter, lastMessage }
 
     try {
-      handle = await nodeExecutors[node.type ?? '']?.(node, context, { armedAt })
+      handle = await nodeExecutors[node.type ?? '']?.(node, context, step)
     } catch (error) {
       if (stopped) return
 
@@ -466,11 +520,12 @@ export const runChain = (
       text: doneText(node, handle, !!options.simulate)
     })
 
-    await followEdges(node.id, handle, Date.now())
+    await followEdges(node.id, handle, messageSequence, step.lastMessage)
   }
 
   const runIteration = async (iteration: number) => {
     context.iteration = iteration
+    visited = new Set()
     log = initialLog(iteration)
 
     for (const node of graph.nodes) setNodeState(node.id, resetNodeState)
@@ -478,7 +533,7 @@ export const runChain = (
     hooks.onIteration?.(iteration, repeatCount)
     publishLog()
 
-    await followEdges('start', undefined, Date.now())
+    await followEdges('start', undefined, messageSequence)
   }
 
   const runIterations = async () => {
