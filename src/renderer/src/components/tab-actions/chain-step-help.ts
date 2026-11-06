@@ -5,6 +5,7 @@ import {
   friendlyPath,
   matchesTopicFilter,
   messageMatches,
+  pathTokens,
   readMessagePath,
   toVariableValue
 } from './chain-message'
@@ -278,4 +279,65 @@ export const stepIssues = (
   }
 
   return issues
+}
+
+const parseLoose = (text: string): unknown => {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+const setPathValue = (root: Record<string, unknown>, path: string, value: unknown) => {
+  const tokens = pathTokens(path)
+
+  if (!tokens.length) return
+
+  let current: Record<string, unknown> = root
+
+  tokens.forEach((token, index) => {
+    if (index === tokens.length - 1) {
+      if (current[token] === undefined) current[token] = value
+      return
+    }
+
+    const next = current[token]
+
+    if (next === null || typeof next !== 'object') {
+      current[token] = /^\d+$/.test(tokens[index + 1]) ? [] : {}
+    }
+
+    current = current[token] as Record<string, unknown>
+  })
+}
+
+export const exampleReply = (data: Partial<WaitMessageNodeData>): string => {
+  const match = data.match ?? { kind: 'any' }
+
+  if (match.kind === 'equals') return match.value ?? ''
+  if (match.kind === 'contains') return match.value ?? ''
+
+  const reply: Record<string, unknown> = {}
+
+  if (match.kind === 'path' && match.path) {
+    setPathValue(reply, match.path, match.value ? parseLoose(match.value) : true)
+  }
+
+  for (const capture of data.captures ?? []) {
+    if (capture.path) setPathValue(reply, capture.path, `example ${capture.name || 'value'}`)
+  }
+
+  return JSON.stringify(Object.keys(reply).length ? reply : { example: true }, null, 2)
+}
+
+export const simulatedReplyFor = (
+  data: Partial<WaitMessageNodeData>,
+  sample?: SampleMessage
+): string => {
+  if (data.simulatedReply?.trim()) return data.simulatedReply
+
+  if (sample && messageMatches(data.match ?? { kind: 'any' }, sample.message)) return sample.message
+
+  return exampleReply(data)
 }

@@ -42,6 +42,7 @@ export type WaitMessageNodeData = {
   timeoutUnit: 'ms' | 's'
   match: MessageMatch
   captures: MessageCapture[]
+  simulatedReply?: string
 }
 export type WaitMessageNode = Node<WaitMessageNodeData, Empty, 'wait-message'>
 

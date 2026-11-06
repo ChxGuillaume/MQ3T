@@ -30,10 +30,17 @@ const dotClass = (state: ChainRunLogEntry['state']) => {
       :class="{ 'text-muted': entry.state === 'skipped' }"
     >
       <span class="size-2.5 shrink-0 rounded-full" :class="dotClass(entry.state)" />
-      <span class="min-w-0 flex-1 truncate" :title="entry.reason">
+      <span class="min-w-0 flex-1 truncate" :title="entry.reason ?? entry.detail">
         {{ entry.text }}
         <span v-if="entry.reason" class="text-error block truncate text-xs">
           {{ entry.reason }}
+        </span>
+        <span
+          v-if="entry.detail"
+          class="text-muted block truncate font-mono text-[11px]"
+          :title="entry.detail"
+        >
+          {{ entry.detail }}
         </span>
       </span>
       <span class="text-muted text-xs">{{ formatRunLogTime(entry) }}</span>

@@ -16,6 +16,7 @@ const props = defineProps<{
   sample?: SampleMessage
   knownTopics: string[]
   subscribed: boolean
+  autoReply: string
 }>()
 
 const emit = defineEmits<{ update: [patch: Partial<WaitMessageNodeData>] }>()
@@ -368,6 +369,23 @@ const sampleTime = computed(() =>
       <p v-else class="text-muted bg-muted rounded-md p-2.5 text-xs leading-[1.45]">
         No message has been received on this topic yet. When one arrives, it shows up here and you
         can pick fields from it.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <span class="text-sm font-medium">Reply used by Simulate</span>
+      <UTextarea
+        :model-value="data.simulatedReply ?? ''"
+        :placeholder="autoReply"
+        :rows="4"
+        autoresize
+        class="w-full font-mono"
+        :ui="{ base: 'font-mono text-xs' }"
+        @update:model-value="emit('update', { simulatedReply: String($event) })"
+      />
+      <p class="text-muted text-xs leading-[1.45]">
+        Simulate pretends this message arrived. Leave it empty to use the last real message if it
+        matches, or the example shown above.
       </p>
     </div>
   </div>

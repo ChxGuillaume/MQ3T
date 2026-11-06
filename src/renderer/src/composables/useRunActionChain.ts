@@ -37,6 +37,7 @@ type UseRunActionChainOptions = {
 
 export function useRunActionChain(options: UseRunActionChainOptions = {}) {
   const running = ref(false)
+  const simulating = ref(false)
   const log = ref<ChainRunLogEntry[]>([])
   const outcome = ref<ChainRunOutcome>()
   const iteration = ref({ current: 1, total: 1 })
@@ -73,6 +74,7 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
     clearTimeout(clearTimer)
 
     running.value = true
+    simulating.value = !!runOptions.simulate
     outcome.value = undefined
     const startedAt = Date.now()
 
@@ -80,7 +82,7 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
 
     const result = await currentRun.done
 
-    if (runOptions.chainId) {
+    if (runOptions.chainId && !runOptions.simulate) {
       historyStore.addRun(runOptions.chainId, {
         connectionId,
         startedAt,
@@ -105,5 +107,5 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
 
   onBeforeUnmount(() => clearTimeout(clearTimer))
 
-  return { running, run, stop, log, progress, outcome, iteration }
+  return { running, simulating, run, stop, log, progress, outcome, iteration }
 }
