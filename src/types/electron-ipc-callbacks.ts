@@ -39,6 +39,11 @@ export type MqttStatusCallback = (
   value: { clientKey: string; status: MqttConnectionStatus }
 ) => void
 
+export type MqttLatencyCallback = (
+  event: never,
+  value: { clientKey: string; latency: number }
+) => void
+
 export type MqttLoadConnectionsCallback = (event: never, value: MqttConnection[]) => void
 
 export type Settings = {
@@ -51,6 +56,7 @@ export type ElectronIpc = {
   handleMqttError: (callback: MqttErrorCallback) => void
   handleMqttMessage: (callback: MqttMessageCallback) => void
   handleMqttStatus: (callback: MqttStatusCallback) => void
+  handleMqttLatency: (callback: MqttLatencyCallback) => void
 
   connectMqtt: (connection: MqttConnection) => void
   disconnectMqtt: (clientKey: string) => void

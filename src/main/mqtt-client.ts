@@ -66,7 +66,7 @@ export class MqttClient {
       connectionOptions
     )
 
-    let pingStartTime: number
+    let pingStartTime: number | undefined
 
     this.pingTimer = setInterval(() => {
       if (!this.client.connected) return
@@ -75,12 +75,19 @@ export class MqttClient {
       this.client.sendPing()
     }, 1000 * 5)
 
+    this.client.on('close', () => {
+      pingStartTime = undefined
+    })
+
     this.client.on('packetreceive', (packet) => {
-      if (packet.cmd !== 'pingresp') return
+      if (packet.cmd !== 'pingresp' || pingStartTime === undefined) return
+
+      const latency = Date.now() - pingStartTime
+      pingStartTime = undefined
 
       for (const cb of this.latencyCallbacks) {
         try {
-          cb(Date.now() - pingStartTime)
+          cb(latency)
         } catch {
           /* empty */
         }

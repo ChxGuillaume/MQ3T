@@ -9,6 +9,7 @@ const api: ElectronIpc = {
   handleMqttError: (callback) => ipcRenderer.on('mqtt-error', callback as any),
   handleMqttMessage: (callback) => ipcRenderer.on('mqtt-message', callback as any),
   handleMqttStatus: (callback) => ipcRenderer.on('mqtt-status', callback as any),
+  handleMqttLatency: (callback) => ipcRenderer.on('mqtt-latency', callback as any),
 
   connectMqtt: (connection) => ipcRenderer.send('connect-mqtt', connection),
   disconnectMqtt: (clientKey) => ipcRenderer.send('disconnect-mqtt', clientKey),

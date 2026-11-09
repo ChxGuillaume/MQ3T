@@ -133,6 +133,10 @@ onMounted(() => {
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
   })
 
+  ElectronApi.handleMqttLatency((_, value) => {
+    mqttConnectionsStore.setConnectionLatency(value.clientKey, value.latency)
+  })
+
   ElectronApi.handleMqttMessage((_, { clientKey, topic, message, packet }) => {
     mqttTopicsStore.addMessage(clientKey, topic, message, packet)
     emitMqttMessage({ clientKey, topic, message })

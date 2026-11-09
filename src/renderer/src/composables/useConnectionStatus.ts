@@ -18,6 +18,18 @@ export const statusDotClass = (status: MqttConnectionStatus) => STATUS_DOT[statu
 
 export const statusLabel = (status: MqttConnectionStatus) => STATUS_LABEL[status]
 
+const SLOW_LATENCY_MS = 150
+const VERY_SLOW_LATENCY_MS = 500
+
+export const latencyLabel = (latency: number) => `${latency} ms`
+
+export const latencyClass = (latency: number) => {
+  if (latency >= VERY_SLOW_LATENCY_MS) return 'text-error'
+  if (latency >= SLOW_LATENCY_MS) return 'text-warning'
+
+  return 'text-muted'
+}
+
 export const protocolVersionLabel = (connection: MqttConnection) => {
   switch (connection.protocolVersion) {
     case 5:

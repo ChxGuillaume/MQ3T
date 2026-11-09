@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {
   hostLabel,
+  latencyClass,
+  latencyLabel,
   protocolVersionLabel,
   statusDotClass
 } from '@renderer/composables/useConnectionStatus'
@@ -35,6 +37,10 @@ const sections = computed<SegmentedItem<ConnectionSection>[]>(() => [
 ])
 
 const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedClientKey.value))
+
+const latency = computed<number | undefined>(
+  () => mqttConnectionsStore.latencies[selectedClientKey.value]
+)
 </script>
 
 <template>
@@ -73,6 +79,15 @@ const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedC
     >
       <span class="size-2 rounded-full" :class="statusDotClass(status)" />
       {{ hostLabel(connection) }} · {{ protocolVersionLabel(connection) }}
+      <template v-if="latency !== undefined">
+        ·
+        <UTooltip text="Round-trip time to the broker, refreshed every 5 seconds">
+          <span class="flex items-center gap-1 tabular-nums" :class="latencyClass(latency)">
+            <UIcon name="i-lucide-activity" class="size-3" />
+            {{ latencyLabel(latency) }}
+          </span>
+        </UTooltip>
+      </template>
     </span>
 
     <UTooltip text="New message" :kbds="['meta', 'N']">
