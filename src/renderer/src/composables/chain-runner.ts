@@ -13,14 +13,17 @@ import {
   matchesTopicFilter,
   messageMatches,
   readMessagePath,
-  toVariableValue
+  toVariableValue,
+  conditionSubject,
+  describeCondition,
+  evaluateCondition
 } from '@renderer/components/tab-actions/chain-message'
 import { resolveNodeAction } from '@renderer/components/tab-actions/chain-node-action'
-import { Action, ChainAction, ChainActionNode } from '../../../types/actions'
+import { Action, ChainAction, ChainActionNode, ConditionNodeData } from '../../../types/actions'
 import { Edge } from '@vue-flow/core'
 import { IClientPublishOptions } from 'mqtt'
 
-export type ChainRunLogState = 'done' | 'active' | 'pending' | 'stopped' | 'failed'
+export type ChainRunLogState = 'done' | 'active' | 'pending' | 'stopped' | 'failed' | 'skipped'
 
 export type ChainRunLogEntry = {
   id: string
@@ -95,6 +98,7 @@ const stepLabel = (node: ChainActionNode) => {
   if (node.type === 'wait')
     return `Wait ${node.data?.duration || 0} ${node.data?.durationType || 'ms'}`
   if (node.type === 'wait-message') return `Wait for ${node.data?.topic || 'message'}`
+  if (node.type === 'condition') return `If ${describeCondition(node.data ?? {})}`
 
   return chainStepLabel(node)
 }
@@ -182,7 +186,22 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   }
 }
 
-const doneText = (node: ChainActionNode) => {
+const executeCondition: NodeExecutor = async (node, context) => {
+  if (node.type !== 'condition') return
+
+  const condition: Partial<ConditionNodeData> = node.data ?? {}
+
+  if (condition.source === 'message' && !context.lastMessage) {
+    throw new ChainStepError('No message has been received yet')
+  }
+
+  const subject = conditionSubject(condition, context.variables, context.lastMessage?.message)
+
+  return evaluateCondition(condition, subject) ? 'true' : 'false'
+}
+
+const doneText = (node: ChainActionNode, handle: string | void) => {
+  if (node.type === 'condition') return `${stepLabel(node)} → ${handle}`
   if (node.type === 'action') return `${stepLabel(node)} sent`
   if (node.type === 'wait-message') return `Received on ${node.data?.topic ?? ''}`
 
@@ -221,7 +240,8 @@ export const chainVariableSource = (graph: ChainRunGraph, connectionId: string) 
 export const nodeExecutors: Partial<Record<string, NodeExecutor>> = {
   action: executeAction,
   wait: executeWait,
-  'wait-message': executeWaitMessage
+  'wait-message': executeWaitMessage,
+  condition: executeCondition
 }
 
 export const runChain = (
@@ -362,7 +382,7 @@ export const runChain = (
     if (stopped) return
 
     setNodeState(node.id, { isRunning: false, isFinished: true })
-    patchLog(node.id, { state: 'done', time: Date.now(), text: doneText(node) })
+    patchLog(node.id, { state: 'done', time: Date.now(), text: doneText(node, handle) })
 
     await followEdges(node.id, handle, Date.now())
   }
@@ -384,6 +404,9 @@ export const runChain = (
 
       return 'stopped'
     }
+
+    log = log.map((entry) => (entry.state === 'pending' ? { ...entry, state: 'skipped' } : entry))
+    publishLog()
 
     return failed ? 'failed' : 'done'
   })

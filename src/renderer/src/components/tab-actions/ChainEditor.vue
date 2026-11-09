@@ -3,7 +3,7 @@ import { Connection, ConnectionMode, Edge, GraphNode, useVueFlow, VueFlow } from
 import { formatRunLogTime, useRunActionChain } from '@renderer/composables/useRunActionChain'
 import { useChainVariablesPrompt } from '@renderer/composables/useChainVariablesPrompt'
 import { Action, ChainAction, ChainActionNode } from '../../../../types/actions'
-import { clone, DEFAULT_GROUP, formatTile, isWildcardTopic } from './action-utils'
+import { clone, DEFAULT_GROUP, formatTile, isWildcardTopic, variableFields } from './action-utils'
 import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import ChainStepTopicDialog from './dialogs/ChainStepTopicDialog.vue'
@@ -16,6 +16,9 @@ import StartNode from './action-chain/StartNode.vue'
 import WaitNode from './action-chain/WaitNode.vue'
 import WaitMessageNode from './action-chain/WaitMessageNode.vue'
 import WaitMessageSettings from './action-chain/WaitMessageSettings.vue'
+import ConditionNode from './action-chain/ConditionNode.vue'
+import ConditionSettings from './action-chain/ConditionSettings.vue'
+import { chainCapturedNames, chainVariableSource } from '@renderer/composables/chain-runner'
 import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
 import ActionDialog from './dialogs/ActionDialog.vue'
@@ -176,6 +179,9 @@ const addWaitMessageStep = (position?: { x: number; y: number }) =>
     position
   )
 
+const addConditionStep = (position?: { x: number; y: number }) =>
+  addStep('condition', { source: 'variable', operator: 'equals', name: '', value: '' }, position)
+
 const addWaitStep = (position?: { x: number; y: number }) =>
   addStep('wait', { duration: 500, durationType: 'ms' }, position)
 
@@ -203,6 +209,7 @@ const handleCanvasDrop = (event: DragEvent) => {
 
   if (payload.type === 'wait') addWaitStep(position)
   if (payload.type === 'wait-message') addWaitMessageStep(position)
+  if (payload.type === 'condition') addConditionStep(position)
   if (payload.type === 'custom') addStep('action', {}, position)
   if (payload.type === 'action') {
     const action = paletteActions.value.find((a) => a.id === payload.actionId)
@@ -289,6 +296,17 @@ const refreshLinkedSnapshots = () => {
 
 const selectedNode = computed(() => getSelectedNodes.value[0])
 
+const knownVariableNames = computed(() => {
+  if (selectedNode.value?.type !== 'condition') return []
+
+  const graph = { nodes: nodes.value as ChainActionNode[], edges: edges.value }
+  const { source } = chainVariableSource(graph, props.connectionId)
+
+  return Array.from(
+    new Set([...variableFields(source).map((field) => field.name), ...chainCapturedNames(graph)])
+  )
+})
+
 const selectedAction = computed(() =>
   selectedNode.value ? nodeAction(selectedNode.value.id) : undefined
 )
@@ -346,6 +364,8 @@ const logDotClass = (state: string) => {
       return 'bg-warning'
     case 'failed':
       return 'bg-error'
+    case 'skipped':
+      return 'border-2 border-dashed border-muted'
     default:
       return 'border-2 border-muted'
   }
@@ -551,6 +571,20 @@ onMounted(async () => {
           </span>
           Wait for message
         </button>
+        <button
+          type="button"
+          draggable="true"
+          class="border-default hover:bg-muted flex items-center gap-2.5 rounded-md border border-dashed p-2 text-[13px] font-semibold"
+          @dragstart="handlePaletteDragStart($event, { type: 'condition' })"
+          @click="addConditionStep()"
+        >
+          <span
+            class="border-default text-muted flex size-7 shrink-0 items-center justify-center rounded-sm border"
+          >
+            <UIcon name="i-lucide-git-branch" class="size-3.5" />
+          </span>
+          Condition
+        </button>
 
         <div
           class="text-muted px-1.5 pt-2.5 pb-1 text-[11px] font-semibold tracking-[0.1em] uppercase"
@@ -641,6 +675,17 @@ onMounted(async () => {
             />
           </template>
 
+          <template #node-condition="nodeProps">
+            <ConditionNode
+              :id="nodeProps.id"
+              :data="nodeProps.data"
+              :selected="nodeProps.selected"
+              :dimmed="running"
+              @copy="duplicateNode(nodeProps.id)"
+              @remove="removeNodes([nodeProps.id])"
+            />
+          </template>
+
           <template #node-wait-message="nodeProps">
             <WaitMessageNode
               :id="nodeProps.id"
@@ -711,6 +756,33 @@ onMounted(async () => {
               ]"
             />
           </div>
+          <div class="flex gap-2">
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-copy"
+              label="Duplicate"
+              @click="duplicateNode(selectedNode.id)"
+            />
+            <UButton
+              size="sm"
+              color="error"
+              variant="ghost"
+              icon="i-lucide-trash-2"
+              label="Delete"
+              @click="removeNodes([selectedNode.id])"
+            />
+          </div>
+        </template>
+
+        <template v-else-if="selectedNode?.type === 'condition'">
+          <h2 class="text-base font-bold">Condition</h2>
+          <ConditionSettings
+            :data="selectedNode.data ?? {}"
+            :variable-names="knownVariableNames"
+            @update="updateNodeData(selectedNode.id, $event)"
+          />
           <div class="flex gap-2">
             <UButton
               size="sm"
