@@ -306,10 +306,10 @@ export const numericPaths = (value: unknown, prefix = '', depth = 0): string[] =
   return entries.flatMap(([path, item]) => numericPaths(item, path, depth + 1))
 }
 
-export const sparklinePoints = (values: number[], width = 64, height = 20) => {
+export const sparklinePoints = (values: number[], width = 64, height = 20, floor?: number) => {
   if (values.length < 2) return ''
 
-  const min = Math.min(...values)
+  const min = floor ?? Math.min(...values)
   const max = Math.max(...values)
   const range = max - min || 1
   const step = width / (values.length - 1)

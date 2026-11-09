@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import {
   hostLabel,
-  latencyClass,
-  latencyLabel,
   protocolVersionLabel,
   statusDotClass
 } from '@renderer/composables/useConnectionStatus'
+import LatencyIndicator from '@renderer/components/shell/LatencyIndicator.vue'
 import SegmentedControl, { SegmentedItem } from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useAppNavigation } from '@renderer/composables/useAppNavigation'
@@ -38,8 +37,8 @@ const sections = computed<SegmentedItem<ConnectionSection>[]>(() => [
 
 const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedClientKey.value))
 
-const latency = computed<number | undefined>(
-  () => mqttConnectionsStore.latencies[selectedClientKey.value]
+const hasLatency = computed(
+  () => mqttConnectionsStore.latencies[selectedClientKey.value] !== undefined
 )
 </script>
 
@@ -79,14 +78,9 @@ const latency = computed<number | undefined>(
     >
       <span class="size-2 rounded-full" :class="statusDotClass(status)" />
       {{ hostLabel(connection) }} · {{ protocolVersionLabel(connection) }}
-      <template v-if="latency !== undefined">
+      <template v-if="hasLatency">
         ·
-        <UTooltip text="Round-trip time to the broker, refreshed every 5 seconds">
-          <span class="flex items-center gap-1 tabular-nums" :class="latencyClass(latency)">
-            <UIcon name="i-lucide-activity" class="size-3" />
-            {{ latencyLabel(latency) }}
-          </span>
-        </UTooltip>
+        <LatencyIndicator :client-key="selectedClientKey" />
       </template>
     </span>
 
