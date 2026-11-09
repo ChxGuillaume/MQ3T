@@ -220,6 +220,8 @@ export const chainStepLabel = (node: ChainAction['nodes'][number]) => {
       return `wait ${node.data?.duration || 0} ${node.data?.durationType || 'ms'}`
     case 'action':
       return node.data?.action?.name || node.data?.action?.topic || 'Action'
+    case 'wait-message':
+      return `wait for ${node.data?.topic || 'message'}`
     default:
       return ''
   }

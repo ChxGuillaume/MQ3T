@@ -8,7 +8,13 @@ import {
 } from '@renderer/components/tab-actions/action-utils'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
-import { BusMessage } from './useMqttMessageBus'
+import { BusMessage, onMqttMessage } from './useMqttMessageBus'
+import {
+  matchesTopicFilter,
+  messageMatches,
+  readMessagePath,
+  toVariableValue
+} from '@renderer/components/tab-actions/chain-message'
 import { resolveNodeAction } from '@renderer/components/tab-actions/chain-node-action'
 import { Action, ChainAction, ChainActionNode } from '../../../types/actions'
 import { Edge } from '@vue-flow/core'
@@ -43,11 +49,22 @@ export type RunContext = {
   iteration: number
   isStopped: () => boolean
   wait: (ms: number) => Promise<void>
+  waitForMessage: (
+    accepts: (message: BusMessage) => boolean,
+    since: number,
+    timeoutMs: number
+  ) => Promise<BusMessage | undefined>
   setNodeState: (nodeId: string, state: ChainNodeState) => void
   setLogText: (nodeId: string, text: string) => void
 }
 
-export type NodeExecutor = (node: ChainActionNode, context: RunContext) => Promise<string | void>
+export type StepInfo = { armedAt: number }
+
+export type NodeExecutor = (
+  node: ChainActionNode,
+  context: RunContext,
+  step: StepInfo
+) => Promise<string | void>
 
 export type ChainRunHooks = {
   onNodeState?: (nodeId: string, state: ChainNodeState) => void
@@ -74,10 +91,13 @@ const resetNodeState: ChainNodeState = {
   waitEndsAt: undefined
 }
 
-const stepLabel = (node: ChainActionNode) =>
-  node.type === 'wait'
-    ? `Wait ${node.data?.duration || 0} ${node.data?.durationType || 'ms'}`
-    : chainStepLabel(node)
+const stepLabel = (node: ChainActionNode) => {
+  if (node.type === 'wait')
+    return `Wait ${node.data?.duration || 0} ${node.data?.durationType || 'ms'}`
+  if (node.type === 'wait-message') return `Wait for ${node.data?.topic || 'message'}`
+
+  return chainStepLabel(node)
+}
 
 const executeWait: NodeExecutor = async (node, context) => {
   if (node.type !== 'wait') return
@@ -120,8 +140,54 @@ const executeAction: NodeExecutor = async (node, context) => {
   ElectronApi.sendMqttMessage(context.connectionId, topic, payload, options)
 }
 
-const doneText = (node: ChainActionNode) =>
-  node.type === 'action' ? `${stepLabel(node)} sent` : stepLabel(node)
+const MESSAGE_BUFFER_SIZE = 500
+
+const executeWaitMessage: NodeExecutor = async (node, context, step) => {
+  if (node.type !== 'wait-message') return
+
+  const { topic, timeout, timeoutUnit, match, captures } = node.data ?? {}
+
+  if (!topic) throw new ChainStepError('Step has no topic to listen on')
+
+  const timeoutValue = timeout || 5
+  const unit = timeoutUnit || 's'
+  const timeoutMs = timeoutValue * (unit === 's' ? 1000 : 1)
+  const startedAt = Date.now()
+
+  context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + timeoutMs })
+  context.setLogText(node.id, `Listening on ${topic}`)
+
+  const received = await context.waitForMessage(
+    (message) =>
+      matchesTopicFilter(topic, message.topic) &&
+      messageMatches(match ?? { kind: 'any' }, message.message),
+    step.armedAt,
+    timeoutMs
+  )
+
+  if (context.isStopped()) return
+  if (!received) {
+    throw new ChainStepError(`No matching message within ${timeoutValue} ${unit}`)
+  }
+
+  context.lastMessage = received
+
+  for (const capture of captures ?? []) {
+    if (!capture.name) continue
+
+    context.variables.set(
+      capture.name,
+      toVariableValue(readMessagePath(received.message, capture.path))
+    )
+  }
+}
+
+const doneText = (node: ChainActionNode) => {
+  if (node.type === 'action') return `${stepLabel(node)} sent`
+  if (node.type === 'wait-message') return `Received on ${node.data?.topic ?? ''}`
+
+  return stepLabel(node)
+}
 
 export const chainActions = (graph: ChainRunGraph, connectionId: string): Action[] =>
   chainSteps(graph).flatMap((node) => {
@@ -129,6 +195,15 @@ export const chainActions = (graph: ChainRunGraph, connectionId: string): Action
 
     return action && !missing ? [action] : []
   })
+
+export const chainCapturedNames = (graph: ChainRunGraph) =>
+  new Set(
+    graph.nodes.flatMap((node) =>
+      node.type === 'wait-message'
+        ? (node.data?.captures ?? []).map((capture) => capture.name).filter(Boolean)
+        : []
+    )
+  )
 
 export const chainVariableSource = (graph: ChainRunGraph, connectionId: string) => {
   const actions = chainActions(graph, connectionId)
@@ -138,14 +213,15 @@ export const chainVariableSource = (graph: ChainRunGraph, connectionId: string) 
   ])
 
   return {
-    source: mergedVariableSource(sources),
+    source: mergedVariableSource(sources, chainCapturedNames(graph)),
     hasUuid: actions.some((action) => hasGeneratedUuid(action.payload))
   }
 }
 
 export const nodeExecutors: Partial<Record<string, NodeExecutor>> = {
   action: executeAction,
-  wait: executeWait
+  wait: executeWait,
+  'wait-message': executeWaitMessage
 }
 
 export const runChain = (
@@ -157,6 +233,17 @@ export const runChain = (
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]))
   const outgoing = new Map<string, Edge[]>()
   const pendingWaits = new Set<() => void>()
+  const messageBuffer: BusMessage[] = []
+  const messageListeners = new Set<(message: BusMessage) => void>()
+
+  const unsubscribe = onMqttMessage((message) => {
+    if (message.clientKey !== connectionId) return
+
+    messageBuffer.push(message)
+    if (messageBuffer.length > MESSAGE_BUFFER_SIZE) messageBuffer.shift()
+
+    for (const listener of Array.from(messageListeners)) listener(message)
+  })
 
   let stopped = false
   let failed = false
@@ -195,17 +282,43 @@ export const runChain = (
       pendingWaits.add(finish)
     })
 
+  const waitForMessage: RunContext['waitForMessage'] = (accepts, since, timeoutMs) => {
+    const buffered = messageBuffer.find(
+      (message) => message.receivedAt >= since && accepts(message)
+    )
+
+    if (buffered) return Promise.resolve(buffered)
+
+    return new Promise((resolve) => {
+      const finish = (message?: BusMessage) => {
+        clearTimeout(timeout)
+        pendingWaits.delete(cancel)
+        messageListeners.delete(listener)
+        resolve(message)
+      }
+      const cancel = () => finish()
+      const listener = (message: BusMessage) => {
+        if (accepts(message)) finish(message)
+      }
+      const timeout = setTimeout(cancel, timeoutMs)
+
+      pendingWaits.add(cancel)
+      messageListeners.add(listener)
+    })
+  }
+
   const context: RunContext = {
     connectionId,
     variables: new Map(Object.entries(options.variables ?? {})),
     iteration: 1,
     isStopped: () => stopped,
     wait,
+    waitForMessage,
     setNodeState,
     setLogText: (nodeId, text) => patchLog(nodeId, { text })
   }
 
-  const followEdges = async (nodeId: string, handle: string | void) => {
+  const followEdges = async (nodeId: string, handle: string | void, armedAt: number) => {
     const edges = (outgoing.get(nodeId) ?? []).filter(
       (edge) => !handle || edge.sourceHandle === handle
     )
@@ -214,12 +327,12 @@ export const runChain = (
       edges.map(async (edge) => {
         const next = nodes.get(edge.target)
 
-        if (next) await executeNode(next)
+        if (next) await executeNode(next, armedAt)
       })
     )
   }
 
-  const executeNode = async (node: ChainActionNode): Promise<void> => {
+  const executeNode = async (node: ChainActionNode, armedAt: number): Promise<void> => {
     if (stopped) return
 
     setNodeState(node.id, { ...resetNodeState, isRunning: true })
@@ -228,7 +341,7 @@ export const runChain = (
     let handle: string | void
 
     try {
-      handle = await nodeExecutors[node.type ?? '']?.(node, context)
+      handle = await nodeExecutors[node.type ?? '']?.(node, context, { armedAt })
     } catch (error) {
       if (stopped) return
 
@@ -251,14 +364,16 @@ export const runChain = (
     setNodeState(node.id, { isRunning: false, isFinished: true })
     patchLog(node.id, { state: 'done', time: Date.now(), text: doneText(node) })
 
-    await followEdges(node.id, handle)
+    await followEdges(node.id, handle, Date.now())
   }
 
   for (const node of graph.nodes) setNodeState(node.id, resetNodeState)
 
   publishLog()
 
-  const done = followEdges('start', undefined).then((): ChainRunOutcome => {
+  const done = followEdges('start', undefined, Date.now()).then((): ChainRunOutcome => {
+    unsubscribe()
+
     if (stopped) {
       log = log.map((entry) =>
         entry.state === 'active' || entry.state === 'pending'
