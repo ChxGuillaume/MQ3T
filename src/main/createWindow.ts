@@ -8,13 +8,6 @@ import path from 'path'
 const DARK_MODE = { height: 46, color: '#1a1a1a', symbolColor: '#a3a3a3' }
 const LIGHT_MODE = { height: 46, color: '#efeff1', symbolColor: '#666666' }
 
-const isCloseTabShortcut = (input: Electron.Input) =>
-  input.type === 'keyDown' &&
-  input.key.toLowerCase() === 'w' &&
-  (input.meta || input.control) &&
-  !input.shift &&
-  !input.alt
-
 export const createWindow = (routePath = '/') => {
   const windowConfig: Electron.BrowserWindowConstructorOptions = {
     width: 1280,
@@ -46,12 +39,6 @@ export const createWindow = (routePath = '/') => {
   }
 
   window.removeMenu()
-
-  if (routePath === '/') {
-    window.webContents.on('before-input-event', (_, input) => {
-      window.webContents.setIgnoreMenuShortcuts(isCloseTabShortcut(input))
-    })
-  }
 
   registerDataGraphHandler(window)
 

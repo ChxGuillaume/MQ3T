@@ -9,6 +9,7 @@ import { initSettingsHandlers } from './stores/settings'
 import { initAutoUpdater } from './initAutoUpdater'
 import { autoUpdater } from 'electron-updater'
 import { createWindow } from './createWindow'
+import { initAppMenu } from './appMenu'
 import { MqttClient } from './mqtt-client'
 import FileFilter = Electron.FileFilter
 import * as path from 'path'
@@ -67,6 +68,14 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow()
   })
+
+  if (process.platform === 'darwin') {
+    initAppMenu(() => {
+      if (!mainWindow || mainWindow.isDestroyed()) mainWindow = createWindow()
+
+      return mainWindow
+    })
+  }
 
   initAutoUpdater(mainWindow)
   initGraphWindowHandlers(mainWindow)
