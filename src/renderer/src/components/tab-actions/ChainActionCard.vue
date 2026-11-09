@@ -5,6 +5,7 @@ import { chainSummary, formatChainDuration } from './action-utils'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
 import ProgressRing from './action-chain/ProgressRing.vue'
+import { useToast } from '@nuxt/ui/composables'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -17,7 +18,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
-const { running, run } = useRunActionChain()
+const { running, run, stop, progress, iteration } = useRunActionChain()
+const toast = useToast()
 const { promptVariables } = useChainVariablesPrompt()
 
 const summary = computed(() => chainSummary(props.chainAction))
@@ -90,9 +92,40 @@ const handleRun = async () => {
 
   if (!variables) return
 
-  run(props.connectionId, props.chainAction, { variables, chainId: props.chainAction.id })
   emit('send')
+
+  const outcome = await run(props.connectionId, props.chainAction, {
+    variables,
+    chainId: props.chainAction.id
+  })
+
+  if (outcome === 'done') {
+    toast.add({
+      title: `“${props.chainAction.name}” finished`,
+      icon: 'i-lucide-check',
+      color: 'success',
+      duration: 1500
+    })
+  }
+
+  if (outcome === 'failed') {
+    toast.add({
+      title: `“${props.chainAction.name}” failed`,
+      description: 'Open the chain to see which step failed',
+      icon: 'i-lucide-circle-x',
+      color: 'error'
+    })
+  }
 }
+
+const runningLabel = computed(() => {
+  const { current, total } = iteration.value
+  const step = `${progress.value.current}/${progress.value.total}`
+
+  if (total === 1) return step
+
+  return total === 0 ? `Run ${current} · ${step}` : `Run ${current}/${total} · ${step}`
+})
 
 const menuItems = computed<ContextMenuItem[][]>(() => [
   [{ label: 'Edit', icon: 'i-lucide-pencil', onSelect: () => emit('edit') }],
@@ -143,19 +176,34 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
       <UDropdownMenu v-if="!noContextMenu" :items="menuItems" :content="{ align: 'end' }">
         <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis" aria-label="More" />
       </UDropdownMenu>
-      <UTooltip :text="disable ? 'Connection is not active' : undefined" :disabled="!disable">
+      <div v-if="running" class="flex items-center gap-2">
+        <span class="text-muted flex items-center gap-1.5 text-xs whitespace-nowrap">
+          <ProgressRing :size="14" class="text-primary" />
+          {{ runningLabel }}
+        </span>
+        <UButton
+          size="sm"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-square"
+          label="Stop"
+          class="font-semibold"
+          @click="stop"
+        />
+      </div>
+      <UTooltip
+        v-else
+        :text="disable ? 'Connection is not active' : undefined"
+        :disabled="!disable"
+      >
         <UButton
           size="sm"
           label="Run"
           class="font-semibold"
-          :icon="running ? undefined : 'i-lucide-play'"
-          :disabled="running || disable"
+          icon="i-lucide-play"
+          :disabled="disable"
           @click="handleRun"
-        >
-          <template v-if="running" #leading>
-            <ProgressRing :size="14" />
-          </template>
-        </UButton>
+        />
       </UTooltip>
     </div>
   </UContextMenu>
