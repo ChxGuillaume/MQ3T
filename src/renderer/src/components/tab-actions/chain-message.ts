@@ -24,7 +24,7 @@ const parseJson = (message: string): unknown => {
   }
 }
 
-const pathTokens = (path: string) =>
+export const pathTokens = (path: string) =>
   Array.from(path.replace(/^\$/, '').matchAll(/\[(\d+)\]|\[["']([^"']+)["']\]|([^.[\]]+)/g)).map(
     (match) => match[1] ?? match[2] ?? match[3]
   )

@@ -19,7 +19,13 @@ import {
   evaluateCondition
 } from '@renderer/components/tab-actions/chain-message'
 import { resolveNodeAction } from '@renderer/components/tab-actions/chain-node-action'
-import { Action, ChainAction, ChainActionNode, ConditionNodeData } from '../../../types/actions'
+import {
+  Action,
+  ChainAction,
+  ChainActionNode,
+  ConditionNodeData,
+  WaitMessageNodeData
+} from '../../../types/actions'
 import { Edge } from '@vue-flow/core'
 import { IClientPublishOptions } from 'mqtt'
 
@@ -31,6 +37,7 @@ export type ChainRunLogEntry = {
   state: ChainRunLogState
   time?: number
   reason?: string
+  detail?: string
 }
 
 export type ChainRunOutcome = 'done' | 'stopped' | 'failed'
@@ -59,6 +66,8 @@ export type RunContext = {
   ) => Promise<BusMessage | undefined>
   setNodeState: (nodeId: string, state: ChainNodeState) => void
   setLogText: (nodeId: string, text: string) => void
+  setLogDetail: (nodeId: string, detail: string) => void
+  simulation?: ChainSimulation
 }
 
 export type StepInfo = { armedAt: number }
@@ -75,7 +84,12 @@ export type ChainRunHooks = {
   onIteration?: (iteration: number, total: number) => void
 }
 
+export type ChainSimulation = {
+  replyFor: (data: Partial<WaitMessageNodeData>) => string | undefined
+}
+
 export type ChainRunOptions = {
+  simulate?: ChainSimulation
   variables?: Record<string, VariableValue>
 }
 
@@ -104,12 +118,23 @@ const stepLabel = (node: ChainActionNode) => {
   return chainStepLabel(node)
 }
 
+const SIMULATED_SEND_MS = 450
+const SIMULATED_REPLY_MS = 900
+const SIMULATED_MAX_WAIT_MS = 1500
+
+const exampleTopic = (filter: string) =>
+  filter
+    .split('/')
+    .map((level) => (level === '+' || level === '#' ? 'example' : level))
+    .join('/')
+
 const executeWait: NodeExecutor = async (node, context) => {
   if (node.type !== 'wait') return
 
   const duration = node.data?.duration || 500
   const durationType = node.data?.durationType || 'ms'
-  const ms = duration * (durationType === 's' ? 1000 : 1)
+  const realMs = duration * (durationType === 's' ? 1000 : 1)
+  const ms = context.simulation ? Math.min(realMs, SIMULATED_MAX_WAIT_MS) : realMs
   const startedAt = Date.now()
 
   context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + ms })
@@ -142,6 +167,13 @@ const executeAction: NodeExecutor = async (node, context) => {
 
   const { topic, payload } = resolveActionVariables(action, context.variables)
 
+  context.setLogDetail(node.id, `${topic}  ${payload}`)
+
+  if (context.simulation) {
+    await context.wait(SIMULATED_SEND_MS)
+    return
+  }
+
   ElectronApi.sendMqttMessage(context.connectionId, topic, payload, options)
 }
 
@@ -159,16 +191,41 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   const timeoutMs = timeoutValue * (unit === 's' ? 1000 : 1)
   const startedAt = Date.now()
 
-  context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + timeoutMs })
   context.setLogText(node.id, `Listening on ${topic}`)
 
-  const received = await context.waitForMessage(
-    (message) =>
-      matchesTopicFilter(topic, message.topic) &&
-      messageMatches(match ?? { kind: 'any' }, message.message),
-    step.armedAt,
-    timeoutMs
-  )
+  const accepts = (message: BusMessage) =>
+    matchesTopicFilter(topic, message.topic) &&
+    messageMatches(match ?? { kind: 'any' }, message.message)
+
+  let received: BusMessage | undefined
+
+  if (context.simulation) {
+    const reply = context.simulation.replyFor(node.data ?? {})
+
+    if (!reply) throw new ChainStepError('No simulated reply for this step')
+
+    context.setNodeState(node.id, {
+      waitStartedAt: startedAt,
+      waitEndsAt: startedAt + SIMULATED_REPLY_MS
+    })
+    await context.wait(SIMULATED_REPLY_MS)
+
+    received = {
+      clientKey: context.connectionId,
+      topic: exampleTopic(topic),
+      message: reply,
+      receivedAt: Date.now()
+    }
+
+    if (!accepts(received)) {
+      context.setLogDetail(node.id, reply)
+      throw new ChainStepError("The simulated reply doesn't pass this step's filter")
+    }
+  } else {
+    context.setNodeState(node.id, { waitStartedAt: startedAt, waitEndsAt: startedAt + timeoutMs })
+
+    received = await context.waitForMessage(accepts, step.armedAt, timeoutMs)
+  }
 
   if (context.isStopped()) return
   if (!received) {
@@ -176,6 +233,7 @@ const executeWaitMessage: NodeExecutor = async (node, context, step) => {
   }
 
   context.lastMessage = received
+  context.setLogDetail(node.id, received.message)
 
   for (const capture of captures ?? []) {
     if (!capture.name) continue
@@ -198,12 +256,17 @@ const executeCondition: NodeExecutor = async (node, context) => {
 
   const subject = conditionSubject(condition, context.variables, context.lastMessage?.message)
 
+  context.setLogDetail(
+    node.id,
+    `value: ${subject === undefined ? 'missing' : JSON.stringify(subject)}`
+  )
+
   return evaluateCondition(condition, subject) ? 'true' : 'false'
 }
 
-const doneText = (node: ChainActionNode, handle: string | void) => {
+const doneText = (node: ChainActionNode, handle: string | void, simulated: boolean) => {
   if (node.type === 'condition') return `${stepLabel(node)} → ${handle}`
-  if (node.type === 'action') return `${stepLabel(node)} sent`
+  if (node.type === 'action') return `${stepLabel(node)} ${simulated ? 'simulated' : 'sent'}`
   if (node.type === 'wait-message') return `Received on ${node.data?.topic ?? ''}`
 
   return stepLabel(node)
@@ -348,7 +411,9 @@ export const runChain = (
     wait,
     waitForMessage,
     setNodeState,
-    setLogText: (nodeId, text) => patchLog(nodeId, { text })
+    setLogText: (nodeId, text) => patchLog(nodeId, { text }),
+    setLogDetail: (nodeId, detail) => patchLog(nodeId, { detail }),
+    simulation: options.simulate
   }
 
   const followEdges = async (nodeId: string, handle: string | void, armedAt: number) => {
@@ -395,7 +460,11 @@ export const runChain = (
     if (stopped) return
 
     setNodeState(node.id, { isRunning: false, isFinished: true })
-    patchLog(node.id, { state: 'done', time: Date.now(), text: doneText(node, handle) })
+    patchLog(node.id, {
+      state: 'done',
+      time: Date.now(),
+      text: doneText(node, handle, !!options.simulate)
+    })
 
     await followEdges(node.id, handle, Date.now())
   }
@@ -419,7 +488,9 @@ export const runChain = (
       const isLast = repeatCount !== 0 && iteration >= repeatCount
 
       if (stopped || failed || isLast) return
-      await wait(repeatIntervalMs)
+      await wait(
+        options.simulate ? Math.min(repeatIntervalMs, SIMULATED_MAX_WAIT_MS) : repeatIntervalMs
+      )
       if (stopped) return
     }
   }
