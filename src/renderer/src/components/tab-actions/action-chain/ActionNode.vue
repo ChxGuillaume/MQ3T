@@ -4,6 +4,7 @@ import type { ContextMenuItem } from '@nuxt/ui'
 import { formatTile } from '../action-utils'
 import { Action } from '../../../../../types/actions'
 import ProgressRing from './ProgressRing.vue'
+import StepIssueBadge from './StepIssueBadge.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -13,6 +14,7 @@ const props = defineProps<{
   linked?: boolean
   missing?: boolean
   selected?: boolean
+  issues?: string[]
   dimmed?: boolean
 }>()
 
@@ -43,7 +45,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
 <template>
   <UContextMenu :items="menuItems">
     <div
-      class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
+      class="bg-default relative flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
       :class="[
         data?.isFailed || missing
           ? 'border-error ring-error ring-1'
@@ -53,6 +55,7 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
         { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished && !data?.isFailed }
       ]"
     >
+      <StepIssueBadge :issues="issues ?? []" />
       <span
         class="border-default flex size-7 shrink-0 items-center justify-center rounded-sm border font-mono text-[11px] font-bold"
         :class="tile.class"
