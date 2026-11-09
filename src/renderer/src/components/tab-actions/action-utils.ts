@@ -123,6 +123,73 @@ export const applyVariables = (
   return result.replace(actionsVariables.uuidV4.regex, () => uuidValue)
 }
 
+const VARIABLE_TOKENS: Record<VariableField['type'], string> = {
+  string: 's',
+  number: 'n',
+  boolean: 'b',
+  enum: 'enum'
+}
+
+export type NamedVariableValues = Record<string, VariableValue>
+
+export const mergedVariableSource = (
+  sources: VariableSource[],
+  excludedNames: Set<string> = new Set()
+): VariableSource => {
+  const types = new Map<string, VariableField['type']>()
+  const enumOptions: Record<string, (string | number)[]> = {}
+
+  for (const source of sources) {
+    for (const field of variableFields(source)) {
+      if (excludedNames.has(field.name) || types.has(field.name)) continue
+
+      types.set(field.name, field.type)
+
+      if (field.type === 'enum') enumOptions[field.name] = field.options
+    }
+  }
+
+  return {
+    payload: Array.from(types)
+      .map(([name, type]) => `$${VARIABLE_TOKENS[type]}$${name}$`)
+      .join('\n'),
+    payloadFormat: 'raw',
+    enumOptions
+  }
+}
+
+export const namedVariableValues = (
+  source: VariableSource,
+  values: Record<string, VariableValue>
+): NamedVariableValues =>
+  Object.fromEntries(variableFields(source).map((field) => [field.name, values[field.key]]))
+
+export const keyedVariableValues = (
+  source: VariableSource,
+  named: Map<string, VariableValue>
+): Record<string, VariableValue> => {
+  const defaults = defaultVariableValues(source)
+
+  return Object.fromEntries(
+    variableFields(source).map((field) => [
+      field.key,
+      named.has(field.name) ? named.get(field.name)! : defaults[field.key]
+    ])
+  )
+}
+
+export const resolveActionVariables = (
+  action: Action,
+  named: Map<string, VariableValue>
+): Pick<Action, 'topic' | 'payload'> => {
+  const topicSource = { payload: action.topic, payloadFormat: 'raw' as const }
+
+  return {
+    topic: applyVariables(topicSource, keyedVariableValues(topicSource, named)),
+    payload: applyVariables(action, keyedVariableValues(action, named))
+  }
+}
+
 export const chainSteps = (chainAction: Pick<ChainAction, 'nodes' | 'edges'>) => {
   const order: string[] = []
   const queue = ['start']

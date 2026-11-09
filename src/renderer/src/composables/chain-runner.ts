@@ -1,12 +1,15 @@
 import {
   chainStepLabel,
   chainSteps,
+  hasGeneratedUuid,
+  mergedVariableSource,
+  resolveActionVariables,
   VariableValue
 } from '@renderer/components/tab-actions/action-utils'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { BusMessage } from './useMqttMessageBus'
-import { ChainAction, ChainActionNode } from '../../../types/actions'
+import { Action, ChainAction, ChainActionNode } from '../../../types/actions'
 import { Edge } from '@vue-flow/core'
 import { IClientPublishOptions } from 'mqtt'
 
@@ -110,11 +113,31 @@ const executeAction: NodeExecutor = async (node, context) => {
     }
   }
 
-  ElectronApi.sendMqttMessage(context.connectionId, action.topic, action.payload, options)
+  const { topic, payload } = resolveActionVariables(action, context.variables)
+
+  ElectronApi.sendMqttMessage(context.connectionId, topic, payload, options)
 }
 
 const doneText = (node: ChainActionNode) =>
   node.type === 'action' ? `${stepLabel(node)} sent` : stepLabel(node)
+
+export const chainActions = (graph: ChainRunGraph): Action[] =>
+  chainSteps(graph).flatMap((node) =>
+    node.type === 'action' && node.data?.action ? [node.data.action] : []
+  )
+
+export const chainVariableSource = (graph: ChainRunGraph) => {
+  const actions = chainActions(graph)
+  const sources = actions.flatMap((action) => [
+    action,
+    { payload: action.topic, payloadFormat: 'raw' as const }
+  ])
+
+  return {
+    source: mergedVariableSource(sources),
+    hasUuid: actions.some((action) => hasGeneratedUuid(action.payload))
+  }
+}
 
 export const nodeExecutors: Partial<Record<string, NodeExecutor>> = {
   action: executeAction,

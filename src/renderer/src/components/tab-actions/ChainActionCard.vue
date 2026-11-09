@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { useChainVariablesPrompt } from '@renderer/composables/useChainVariablesPrompt'
 import { chainSummary, formatChainDuration } from './action-utils'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { ChainAction } from '../../../../types/actions'
@@ -17,6 +18,7 @@ const props = defineProps<{
 const emit = defineEmits(['send', 'edit', 'copy', 'move', 'delete'])
 
 const { running, run } = useRunActionChain()
+const { promptVariables } = useChainVariablesPrompt()
 
 const summary = computed(() => chainSummary(props.chainAction))
 
@@ -71,8 +73,12 @@ const stats = computed(() => {
   ].filter((stat) => stat.show)
 })
 
-const handleRun = () => {
-  run(props.connectionId, props.chainAction)
+const handleRun = async () => {
+  const variables = await promptVariables(props.chainAction.name, props.chainAction)
+
+  if (!variables) return
+
+  run(props.connectionId, props.chainAction, { variables })
   emit('send')
 }
 

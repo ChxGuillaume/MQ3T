@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Connection, ConnectionMode, Edge, GraphNode, useVueFlow, VueFlow } from '@vue-flow/core'
 import { formatRunLogTime, useRunActionChain } from '@renderer/composables/useRunActionChain'
+import { useChainVariablesPrompt } from '@renderer/composables/useChainVariablesPrompt'
 import { Action, ChainAction, ChainActionNode } from '../../../../types/actions'
 import { clone, DEFAULT_GROUP, formatTile, isWildcardTopic } from './action-utils'
 import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
@@ -59,6 +60,8 @@ const {
 const { running, run, stop, log, progress } = useRunActionChain({
   onNodeState: (nodeId, state) => updateNodeData(nodeId, state)
 })
+
+const { promptVariables } = useChainVariablesPrompt()
 
 const chainId = ref(props.chainAction?.id)
 const name = ref(props.chainAction?.name ?? 'New chain')
@@ -281,8 +284,13 @@ const logDotClass = (state: string) => {
   }
 }
 
-const handleRun = () => {
-  run(props.connectionId, serialize())
+const handleRun = async () => {
+  const graph = serialize()
+  const variables = await promptVariables(name.value, graph)
+
+  if (!variables) return
+
+  run(props.connectionId, graph, { variables })
 }
 
 const save = () => {
