@@ -4,6 +4,7 @@ import { ConditionNodeData, ConditionOperator } from '../../../../../types/actio
 import { ConditionPreview, conditionSentence, SampleMessage } from '../chain-step-help'
 import { compactValue } from '@renderer/assets/js/payload-insight'
 import MessageFieldPicker from './MessageFieldPicker.vue'
+import FieldPathInput from './FieldPathInput.vue'
 import { CONDITION_OPERATORS } from '../chain-message'
 import StepSentence from './StepSentence.vue'
 import { computed } from 'vue'
@@ -54,6 +55,16 @@ const handlePickField = (path: string, value: unknown) =>
     value: typeof value === 'string' ? value : JSON.stringify(value)
   })
 
+const MAX_LISTED_VARIABLES = 5
+
+const variableItems = computed(() =>
+  props.variables.map((variable) => ({
+    label: variable.name,
+    value: variable.name,
+    description: variable.description
+  }))
+)
+
 const unknownName = computed(
   () =>
     source.value === 'variable' &&
@@ -77,7 +88,16 @@ const unknownName = computed(
     </UFormField>
 
     <template v-if="source === 'variable'">
-      <div v-if="variables.length" class="flex flex-col gap-1">
+      <UFormField v-if="variables.length > MAX_LISTED_VARIABLES" label="Saved value">
+        <USelect
+          :model-value="data.name || undefined"
+          :items="variableItems"
+          placeholder="Choose a saved value"
+          class="w-full"
+          @update:model-value="emit('update', { name: String($event) })"
+        />
+      </UFormField>
+      <div v-else-if="variables.length" class="flex flex-col gap-1">
         <span class="text-sm font-medium">Saved values in this chain</span>
         <button
           v-for="variable in variables"
@@ -96,17 +116,14 @@ const unknownName = computed(
         variable like <span class="font-mono">$s$status$</span> in an action so it's asked when the
         chain runs.
       </p>
-      <UFormField
-        label="Or type a name"
-        :error="unknownName ? 'No step provides this value' : undefined"
-      >
-        <UInput
-          :model-value="data.name ?? ''"
-          placeholder="status"
-          class="w-full font-mono"
-          @update:model-value="emit('update', { name: String($event).trim() })"
-        />
-      </UFormField>
+      <UAlert
+        v-if="unknownName"
+        color="warning"
+        variant="soft"
+        icon="i-lucide-triangle-alert"
+        :title="`No step saves “${data.name}” anymore`"
+        description="Pick one of the saved values above."
+      />
     </template>
 
     <template v-else>
@@ -118,15 +135,12 @@ const unknownName = computed(
         title="No message to check yet"
         description="Put a Wait for message step before this condition. The condition checks the message it received."
       />
-      <UFormField
-        label="Field"
-        help="A path like $.status. Leave empty to check the whole payload."
-      >
-        <UInput
+      <UFormField label="Field" help="Leave empty to check the whole payload">
+        <FieldPathInput
           :model-value="data.path ?? ''"
-          placeholder="$.status"
-          class="w-full font-mono"
-          @update:model-value="emit('update', { path: String($event) })"
+          :sample="sample?.message"
+          allow-whole
+          @update:model-value="emit('update', { path: $event })"
         />
       </UFormField>
       <div v-if="sample && sampleIsJson" class="flex flex-col gap-1.5">

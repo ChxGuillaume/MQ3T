@@ -2,6 +2,7 @@ import { ChainActionNode, ConditionNodeData, WaitMessageNodeData } from '../../.
 import {
   conditionSubject,
   evaluateCondition,
+  friendlyPath,
   matchesTopicFilter,
   messageMatches,
   readMessagePath,
@@ -47,7 +48,9 @@ export const waitMessageSentence = (data: Partial<WaitMessageNodeData>): Sentenc
   if (match.kind === 'contains')
     parts.push(' whose payload contains ', { code: match.value || '…' })
   if (match.kind === 'path') {
-    const field = match.path ? { code: match.path } : { placeholder: 'a field' }
+    const field = match.path
+      ? { code: friendlyPath(match.path) || 'payload' }
+      : { placeholder: 'a field' }
 
     if (match.value) parts.push(' where ', field, ' is ', { code: match.value })
     else parts.push(' that has ', field)
@@ -59,7 +62,11 @@ export const waitMessageSentence = (data: Partial<WaitMessageNodeData>): Sentenc
     parts.push(
       ', then save ',
       ...joinWithAnd<SentencePart>(
-        captures.map((capture) => [{ code: capture.path }, ' as ', { code: capture.name }])
+        captures.map((capture) => [
+          { code: friendlyPath(capture.path) || 'the payload' },
+          ' as ',
+          { code: capture.name }
+        ])
       )
     )
   }
@@ -73,7 +80,7 @@ export const conditionSentence = (data: Partial<ConditionNodeData>): SentencePar
   const subject: SentencePart[] =
     data.source === 'message'
       ? data.path && data.path !== '$'
-        ? ['the field ', { code: data.path }, ' of the last received message']
+        ? ['the field ', { code: friendlyPath(data.path) }, ' of the last received message']
         : ['the last received message']
       : [data.name ? { code: data.name } : { placeholder: 'a variable' }]
 

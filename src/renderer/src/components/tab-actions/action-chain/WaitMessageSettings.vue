@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import SegmentedControl from '@renderer/components/ui/SegmentedControl.vue'
 import { MessageCapture, MessageMatch, WaitMessageNodeData } from '../../../../../types/actions'
-import { matchesTopicFilter, messageMatches, readMessagePath } from '../chain-message'
+import { matchesTopicFilter, messageMatches } from '../chain-message'
 import { SampleMessage, waitMessageSentence } from '../chain-step-help'
-import { compactValue } from '@renderer/assets/js/payload-insight'
 import MessageFieldPicker from './MessageFieldPicker.vue'
+import FieldPathInput from './FieldPathInput.vue'
 import { useToast } from '@nuxt/ui/composables'
 import StepSentence from './StepSentence.vue'
 import { computed, ref } from 'vue'
@@ -85,7 +85,23 @@ const updateCapture = (index: number, patch: Partial<MessageCapture>) =>
     captures: captures.value.map((capture, i) => (i === index ? { ...capture, ...patch } : capture))
   })
 
-const addCapture = (capture: MessageCapture = { name: '', path: '$.' }) =>
+const lastSegment = (path: string) => {
+  const segments = path.match(/[A-Za-z_$][\w$]*|\d+/g) ?? []
+  const last = [...segments].reverse().find((segment) => !/^\d+$/.test(segment) && segment !== '$')
+
+  return last ?? 'value'
+}
+
+const setCapturePath = (index: number, path: string) => {
+  const capture = captures.value[index]
+
+  updateCapture(
+    index,
+    capture.name || !path ? { path } : { path, name: uniqueName(lastSegment(path)) }
+  )
+}
+
+const addCapture = (capture: MessageCapture = { name: '', path: '' }) =>
   emit('update', { captures: [...captures.value, capture] })
 
 const removeCapture = (index: number) =>
@@ -147,14 +163,6 @@ const sampleMatches = computed(() => {
     messageMatches(match.value, props.sample.message)
   )
 })
-
-const capturePreview = (capture: MessageCapture) => {
-  if (!props.sample || !capture.path) return undefined
-
-  const value = readMessagePath(props.sample.message, capture.path)
-
-  return value === undefined ? 'not found' : compactValue(value, 40)
-}
 
 const sampleTime = computed(() =>
   props.sample
@@ -230,13 +238,12 @@ const sampleTime = computed(() =>
     <UFormField
       v-if="match.kind === 'path'"
       label="Field"
-      help="Pick it from the message below, or type a path like $.status or $.items[0].id"
+      help="Type to pick from the last message, or use the field tree below"
     >
-      <UInput
+      <FieldPathInput
         :model-value="match.path ?? ''"
-        placeholder="$.status"
-        class="w-full font-mono"
-        @update:model-value="updateMatch({ path: String($event) })"
+        :sample="sample?.message"
+        @update:model-value="updateMatch({ path: $event })"
       />
     </UFormField>
 
@@ -277,14 +284,14 @@ const sampleTime = computed(() =>
         :key="index"
         class="border-default flex flex-col gap-1.5 rounded-md border p-2"
       >
-        <div class="flex items-center gap-1.5">
-          <span class="text-muted w-9 shrink-0 text-xs">Field</span>
-          <UInput
+        <div class="flex items-start gap-1.5">
+          <span class="text-muted w-9 shrink-0 self-start pt-1.5 text-xs">Field</span>
+          <FieldPathInput
             :model-value="capture.path"
-            placeholder="$.id"
+            :sample="sample?.message"
+            placeholder="id"
             size="sm"
-            class="min-w-0 flex-1 font-mono"
-            @update:model-value="updateCapture(index, { path: String($event) })"
+            @update:model-value="setCapturePath(index, $event)"
           />
           <UButton
             size="xs"
@@ -317,9 +324,6 @@ const sampleTime = computed(() =>
               <UIcon name="i-lucide-copy" class="size-3" />
             </button>
           </UTooltip>
-          <span v-if="capturePreview(capture)" class="text-muted ml-auto truncate font-mono">
-            = {{ capturePreview(capture) }}
-          </span>
         </div>
       </div>
     </div>

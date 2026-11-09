@@ -124,10 +124,70 @@ export const evaluateCondition = (condition: Partial<ConditionNodeData>, subject
 
 export const describeCondition = (condition: Partial<ConditionNodeData>) => {
   const subject =
-    condition.source === 'message' ? condition.path || '$' : condition.name || 'variable'
+    condition.source === 'message'
+      ? friendlyPath(condition.path) || 'payload'
+      : condition.name || 'variable'
   const operator = CONDITION_OPERATORS.find((item) => item.value === condition.operator)
 
   if (condition.operator === 'exists') return `${subject} exists`
 
   return `${subject} ${operator?.symbol ?? '='} ${condition.value ?? ''}`.trim()
+}
+
+export const friendlyPath = (path?: string) => (path ?? '').trim().replace(/^\$\.?/, '')
+
+export const toCanonicalPath = (text: string) => {
+  const trimmed = text.trim()
+
+  if (!trimmed) return ''
+  if (trimmed.startsWith('$')) return trimmed
+  if (trimmed.startsWith('[')) return `$${trimmed}`
+
+  return `$.${trimmed}`
+}
+
+export type MessagePathOption = {
+  path: string
+  label: string
+  value: unknown
+  isContainer: boolean
+}
+
+const MAX_PATH_DEPTH = 5
+const MAX_PATH_OPTIONS = 300
+
+const keySegment = (key: string) =>
+  /^[A-Za-z_$][\w$]*$/.test(key) ? `.${key}` : `["${key.replace(/"/g, '\\"')}"]`
+
+export const listMessagePaths = (message: string): MessagePathOption[] => {
+  let root: unknown
+
+  try {
+    root = JSON.parse(message)
+  } catch {
+    return []
+  }
+
+  const options: MessagePathOption[] = []
+
+  const walk = (value: unknown, path: string, depth: number) => {
+    if (options.length >= MAX_PATH_OPTIONS || depth > MAX_PATH_DEPTH) return
+    if (value === null || typeof value !== 'object') return
+
+    const entries = Array.isArray(value)
+      ? value.map((item, index) => [`[${index}]`, item] as const)
+      : Object.entries(value).map(([key, item]) => [keySegment(key), item] as const)
+
+    for (const [segment, item] of entries) {
+      const childPath = `${path}${segment}`
+      const isContainer = item !== null && typeof item === 'object'
+
+      options.push({ path: childPath, label: friendlyPath(childPath), value: item, isContainer })
+      walk(item, childPath, depth + 1)
+    }
+  }
+
+  walk(root, '$', 0)
+
+  return options
 }
