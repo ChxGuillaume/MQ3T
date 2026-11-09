@@ -74,7 +74,11 @@ const stats = computed(() => {
 })
 
 const handleRun = async () => {
-  const variables = await promptVariables(props.chainAction.name, props.chainAction)
+  const variables = await promptVariables(
+    props.chainAction.name,
+    props.chainAction,
+    props.connectionId
+  )
 
   if (!variables) return
 

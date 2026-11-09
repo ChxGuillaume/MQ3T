@@ -9,6 +9,7 @@ import {
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { BusMessage } from './useMqttMessageBus'
+import { resolveNodeAction } from '@renderer/components/tab-actions/chain-node-action'
 import { Action, ChainAction, ChainActionNode } from '../../../types/actions'
 import { Edge } from '@vue-flow/core'
 import { IClientPublishOptions } from 'mqtt'
@@ -95,8 +96,9 @@ const executeWait: NodeExecutor = async (node, context) => {
 const executeAction: NodeExecutor = async (node, context) => {
   if (node.type !== 'action') return
 
-  const action = node.data?.action
+  const { action, missing } = resolveNodeAction(node, context.connectionId)
 
+  if (missing) throw new ChainStepError('The linked action no longer exists')
   if (!action) throw new ChainStepError('Step has no message')
 
   const options: IClientPublishOptions = { retain: action.retained, qos: action.qos }
@@ -121,13 +123,15 @@ const executeAction: NodeExecutor = async (node, context) => {
 const doneText = (node: ChainActionNode) =>
   node.type === 'action' ? `${stepLabel(node)} sent` : stepLabel(node)
 
-export const chainActions = (graph: ChainRunGraph): Action[] =>
-  chainSteps(graph).flatMap((node) =>
-    node.type === 'action' && node.data?.action ? [node.data.action] : []
-  )
+export const chainActions = (graph: ChainRunGraph, connectionId: string): Action[] =>
+  chainSteps(graph).flatMap((node) => {
+    const { action, missing } = resolveNodeAction(node, connectionId)
 
-export const chainVariableSource = (graph: ChainRunGraph) => {
-  const actions = chainActions(graph)
+    return action && !missing ? [action] : []
+  })
+
+export const chainVariableSource = (graph: ChainRunGraph, connectionId: string) => {
+  const actions = chainActions(graph, connectionId)
   const sources = actions.flatMap((action) => [
     action,
     { payload: action.topic, payloadFormat: 'raw' as const }

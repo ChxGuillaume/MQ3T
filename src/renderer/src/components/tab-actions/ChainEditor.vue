@@ -18,6 +18,7 @@ import { useActionsStore } from '@renderer/store/actions'
 import ConfirmDialog from './dialogs/ConfirmDialog.vue'
 import ActionDialog from './dialogs/ActionDialog.vue'
 import PayloadPreview from './PayloadPreview.vue'
+import { resolveNodeAction } from './chain-node-action'
 import { Background } from '@vue-flow/background'
 import { v4 as uuidV4 } from 'uuid'
 
@@ -153,16 +154,17 @@ const addStep = (
 
 const addActionStep = async (action: Action, position?: { x: number; y: number }) => {
   const copy = clone(action)
+  let topicOverride: string | undefined
 
   if (isWildcardTopic(copy.topic)) {
-    const topic = await topicModal.open({ action: copy, connectionId: props.connectionId }).result
+    topicOverride = await topicModal.open({ action: copy, connectionId: props.connectionId }).result
 
-    if (!topic) return
+    if (!topicOverride) return
 
-    copy.topic = topic
+    copy.topic = topicOverride
   }
 
-  addStep('action', { action: copy }, position)
+  addStep('action', { action: copy, actionId: action.id, topicOverride }, position)
 }
 
 const addWaitStep = (position?: { x: number; y: number }) =>
@@ -212,19 +214,74 @@ const duplicateNode = (id: string) => {
   } as ChainActionNode)
 }
 
-const actionDialog = ref({ opened: false, nodeId: '', action: undefined as Action | undefined })
+const resolvedActions = computed(
+  () =>
+    new Map(
+      nodes.value.map((node) => [
+        node.id,
+        resolveNodeAction(node as ChainActionNode, props.connectionId)
+      ])
+    )
+)
+
+const nodeAction = (id: string) =>
+  resolvedActions.value.get(id) ?? { action: undefined, linked: false, missing: false }
+
+const actionDialog = ref({
+  opened: false,
+  nodeId: '',
+  linked: false,
+  action: undefined as Action | undefined
+})
 
 const editActionNode = (id: string) => {
+  const { action, linked, missing } = nodeAction(id)
   const node = findNode(id)
+  const editsSavedAction = linked && !missing
 
-  actionDialog.value = { opened: true, nodeId: id, action: node?.data?.action }
+  actionDialog.value = {
+    opened: true,
+    nodeId: id,
+    linked: editsSavedAction,
+    action: editsSavedAction
+      ? actionsStore
+          .getConnectionActions(props.connectionId)
+          .find((saved) => saved.id === node?.data?.actionId)
+      : action
+  }
 }
 
 const handleActionDialogSave = (action: Action) => {
+  if (actionDialog.value.linked) {
+    actionsStore.updateAction(props.connectionId, action.groupId, action)
+    refreshLinkedSnapshots()
+    return
+  }
+
   updateNodeData(actionDialog.value.nodeId, { action })
 }
 
+const unlinkActionNode = (id: string) => {
+  const { action } = nodeAction(id)
+
+  updateNodeData(id, { action: clone(action), actionId: undefined, topicOverride: undefined })
+}
+
+const refreshLinkedSnapshots = () => {
+  for (const node of nodes.value) {
+    const { action, linked, missing } = nodeAction(node.id)
+
+    if (linked && !missing && JSON.stringify(action) !== JSON.stringify(node.data?.action)) {
+      updateNodeData(node.id, { action: clone(action) })
+    }
+  }
+}
+
 const selectedNode = computed(() => getSelectedNodes.value[0])
+
+const selectedAction = computed(() =>
+  selectedNode.value ? nodeAction(selectedNode.value.id) : undefined
+)
 
 const waitDuration = computed({
   get: () => Number(selectedNode.value?.data?.duration ?? 0),
@@ -286,7 +343,7 @@ const logDotClass = (state: string) => {
 
 const handleRun = async () => {
   const graph = serialize()
-  const variables = await promptVariables(name.value, graph)
+  const variables = await promptVariables(name.value, graph, props.connectionId)
 
   if (!variables) return
 
@@ -294,6 +351,8 @@ const handleRun = async () => {
 }
 
 const save = () => {
+  refreshLinkedSnapshots()
+
   const data = serialize()
 
   if (!data.name.trim()) {
@@ -352,6 +411,7 @@ onMounted(async () => {
   }
 
   await nextTick()
+  refreshLinkedSnapshots()
   savedSnapshot.value = props.chainAction ? JSON.stringify(serialize()) : ''
   fitView()
 })
@@ -536,6 +596,9 @@ onMounted(async () => {
             <ActionNode
               :id="nodeProps.id"
               :data="nodeProps.data"
+              :action="nodeAction(nodeProps.id).action"
+              :linked="nodeAction(nodeProps.id).linked"
+              :missing="nodeAction(nodeProps.id).missing"
               :selected="nodeProps.selected"
               :dimmed="running"
               @edit="editActionNode(nodeProps.id)"
@@ -634,25 +697,45 @@ onMounted(async () => {
         </template>
 
         <template v-else-if="selectedNode?.type === 'action'">
-          <template v-if="selectedNode.data?.action">
-            <h2 class="text-base font-bold">{{ selectedNode.data.action.name || 'Action' }}</h2>
+          <template v-if="selectedAction?.action">
+            <h2 class="text-base font-bold">{{ selectedAction.action.name || 'Action' }}</h2>
             <div class="text-primary font-mono text-xs break-all">
-              {{ selectedNode.data.action.topic }}
+              {{ selectedAction.action.topic }}
             </div>
             <div class="flex flex-wrap gap-1.5">
-              <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
-                QoS {{ selectedNode.data.action.qos }}
+              <span
+                v-if="selectedAction.missing"
+                class="bg-error/10 text-error flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
+              >
+                <UIcon name="i-lucide-unlink" class="size-3" />
+                Linked action deleted
               </span>
               <span
-                v-if="selectedNode.data.action.retained"
+                v-else-if="selectedAction.linked"
+                class="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
+              >
+                <UIcon name="i-lucide-link" class="size-3" />
+                Linked to saved action
+              </span>
+              <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
+                QoS {{ selectedAction.action.qos }}
+              </span>
+              <span
+                v-if="selectedAction.action.retained"
                 class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs"
               >
                 Retain
               </span>
             </div>
+            <p v-if="selectedAction.linked && !selectedAction.missing" class="text-muted text-xs">
+              Edits change the saved action and every chain that uses it.
+            </p>
+            <p v-else-if="selectedAction.missing" class="text-muted text-xs">
+              The saved action was deleted. Unlink to keep this step as a copy.
+            </p>
             <PayloadPreview
-              :payload="selectedNode.data.action.payload"
-              :format="selectedNode.data.action.payloadFormat"
+              :payload="selectedAction.action.payload"
+              :format="selectedAction.action.payloadFormat"
               dense
               class="max-h-48"
             />
@@ -660,15 +743,26 @@ onMounted(async () => {
           <p v-else class="text-muted text-sm">This step has no message yet.</p>
           <div class="flex flex-wrap gap-2">
             <UButton
+              v-if="!selectedAction?.missing"
               size="sm"
               color="neutral"
               variant="outline"
               icon="i-lucide-pencil"
-              :label="selectedNode.data?.action ? 'Edit' : 'Set up'"
+              :label="selectedAction?.action ? 'Edit' : 'Set up'"
               @click="editActionNode(selectedNode.id)"
             />
             <UButton
-              v-if="selectedNode.data?.action"
+              v-if="selectedAction?.linked"
+              size="sm"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-unlink"
+              label="Unlink"
+              title="Keep this step as an independent copy"
+              @click="unlinkActionNode(selectedNode.id)"
+            />
+            <UButton
+              v-if="selectedAction?.action"
               size="sm"
               color="neutral"
               variant="outline"
@@ -724,7 +818,7 @@ onMounted(async () => {
       :edit-mode="!!actionDialog.action"
       :action="actionDialog.action"
       :connection-id="connectionId"
-      no-wildcard
+      :no-wildcard="!actionDialog.linked"
       variable-completion
       @create:action="handleActionDialogSave"
       @update:action="handleActionDialogSave"
