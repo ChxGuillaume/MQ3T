@@ -58,8 +58,8 @@ app.whenReady().then(() => {
   mainWindow = createWindow()
 
   mainWindow?.on('close', () => {
-    for (const client of mqttClients.values()) {
-      client.disconnect()
+    for (const clientKey of [...mqttClients.keys()]) {
+      disconnectClient(clientKey)
     }
   })
 
@@ -170,6 +170,15 @@ const createConnection = async (connection: MqttConnection) => {
   })
 }
 
+const disconnectClient = async (clientKey: string) => {
+  const client = mqttClients.get(clientKey)
+
+  mqttClients.delete(clientKey)
+  mqttClientsState.set(clientKey, 'disconnected')
+
+  await client?.disconnect()
+}
+
 const readJsonFile = (filePath: string) => {
   if (fs.existsSync(filePath)) {
     try {
@@ -258,10 +267,8 @@ const initIpcMain = () => {
   })
 
   ipcMain.on('disconnect-mqtt', async (event, clientKey: string) => {
-    await mqttClients.get(clientKey)?.disconnect()
-    mqttClients.delete(clientKey)
+    await disconnectClient(clientKey)
 
-    mqttClientsState.set(clientKey, 'disconnected')
     event.reply('mqtt-status', { clientKey, status: 'disconnected' })
   })
 
