@@ -28,10 +28,12 @@ export const useChainActionsStore = defineStore('chain-actions', {
       return useActionsStore().resolveGroupStorageKey(connectionId, groupId)
     },
     getConnectionChainActions(connectionId: string): Record<string, ChainAction[]> {
-      const sharedGroups = useActionsStore().getSharedGroupsForConnection(connectionId)
+      const actionsStore = useActionsStore()
+      const sourceId = actionsStore.resolveActionsConnection(connectionId)
+      const sharedGroups = actionsStore.getSharedGroupsForConnection(sourceId)
 
       return {
-        ...(this.chainActions[connectionId] || {}),
+        ...(this.chainActions[sourceId] || {}),
         ...Object.fromEntries(
           sharedGroups.map((group) => [group.id, this.getGroupChainActions(connectionId, group.id)])
         )

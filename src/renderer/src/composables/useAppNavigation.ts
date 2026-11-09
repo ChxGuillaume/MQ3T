@@ -13,7 +13,9 @@ export function useAppNavigation() {
   const selectedClientKey = computed(() => mqttTopicsStore.selectedConnection)
 
   const isSectionAvailable = (clientKey: string, section: ConnectionSection) =>
-    section !== 'actions' || !mqttConnectionsStore.isTemporary(clientKey)
+    section !== 'actions' ||
+    !mqttConnectionsStore.isTemporary(clientKey) ||
+    !!mqttConnectionsStore.getConnection(clientKey)?.actionsFrom
 
   const currentSection = computed<ConnectionSection>({
     get: () => {

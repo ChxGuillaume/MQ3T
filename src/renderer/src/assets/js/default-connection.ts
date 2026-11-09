@@ -1,7 +1,8 @@
 import { MqttConnection } from '../../../../types/mqtt-connection'
 import { v4 as uuidV4 } from 'uuid'
 
-export type ConnectionForm = Required<MqttConnection>
+export type ConnectionForm = Required<Omit<MqttConnection, 'actionsFrom'>> &
+  Pick<MqttConnection, 'actionsFrom'>
 
 export const DEFAULT_PORTS: Record<ConnectionForm['protocol'], number> = {
   mqtt: 1883,

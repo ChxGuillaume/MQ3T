@@ -54,8 +54,13 @@ export const useActionsStore = defineStore('actions', {
 
       return owner ? this.actionsGroups[owner].find((g) => g.id === groupId) : undefined
     },
+    resolveActionsConnection(connectionId: string): string {
+      const connection = useMqttConnectionsStore().getConnection(connectionId)
+
+      return (connection?.temporary && connection.actionsFrom) || connectionId
+    },
     resolveGroupStorageKey(connectionId: string, groupId: string): string {
-      return this.getGroupOwner(groupId) ?? connectionId
+      return this.getGroupOwner(groupId) ?? this.resolveActionsConnection(connectionId)
     },
     getGroupConnectionIds(groupId: string): string[] {
       const owner = this.getGroupOwner(groupId)
@@ -68,9 +73,11 @@ export const useActionsStore = defineStore('actions', {
       return !!this.findGroup(groupId)?.sharedWith?.length
     },
     getConnectionGroups(connectionId: string): ActionGroup[] {
+      const sourceId = this.resolveActionsConnection(connectionId)
+
       return [
-        ...(this.actionsGroups[connectionId] || []),
-        ...this.getSharedGroupsForConnection(connectionId)
+        ...(this.actionsGroups[sourceId] || []),
+        ...this.getSharedGroupsForConnection(sourceId)
       ]
     },
     getConnectionGroup(connectionId: string, groupId: string): ActionGroup | undefined {
@@ -80,9 +87,10 @@ export const useActionsStore = defineStore('actions', {
       return this.actions[this.resolveGroupStorageKey(connectionId, groupId)]?.[groupId] || []
     },
     getConnectionActions(connectionId: string): Action[] {
-      const ownActions = Object.values(this.actions[connectionId] || {}).flat()
-      const sharedActions = this.getSharedGroupsForConnection(connectionId).flatMap((group) =>
-        this.getConnectionGroupActions(connectionId, group.id)
+      const sourceId = this.resolveActionsConnection(connectionId)
+      const ownActions = Object.values(this.actions[sourceId] || {}).flat()
+      const sharedActions = this.getSharedGroupsForConnection(sourceId).flatMap((group) =>
+        this.getConnectionGroupActions(sourceId, group.id)
       )
 
       return [...ownActions, ...sharedActions]
@@ -91,9 +99,20 @@ export const useActionsStore = defineStore('actions', {
       return this.getConnectionActions(connectionId).some((action) => action.topic === topic)
     },
     getTopicConnectionIds(connectionId: string, groupId: string): string[] {
-      const connectionIds = this.getGroupConnectionIds(groupId)
+      const groupConnectionIds = this.getGroupConnectionIds(groupId)
+      const connectionIds = groupConnectionIds.length
+        ? groupConnectionIds
+        : [this.resolveActionsConnection(connectionId)]
+      const borrowingConnectionIds = useMqttConnectionsStore()
+        .temporaryConnections.filter((c) => c.actionsFrom && connectionIds.includes(c.actionsFrom))
+        .map((c) => c.clientKey)
 
-      return connectionIds.length ? connectionIds : [connectionId]
+      return [...connectionIds, ...borrowingConnectionIds]
+    },
+    cacheConnectionTopics(connectionId: string) {
+      for (const action of this.getConnectionActions(connectionId)) {
+        this.addTopicToConnections([connectionId], action.topic)
+      }
     },
     addTopicToConnections(connectionIds: string[], topic: string) {
       const actionsCacheStore = useActionsCacheStore()

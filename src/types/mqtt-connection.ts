@@ -45,6 +45,7 @@ export type MqttConnection = {
   labelColor?: string | null
 
   temporary?: boolean
+  actionsFrom?: string
 }
 
 export type MqttConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'disconnected'
