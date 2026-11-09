@@ -56,7 +56,9 @@ const {
   findNode
 } = useVueFlow()
 
-const { running, run, stop, log, progress } = useRunActionChain()
+const { running, run, stop, log, progress } = useRunActionChain({
+  onNodeState: (nodeId, state) => updateNodeData(nodeId, state)
+})
 
 const chainId = ref(props.chainAction?.id)
 const name = ref(props.chainAction?.name ?? 'New chain')
@@ -88,6 +90,7 @@ const serialize = () => ({
     const {
       isRunning: _r,
       isFinished: _f,
+      isFailed: _x,
       waitStartedAt: _s,
       waitEndsAt: _e,
       ...data
@@ -202,7 +205,7 @@ const duplicateNode = (id: string) => {
     id: uuidV4(),
     type: node.type,
     position: { x: node.position.x + 40, y: node.position.y + 70 },
-    data: clone({ ...node.data, isRunning: false, isFinished: false })
+    data: clone({ ...node.data, isRunning: false, isFinished: false, isFailed: false })
   } as ChainActionNode)
 }
 
@@ -258,6 +261,7 @@ watch([nodeStatusKey, running], () => {
 const statusLabel = computed(() => {
   if (running.value) return `Running · step ${progress.value.current} of ${progress.value.total}`
   if (log.value.some((entry) => entry.state === 'stopped')) return 'Stopped'
+  if (log.value.some((entry) => entry.state === 'failed')) return 'Failed'
   if (log.value.length) return 'Finished'
   return ''
 })
@@ -270,13 +274,15 @@ const logDotClass = (state: string) => {
       return 'bg-primary'
     case 'stopped':
       return 'bg-warning'
+    case 'failed':
+      return 'bg-error'
     default:
       return 'border-2 border-muted'
   }
 }
 
 const handleRun = () => {
-  run(props.connectionId, nodes.value, edges.value)
+  run(props.connectionId, serialize())
 }
 
 const save = () => {
@@ -692,7 +698,12 @@ onMounted(async () => {
               class="border-default flex items-center gap-2.5 border-b px-1 py-2"
             >
               <span class="size-2.5 shrink-0 rounded-full" :class="logDotClass(entry.state)" />
-              <span class="min-w-0 flex-1 truncate">{{ entry.text }}</span>
+              <span class="min-w-0 flex-1 truncate" :title="entry.reason">
+                {{ entry.text }}
+                <span v-if="entry.reason" class="text-error block truncate text-xs">
+                  {{ entry.reason }}
+                </span>
+              </span>
               <span class="text-muted text-xs">{{ formatRunLogTime(entry) }}</span>
             </li>
           </ol>

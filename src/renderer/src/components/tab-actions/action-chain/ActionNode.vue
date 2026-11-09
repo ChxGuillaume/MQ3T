@@ -8,7 +8,7 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   id: string
-  data: { action?: Action; isRunning?: boolean; isFinished?: boolean }
+  data: { action?: Action; isRunning?: boolean; isFinished?: boolean; isFailed?: boolean }
   selected?: boolean
   dimmed?: boolean
 }>()
@@ -42,8 +42,12 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
     <div
       class="bg-default flex h-[60px] w-[220px] items-center gap-2.5 rounded-lg border px-3 transition-[opacity,box-shadow]"
       :class="[
-        selected || data?.isRunning ? 'border-primary ring-primary ring-1' : 'border-default',
-        { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished }
+        data?.isFailed
+          ? 'border-error ring-error ring-1'
+          : selected || data?.isRunning
+            ? 'border-primary ring-primary ring-1'
+            : 'border-default',
+        { 'opacity-75': dimmed && !data?.isRunning && !data?.isFinished && !data?.isFailed }
       ]"
     >
       <span
@@ -75,6 +79,12 @@ const menuItems = computed<ContextMenuItem[][]>(() => [
         name="i-lucide-check"
         class="text-success size-[18px] shrink-0"
         aria-label="Sent"
+      />
+      <UIcon
+        v-else-if="data?.isFailed"
+        name="i-lucide-circle-x"
+        class="text-error size-[18px] shrink-0"
+        aria-label="Failed"
       />
     </div>
   </UContextMenu>

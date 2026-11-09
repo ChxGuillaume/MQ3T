@@ -72,7 +72,7 @@ const stats = computed(() => {
 })
 
 const handleRun = () => {
-  run(props.connectionId, props.chainAction.nodes, props.chainAction.edges)
+  run(props.connectionId, props.chainAction)
   emit('send')
 }
 
