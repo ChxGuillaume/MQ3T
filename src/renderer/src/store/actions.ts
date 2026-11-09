@@ -1,6 +1,7 @@
 import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
+import { useChainActionsStore } from './chain-actions'
 import { useMqttConnectionsStore } from './mqtt-connections'
 import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
@@ -13,6 +14,12 @@ import {
   Action
 } from '../../../types/actions'
 
+const withoutSharing = (group: ActionGroup): ActionGroup => {
+  const { sharedWith: _, ...rest } = group
+
+  return rest
+}
+
 export const useActionsStore = defineStore('actions', {
   state: () => ({
     actions: {} as ConnectionsActions,
@@ -24,71 +31,97 @@ export const useActionsStore = defineStore('actions', {
     selectedActionGroup: 'default'
   }),
   getters: {
-    selectedConnectionGroupActionsRecord: (state): Record<string, Action[]> => {
-      return state.actions[state.selectedConnection] || {}
-    },
-    selectedConnectionGroupActions: (state): Action[] => {
-      return state.actions[state.selectedConnection]?.[state.selectedActionGroup] || []
-    },
-    selectedConnectionGroups: (state): ActionGroup[] => {
-      return state.actionsGroups[state.selectedConnection] || []
-    },
-    getSelectedConnectionGroupActions:
+    getGroupOwner:
       (state) =>
-      (groupId: string): Action[] => {
-        return state.actions[state.selectedConnection]?.[groupId] || []
-      },
-    getConnectionActions:
-      (state) =>
-      (connectionId: string): Action[] => {
-        const records = state.actions[connectionId]
+      (groupId: string): string | undefined => {
+        if (groupId === 'default') return undefined
 
-        if (!records) return []
-
-        return Object.values(records).flat()
+        return Object.keys(state.actionsGroups).find((connectionId) =>
+          state.actionsGroups[connectionId].some((g) => g.id === groupId)
+        )
       },
-    getConnectionGroups:
+    getSharedGroupsForConnection:
       (state) =>
       (connectionId: string): ActionGroup[] => {
-        return state.actionsGroups[connectionId] || []
-      },
-    getConnectionGroup:
-      (state) =>
-      (connectionId: string, groupId: string): ActionGroup | undefined => {
-        return state.actionsGroups[connectionId]?.find((g) => g.id === groupId)
-      },
-    getConnectionGroupActions:
-      (state) =>
-      (connectionId: string, groupId: string): Action[] => {
-        return state.actions[connectionId]?.[groupId] || []
-      },
-    getConnectionGroupActionsRecord:
-      (state) =>
-      (connectionId: string, groupId: string): Record<string, Action[]> => {
-        const record = state.actions[connectionId]
-
-        return { [groupId]: record[groupId] }
-      },
-    getAction:
-      (state) =>
-      (actionId: string): Action | undefined => {
-        for (const group of Object.values(state.actions[state.selectedConnection])) {
-          const action = group.find((a) => a.id === actionId)
-
-          if (action) return action
-        }
-
-        return undefined
-      },
-    hasActionWithTopic:
-      (state) =>
-      (connectionId: string, topic: string): boolean => {
-        return Object.values(state.actions[connectionId] || {}).some((group) =>
-          group.some((action) => action.topic === topic)
-        )
+        return Object.entries(state.actionsGroups)
+          .filter(([ownerId]) => ownerId !== connectionId)
+          .flatMap(([, groups]) => groups.filter((g) => g.sharedWith?.includes(connectionId)))
       }
   },
   actions: {
+    findGroup(groupId: string): ActionGroup | undefined {
+      const owner = this.getGroupOwner(groupId)
+
+      return owner ? this.actionsGroups[owner].find((g) => g.id === groupId) : undefined
+    },
+    resolveGroupStorageKey(connectionId: string, groupId: string): string {
+      return this.getGroupOwner(groupId) ?? connectionId
+    },
+    getGroupConnectionIds(groupId: string): string[] {
+      const owner = this.getGroupOwner(groupId)
+
+      if (!owner) return []
+
+      return [owner, ...(this.findGroup(groupId)?.sharedWith ?? [])]
+    },
+    isSharedGroup(groupId: string): boolean {
+      return !!this.findGroup(groupId)?.sharedWith?.length
+    },
+    getConnectionGroups(connectionId: string): ActionGroup[] {
+      return [
+        ...(this.actionsGroups[connectionId] || []),
+        ...this.getSharedGroupsForConnection(connectionId)
+      ]
+    },
+    getConnectionGroup(connectionId: string, groupId: string): ActionGroup | undefined {
+      return this.getConnectionGroups(connectionId).find((g) => g.id === groupId)
+    },
+    getConnectionGroupActions(connectionId: string, groupId: string): Action[] {
+      return this.actions[this.resolveGroupStorageKey(connectionId, groupId)]?.[groupId] || []
+    },
+    getConnectionActions(connectionId: string): Action[] {
+      const ownActions = Object.values(this.actions[connectionId] || {}).flat()
+      const sharedActions = this.getSharedGroupsForConnection(connectionId).flatMap((group) =>
+        this.getConnectionGroupActions(connectionId, group.id)
+      )
+
+      return [...ownActions, ...sharedActions]
+    },
+    hasActionWithTopic(connectionId: string, topic: string): boolean {
+      return this.getConnectionActions(connectionId).some((action) => action.topic === topic)
+    },
+    getTopicConnectionIds(connectionId: string, groupId: string): string[] {
+      const connectionIds = this.getGroupConnectionIds(groupId)
+
+      return connectionIds.length ? connectionIds : [connectionId]
+    },
+    addTopicToConnections(connectionIds: string[], topic: string) {
+      const actionsCacheStore = useActionsCacheStore()
+
+      for (const connectionId of connectionIds) actionsCacheStore.addTopic(connectionId, topic)
+    },
+    pruneTopicsFromConnections(connectionIds: string[], topics: string[]) {
+      const actionsCacheStore = useActionsCacheStore()
+
+      for (const connectionId of connectionIds) {
+        for (const topic of new Set(topics)) {
+          if (!this.hasActionWithTopic(connectionId, topic)) {
+            actionsCacheStore.removeTopic(connectionId, topic)
+          }
+        }
+      }
+    },
+    cacheSharedGroupsTopics() {
+      for (const groups of Object.values(this.actionsGroups)) {
+        for (const group of groups) {
+          if (!group.sharedWith?.length) continue
+
+          for (const action of this.getConnectionGroupActions('', group.id)) {
+            this.addTopicToConnections(group.sharedWith, action.topic)
+          }
+        }
+      }
+    },
     setActions(actions: ConnectionsActionsFile) {
       const actionsCacheStore = useActionsCacheStore()
 
@@ -106,26 +139,35 @@ export const useActionsStore = defineStore('actions', {
             }
           }
         }
+
+        this.cacheSharedGroupsTopics()
       }
     },
     setActionsGroups(actionsGroups: ConnectionsActionsGroups) {
       this.actionsGroups = actionsGroups
-    },
-    setConnectionActions(connectionId: string, groupId: string, actions: Action[]) {
-      this.actions[connectionId][groupId] = actions
-    },
-    setConnectionActionsGroups(connectionId: string, actionsGroups: ActionGroup[]) {
-      this.actionsGroups[connectionId] = actionsGroups
+
+      this.cacheSharedGroupsTopics()
     },
     setSelectedConnectionGroups(actionsGroups: ActionGroup[]) {
-      this.actionsGroups[this.selectedConnection] = actionsGroups
+      const ownGroupIds = new Set(
+        (this.actionsGroups[this.selectedConnection] || []).map((g) => g.id)
+      )
+
+      this.actionsGroups[this.selectedConnection] = actionsGroups.filter((g) =>
+        ownGroupIds.has(g.id)
+      )
 
       this.saveActionsGroups()
     },
     setSelectedConnectionGroupActions(actions: Action[]) {
-      if (!this.actions[this.selectedConnection]) this.actions[this.selectedConnection] = {}
+      const storageKey = this.resolveGroupStorageKey(
+        this.selectedConnection,
+        this.selectedActionGroup
+      )
 
-      this.actions[this.selectedConnection][this.selectedActionGroup] = actions
+      if (!this.actions[storageKey]) this.actions[storageKey] = {}
+
+      this.actions[storageKey][this.selectedActionGroup] = actions
 
       this.saveActions()
     },
@@ -135,25 +177,22 @@ export const useActionsStore = defineStore('actions', {
     setSelectedActionGroup(groupId: string) {
       this.selectedActionGroup = groupId
     },
-    addAction(action: Action) {
-      this.addActionToConnectionGroup(action, this.selectedConnection, this.selectedActionGroup)
-    },
     addActionToConnectionGroup(action: Action, connectionId: string, groupId: string) {
-      const actionsCacheStore = useActionsCacheStore()
+      const storageKey = this.resolveGroupStorageKey(connectionId, groupId)
 
-      if (!this.actions[connectionId]) this.actions[connectionId] = {}
-      if (!this.actions[connectionId][groupId]) this.actions[connectionId][groupId] = []
+      if (!this.actions[storageKey]) this.actions[storageKey] = {}
+      if (!this.actions[storageKey][groupId]) this.actions[storageKey][groupId] = []
 
       const copy = JSON.parse(JSON.stringify(action))
 
       copy.id = `action-${uuidV4()}`
       copy.groupId = groupId
 
-      this.actions[connectionId][groupId].push(copy)
+      this.actions[storageKey][groupId].push(copy)
 
       this.saveActions()
 
-      actionsCacheStore.addTopic(connectionId, action.topic)
+      this.addTopicToConnections(this.getTopicConnectionIds(connectionId, groupId), action.topic)
     },
     addActionGroup(group: ActionGroup) {
       if (!this.actionsGroups[this.selectedConnection])
@@ -166,7 +205,7 @@ export const useActionsStore = defineStore('actions', {
     addActionGroupToConnection(group: ActionGroup, connectionId: string): ActionGroup {
       if (!this.actionsGroups[connectionId]) this.actionsGroups[connectionId] = []
 
-      const copy = JSON.parse(JSON.stringify(group))
+      const copy = withoutSharing(JSON.parse(JSON.stringify(group)))
 
       copy.id = `group-${uuidV4()}`
 
@@ -179,7 +218,8 @@ export const useActionsStore = defineStore('actions', {
     updateAction(clientKey: string, actionGroupId: string, action: Action) {
       const actionsCacheStore = useActionsCacheStore()
 
-      const actions = this.actions[clientKey][actionGroupId]
+      const actions =
+        this.actions[this.resolveGroupStorageKey(clientKey, actionGroupId)][actionGroupId]
       const index = actions.findIndex((a) => a.id === action.id)
 
       const { 0: removedAction } = actions.splice(index, 1, action)
@@ -187,70 +227,142 @@ export const useActionsStore = defineStore('actions', {
       this.saveActions()
 
       if (removedAction.topic !== action.topic) {
-        if (!this.hasActionWithTopic(clientKey, removedAction.topic)) {
-          actionsCacheStore.removeNormalTopic(clientKey, removedAction.topic)
-        }
+        for (const connectionId of this.getTopicConnectionIds(clientKey, actionGroupId)) {
+          if (!this.hasActionWithTopic(connectionId, removedAction.topic)) {
+            actionsCacheStore.removeNormalTopic(connectionId, removedAction.topic)
+          }
 
-        actionsCacheStore.addTopic(clientKey, action.topic)
+          actionsCacheStore.addTopic(connectionId, action.topic)
+        }
       }
     },
-    updateSelectedActionGroupAction(action: Action) {
-      this.updateAction(this.selectedConnection, this.selectedActionGroup, action)
-    },
     updateActionGroup(group: ActionGroup) {
-      const index = this.actionsGroups[this.selectedConnection].findIndex((g) => g.id === group.id)
+      const owner = this.resolveGroupStorageKey(this.selectedConnection, group.id)
+      const groups = this.actionsGroups[owner]
+      const index = groups.findIndex((g) => g.id === group.id)
 
-      this.actionsGroups[this.selectedConnection].splice(index, 1, group)
+      groups.splice(index, 1, { ...group, sharedWith: groups[index].sharedWith })
 
       this.saveActionsGroups()
     },
-    deleteAction(actionId: string) {
-      this.deleteActionFromConnectionGroup(
-        actionId,
-        this.selectedConnection,
-        this.selectedActionGroup
-      )
-    },
     deleteActionFromConnectionGroup(actionId: string, connectionId: string, groupId: string) {
-      const actionsCacheStore = useActionsCacheStore()
-
-      const actions = this.actions[connectionId][groupId]
+      const actions = this.actions[this.resolveGroupStorageKey(connectionId, groupId)][groupId]
       const index = actions.findIndex((a) => a.id === actionId)
 
       const { 0: removedAction } = actions.splice(index, 1)
 
       this.saveActions()
 
-      if (!this.hasActionWithTopic(connectionId, removedAction.topic)) {
-        actionsCacheStore.removeTopic(connectionId, removedAction.topic)
-      }
+      this.pruneTopicsFromConnections(this.getTopicConnectionIds(connectionId, groupId), [
+        removedAction.topic
+      ])
     },
     deleteActionGroup(groupId: string, moveActionsToDefault = true) {
       const connectionId = this.selectedConnection
-      const actions = this.actions[connectionId][groupId]
 
-      if (actions) {
-        // Duplicating the actions array to avoid mutation while deleting
-        for (const action of JSON.parse(JSON.stringify(actions))) {
-          if (moveActionsToDefault) this.addActionToConnectionGroup(action, connectionId, 'default')
-          else this.deleteActionFromConnectionGroup(action.id, connectionId, groupId)
+      if (moveActionsToDefault) {
+        for (const action of this.getConnectionGroupActions(connectionId, groupId)) {
+          this.addActionToConnectionGroup(action, connectionId, 'default')
         }
       }
-
-      delete this.actions[connectionId][groupId]
 
       this.deleteActionGroupFromConnection(connectionId, groupId)
 
       if (this.selectedActionGroup === groupId) this.selectedActionGroup = 'default'
     },
     deleteActionGroupFromConnection(connectionId: string, groupId: string) {
-      const groupIndex = this.actionsGroups[connectionId].findIndex((g) => g.id === groupId)
+      const owner = this.resolveGroupStorageKey(connectionId, groupId)
+      const connectionIds = this.getTopicConnectionIds(connectionId, groupId)
+      const topics = this.getConnectionGroupActions(connectionId, groupId).map((a) => a.topic)
+      const groupIndex = this.actionsGroups[owner].findIndex((g) => g.id === groupId)
 
-      delete this.actions[connectionId][groupId]
-      this.actionsGroups[connectionId].splice(groupIndex, 1)
+      if (this.actions[owner]) delete this.actions[owner][groupId]
+      this.actionsGroups[owner].splice(groupIndex, 1)
 
       this.saveActions()
       this.saveActionsGroups()
+
+      this.pruneTopicsFromConnections(connectionIds, topics)
+    },
+    setGroupSharedWith(groupId: string, connectionIds: string[]) {
+      const owner = this.getGroupOwner(groupId)
+      const group = this.findGroup(groupId)
+
+      if (!owner || !group) return
+
+      const previous = group.sharedWith ?? []
+      const next = [...new Set(connectionIds)].filter((id) => id !== owner)
+      const topics = this.getConnectionGroupActions(owner, groupId).map((a) => a.topic)
+
+      if (next.length) group.sharedWith = next
+      else delete group.sharedWith
+
+      this.saveActionsGroups()
+
+      for (const topic of topics) {
+        this.addTopicToConnections(
+          next.filter((id) => !previous.includes(id)),
+          topic
+        )
+      }
+
+      this.pruneTopicsFromConnections(
+        previous.filter((id) => !next.includes(id)),
+        topics
+      )
+    },
+    transferGroupOwnership(groupId: string, newOwner: string) {
+      const chainActionsStore = useChainActionsStore()
+
+      const owner = this.getGroupOwner(groupId)
+
+      if (!owner || owner === newOwner) return
+
+      const groupIndex = this.actionsGroups[owner].findIndex((g) => g.id === groupId)
+      const { 0: group } = this.actionsGroups[owner].splice(groupIndex, 1)
+
+      group.sharedWith = [owner, ...(group.sharedWith ?? []).filter((id) => id !== newOwner)]
+
+      if (!this.actionsGroups[newOwner]) this.actionsGroups[newOwner] = []
+      this.actionsGroups[newOwner].push(group)
+
+      const groupActions = this.actions[owner]?.[groupId]
+
+      if (groupActions) {
+        if (!this.actions[newOwner]) this.actions[newOwner] = {}
+        this.actions[newOwner][groupId] = groupActions
+        delete this.actions[owner][groupId]
+      }
+
+      chainActionsStore.moveGroupChainActions(owner, newOwner, groupId)
+
+      this.saveActions()
+      this.saveActionsGroups()
+    },
+    setGroupConnections(groupId: string, connectionIds: string[]) {
+      const owner = this.getGroupOwner(groupId)
+
+      if (!owner || !connectionIds.length) return
+
+      if (!connectionIds.includes(owner)) this.transferGroupOwnership(groupId, connectionIds[0])
+
+      this.setGroupSharedWith(groupId, connectionIds)
+    },
+    unshareGroupFromConnection(groupId: string, connectionId: string) {
+      if (!this.isSharedGroup(groupId)) return
+
+      this.setGroupConnections(
+        groupId,
+        this.getGroupConnectionIds(groupId).filter((id) => id !== connectionId)
+      )
+    },
+    removeConnectionFromSharing(connectionId: string) {
+      const sharedGroupIds = [
+        ...(this.actionsGroups[connectionId] || []).filter((g) => g.sharedWith?.length),
+        ...this.getSharedGroupsForConnection(connectionId)
+      ].map((g) => g.id)
+
+      for (const groupId of sharedGroupIds) this.unshareGroupFromConnection(groupId, connectionId)
     },
     sendAction(connectionId: string, action: Action, topicOverride?: string) {
       const publishOptions: IClientPublishOptions = {
