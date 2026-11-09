@@ -58,12 +58,19 @@ export type ConditionNode = Node<ConditionNodeData, Empty, 'condition'>
 
 export type ChainActionNode = StartNode | ActionNode | WaitNode | WaitMessageNode | ConditionNode
 
+export type ChainRepeat = {
+  count: number
+  interval: number
+  intervalUnit: 'ms' | 's'
+}
+
 export type ChainAction = {
   id: string
   groupId: string | 'default'
   name: string
   nodes: ChainActionNode[]
   edges: Edge[]
+  repeat?: ChainRepeat
 }
 
 export type ActionGroup = {

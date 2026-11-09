@@ -28,6 +28,7 @@ const stats = computed(() => {
   const { actionCount, waitCount, topicCount, durationMs, hasBranches, unlinkedCount } =
     summary.value
   const duration = `~${formatChainDuration(durationMs)}`
+  const repeatCount = props.chainAction.repeat?.count ?? 1
 
   return [
     {
@@ -54,6 +55,13 @@ const stats = computed(() => {
       label: duration,
       tooltip: 'Estimated duration',
       show: durationMs > 0
+    },
+    {
+      icon: 'i-lucide-repeat',
+      short: repeatCount === 0 ? '∞' : `×${repeatCount}`,
+      label: repeatCount === 0 ? 'Until stopped' : `${repeatCount} runs`,
+      tooltip: repeatCount === 0 ? 'Repeats until stopped' : `Repeats ${repeatCount} times`,
+      show: repeatCount !== 1
     },
     {
       icon: 'i-lucide-git-fork',

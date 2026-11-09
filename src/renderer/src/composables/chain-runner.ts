@@ -43,7 +43,7 @@ export type ChainNodeState = {
   waitEndsAt?: number
 }
 
-export type ChainRunGraph = Pick<ChainAction, 'nodes' | 'edges'>
+export type ChainRunGraph = Pick<ChainAction, 'nodes' | 'edges' | 'repeat'>
 
 export type RunContext = {
   connectionId: string
@@ -72,6 +72,7 @@ export type NodeExecutor = (
 export type ChainRunHooks = {
   onNodeState?: (nodeId: string, state: ChainNodeState) => void
   onLog?: (log: ChainRunLogEntry[]) => void
+  onIteration?: (iteration: number, total: number) => void
 }
 
 export type ChainRunOptions = {
@@ -274,12 +275,24 @@ export const runChain = (
     outgoing.get(edge.source)!.push(edge)
   }
 
-  let log: ChainRunLogEntry[] = [
-    { id: 'start', text: 'Started', state: 'done', time: Date.now() },
+  const repeatCount = Math.max(0, Math.floor(graph.repeat?.count ?? 1))
+  const repeatIntervalMs =
+    (graph.repeat?.interval ?? 0) * (graph.repeat?.intervalUnit === 's' ? 1000 : 1)
+
+  const iterationLabel = (iteration: number) => {
+    if (repeatCount === 1) return 'Started'
+
+    return repeatCount === 0 ? `Run ${iteration}` : `Run ${iteration} of ${repeatCount}`
+  }
+
+  const initialLog = (iteration: number): ChainRunLogEntry[] => [
+    { id: 'start', text: iterationLabel(iteration), state: 'done', time: Date.now() },
     ...chainSteps(graph)
       .filter((node) => node.type !== 'start')
       .map((node) => ({ id: node.id, text: stepLabel(node), state: 'pending' as const }))
   ]
+
+  let log = initialLog(1)
 
   const publishLog = () => hooks.onLog?.(log)
 
@@ -387,11 +400,31 @@ export const runChain = (
     await followEdges(node.id, handle, Date.now())
   }
 
-  for (const node of graph.nodes) setNodeState(node.id, resetNodeState)
+  const runIteration = async (iteration: number) => {
+    context.iteration = iteration
+    log = initialLog(iteration)
 
-  publishLog()
+    for (const node of graph.nodes) setNodeState(node.id, resetNodeState)
 
-  const done = followEdges('start', undefined, Date.now()).then((): ChainRunOutcome => {
+    hooks.onIteration?.(iteration, repeatCount)
+    publishLog()
+
+    await followEdges('start', undefined, Date.now())
+  }
+
+  const runIterations = async () => {
+    for (let iteration = 1; repeatCount === 0 || iteration <= repeatCount; iteration++) {
+      await runIteration(iteration)
+
+      const isLast = repeatCount !== 0 && iteration >= repeatCount
+
+      if (stopped || failed || isLast) return
+      await wait(repeatIntervalMs)
+      if (stopped) return
+    }
+  }
+
+  const done = runIterations().then((): ChainRunOutcome => {
     unsubscribe()
 
     if (stopped) {
