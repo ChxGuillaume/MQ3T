@@ -196,7 +196,12 @@ export const useActionsStore = defineStore('actions', {
     setSelectedActionGroup(groupId: string) {
       this.selectedActionGroup = groupId
     },
-    addActionToConnectionGroup(action: Action, connectionId: string, groupId: string) {
+    addActionToConnectionGroup(
+      action: Action,
+      connectionId: string,
+      groupId: string,
+      { keepId = false }: { keepId?: boolean } = {}
+    ) {
       const storageKey = this.resolveGroupStorageKey(connectionId, groupId)
 
       if (!this.actions[storageKey]) this.actions[storageKey] = {}
@@ -204,7 +209,7 @@ export const useActionsStore = defineStore('actions', {
 
       const copy = JSON.parse(JSON.stringify(action))
 
-      copy.id = `action-${uuidV4()}`
+      if (!keepId) copy.id = `action-${uuidV4()}`
       copy.groupId = groupId
 
       this.actions[storageKey][groupId].push(copy)
@@ -281,7 +286,7 @@ export const useActionsStore = defineStore('actions', {
 
       if (moveActionsToDefault) {
         for (const action of this.getConnectionGroupActions(connectionId, groupId)) {
-          this.addActionToConnectionGroup(action, connectionId, 'default')
+          this.addActionToConnectionGroup(action, connectionId, 'default', { keepId: true })
         }
       }
 

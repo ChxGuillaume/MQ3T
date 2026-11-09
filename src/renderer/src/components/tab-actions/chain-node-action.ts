@@ -1,5 +1,5 @@
 import { useActionsStore } from '@renderer/store/actions'
-import { Action, ChainActionNode } from '../../../../types/actions'
+import { Action, ChainAction, ChainActionNode } from '../../../../types/actions'
 
 export type ResolvedNodeAction = {
   action?: Action
@@ -25,3 +25,21 @@ export const resolveNodeAction = (
 
   return { action: { ...saved, topic: topicOverride || saved.topic }, linked: true, missing: false }
 }
+
+export const detachUnresolvedLinks = <T extends Pick<ChainAction, 'nodes'>>(
+  chain: T,
+  connectionId: string
+): T => ({
+  ...chain,
+  nodes: chain.nodes.map((node) => {
+    if (node.type !== 'action' || !node.data?.actionId) return node
+
+    const { missing } = resolveNodeAction(node, connectionId)
+
+    if (!missing) return node
+
+    const { actionId: _actionId, topicOverride: _topicOverride, ...data } = node.data
+
+    return { ...node, data }
+  })
+})

@@ -195,9 +195,11 @@ export const dryRunUpstream = (
 
     for (const capture of node.data?.captures ?? []) {
       if (!capture.name) continue
-      if (sample)
-        variables.set(capture.name, toVariableValue(readMessagePath(sample.message, capture.path)))
-      else variables.delete(capture.name)
+
+      const value = sample ? readMessagePath(sample.message, capture.path) : undefined
+
+      if (value === undefined) variables.delete(capture.name)
+      else variables.set(capture.name, toVariableValue(value))
     }
   }
 

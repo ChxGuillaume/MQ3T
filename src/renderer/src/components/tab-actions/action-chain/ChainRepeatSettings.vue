@@ -60,12 +60,12 @@ const intervalUnit = computed<'ms' | 's'>({
     </UFormField>
 
     <UFormField v-if="mode === 'times'" label="Runs">
-      <UInput v-model.number="count" type="number" min="2" class="w-full" />
+      <UInput v-model.lazy.number="count" type="number" min="2" class="w-full" />
     </UFormField>
 
     <div v-if="mode !== 'once'" class="flex items-end gap-2">
       <UFormField label="Pause between runs" class="flex-1">
-        <UInput v-model.number="interval" type="number" min="0" class="w-full" />
+        <UInput v-model.lazy.number="interval" type="number" min="0" class="w-full" />
       </UFormField>
       <SegmentedControl
         v-model="intervalUnit"
@@ -77,7 +77,8 @@ const intervalUnit = computed<'ms' | 's'>({
     </div>
 
     <p v-if="mode !== 'once'" class="text-muted text-xs leading-[1.45]">
-      Captured values carry over to the next run. Repeating stops when a step fails.
+      Captured values carry over to the next run. Repeating stops when a step fails, and runs are
+      always at least 100 ms apart.
     </p>
   </div>
 </template>

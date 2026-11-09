@@ -9,7 +9,7 @@ import {
   runChain
 } from './chain-runner'
 import { useChainRunHistoryStore } from '@renderer/store/chain-run-history'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive } from 'vue'
 
 export type { ChainRunLogEntry } from './chain-runner'
 
@@ -31,30 +31,52 @@ export const formatRunLogTime = (entry: ChainRunLogEntry) => {
   return entry.time ? formatTime(entry.time) : ''
 }
 
+type RunState = {
+  running: boolean
+  simulating: boolean
+  log: ChainRunLogEntry[]
+  outcome?: ChainRunOutcome
+  iteration: { current: number; total: number }
+  handle?: ChainRun
+}
+
+const createRunState = (): RunState => ({
+  running: false,
+  simulating: false,
+  log: [],
+  outcome: undefined,
+  iteration: { current: 1, total: 1 },
+  handle: undefined
+})
+
+const sharedRuns = reactive(new Map<string, RunState>())
+
+const sharedRunState = (key: string): RunState => {
+  if (!sharedRuns.has(key)) sharedRuns.set(key, createRunState())
+
+  return sharedRuns.get(key)!
+}
+
 type UseRunActionChainOptions = {
+  key?: () => string | undefined
   onNodeState?: (nodeId: string, state: ChainNodeState) => void
 }
 
 export function useRunActionChain(options: UseRunActionChainOptions = {}) {
-  const running = ref(false)
-  const simulating = ref(false)
-  const log = ref<ChainRunLogEntry[]>([])
-  const outcome = ref<ChainRunOutcome>()
-  const iteration = ref({ current: 1, total: 1 })
+  const localState = reactive(createRunState()) as RunState
 
   const historyStore = useChainRunHistoryStore()
 
-  let currentRun: ChainRun | undefined
   let clearTimer: ReturnType<typeof setTimeout> | undefined
 
-  const hooks = {
-    onNodeState: options.onNodeState,
-    onLog: (entries: ChainRunLogEntry[]) => (log.value = entries),
-    onIteration: (current: number, total: number) => (iteration.value = { current, total })
-  }
+  const state = computed<RunState>(() => {
+    const key = options.key?.()
+
+    return (key && sharedRuns.get(key)) || localState
+  })
 
   const steps = computed(() =>
-    log.value.filter((entry) => entry.id !== 'start' && entry.state !== 'skipped')
+    state.value.log.filter((entry) => entry.id !== 'start' && entry.state !== 'skipped')
   )
 
   const progress = computed(() => {
@@ -69,18 +91,29 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
     graph: ChainRunGraph,
     runOptions: ChainRunOptions & { chainId?: string } = {}
   ): Promise<ChainRunOutcome | undefined> => {
-    if (running.value) return
+    const key = options.key?.()
+    const target = key ? sharedRunState(key) : localState
+
+    if (target.running) return
 
     clearTimeout(clearTimer)
 
-    running.value = true
-    simulating.value = !!runOptions.simulate
-    outcome.value = undefined
+    const hooks = {
+      onNodeState: options.onNodeState,
+      onLog: (entries: ChainRunLogEntry[]) => (target.log = entries),
+      onIteration: (current: number, total: number) => (target.iteration = { current, total })
+    }
+
+    target.running = true
+    target.simulating = !!runOptions.simulate
+    target.outcome = undefined
+
     const startedAt = Date.now()
+    const handle = runChain(graph, connectionId, hooks, runOptions)
 
-    currentRun = runChain(graph, connectionId, hooks, runOptions)
+    target.handle = handle
 
-    const result = await currentRun.done
+    const result = await handle.done
 
     if (runOptions.chainId && !runOptions.simulate) {
       historyStore.addRun(runOptions.chainId, {
@@ -88,14 +121,14 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
         startedAt,
         endedAt: Date.now(),
         outcome: result,
-        iterations: currentRun.context.iteration,
-        log: log.value
+        iterations: handle.context.iteration,
+        log: target.log
       })
     }
 
-    running.value = false
-    outcome.value = result
-    currentRun = undefined
+    target.running = false
+    target.outcome = result
+    target.handle = undefined
 
     if (result === 'stopped') clearNodeStates(graph, hooks)
     else clearTimer = setTimeout(() => clearNodeStates(graph, hooks), CLEAR_STATUS_DELAY)
@@ -103,9 +136,21 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
     return result
   }
 
-  const stop = () => currentRun?.stop()
+  const stop = () => state.value.handle?.stop()
 
-  onBeforeUnmount(() => clearTimeout(clearTimer))
+  onBeforeUnmount(() => {
+    clearTimeout(clearTimer)
+    localState.handle?.stop()
+  })
 
-  return { running, simulating, run, stop, log, progress, outcome, iteration }
+  return {
+    running: computed(() => state.value.running),
+    simulating: computed(() => state.value.simulating),
+    log: computed(() => state.value.log),
+    outcome: computed(() => state.value.outcome),
+    iteration: computed(() => state.value.iteration),
+    progress,
+    run,
+    stop
+  }
 }
