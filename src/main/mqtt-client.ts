@@ -11,6 +11,7 @@ const valueOrUndefined = <T>(value: T | undefined) => {
 export class MqttClient {
   private client: mqtt.MqttClient
   private latencyCallbacks: Array<(latency: number) => void> = []
+  private pingTimer: ReturnType<typeof setInterval>
 
   constructor(connection: MqttConnection) {
     const connectionOptions: mqtt.IClientOptions = {
@@ -20,7 +21,8 @@ export class MqttClient {
       protocolVersion: connection.protocolVersion,
       connectTimeout: (connection.connectTimeout || 30) * 1000,
       reconnectPeriod: (connection.reconnectPeriod || 1) * 1000,
-      clean: connection.clean
+      clean: connection.clean,
+      queueQoSZero: false
     }
 
     if (connection.protocolVersion === 5 && connection.properties) {
@@ -66,7 +68,9 @@ export class MqttClient {
 
     let pingStartTime: number
 
-    setInterval(() => {
+    this.pingTimer = setInterval(() => {
+      if (!this.client.connected) return
+
       pingStartTime = Date.now()
       this.client.sendPing()
     }, 1000 * 5)
@@ -117,6 +121,7 @@ export class MqttClient {
   }
 
   public async disconnect() {
+    clearInterval(this.pingTimer)
     await this.client.endAsync(true)
   }
 }
