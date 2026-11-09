@@ -34,7 +34,8 @@ const appStore = useAppStore()
 const exploreUiStore = useExploreUiStore()
 const toast = useToast()
 
-const { currentSection, openSection, openNewTab, toggleSettings } = useAppNavigation()
+const { currentSection, openSection, openNewTab, cycleTab, toggleSettings, closeCurrentTab } =
+  useAppNavigation()
 
 const isConnectionLost = computed(() => {
   const status = mqttConnectionsStore.getConnectionStatus(mqttTopicsStore.selectedConnection)
@@ -49,7 +50,10 @@ defineShortcuts({
   meta_4: () => openSection('broker'),
   meta_t: () => openNewTab(),
   meta_n: () => openNewMessage(),
-  'meta_,': () => toggleSettings()
+  'meta_,': () => toggleSettings(),
+  meta_w: { usingInput: true, handler: () => closeCurrentTab() },
+  ctrl_tab: { usingInput: true, handler: () => cycleTab(1) },
+  ctrl_shift_tab: { usingInput: true, handler: () => cycleTab(-1) }
 })
 
 const openNewMessage = () => {
