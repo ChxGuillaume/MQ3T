@@ -2,6 +2,7 @@ import { convertActionsFileV1toV2 } from '../assets/js/actions-convert'
 import { ElectronApi } from '../assets/js/electron-api'
 import { useActionsCacheStore } from './actions-cache'
 import { useChainActionsStore } from './chain-actions'
+import { detachUnresolvedLinks } from '@renderer/components/tab-actions/chain-node-action'
 import { useMqttConnectionsStore } from './mqtt-connections'
 import { defineStore } from 'pinia'
 import { v4 as uuidV4 } from 'uuid'
@@ -371,6 +372,25 @@ export const useActionsStore = defineStore('actions', {
       if (!connectionIds.includes(owner)) this.transferGroupOwnership(groupId, connectionIds[0])
 
       this.setGroupSharedWith(groupId, connectionIds)
+    },
+    moveGroupToConnection(groupId: string, connectionId: string) {
+      const chainActionsStore = useChainActionsStore()
+
+      this.setGroupConnections(groupId, [connectionId])
+
+      const topicConnectionIds = this.getTopicConnectionIds(connectionId, groupId)
+
+      for (const action of this.getConnectionGroupActions(connectionId, groupId)) {
+        this.addTopicToConnections(topicConnectionIds, action.topic)
+      }
+
+      chainActionsStore.setConnectionGroupChainActions(
+        connectionId,
+        groupId,
+        chainActionsStore
+          .getGroupChainActions(connectionId, groupId)
+          .map((chain) => detachUnresolvedLinks(chain, connectionId))
+      )
     },
     unshareGroupFromConnection(groupId: string, connectionId: string) {
       if (!this.isSharedGroup(groupId)) return
