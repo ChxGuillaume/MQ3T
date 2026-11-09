@@ -578,6 +578,11 @@ const handleSimulate = async () => {
   run(props.connectionId, graph, { variables, simulate: { replyFor } })
 }
 
+const splitterItems = [
+  { slot: 'canvas', minSize: 30 },
+  { slot: 'details', defaultSize: 320, minSize: 280, maxSize: 640, sizeUnit: 'px' as const }
+]
+
 const activeTour = ref<ExampleTourItem[]>()
 
 const waitForMeasuredNodes = async () => {
@@ -925,416 +930,438 @@ onMounted(async () => {
         </div>
       </nav>
 
-      <main
-        aria-label="Chain canvas"
-        class="chain-canvas bg-muted relative min-w-0 flex-1"
-        @dragover="handleCanvasDragOver"
-        @drop="handleCanvasDrop"
+      <USplitter
+        :items="splitterItems"
+        auto-save-id="mq3t-chain-details"
+        class="min-w-0 flex-1"
+        :ui="{ panel: 'min-w-0 flex', handle: 'w-px bg-(--ui-border)' }"
       >
-        <VueFlow
-          :zoom-activation-key-code="trackPadMode ? 'Shift' : null"
-          :pan-activation-key-code="!trackPadMode ? 'Shift' : null"
-          :connection-mode="ConnectionMode.Strict"
-          :is-valid-connection="isValid"
-          :pan-on-scroll="trackPadMode"
-          :snap-grid="[10, 10]"
-          :min-zoom="0.5"
-          :max-zoom="2"
-          fit-view-on-init
-          zoom-on-scroll
-          snap-to-grid
-        >
-          <Background :gap="20" :size="1.2" pattern-color="var(--ui-border-accented)" />
-
-          <div
-            v-if="isEmptyCanvas && !running"
-            class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6"
+        <template #canvas>
+          <main
+            aria-label="Chain canvas"
+            class="chain-canvas bg-muted relative h-full min-w-0 flex-1"
+            @dragover="handleCanvasDragOver"
+            @drop="handleCanvasDrop"
           >
-            <div
-              class="border-default bg-default pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm"
+            <VueFlow
+              :zoom-activation-key-code="trackPadMode ? 'Shift' : null"
+              :pan-activation-key-code="!trackPadMode ? 'Shift' : null"
+              :connection-mode="ConnectionMode.Strict"
+              :is-valid-connection="isValid"
+              :pan-on-scroll="trackPadMode"
+              :snap-grid="[10, 10]"
+              :min-zoom="0.5"
+              :max-zoom="2"
+              fit-view-on-init
+              zoom-on-scroll
+              snap-to-grid
             >
-              <UIcon name="i-lucide-workflow" class="text-primary size-8" />
-              <h3 class="text-base font-bold">Build your first chain</h3>
-              <p class="text-muted text-sm leading-[1.5]">
-                Drag steps from the left onto the canvas and connect them from Start. Not sure where
-                to begin? Load an example, then press Simulate to watch it run without sending
-                anything.
-              </p>
-              <div class="flex w-full flex-col gap-2">
-                <button
-                  v-for="example in CHAIN_EXAMPLES"
-                  :key="example.id"
-                  type="button"
-                  class="border-default hover:border-primary hover:bg-primary/5 flex items-start gap-3 rounded-lg border p-3 text-left transition-colors"
-                  @click="loadExample(example)"
+              <Background :gap="20" :size="1.2" pattern-color="var(--ui-border-accented)" />
+
+              <div
+                v-if="isEmptyCanvas && !running"
+                class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6"
+              >
+                <div
+                  class="border-default bg-default pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm"
                 >
-                  <UIcon :name="example.icon" class="text-primary mt-0.5 size-5 shrink-0" />
-                  <span class="flex flex-col gap-0.5">
-                    <span class="text-sm font-bold">{{ example.label }}</span>
-                    <span class="text-muted text-xs leading-[1.45]">{{ example.description }}</span>
-                  </span>
-                </button>
+                  <UIcon name="i-lucide-workflow" class="text-primary size-8" />
+                  <h3 class="text-base font-bold">Build your first chain</h3>
+                  <p class="text-muted text-sm leading-[1.5]">
+                    Drag steps from the left onto the canvas and connect them from Start. Not sure
+                    where to begin? Load an example, then press Simulate to watch it run without
+                    sending anything.
+                  </p>
+                  <div class="flex w-full flex-col gap-2">
+                    <button
+                      v-for="example in CHAIN_EXAMPLES"
+                      :key="example.id"
+                      type="button"
+                      class="border-default hover:border-primary hover:bg-primary/5 flex items-start gap-3 rounded-lg border p-3 text-left transition-colors"
+                      @click="loadExample(example)"
+                    >
+                      <UIcon :name="example.icon" class="text-primary mt-0.5 size-5 shrink-0" />
+                      <span class="flex flex-col gap-0.5">
+                        <span class="text-sm font-bold">{{ example.label }}</span>
+                        <span class="text-muted text-xs leading-[1.45]">{{
+                          example.description
+                        }}</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <template #node-start="nodeProps">
+                <StartNode :id="nodeProps.id" :selected="nodeProps.selected" />
+              </template>
+
+              <template #node-action="nodeProps">
+                <ActionNode
+                  :id="nodeProps.id"
+                  :data="nodeProps.data"
+                  :issues="issuesOf(nodeProps.id)"
+                  :action="nodeAction(nodeProps.id).action"
+                  :linked="nodeAction(nodeProps.id).linked"
+                  :missing="nodeAction(nodeProps.id).missing"
+                  :selected="nodeProps.selected"
+                  :dimmed="running"
+                  @edit="editActionNode(nodeProps.id)"
+                  @copy="duplicateNode(nodeProps.id)"
+                  @remove="removeNodes([nodeProps.id])"
+                />
+              </template>
+
+              <template #node-wait="nodeProps">
+                <WaitNode
+                  :id="nodeProps.id"
+                  :data="nodeProps.data"
+                  :selected="nodeProps.selected"
+                  @copy="duplicateNode(nodeProps.id)"
+                  @remove="removeNodes([nodeProps.id])"
+                />
+              </template>
+
+              <template #node-condition="nodeProps">
+                <ConditionNode
+                  :id="nodeProps.id"
+                  :data="nodeProps.data"
+                  :issues="issuesOf(nodeProps.id)"
+                  :selected="nodeProps.selected"
+                  :dimmed="running"
+                  @copy="duplicateNode(nodeProps.id)"
+                  @remove="removeNodes([nodeProps.id])"
+                />
+              </template>
+
+              <template #node-wait-message="nodeProps">
+                <WaitMessageNode
+                  :id="nodeProps.id"
+                  :data="nodeProps.data"
+                  :issues="issuesOf(nodeProps.id)"
+                  :selected="nodeProps.selected"
+                  :dimmed="running"
+                  @copy="duplicateNode(nodeProps.id)"
+                  @remove="removeNodes([nodeProps.id])"
+                />
+              </template>
+            </VueFlow>
+
+            <div
+              class="border-default bg-default absolute right-4 bottom-4 flex items-center gap-1 rounded-lg border p-1"
+            >
+              <UTooltip text="Trackpad mode: scroll pans, Shift + scroll zooms">
+                <UButton
+                  color="neutral"
+                  :variant="trackPadMode ? 'soft' : 'ghost'"
+                  icon="i-lucide-mouse-pointer-2"
+                  aria-label="Trackpad mode"
+                  @click="trackPadMode = !trackPadMode"
+                />
+              </UTooltip>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-minus"
+                aria-label="Zoom out"
+                @click="zoomOut()"
+              />
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-plus"
+                aria-label="Zoom in"
+                @click="zoomIn()"
+              />
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-scan"
+                aria-label="Fit view"
+                @click="fitView()"
+              />
+              <UTooltip text="Tidy up the layout">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-wand-sparkles"
+                  aria-label="Tidy up the layout"
+                  :disabled="nodes.length < 2"
+                  @click="tidyLayout"
+                />
+              </UTooltip>
             </div>
-          </div>
-
-          <template #node-start="nodeProps">
-            <StartNode :id="nodeProps.id" :selected="nodeProps.selected" />
-          </template>
-
-          <template #node-action="nodeProps">
-            <ActionNode
-              :id="nodeProps.id"
-              :data="nodeProps.data"
-              :issues="issuesOf(nodeProps.id)"
-              :action="nodeAction(nodeProps.id).action"
-              :linked="nodeAction(nodeProps.id).linked"
-              :missing="nodeAction(nodeProps.id).missing"
-              :selected="nodeProps.selected"
-              :dimmed="running"
-              @edit="editActionNode(nodeProps.id)"
-              @copy="duplicateNode(nodeProps.id)"
-              @remove="removeNodes([nodeProps.id])"
-            />
-          </template>
-
-          <template #node-wait="nodeProps">
-            <WaitNode
-              :id="nodeProps.id"
-              :data="nodeProps.data"
-              :selected="nodeProps.selected"
-              @copy="duplicateNode(nodeProps.id)"
-              @remove="removeNodes([nodeProps.id])"
-            />
-          </template>
-
-          <template #node-condition="nodeProps">
-            <ConditionNode
-              :id="nodeProps.id"
-              :data="nodeProps.data"
-              :issues="issuesOf(nodeProps.id)"
-              :selected="nodeProps.selected"
-              :dimmed="running"
-              @copy="duplicateNode(nodeProps.id)"
-              @remove="removeNodes([nodeProps.id])"
-            />
-          </template>
-
-          <template #node-wait-message="nodeProps">
-            <WaitMessageNode
-              :id="nodeProps.id"
-              :data="nodeProps.data"
-              :issues="issuesOf(nodeProps.id)"
-              :selected="nodeProps.selected"
-              :dimmed="running"
-              @copy="duplicateNode(nodeProps.id)"
-              @remove="removeNodes([nodeProps.id])"
-            />
-          </template>
-        </VueFlow>
-
-        <div
-          class="border-default bg-default absolute right-4 bottom-4 flex items-center gap-1 rounded-lg border p-1"
-        >
-          <UTooltip text="Trackpad mode: scroll pans, Shift + scroll zooms">
-            <UButton
-              color="neutral"
-              :variant="trackPadMode ? 'soft' : 'ghost'"
-              icon="i-lucide-mouse-pointer-2"
-              aria-label="Trackpad mode"
-              @click="trackPadMode = !trackPadMode"
-            />
-          </UTooltip>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-lucide-minus"
-            aria-label="Zoom out"
-            @click="zoomOut()"
-          />
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-lucide-plus"
-            aria-label="Zoom in"
-            @click="zoomIn()"
-          />
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-lucide-scan"
-            aria-label="Fit view"
-            @click="fitView()"
-          />
-          <UTooltip text="Tidy up the layout">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              icon="i-lucide-wand-sparkles"
-              aria-label="Tidy up the layout"
-              :disabled="nodes.length < 2"
-              @click="tidyLayout"
-            />
-          </UTooltip>
-        </div>
-      </main>
-
-      <aside
-        aria-label="Step details"
-        class="border-default flex w-[320px] shrink-0 flex-col gap-3.5 overflow-auto border-l p-4"
-      >
-        <div class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
-          Selected step
-        </div>
-
-        <template v-if="selectedNode?.type === 'wait'">
-          <h2 class="text-base font-bold">Wait</h2>
-          <div class="flex items-end gap-2">
-            <UFormField label="Duration" class="flex-1">
-              <UInput v-model.number="waitDuration" type="number" min="0" class="w-full" />
-            </UFormField>
-            <SegmentedControl
-              v-model="waitDurationType"
-              :items="[
-                { label: 'ms', value: 'ms' },
-                { label: 's', value: 's' }
-              ]"
-            />
-          </div>
-          <div class="flex gap-2">
-            <UButton
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-copy"
-              label="Duplicate"
-              @click="duplicateNode(selectedNode.id)"
-            />
-            <UButton
-              size="sm"
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              label="Delete"
-              @click="removeNodes([selectedNode.id])"
-            />
-          </div>
+          </main>
         </template>
 
-        <template v-else-if="selectedNode?.type === 'condition'">
-          <h2 class="text-base font-bold">Condition</h2>
-          <ConditionSettings
-            :key="selectedNode.id"
-            :data="selectedNode.data ?? {}"
-            :variables="conditionVariables"
-            :preview="conditionPreview"
-            :sample="selectedSample"
-            :has-message-step="!!selectedDryRun?.hasMessageStep"
-            @update="updateNodeData(selectedNode.id, $event)"
-          />
-          <div class="flex gap-2">
-            <UButton
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-copy"
-              label="Duplicate"
-              @click="duplicateNode(selectedNode.id)"
-            />
-            <UButton
-              size="sm"
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              label="Delete"
-              @click="removeNodes([selectedNode.id])"
-            />
-          </div>
-        </template>
-
-        <template v-else-if="selectedNode?.type === 'wait-message'">
-          <h2 class="text-base font-bold">Wait for message</h2>
-          <WaitMessageSettings
-            :key="selectedNode.id"
-            :data="selectedNode.data ?? {}"
-            :sample="selectedSample"
-            :known-topics="knownTopics"
-            :subscribed="selectedSubscribed"
-            :auto-reply="autoReplyFor(selectedNode.data ?? {})"
-            @update="updateNodeData(selectedNode.id, $event)"
-          />
-          <div class="flex gap-2">
-            <UButton
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-copy"
-              label="Duplicate"
-              @click="duplicateNode(selectedNode.id)"
-            />
-            <UButton
-              size="sm"
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              label="Delete"
-              @click="removeNodes([selectedNode.id])"
-            />
-          </div>
-        </template>
-
-        <template v-else-if="selectedNode?.type === 'action'">
-          <template v-if="selectedAction?.action">
-            <h2 class="text-base font-bold">{{ selectedAction.action.name || 'Action' }}</h2>
-            <div class="text-primary font-mono text-xs break-all">
-              {{ selectedAction.action.topic }}
+        <template #details>
+          <aside
+            aria-label="Step details"
+            class="flex h-full min-w-0 flex-1 flex-col gap-3.5 overflow-auto p-4"
+          >
+            <div class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
+              Selected step
             </div>
-            <div class="flex flex-wrap gap-1.5">
-              <span
-                v-if="selectedAction.missing"
-                class="bg-error/10 text-error flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
-              >
-                <UIcon name="i-lucide-unlink" class="size-3" />
-                Linked action deleted
-              </span>
-              <span
-                v-else-if="selectedAction.linked"
-                class="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
-              >
-                <UIcon name="i-lucide-link" class="size-3" />
-                Linked to saved action
-              </span>
-              <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
-                QoS {{ selectedAction.action.qos }}
-              </span>
-              <span
-                v-if="selectedAction.action.retained"
-                class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs"
-              >
-                Retain
-              </span>
-            </div>
-            <p v-if="selectedAction.linked && !selectedAction.missing" class="text-muted text-xs">
-              Edits change the saved action and every chain that uses it.
+
+            <template v-if="selectedNode?.type === 'wait'">
+              <h2 class="text-base font-bold">Wait</h2>
+              <div class="flex items-end gap-2">
+                <UFormField label="Duration" class="flex-1">
+                  <UInput v-model.number="waitDuration" type="number" min="0" class="w-full" />
+                </UFormField>
+                <SegmentedControl
+                  v-model="waitDurationType"
+                  :items="[
+                    { label: 'ms', value: 'ms' },
+                    { label: 's', value: 's' }
+                  ]"
+                />
+              </div>
+              <div class="flex gap-2">
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-copy"
+                  label="Duplicate"
+                  @click="duplicateNode(selectedNode.id)"
+                />
+                <UButton
+                  size="sm"
+                  color="error"
+                  variant="ghost"
+                  icon="i-lucide-trash-2"
+                  label="Delete"
+                  @click="removeNodes([selectedNode.id])"
+                />
+              </div>
+            </template>
+
+            <template v-else-if="selectedNode?.type === 'condition'">
+              <h2 class="text-base font-bold">Condition</h2>
+              <ConditionSettings
+                :key="selectedNode.id"
+                :data="selectedNode.data ?? {}"
+                :variables="conditionVariables"
+                :preview="conditionPreview"
+                :sample="selectedSample"
+                :has-message-step="!!selectedDryRun?.hasMessageStep"
+                @update="updateNodeData(selectedNode.id, $event)"
+              />
+              <div class="flex gap-2">
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-copy"
+                  label="Duplicate"
+                  @click="duplicateNode(selectedNode.id)"
+                />
+                <UButton
+                  size="sm"
+                  color="error"
+                  variant="ghost"
+                  icon="i-lucide-trash-2"
+                  label="Delete"
+                  @click="removeNodes([selectedNode.id])"
+                />
+              </div>
+            </template>
+
+            <template v-else-if="selectedNode?.type === 'wait-message'">
+              <h2 class="text-base font-bold">Wait for message</h2>
+              <WaitMessageSettings
+                :key="selectedNode.id"
+                :data="selectedNode.data ?? {}"
+                :sample="selectedSample"
+                :known-topics="knownTopics"
+                :subscribed="selectedSubscribed"
+                :auto-reply="autoReplyFor(selectedNode.data ?? {})"
+                @update="updateNodeData(selectedNode.id, $event)"
+              />
+              <div class="flex gap-2">
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-copy"
+                  label="Duplicate"
+                  @click="duplicateNode(selectedNode.id)"
+                />
+                <UButton
+                  size="sm"
+                  color="error"
+                  variant="ghost"
+                  icon="i-lucide-trash-2"
+                  label="Delete"
+                  @click="removeNodes([selectedNode.id])"
+                />
+              </div>
+            </template>
+
+            <template v-else-if="selectedNode?.type === 'action'">
+              <template v-if="selectedAction?.action">
+                <h2 class="text-base font-bold">{{ selectedAction.action.name || 'Action' }}</h2>
+                <div class="text-primary font-mono text-xs break-all">
+                  {{ selectedAction.action.topic }}
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-if="selectedAction.missing"
+                    class="bg-error/10 text-error flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
+                  >
+                    <UIcon name="i-lucide-unlink" class="size-3" />
+                    Linked action deleted
+                  </span>
+                  <span
+                    v-else-if="selectedAction.linked"
+                    class="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs"
+                  >
+                    <UIcon name="i-lucide-link" class="size-3" />
+                    Linked to saved action
+                  </span>
+                  <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
+                    QoS {{ selectedAction.action.qos }}
+                  </span>
+                  <span
+                    v-if="selectedAction.action.retained"
+                    class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs"
+                  >
+                    Retain
+                  </span>
+                </div>
+                <p
+                  v-if="selectedAction.linked && !selectedAction.missing"
+                  class="text-muted text-xs"
+                >
+                  Edits change the saved action and every chain that uses it.
+                </p>
+                <p v-else-if="selectedAction.missing" class="text-muted text-xs">
+                  The saved action was deleted. Unlink to keep this step as a copy.
+                </p>
+                <PayloadPreview
+                  :payload="selectedAction.action.payload"
+                  :format="selectedAction.action.payloadFormat"
+                  dense
+                  class="max-h-48"
+                />
+              </template>
+              <p v-else class="text-muted text-sm">This step has no message yet.</p>
+              <div class="flex flex-wrap gap-2">
+                <UButton
+                  v-if="!selectedAction?.missing"
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-pencil"
+                  :label="selectedAction?.action ? 'Edit' : 'Set up'"
+                  @click="editActionNode(selectedNode.id)"
+                />
+                <UButton
+                  v-if="selectedAction?.linked"
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-unlink"
+                  label="Unlink"
+                  title="Keep this step as an independent copy"
+                  @click="unlinkActionNode(selectedNode.id)"
+                />
+                <UButton
+                  v-if="selectedAction?.action"
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-copy"
+                  label="Duplicate"
+                  @click="duplicateNode(selectedNode.id)"
+                />
+                <UButton
+                  size="sm"
+                  color="error"
+                  variant="ghost"
+                  icon="i-lucide-trash-2"
+                  label="Delete"
+                  @click="removeNodes([selectedNode.id])"
+                />
+              </div>
+            </template>
+
+            <p v-else-if="selectedNode?.type === 'start'" class="text-muted text-sm">
+              Every chain begins here. Drag from its right handle to the first step.
             </p>
-            <p v-else-if="selectedAction.missing" class="text-muted text-xs">
-              The saved action was deleted. Unlink to keep this step as a copy.
+            <p v-else class="text-muted text-sm">
+              Select a step to edit it. Connect steps by dragging from a step's right handle to the
+              next one.
             </p>
-            <PayloadPreview
-              :payload="selectedAction.action.payload"
-              :format="selectedAction.action.payloadFormat"
-              dense
-              class="max-h-48"
-            />
-          </template>
-          <p v-else class="text-muted text-sm">This step has no message yet.</p>
-          <div class="flex flex-wrap gap-2">
-            <UButton
-              v-if="!selectedAction?.missing"
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-pencil"
-              :label="selectedAction?.action ? 'Edit' : 'Set up'"
-              @click="editActionNode(selectedNode.id)"
-            />
-            <UButton
-              v-if="selectedAction?.linked"
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-unlink"
-              label="Unlink"
-              title="Keep this step as an independent copy"
-              @click="unlinkActionNode(selectedNode.id)"
-            />
-            <UButton
-              v-if="selectedAction?.action"
-              size="sm"
-              color="neutral"
-              variant="outline"
-              icon="i-lucide-copy"
-              label="Duplicate"
-              @click="duplicateNode(selectedNode.id)"
-            />
-            <UButton
-              size="sm"
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              label="Delete"
-              @click="removeNodes([selectedNode.id])"
-            />
-          </div>
+
+            <div
+              v-if="activeTour && !selectedNode"
+              class="border-primary/30 bg-primary/5 flex flex-col gap-2.5 rounded-lg border p-3"
+            >
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-sparkles" class="text-primary size-4" />
+                <span class="text-sm font-bold">About this example</span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-x"
+                  aria-label="Hide the example tour"
+                  class="ml-auto"
+                  @click="activeTour = undefined"
+                />
+              </div>
+              <div v-for="item in activeTour" :key="item.title" class="flex gap-2 text-xs">
+                <UIcon :name="item.icon" class="text-muted mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  <b>{{ item.title }}.</b>
+                  <span class="text-muted"> {{ item.text }}</span>
+                </span>
+              </div>
+              <UButton
+                size="sm"
+                icon="i-lucide-flask-conical"
+                label="Simulate it"
+                class="self-start font-semibold"
+                :disabled="running"
+                @click="handleSimulate"
+              />
+              <span class="text-muted text-xs">
+                Click any step to see how it's set up. Simulate plays the chain on the canvas with
+                example replies, so you don't need a broker.
+              </span>
+            </div>
+
+            <template v-if="!selectedNode">
+              <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
+                Chain settings
+              </div>
+              <ChainRepeatSettings v-model="repeat" />
+            </template>
+
+            <template v-if="log.length || historyCount">
+              <SegmentedControl
+                v-model="logTab"
+                size="sm"
+                class="mt-2.5 self-start"
+                :items="[
+                  { label: 'This run', value: 'run', disabled: !log.length },
+                  { label: `History (${historyCount})`, value: 'history', disabled: !historyCount }
+                ]"
+              />
+              <ChainRunLog v-if="logTab === 'run' && log.length" :entries="log" />
+              <ChainRunHistory v-else-if="chainId" :chain-id="chainId" />
+            </template>
+          </aside>
         </template>
 
-        <p v-else-if="selectedNode?.type === 'start'" class="text-muted text-sm">
-          Every chain begins here. Drag from its right handle to the first step.
-        </p>
-        <p v-else class="text-muted text-sm">
-          Select a step to edit it. Connect steps by dragging from a step's right handle to the next
-          one.
-        </p>
-
-        <div
-          v-if="activeTour && !selectedNode"
-          class="border-primary/30 bg-primary/5 flex flex-col gap-2.5 rounded-lg border p-3"
-        >
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-sparkles" class="text-primary size-4" />
-            <span class="text-sm font-bold">About this example</span>
-            <UButton
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              icon="i-lucide-x"
-              aria-label="Hide the example tour"
-              class="ml-auto"
-              @click="activeTour = undefined"
-            />
-          </div>
-          <div v-for="item in activeTour" :key="item.title" class="flex gap-2 text-xs">
-            <UIcon :name="item.icon" class="text-muted mt-0.5 size-3.5 shrink-0" />
-            <span>
-              <b>{{ item.title }}.</b>
-              <span class="text-muted"> {{ item.text }}</span>
-            </span>
-          </div>
-          <UButton
-            size="sm"
-            icon="i-lucide-flask-conical"
-            label="Simulate it"
-            class="self-start font-semibold"
-            :disabled="running"
-            @click="handleSimulate"
+        <template #resize-handle>
+          <div
+            class="group-hover:bg-primary/40 group-data-[resize-handle-state=drag]:bg-primary absolute inset-y-0 left-1/2 w-px -translate-x-1/2 transition-colors"
           />
-          <span class="text-muted text-xs">
-            Click any step to see how it's set up. Simulate plays the chain on the canvas with
-            example replies, so you don't need a broker.
-          </span>
-        </div>
-
-        <template v-if="!selectedNode">
-          <div class="text-muted mt-2.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
-            Chain settings
-          </div>
-          <ChainRepeatSettings v-model="repeat" />
         </template>
-
-        <template v-if="log.length || historyCount">
-          <SegmentedControl
-            v-model="logTab"
-            size="sm"
-            class="mt-2.5 self-start"
-            :items="[
-              { label: 'This run', value: 'run', disabled: !log.length },
-              { label: `History (${historyCount})`, value: 'history', disabled: !historyCount }
-            ]"
-          />
-          <ChainRunLog v-if="logTab === 'run' && log.length" :entries="log" />
-          <ChainRunHistory v-else-if="chainId" :chain-id="chainId" />
-        </template>
-      </aside>
+      </USplitter>
     </div>
 
     <ActionDialog
