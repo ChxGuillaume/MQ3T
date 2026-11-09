@@ -8,6 +8,7 @@ import {
   clearNodeStates,
   runChain
 } from './chain-runner'
+import { useChainRunHistoryStore } from '@renderer/store/chain-run-history'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 export type { ChainRunLogEntry } from './chain-runner'
@@ -40,6 +41,8 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
   const outcome = ref<ChainRunOutcome>()
   const iteration = ref({ current: 1, total: 1 })
 
+  const historyStore = useChainRunHistoryStore()
+
   let currentRun: ChainRun | undefined
   let clearTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -63,7 +66,7 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
   const run = async (
     connectionId: string,
     graph: ChainRunGraph,
-    runOptions: ChainRunOptions = {}
+    runOptions: ChainRunOptions & { chainId?: string } = {}
   ): Promise<ChainRunOutcome | undefined> => {
     if (running.value) return
 
@@ -71,9 +74,22 @@ export function useRunActionChain(options: UseRunActionChainOptions = {}) {
 
     running.value = true
     outcome.value = undefined
+    const startedAt = Date.now()
+
     currentRun = runChain(graph, connectionId, hooks, runOptions)
 
     const result = await currentRun.done
+
+    if (runOptions.chainId) {
+      historyStore.addRun(runOptions.chainId, {
+        connectionId,
+        startedAt,
+        endedAt: Date.now(),
+        outcome: result,
+        iterations: currentRun.context.iteration,
+        log: log.value
+      })
+    }
 
     running.value = false
     outcome.value = result

@@ -90,7 +90,7 @@ const handleRun = async () => {
 
   if (!variables) return
 
-  run(props.connectionId, props.chainAction, { variables })
+  run(props.connectionId, props.chainAction, { variables, chainId: props.chainAction.id })
   emit('send')
 }
 
