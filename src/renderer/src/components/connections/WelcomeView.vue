@@ -28,6 +28,15 @@ const importActions = () => {
           @click="appStore.openConnectionEditor(null)"
         />
         <UButton
+          icon="i-lucide-timer"
+          label="Temporary connection"
+          color="neutral"
+          variant="outline"
+          size="lg"
+          class="h-[42px] px-[18px]"
+          @click="appStore.openQuickConnect()"
+        />
+        <UButton
           label="Import actions file"
           color="neutral"
           variant="outline"

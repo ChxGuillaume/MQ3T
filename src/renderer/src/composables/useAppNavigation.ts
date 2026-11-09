@@ -12,8 +12,15 @@ export function useAppNavigation() {
 
   const selectedClientKey = computed(() => mqttTopicsStore.selectedConnection)
 
+  const isSectionAvailable = (clientKey: string, section: ConnectionSection) =>
+    section !== 'actions' || !mqttConnectionsStore.isTemporary(clientKey)
+
   const currentSection = computed<ConnectionSection>({
-    get: () => appStore.getSection(selectedClientKey.value),
+    get: () => {
+      const section = appStore.getSection(selectedClientKey.value)
+
+      return isSectionAvailable(selectedClientKey.value, section) ? section : 'explore'
+    },
     set: (section) => appStore.setSection(selectedClientKey.value, section)
   })
 
@@ -24,13 +31,14 @@ export function useAppNavigation() {
     mqttTopicsStore.selectedConnection = clientKey
     actionsStore.setSelectedConnection(clientKey)
 
-    if (section) appStore.setSection(clientKey, section)
+    if (section && isSectionAvailable(clientKey, section)) appStore.setSection(clientKey, section)
 
     appStore.setView('connection')
   }
 
   const openSection = (section: ConnectionSection) => {
     if (!selectedClientKey.value) return
+    if (!isSectionAvailable(selectedClientKey.value, section)) return
 
     openConnection(selectedClientKey.value, section)
   }

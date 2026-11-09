@@ -23,7 +23,7 @@ export function useConnectionActions() {
   const mqttConnectionsStore = useMqttConnectionsStore()
   const appStore = useAppStore()
 
-  const { openConnection } = useAppNavigation()
+  const { openConnection, closeConnection } = useAppNavigation()
 
   const isOpen = (clientKey: string) => !!mqttConnectionsStore.connectionsStatus[clientKey]
 
@@ -36,6 +36,12 @@ export function useConnectionActions() {
     }
 
     mqttConnectionsStore.duplicateConnection(connection.clientKey, copy)
+  }
+
+  const discardTemporary = (clientKey: string) => {
+    if (isOpen(clientKey)) closeConnection(clientKey)
+
+    mqttConnectionsStore.discardTemporaryConnection(clientKey)
   }
 
   const reconnect = (clientKey: string) => {
@@ -64,28 +70,50 @@ export function useConnectionActions() {
             ]
           : [])
       ],
-      [
-        {
-          label: 'Edit',
-          icon: 'i-lucide-pencil',
-          onSelect: () => appStore.openConnectionEditor(connection.clientKey)
-        },
-        {
-          label: 'Duplicate',
-          icon: 'i-lucide-copy',
-          onSelect: () => duplicate(connection)
-        }
-      ],
-      [
-        {
-          label: 'Delete',
-          icon: 'i-lucide-trash-2',
-          color: 'error',
-          onSelect: () => mqttConnectionsStore.removeConnection(connection.clientKey)
-        }
-      ]
+      ...(connection.temporary ? temporaryItems(connection) : savedItems(connection))
     ]
   }
 
-  return { connectionItems, duplicate, reconnect, isOpen }
+  const savedItems = (connection: MqttConnection): DropdownMenuItem[][] => [
+    [
+      {
+        label: 'Edit',
+        icon: 'i-lucide-pencil',
+        onSelect: () => appStore.openConnectionEditor(connection.clientKey)
+      },
+      {
+        label: 'Duplicate',
+        icon: 'i-lucide-copy',
+        onSelect: () => duplicate(connection)
+      }
+    ],
+    [
+      {
+        label: 'Delete',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: () => mqttConnectionsStore.removeConnection(connection.clientKey)
+      }
+    ]
+  ]
+
+  const temporaryItems = (connection: MqttConnection): DropdownMenuItem[][] => [
+    [
+      {
+        label: 'Save connection…',
+        icon: 'i-lucide-save',
+        onSelect: () => appStore.openConnectionEditor(connection.clientKey)
+      }
+    ],
+    [
+      {
+        label: 'Discard',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: () => discardTemporary(connection.clientKey)
+      }
+    ]
+  ]
+
+  return { connectionItems, duplicate, reconnect, isOpen, discardTemporary }
 }

@@ -50,7 +50,12 @@ const items = computed(() => connectionItems(props.connection))
   <div class="flex min-w-0">
     <UContextMenu :items="items">
       <article
-        class="border-default bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-lg border p-4"
+        class="bg-default flex min-w-0 flex-1 flex-col gap-3.5 rounded-lg border p-4"
+        :class="
+          connection.temporary
+            ? 'border-dashed border-[color-mix(in_oklab,var(--ui-warning)_55%,transparent)]'
+            : 'border-default'
+        "
       >
         <div class="flex items-center gap-3">
           <span
@@ -65,7 +70,15 @@ const items = computed(() => connectionItems(props.connection))
             {{ connectionInitials(connection.name) }}
           </span>
           <div class="min-w-0 flex-1" :class="{ 'drag-handle cursor-grab': draggable }">
-            <div class="truncate font-bold" :title="connection.name">{{ connection.name }}</div>
+            <div class="flex items-center gap-1.5">
+              <span class="truncate font-bold" :title="connection.name">{{ connection.name }}</span>
+              <UIcon
+                v-if="connection.temporary"
+                name="i-lucide-timer"
+                class="text-warning size-3.5 shrink-0"
+                aria-label="Temporary connection"
+              />
+            </div>
             <div class="text-muted truncate font-mono text-xs" :title="formatMqttUrl(connection)">
               {{ formatMqttUrl(connection) }}
             </div>
@@ -88,28 +101,31 @@ const items = computed(() => connectionItems(props.connection))
           <span class="bg-muted text-muted rounded-full px-2.5 py-0.5 text-xs">
             {{ subscriptionsLabel }}
           </span>
+        </div>
+
+        <div class="mt-auto flex items-center gap-3">
           <span
-            class="ml-1 flex items-center gap-1.5 text-xs font-semibold"
+            class="flex min-w-0 items-center gap-2 text-xs leading-none font-semibold"
             :class="opened ? 'text-default' : 'text-muted'"
           >
             <span
-              class="size-2 rounded-full"
+              class="size-2 shrink-0 rounded-full"
               :class="opened ? statusDotClass(status) : 'bg-(--ui-text-muted)'"
             />
-            {{ stateLabel }}
+            <span class="truncate">{{ stateLabel }}</span>
           </span>
           <UButton
             v-if="opened"
             label="Go to tab"
             color="neutral"
             variant="outline"
-            class="ml-auto font-semibold"
+            class="ml-auto shrink-0 font-semibold"
             @click="openConnection(connection.clientKey)"
           />
           <UButton
             v-else
             label="Connect"
-            class="ml-auto font-semibold"
+            class="ml-auto shrink-0 font-semibold"
             @click="openConnection(connection.clientKey)"
           />
         </div>

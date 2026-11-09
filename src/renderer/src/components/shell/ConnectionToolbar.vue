@@ -7,7 +7,7 @@ import {
 import SegmentedControl, { SegmentedItem } from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useAppNavigation } from '@renderer/composables/useAppNavigation'
-import { ConnectionSection } from '@renderer/store/app-store'
+import { ConnectionSection, useAppStore } from '@renderer/store/app-store'
 import { computed } from 'vue'
 
 defineSlots<{ default?: () => unknown }>()
@@ -15,17 +15,20 @@ defineSlots<{ default?: () => unknown }>()
 const emit = defineEmits<{ 'new-message': [] }>()
 
 const mqttConnectionsStore = useMqttConnectionsStore()
+const appStore = useAppStore()
 
 const { selectedClientKey, currentSection } = useAppNavigation()
 
-const sections: SegmentedItem<ConnectionSection>[] = [
+const connection = computed(() => mqttConnectionsStore.getConnection(selectedClientKey.value))
+
+const isTemporary = computed(() => !!connection.value?.temporary)
+
+const sections = computed<SegmentedItem<ConnectionSection>[]>(() => [
   { label: 'Explore', value: 'explore' },
-  { label: 'Actions', value: 'actions' },
+  { label: 'Actions', value: 'actions', disabled: isTemporary.value },
   { label: 'Graphs', value: 'graphs' },
   { label: 'Broker', value: 'broker' }
-]
-
-const connection = computed(() => mqttConnectionsStore.getConnection(selectedClientKey.value))
+])
 
 const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedClientKey.value))
 </script>
@@ -36,9 +39,32 @@ const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedC
 
     <slot />
 
+    <UTooltip
+      v-if="isTemporary"
+      text="Not saved: discarded when MQ3T closes. Save it to use actions."
+    >
+      <UBadge
+        label="Temporary"
+        icon="i-lucide-timer"
+        color="warning"
+        variant="subtle"
+        class="ml-auto"
+      />
+    </UTooltip>
+
+    <UButton
+      v-if="isTemporary"
+      icon="i-lucide-save"
+      label="Save connection"
+      color="neutral"
+      variant="outline"
+      @click="appStore.openConnectionEditor(selectedClientKey)"
+    />
+
     <span
       v-if="connection"
-      class="text-muted ml-auto flex items-center gap-1.5 text-xs"
+      class="text-muted flex items-center gap-1.5 text-xs"
+      :class="{ 'ml-auto': !isTemporary }"
       :title="`${connection.protocol}://${hostLabel(connection)}`"
     >
       <span class="size-2 rounded-full" :class="statusDotClass(status)" />

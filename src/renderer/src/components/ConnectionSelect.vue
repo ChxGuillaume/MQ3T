@@ -31,7 +31,7 @@ const sortedConnectionsFunc = (a: MqttConnection, b: MqttConnection) => {
 }
 
 const items = computed(() =>
-  mqttConnectionsStore.connections
+  mqttConnectionsStore.savedConnections
     .slice()
     .sort(sortedConnectionsFunc)
     .map((connection) => ({

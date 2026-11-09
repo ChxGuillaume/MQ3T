@@ -3,6 +3,7 @@ import ActionDialog from '@renderer/components/tab-actions/dialogs/ActionDialog.
 import PublishHistoryList, { SentMessage } from './PublishHistoryList.vue'
 import { useSettingsStore } from '@renderer/store/settings-store'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useActionsStore } from '@renderer/store/actions'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { Action } from '../../../../../types/actions'
@@ -15,6 +16,7 @@ const props = defineProps<{ clientKey: string; topic: string }>()
 const emit = defineEmits<{ published: [topic: string] }>()
 
 const mqttTopicsStore = useMqttTopicsStore()
+const mqttConnectionsStore = useMqttConnectionsStore()
 const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 
@@ -97,6 +99,7 @@ const editAction = (action: Action) => {
 
     <PublishHistoryList
       :items="sent"
+      :can-convert="!mqttConnectionsStore.isTemporary(clientKey)"
       @load="formRef?.load($event.message)"
       @convert="formRef?.openConvert($event.message, $event.topic)"
     />

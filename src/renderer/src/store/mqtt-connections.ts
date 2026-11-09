@@ -27,6 +27,14 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         .map((clientKey) => this.getConnection(clientKey))
         .filter((connection): connection is MqttConnection => !!connection)
     },
+    savedConnections: (state): MqttConnection[] =>
+      state.connections.filter((connection) => !connection.temporary),
+    temporaryConnections: (state): MqttConnection[] =>
+      state.connections.filter((connection) => connection.temporary),
+    isTemporary:
+      (state) =>
+      (clientKey: string): boolean =>
+        !!state.connections.find((connection) => connection.clientKey === clientKey)?.temporary,
     getConnectionsFromClientKeyList: (state) => (clientKeyList: string[]) => {
       return state.connections.filter((connection) => {
         return clientKeyList.includes(connection.clientKey)
@@ -74,7 +82,17 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       this.saveConnections()
     },
     saveConnections() {
-      ElectronApi.saveMqttConnections(JSON.parse(JSON.stringify(this.connections)))
+      ElectronApi.saveMqttConnections(JSON.parse(JSON.stringify(this.savedConnections)))
+    },
+    addTemporaryConnection(connection: MqttConnection) {
+      this.connections.push({ ...connection, temporary: true })
+    },
+    discardTemporaryConnection(clientKey: string) {
+      if (!this.isTemporary(clientKey)) return
+
+      this.disconnectClient(clientKey)
+      this.hideConnection(clientKey)
+      this.connections = this.connections.filter((connection) => connection.clientKey !== clientKey)
     },
     setConnectionStatus(clientKey: string, status: MqttConnectionStatus) {
       this.connectionsStatus[clientKey] = status

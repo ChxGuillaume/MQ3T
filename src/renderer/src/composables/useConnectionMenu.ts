@@ -1,11 +1,13 @@
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { MqttConnection } from '../../../types/mqtt-connection'
+import { useAppStore } from '@renderer/store/app-store'
 import type { ContextMenuItem } from '@nuxt/ui'
 
 export function useConnectionMenu() {
   const mqttConnectionsStore = useMqttConnectionsStore()
   const mqttTopicsStore = useMqttTopicsStore()
+  const appStore = useAppStore()
 
   const reconnect = (connection: MqttConnection) => {
     mqttConnectionsStore.disconnectClient(connection.clientKey)
@@ -41,6 +43,30 @@ export function useConnectionMenu() {
             }
           ]
 
+    const temporaryItems: ContextMenuItem[] = connection.temporary
+      ? [
+          {
+            label: 'Save connection…',
+            icon: 'i-lucide-save',
+            onSelect: () => appStore.openConnectionEditor(connection.clientKey)
+          }
+        ]
+      : []
+
+    const discardItems: ContextMenuItem[] = connection.temporary
+      ? [
+          {
+            label: 'Discard connection',
+            icon: 'i-lucide-trash-2',
+            color: 'error',
+            onSelect: () => {
+              onClose(connection.clientKey)
+              mqttConnectionsStore.discardTemporaryConnection(connection.clientKey)
+            }
+          }
+        ]
+      : []
+
     return [
       statusItems,
       [
@@ -48,7 +74,8 @@ export function useConnectionMenu() {
           label: 'Clear all topics',
           icon: 'i-lucide-eraser',
           onSelect: () => mqttTopicsStore.clearConnectionMessages(connection.clientKey)
-        }
+        },
+        ...temporaryItems
       ],
       [
         {
@@ -56,7 +83,8 @@ export function useConnectionMenu() {
           icon: 'i-lucide-x',
           color: 'error',
           onSelect: () => onClose(connection.clientKey)
-        }
+        },
+        ...discardItems
       ]
     ]
   }

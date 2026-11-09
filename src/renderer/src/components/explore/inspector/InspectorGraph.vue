@@ -12,9 +12,13 @@ import { useDataGraphsStore } from '@renderer/store/data-graphs'
 import { ElectronApi } from '@renderer/assets/js/electron-api'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { useSharedNow } from '@renderer/composables/useSharedNow'
+import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{ clientKey: string; topic: string }>()
+
+const mqttConnectionsStore = useMqttConnectionsStore()
+const canOpenWindow = computed(() => !mqttConnectionsStore.isTemporary(props.clientKey))
 
 const mqttTopicsStore = useMqttTopicsStore()
 const dataGraphsStore = useDataGraphsStore()
@@ -179,6 +183,7 @@ const addToGraphs = () => {
         @click="addToGraphs"
       />
       <UButton
+        v-if="canOpenWindow"
         icon="i-lucide-external-link"
         label="Open in graph window"
         color="neutral"
