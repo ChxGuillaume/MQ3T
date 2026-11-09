@@ -2,6 +2,8 @@ import { IClientPublishOptions, OnMessageCallback } from 'mqtt'
 import { MqttConnection } from '../types/mqtt-connection'
 import mqtt, { IClientOptions } from 'mqtt'
 
+const LATENCY_PING_INTERVAL_MS = 2000
+
 const valueOrUndefined = <T>(value: T | undefined) => {
   if (!value) return undefined
 
@@ -66,21 +68,28 @@ export class MqttClient {
       connectionOptions
     )
 
-    let pingStartTime: number
+    let pingStartTime: number | undefined
 
     this.pingTimer = setInterval(() => {
-      if (!this.client.connected) return
+      if (!this.client.connected || pingStartTime !== undefined) return
 
       pingStartTime = Date.now()
       this.client.sendPing()
-    }, 1000 * 5)
+    }, LATENCY_PING_INTERVAL_MS)
+
+    this.client.on('close', () => {
+      pingStartTime = undefined
+    })
 
     this.client.on('packetreceive', (packet) => {
-      if (packet.cmd !== 'pingresp') return
+      if (packet.cmd !== 'pingresp' || pingStartTime === undefined) return
+
+      const latency = Date.now() - pingStartTime
+      pingStartTime = undefined
 
       for (const cb of this.latencyCallbacks) {
         try {
-          cb(Date.now() - pingStartTime)
+          cb(latency)
         } catch {
           /* empty */
         }

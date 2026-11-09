@@ -5,6 +5,10 @@ import { defineStore } from 'pinia'
 
 const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
+const LATENCY_HISTORY_SIZE = 60
+
+export type LatencySample = { at: number; latency: number }
+
 export const useMqttConnectionsStore = defineStore('mqtt-connections', {
   state: () => ({
     connections: [] as MqttConnection[],
@@ -12,6 +16,8 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
     connectedAt: {} as Record<string, number>,
     reconnectAttempts: {} as Record<string, number>,
     lastErrors: {} as Record<string, string>,
+    latencies: {} as Record<string, number>,
+    latencyHistory: {} as Record<string, LatencySample[]>,
     tabOrder: [] as string[]
   }),
   getters: {
@@ -109,7 +115,22 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
         this.reconnectAttempts[clientKey] = (this.reconnectAttempts[clientKey] ?? 0) + 1
       }
 
-      if (status !== 'connected') delete this.connectedAt[clientKey]
+      if (status !== 'connected') {
+        delete this.connectedAt[clientKey]
+        delete this.latencies[clientKey]
+        delete this.latencyHistory[clientKey]
+      }
+    },
+    setConnectionLatency(clientKey: string, latency: number) {
+      if (this.connectionsStatus[clientKey] !== 'connected') return
+
+      this.latencies[clientKey] = latency
+
+      const history = this.latencyHistory[clientKey] ?? []
+
+      this.latencyHistory[clientKey] = [...history, { at: Date.now(), latency }].slice(
+        -LATENCY_HISTORY_SIZE
+      )
     },
     setConnectionError(clientKey: string, message: string) {
       this.lastErrors[clientKey] = message
@@ -125,6 +146,8 @@ export const useMqttConnectionsStore = defineStore('mqtt-connections', {
       delete this.connectionsStatus[clientKey]
       delete this.reconnectAttempts[clientKey]
       delete this.lastErrors[clientKey]
+      delete this.latencies[clientKey]
+      delete this.latencyHistory[clientKey]
       this.removeFromTabOrder(clientKey)
     },
     setTabOrder(clientKeys: string[]) {

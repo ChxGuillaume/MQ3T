@@ -4,6 +4,7 @@ import {
   protocolVersionLabel,
   statusDotClass
 } from '@renderer/composables/useConnectionStatus'
+import LatencyIndicator from '@renderer/components/shell/LatencyIndicator.vue'
 import SegmentedControl, { SegmentedItem } from '@renderer/components/ui/SegmentedControl.vue'
 import { useMqttConnectionsStore } from '@renderer/store/mqtt-connections'
 import { useAppNavigation } from '@renderer/composables/useAppNavigation'
@@ -35,6 +36,10 @@ const sections = computed<SegmentedItem<ConnectionSection>[]>(() => [
 ])
 
 const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedClientKey.value))
+
+const hasLatency = computed(
+  () => mqttConnectionsStore.latencies[selectedClientKey.value] !== undefined
+)
 </script>
 
 <template>
@@ -73,6 +78,10 @@ const status = computed(() => mqttConnectionsStore.getConnectionStatus(selectedC
     >
       <span class="size-2 rounded-full" :class="statusDotClass(status)" />
       {{ hostLabel(connection) }} · {{ protocolVersionLabel(connection) }}
+      <template v-if="hasLatency">
+        ·
+        <LatencyIndicator :client-key="selectedClientKey" />
+      </template>
     </span>
 
     <UTooltip text="New message" :kbds="['meta', 'N']">
