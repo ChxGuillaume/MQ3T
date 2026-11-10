@@ -5,7 +5,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import SmartSearchInput from './SmartSearchInput.vue'
 import { computed } from 'vue'
 
-defineProps<{ countLabel: string }>()
+defineProps<{ countLabel: { text: string; title: string } }>()
 
 const emit = defineEmits<{ collapseAll: []; revealSelected: [] }>()
 
@@ -17,40 +17,55 @@ const search = computed({
   set: (value: string) => mqttTopicsStore.setTopicSearch(value)
 })
 
-const displayModes: { label: string; value: TopicDisplayMode; icon: string }[] = [
+type ViewMode = TopicDisplayMode | 'favorites'
+
+const viewModes: { label: string; value: ViewMode; icon: string }[] = [
   { label: 'Tree', value: 'tree', icon: 'i-lucide-list-tree' },
-  { label: 'List', value: 'line', icon: 'i-lucide-list' }
+  { label: 'List', value: 'line', icon: 'i-lucide-list' },
+  { label: 'Favorites', value: 'favorites', icon: 'i-lucide-star' }
 ]
 
-const chips = computed(() => [
+const viewMode = computed<ViewMode>(() =>
+  exploreUiStore.filterFavorites ? 'favorites' : exploreUiStore.displayMode
+)
+
+const setViewMode = (mode: ViewMode) => {
+  exploreUiStore.filterFavorites = mode === 'favorites'
+
+  if (mode !== 'favorites') exploreUiStore.displayMode = mode
+}
+
+const filters = computed(() => [
   {
     label: 'Changing now',
+    icon: 'i-lucide-activity',
+    query: 'is:changing',
     pressed: exploreUiStore.filterChanging,
     toggle: () => (exploreUiStore.filterChanging = !exploreUiStore.filterChanging)
   },
   {
-    label: 'Favorites',
-    pressed: exploreUiStore.filterFavorites,
-    toggle: () => (exploreUiStore.filterFavorites = !exploreUiStore.filterFavorites)
-  },
-  {
     label: 'Retained',
+    icon: 'i-lucide-pin',
+    query: 'is:retained',
     pressed: exploreUiStore.filterRetained,
     toggle: () => (exploreUiStore.filterRetained = !exploreUiStore.filterRetained)
   }
 ])
 
-const activeChipCount = computed(() => chips.value.filter((chip) => chip.pressed).length)
+const activeFilterCount = computed(() => filters.value.filter((filter) => filter.pressed).length)
 
-const filterMenuItems = computed<DropdownMenuItem[]>(() =>
-  chips.value.map((chip) => ({
+const filterMenuItems = computed<DropdownMenuItem[][]>(() => [
+  [{ type: 'label', label: 'Show only' }],
+  filters.value.map((filter) => ({
     type: 'checkbox',
-    label: chip.label,
-    checked: chip.pressed,
-    onUpdateChecked: chip.toggle,
+    label: filter.label,
+    icon: filter.icon,
+    kbds: [filter.query],
+    checked: filter.pressed,
+    onUpdateChecked: filter.toggle,
     onSelect: (event: Event) => event.preventDefault()
   }))
-)
+])
 </script>
 
 <template>
@@ -64,71 +79,51 @@ const filterMenuItems = computed<DropdownMenuItem[]>(() =>
             ? 'Filter favorites, try is:changing or temp>20'
             : 'Search topics and values, try temp>20 is:retained'
         "
+        :count="countLabel"
         class="min-w-0 flex-1"
       />
 
-      <div
-        v-if="!exploreUiStore.filterFavorites"
-        class="bg-muted flex shrink-0 gap-0.5 rounded-md p-0.5"
-      >
-        <UTooltip v-for="mode in displayModes" :key="mode.value" :text="mode.label">
+      <div class="bg-muted flex shrink-0 gap-0.5 rounded-md p-0.5">
+        <UTooltip v-for="mode in viewModes" :key="mode.value" :text="mode.label">
           <UButton
             :icon="mode.icon"
             size="xs"
             color="neutral"
             variant="ghost"
-            :aria-label="`${mode.label} display`"
-            :aria-pressed="exploreUiStore.displayMode === mode.value"
+            :aria-label="`${mode.label} view`"
+            :aria-pressed="viewMode === mode.value"
             :class="
-              exploreUiStore.displayMode === mode.value
+              viewMode === mode.value
                 ? 'bg-default text-primary hover:bg-default rounded-sm'
                 : 'text-muted rounded-sm'
             "
-            @click="exploreUiStore.displayMode = mode.value"
+            @click="setViewMode(mode.value)"
           />
         </UTooltip>
       </div>
 
-      <div class="hidden shrink-0 items-center gap-1.5 @3xl:flex">
-        <UButton
-          v-for="chip in chips"
-          :key="chip.label"
-          :label="chip.label"
-          :aria-pressed="chip.pressed"
-          color="neutral"
-          variant="outline"
-          class="h-8 px-3 text-xs whitespace-nowrap"
-          :class="
-            chip.pressed
-              ? 'bg-primary/10 text-primary ring-primary hover:bg-primary/10 font-bold'
-              : 'font-medium'
-          "
-          @click="chip.toggle"
-        />
-      </div>
-
       <UDropdownMenu :items="filterMenuItems" :content="{ align: 'end' }">
-        <UButton
-          icon="i-lucide-list-filter"
-          color="neutral"
-          variant="outline"
-          aria-label="Filters"
-          class="h-8 shrink-0 px-2 text-xs font-medium @3xl:hidden"
-          :class="
-            activeChipCount ? 'bg-primary/10 text-primary ring-primary hover:bg-primary/10' : ''
-          "
-        >
-          <span class="hidden @md:inline">Filters</span>
-          <span
-            v-if="activeChipCount"
-            class="bg-primary text-inverted rounded-full px-1.5 text-[10px] leading-4 font-bold"
+        <UTooltip text="Filters">
+          <UButton
+            icon="i-lucide-list-filter"
+            size="sm"
+            color="neutral"
+            :variant="activeFilterCount ? 'soft' : 'ghost'"
+            aria-label="Filters"
+            class="relative shrink-0"
+            :class="activeFilterCount ? 'text-primary' : ''"
           >
-            {{ activeChipCount }}
-          </span>
-        </UButton>
+            <span
+              v-if="activeFilterCount"
+              class="bg-primary text-inverted absolute -top-1 -right-1 min-w-4 rounded-full px-1 text-[10px] leading-4 font-bold"
+            >
+              {{ activeFilterCount }}
+            </span>
+          </UButton>
+        </UTooltip>
       </UDropdownMenu>
 
-      <template v-if="!exploreUiStore.filterFavorites && exploreUiStore.displayMode === 'tree'">
+      <div class="flex shrink-0 items-center">
         <UTooltip text="Collapse all">
           <UButton
             icon="i-lucide-chevrons-down-up"
@@ -136,7 +131,7 @@ const filterMenuItems = computed<DropdownMenuItem[]>(() =>
             color="neutral"
             variant="ghost"
             aria-label="Collapse all"
-            class="shrink-0"
+            :disabled="viewMode !== 'tree'"
             @click="emit('collapseAll')"
           />
         </UTooltip>
@@ -147,16 +142,11 @@ const filterMenuItems = computed<DropdownMenuItem[]>(() =>
             color="neutral"
             variant="ghost"
             aria-label="Reveal selected"
-            class="shrink-0"
-            :disabled="!mqttTopicsStore.selectedTopic"
+            :disabled="viewMode !== 'tree' || !mqttTopicsStore.selectedTopic"
             @click="emit('revealSelected')"
           />
         </UTooltip>
-      </template>
-
-      <span class="text-muted hidden shrink-0 text-xs whitespace-nowrap @xl:inline">
-        {{ countLabel }}
-      </span>
+      </div>
     </div>
   </div>
 </template>

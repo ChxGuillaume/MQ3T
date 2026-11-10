@@ -5,7 +5,7 @@ import { parseMessage } from '@renderer/assets/js/payload-insight'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { computed, nextTick, ref, toRaw, useTemplateRef, watch } from 'vue'
 import { sortTopicKeys } from './topic-tree-context'
-import { useStorage } from '@vueuse/core'
+import { useElementSize, useStorage } from '@vueuse/core'
 
 type Suggestion = {
   label: string
@@ -19,7 +19,11 @@ const MAX_SUGGESTIONS = 10
 const MAX_RECENT = 10
 const PATH_SAMPLE_SIZE = 20
 
-const props = defineProps<{ clientKey: string; placeholder: string }>()
+const props = defineProps<{
+  clientKey: string
+  placeholder: string
+  count?: { text: string; title: string }
+}>()
 
 const model = defineModel<string>({ required: true })
 
@@ -27,6 +31,8 @@ const mqttTopicsStore = useMqttTopicsStore()
 const { typedQuery } = useTopicQuery()
 
 const inputComponent = useTemplateRef('inputComponent')
+const trailingRef = useTemplateRef('trailingRef')
+const { width: trailingWidth } = useElementSize(trailingRef)
 const caret = ref(0)
 const focused = ref(false)
 const dismissed = ref(false)
@@ -322,6 +328,7 @@ const appendExample = (example: string) => {
           aria-autocomplete="list"
           :aria-expanded="open"
           spellcheck="false"
+          :style="{ paddingInlineEnd: `${trailingWidth + 16}px` }"
           @keydown="handleKeyDown"
           @keyup="syncCaret"
           @click="syncCaret"
@@ -330,7 +337,14 @@ const appendExample = (example: string) => {
           @blur="handleBlur"
         >
           <template #trailing>
-            <div class="flex items-center gap-0.5">
+            <div ref="trailingRef" class="flex items-center gap-0.5">
+              <span
+                v-if="count"
+                :title="count.title"
+                class="text-dimmed hidden pe-1 text-xs whitespace-nowrap tabular-nums @md:inline"
+              >
+                {{ count.text }}
+              </span>
               <UTooltip v-if="typedQuery.warnings.length" :text="typedQuery.warnings.join(' · ')">
                 <UIcon
                   name="i-lucide-triangle-alert"
