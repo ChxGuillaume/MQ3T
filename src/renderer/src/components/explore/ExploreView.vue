@@ -27,13 +27,20 @@ const favoritesCount = computed(
 
 const countLabel = computed(() => {
   if (exploreUiStore.filterFavorites) {
-    return `${favoritesCount.value} ${favoritesCount.value === 1 ? 'favorite' : 'favorites'} · drag to reorder`
+    const text = `${favoritesCount.value} ${favoritesCount.value === 1 ? 'favorite' : 'favorites'}`
+
+    return { text, title: `${text}, drag cards to reorder` }
   }
 
   const { matched, total } = topicsCount.value
   const label = `${total.toLocaleString()} ${total === 1 ? 'topic' : 'topics'}`
 
-  return matched === total ? label : `${matched.toLocaleString()} of ${label}`
+  if (matched === total) return { text: label, title: label }
+
+  return {
+    text: `${matched.toLocaleString()} / ${total.toLocaleString()}`,
+    title: `${matched.toLocaleString()} of ${label} match`
+  }
 })
 
 const splitterItems = [

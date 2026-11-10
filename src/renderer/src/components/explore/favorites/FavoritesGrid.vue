@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useFavoriteTopicsStore } from '@renderer/store/favorite-topics'
-import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
-import { matchTopics } from '@renderer/assets/js/mqtt'
+import { useTopicFilter } from '@renderer/composables/useTopicQuery'
 import FavoriteCard from './FavoriteCard.vue'
 import draggable from 'vuedraggable'
 import { computed } from 'vue'
@@ -11,23 +10,14 @@ const props = defineProps<{ clientKey: string }>()
 const emit = defineEmits<{ open: [topic: string] }>()
 
 const favoriteTopicsStore = useFavoriteTopicsStore()
-const mqttTopicsStore = useMqttTopicsStore()
-
-const search = computed(() => mqttTopicsStore.topicSearch.trim())
+const { filterActive, topicStage, factsStage } = useTopicFilter(() => props.clientKey)
 
 const favorites = computed({
   get: () => favoriteTopicsStore.getClientFavoriteTopics(props.clientKey),
   set: (topics: string[]) => favoriteTopicsStore.reorderFavoriteTopics(props.clientKey, topics)
 })
 
-const visible = computed(() => {
-  const query = search.value
-
-  if (!query) return favorites.value
-  if (/[+#]/.test(query)) return favorites.value.filter((topic) => matchTopics(query, topic))
-
-  return favorites.value.filter((topic) => topic.toLowerCase().includes(query.toLowerCase()))
-})
+const visible = computed(() => factsStage(topicStage(favorites.value)))
 </script>
 
 <template>
@@ -41,7 +31,7 @@ const visible = computed(() => {
       class="py-16"
     />
     <draggable
-      v-else-if="!search"
+      v-else-if="!filterActive"
       v-model="favorites"
       :item-key="(topic: string) => topic"
       handle=".drag-handle-card"
