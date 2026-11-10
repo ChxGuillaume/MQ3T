@@ -2,6 +2,7 @@
 import { TopicDisplayMode, useExploreUiStore } from '@renderer/store/explore-ui'
 import { useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import type { DropdownMenuItem } from '@nuxt/ui'
+import SmartSearchInput from './SmartSearchInput.vue'
 import { computed } from 'vue'
 
 defineProps<{ countLabel: string }>()
@@ -55,28 +56,16 @@ const filterMenuItems = computed<DropdownMenuItem[]>(() =>
 <template>
   <div class="@container">
     <div class="flex items-center gap-2 px-4 py-2">
-      <UInput
+      <SmartSearchInput
         v-model="search"
-        icon="i-lucide-search"
+        :client-key="mqttTopicsStore.selectedConnection"
         :placeholder="
           exploreUiStore.filterFavorites
-            ? 'Filter favorites'
-            : 'Filter topics, wildcards work: line-2/+/temperature'
+            ? 'Filter favorites, try is:changing or temp>20'
+            : 'Search topics and values, try temp>20 is:retained'
         "
         class="min-w-0 flex-1"
-        :ui="{ base: 'h-8' }"
-      >
-        <template v-if="search" #trailing>
-          <UButton
-            icon="i-lucide-x"
-            size="xs"
-            color="neutral"
-            variant="link"
-            aria-label="Clear filter"
-            @click="search = ''"
-          />
-        </template>
-      </UInput>
+      />
 
       <div
         v-if="!exploreUiStore.filterFavorites"

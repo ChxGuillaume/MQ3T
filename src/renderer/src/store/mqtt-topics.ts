@@ -10,14 +10,6 @@ import _ from 'lodash'
 
 export type { MqttMessage, MqttTopicStructure, TopicMessages } from '../../../types/mqtt-topics'
 
-const filterBySearchTerms = (text: string, searchTerms: string): boolean => {
-  return searchTerms
-    .trim()
-    .toLowerCase()
-    .split(' ')
-    .some((keyword) => text.toLowerCase().includes(keyword))
-}
-
 export const useMqttTopicsStore = defineStore('mqtt-topics', {
   state: () => ({
     topicsMessages: {} as TopicMessages,
@@ -134,39 +126,7 @@ export const useMqttTopicsStore = defineStore('mqtt-topics', {
       return Object.keys(state.topicsMessages[clientKey] || {}).some((subTopic) => {
         return subTopic.startsWith(topic + '/')
       })
-    },
-    getFilteredTopicsList: (state) => (clientKey: string) => {
-      return Object.keys(state.topicsMessages[clientKey] || {}).filter((topic) => {
-        return filterBySearchTerms(topic, state.topicSearch)
-      })
-    },
-    getFilteredTopicsStructure:
-      (state) =>
-      (clientKey: string): MqttTopicStructure => {
-        const topicStructure = state.topicsStructure[clientKey] || {}
-
-        if (!state.topicSearch) return topicStructure
-
-        const filterTopicStructure = (topicStructure: MqttTopicStructure): MqttTopicStructure => {
-          const filteredTopicStructure: MqttTopicStructure = {}
-
-          for (const topicKey in topicStructure) {
-            if (filterBySearchTerms(topicKey, state.topicSearch)) {
-              filteredTopicStructure[topicKey] = topicStructure[topicKey]
-            } else {
-              const subTopicStructure = filterTopicStructure(topicStructure[topicKey] || {})
-
-              if (Object.keys(subTopicStructure).length) {
-                filteredTopicStructure[topicKey] = subTopicStructure
-              }
-            }
-          }
-
-          return filteredTopicStructure
-        }
-
-        return filterTopicStructure(topicStructure)
-      }
+    }
   },
   actions: {
     initStore() {

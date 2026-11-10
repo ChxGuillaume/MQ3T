@@ -7,17 +7,13 @@ import {
 } from './topic-tree-context'
 import { MqttTopicStructure, useMqttTopicsStore } from '@renderer/store/mqtt-topics'
 import { useActionsCacheStore } from '@renderer/store/actions-cache'
-import { useSharedNow } from '@renderer/composables/useSharedNow'
+import { useTopicFilter } from '@renderer/composables/useTopicQuery'
 import { TopicListSortKey, useExploreUiStore } from '@renderer/store/explore-ui'
 import { sortTopics } from '@renderer/assets/js/sort-topics'
 import { useAppStore } from '@renderer/store/app-store'
-import { matchTopics } from '@renderer/assets/js/mqtt'
 import { computed, provide, ref, watch } from 'vue'
-import { refDebounced } from '@vueuse/core'
 import TopicTreeRow from './TopicTreeRow.vue'
 import TopicListRow from './TopicListRow.vue'
-
-const CHANGING_WINDOW = 5000
 
 const props = defineProps<{ clientKey: string }>()
 
@@ -27,13 +23,11 @@ const actionsCacheStore = useActionsCacheStore()
 const mqttTopicsStore = useMqttTopicsStore()
 const exploreUiStore = useExploreUiStore()
 const appStore = useAppStore()
-const now = useSharedNow()
 
 const containerRef = ref<HTMLElement | null>(null)
 const filterCollapsed = ref(new Set<string>())
 
-const search = computed(() => mqttTopicsStore.topicSearch.trim())
-const debouncedSearch = refDebounced(search, 100)
+const { query, filterActive, topicStage, factsStage } = useTopicFilter(() => props.clientKey)
 
 const allTopics = computed(() => {
   const topics = new Set([
@@ -44,45 +38,17 @@ const allTopics = computed(() => {
   return Array.from(topics)
 })
 
-const matchesSearch = (topic: string, query: string) => {
-  if (/[+#]/.test(query)) return matchTopics(query, topic)
+const keywords = computed(() => query.value.highlightKeywords)
 
-  return query
-    .toLowerCase()
-    .split(' ')
-    .filter(Boolean)
-    .some((keyword) => topic.toLowerCase().includes(keyword))
-}
+const topicMatches = computed(() => topicStage(allTopics.value))
 
-const keywords = computed(() => {
-  if (/[+#]/.test(debouncedSearch.value)) return []
+const sameTopics = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((topic, index) => topic === b[index])
 
-  return debouncedSearch.value.toLowerCase().split(' ').filter(Boolean)
-})
+const matchedTopics = computed<string[]>((previous) => {
+  const next = factsStage(topicMatches.value)
 
-const filterActive = computed(
-  () => !!debouncedSearch.value || exploreUiStore.filterChanging || exploreUiStore.filterRetained
-)
-
-const matchedTopics = computed(() => {
-  if (!filterActive.value) return allTopics.value
-
-  const query = debouncedSearch.value
-  const changingSince = exploreUiStore.filterChanging ? now.value.getTime() - CHANGING_WINDOW : 0
-
-  return allTopics.value.filter((topic) => {
-    if (query && !matchesSearch(topic, query)) return false
-
-    if (!exploreUiStore.filterChanging && !exploreUiStore.filterRetained) return true
-
-    const last = mqttTopicsStore.getTopicLastMessage(props.clientKey, topic)
-
-    if (exploreUiStore.filterRetained && !last?.retained) return false
-    if (exploreUiStore.filterChanging && (!last || last.createdAt.getTime() < changingSince))
-      return false
-
-    return true
-  })
+  return previous && sameTopics(previous, next) ? previous : next
 })
 
 const visibleSet = computed(() => {
@@ -105,12 +71,9 @@ watch(
   { immediate: true }
 )
 
-watch(
-  [debouncedSearch, () => exploreUiStore.filterChanging, () => exploreUiStore.filterRetained],
-  () => {
-    filterCollapsed.value = new Set()
-  }
-)
+watch(query, () => {
+  filterCollapsed.value = new Set()
+})
 
 const structure = computed(() => mqttTopicsStore.getConnectionTopicsStructure(props.clientKey))
 
@@ -442,7 +405,7 @@ defineExpose({ scrollToTopic, collapseAll, revealSelected })
         <p class="text-xs">
           {{
             filterActive
-              ? 'Try another filter, wildcards like line-2/+/temperature work too.'
+              ? 'Try another filter, or open the search help for examples like temp>20 is:retained.'
               : 'Topics show up here as soon as the broker sends them.'
           }}
         </p>
