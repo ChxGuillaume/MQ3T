@@ -167,51 +167,60 @@ defineExpose({ confirmLeave })
     <div class="flex min-h-0 flex-1">
       <nav
         :aria-label="`Actions in ${group.name}`"
-        class="border-default flex w-[250px] shrink-0 flex-col gap-0.5 overflow-auto border-r px-3 py-4"
+        class="border-default flex w-[250px] shrink-0 flex-col border-r"
       >
-        <button
-          type="button"
-          class="text-muted hover:text-default mb-2 flex h-8 items-center gap-1.5 px-2.5 text-[13px]"
-          @click="leaveTo(() => emit('back'))"
-        >
-          <UIcon name="i-lucide-chevron-left" class="size-3.5" />
-          All actions
-        </button>
-        <div
-          class="text-muted truncate px-2.5 pb-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase"
-        >
-          {{ group.name }}
-        </div>
-        <button
-          v-for="sibling in siblings"
-          :key="sibling.id"
-          type="button"
-          class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
-          :class="
-            sibling.id === actionId
-              ? 'bg-primary/10 text-primary font-bold'
-              : 'hover:bg-muted font-medium'
-          "
-          @click="sibling.id !== actionId && leaveTo(() => emit('open', sibling.id))"
-        >
-          <span
-            aria-hidden="true"
-            class="border-default flex size-[22px] shrink-0 items-center justify-center rounded-sm border font-mono text-[10px] font-bold"
-            :class="formatTile(sibling.payloadFormat).class"
+        <div class="flex shrink-0 flex-col px-3 pt-4">
+          <button
+            type="button"
+            class="text-muted hover:text-default mb-2 flex h-8 items-center gap-1.5 px-2.5 text-[13px]"
+            @click="leaveTo(() => emit('back'))"
           >
-            {{ formatTile(sibling.payloadFormat).glyph }}
-          </span>
-          <span class="truncate text-left">{{ sibling.name }}</span>
-        </button>
-        <button
-          type="button"
-          class="flex h-9 shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
-          :class="!actionId ? 'bg-primary/10 text-primary font-bold' : 'text-muted hover:bg-muted'"
-          @click="actionId && leaveTo(() => emit('create'))"
+            <UIcon name="i-lucide-chevron-left" class="size-3.5" />
+            All actions
+          </button>
+          <div
+            class="text-muted truncate px-2.5 pb-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase"
+          >
+            {{ group.name }}
+          </div>
+        </div>
+        <div
+          class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto px-3 pb-4"
         >
-          <UIcon name="i-lucide-plus" class="size-3.5" />
-          New action
-        </button>
+          <button
+            v-for="sibling in siblings"
+            :key="sibling.id"
+            type="button"
+            class="flex h-9 w-full shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
+            :class="
+              sibling.id === actionId
+                ? 'bg-primary/10 text-primary font-bold'
+                : 'hover:bg-muted font-medium'
+            "
+            :title="sibling.name"
+            @click="sibling.id !== actionId && leaveTo(() => emit('open', sibling.id))"
+          >
+            <span
+              aria-hidden="true"
+              class="border-default flex size-[22px] shrink-0 items-center justify-center rounded-sm border font-mono text-[10px] font-bold"
+              :class="formatTile(sibling.payloadFormat).class"
+            >
+              {{ formatTile(sibling.payloadFormat).glyph }}
+            </span>
+            <span class="min-w-0 truncate text-left">{{ sibling.name }}</span>
+          </button>
+          <button
+            type="button"
+            class="flex h-9 w-full shrink-0 items-center gap-2 rounded-md px-2.5 text-[13px]"
+            :class="
+              !actionId ? 'bg-primary/10 text-primary font-bold' : 'text-muted hover:bg-muted'
+            "
+            @click="actionId && leaveTo(() => emit('create'))"
+          >
+            <UIcon name="i-lucide-plus" class="size-3.5" />
+            New action
+          </button>
+        </div>
       </nav>
 
       <main class="flex min-w-0 flex-1 flex-col overflow-auto px-7 py-5">
