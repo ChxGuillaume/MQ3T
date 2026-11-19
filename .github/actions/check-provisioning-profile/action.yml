@@ -1,0 +1,47 @@
+name: Check provisioning profile
+description: >
+  Decodes an Apple provisioning profile and checks its expiry date, app ID, team and,
+  when a .p12 bundle is given, that it includes one of the bundle's certificates.
+  Runs on macOS.
+
+inputs:
+  label:
+    description: Name shown in the report, e.g. "Mac App Store profile"
+    required: false
+    default: Provisioning profile
+  profile:
+    description: Base64 encoded .provisionprofile
+    required: true
+  bundle-id:
+    description: Bundle ID the profile must be for, e.g. com.example.app
+    required: true
+  team-id:
+    description: Apple team ID the profile must belong to (optional)
+    required: false
+    default: ''
+  certificate:
+    description: Base64 encoded .p12 bundle used to sign with this profile (optional)
+    required: false
+    default: ''
+  password:
+    description: Password of the .p12 bundle
+    required: false
+    default: ''
+  warn-days:
+    description: Warn when the profile expires within this many days
+    required: false
+    default: '30'
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        LABEL: ${{ inputs.label }}
+        PROFILE: ${{ inputs.profile }}
+        BUNDLE_ID: ${{ inputs.bundle-id }}
+        TEAM_ID: ${{ inputs.team-id }}
+        CERTIFICATE: ${{ inputs.certificate }}
+        PASSWORD: ${{ inputs.password }}
+        WARN_DAYS: ${{ inputs.warn-days }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"

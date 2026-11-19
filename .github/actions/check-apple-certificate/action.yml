@@ -1,0 +1,38 @@
+name: Check Apple certificate
+description: >
+  Imports a .p12 bundle into a throwaway keychain and checks that it holds the expected
+  signing identities, that they belong to the team and that they aren't about to expire.
+  Runs on macOS.
+
+inputs:
+  certificate:
+    description: Base64 encoded .p12 bundle
+    required: true
+  password:
+    description: Password of the .p12 bundle
+    required: true
+  identities:
+    description: >
+      Signing identities the bundle must hold, one per line. A line matches an identity
+      whose name starts with it, e.g. "Developer ID Application".
+    required: true
+  team-id:
+    description: Apple team ID the certificates must belong to (optional)
+    required: false
+    default: ''
+  warn-days:
+    description: Warn when a certificate expires within this many days
+    required: false
+    default: '30'
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERTIFICATE: ${{ inputs.certificate }}
+        PASSWORD: ${{ inputs.password }}
+        IDENTITIES: ${{ inputs.identities }}
+        TEAM_ID: ${{ inputs.team-id }}
+        WARN_DAYS: ${{ inputs.warn-days }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"
