@@ -1,5 +1,5 @@
-name: Release
-run-name: Release ${{ github.ref_name }}
+name: 🚀 Release
+run-name: "🚀 ${{ contains(github.ref_name, '-') && 'Release candidate' || 'Release' }} ${{ github.ref_name }}: build and publish every package"
 
 # Pushing a version tag builds every package in parallel and publishes it:
 #   v3.0.0-rc.1 → GitHub pre-release (draft), Snap candidate channel, store uploads
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   draft:
-    name: Draft GitHub release
+    name: 📝 Draft the GitHub release
     runs-on: ubuntu-latest
     steps:
       # Created once up front, so the builds upload to it instead of racing to create it.
@@ -33,7 +33,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" "${flags[@]}"
 
   package:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.title }}
     needs: draft
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -41,10 +41,12 @@ jobs:
       matrix:
         include:
           - name: Linux
+            title: 🐧 Linux · AppImage + deb → GitHub
             runner: ubuntu-latest
             package: package:linux:publish
 
           - name: Snap
+            title: 📦 Snap → Snap Store
             runner: ubuntu-latest
             package: package:linux:snap
             store-version: true
@@ -53,21 +55,25 @@ jobs:
             keep: dist/*.snap
 
           - name: Windows
+            title: 🪟 Windows · installer + portable → GitHub
             runner: windows-latest
             package: package:win:publish
 
           - name: Microsoft Store
+            title: 🛍️ Microsoft Store · appx package
             runner: windows-latest
             package: package:win:store
             store-version: true
             keep: dist/*.appx
 
           - name: macOS
+            title: 🍎 macOS · signed + notarized DMG & ZIP → GitHub
             runner: macos-latest
             package: package:mac:publish
             apple-signing: true
 
           - name: Mac App Store
+            title: 🍏 Mac App Store · pkg → App Store Connect
             runner: macos-latest
             package: package:mac:store
             store-version: true

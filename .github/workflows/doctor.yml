@@ -1,5 +1,5 @@
-name: Doctor
-run-name: ${{ github.event_name == 'schedule' && 'Weekly' || 'Manual' }} check of build secrets and certificates
+name: 🩺 Doctor
+run-name: "🩺 ${{ github.event_name == 'schedule' && 'Weekly' || 'Manual' }} checkup: are the signing certificates and store credentials still good to ship?"
 
 # Checks that every secret the build workflows need is set, valid and not about to expire,
 # so a release can be built whenever it's needed. Results are in each job's summary.
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   macos:
-    name: macOS signing and App Store
+    name: 🍎 Apple signing, notarization & App Store
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
@@ -51,7 +51,7 @@ jobs:
           bundle-id: dev.guillaumechx.mq3t
 
   linux:
-    name: Snap Store
+    name: 🐧 Snap Store login
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
