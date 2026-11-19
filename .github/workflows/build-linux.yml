@@ -52,8 +52,11 @@ jobs:
         continue-on-error: true
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          # Release candidates (v3.0.0-rc.0) go to the candidate channel, releases (v3.0.0) to stable
+          CHANNEL: ${{ contains(github.ref_name, '-') && 'candidate' || 'stable' }}
         run: |
-          snapcraft upload --release stable dist/**/*.snap
+          echo "Releasing to the $CHANNEL channel"
+          snapcraft upload --release "$CHANNEL" dist/**/*.snap
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
