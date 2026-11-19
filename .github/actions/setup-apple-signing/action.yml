@@ -1,0 +1,53 @@
+name: Set up Apple signing
+description: >
+  Installs what electron-builder needs to sign and notarize on macOS: the .p12 certificate
+  bundle, the App Store Connect API key and, when given, a provisioning profile. Keeps the
+  certificate holder's name and team ID out of the logs.
+
+inputs:
+  certificate:
+    description: Base64 encoded .p12 bundle
+    required: true
+  password:
+    description: Password of the .p12 bundle
+    required: true
+  team-id:
+    description: Apple team ID, masked in the logs
+    required: true
+  api-key:
+    description: Base64 encoded App Store Connect API key (.p8)
+    required: true
+  api-key-id:
+    description: App Store Connect API key ID
+    required: true
+  api-issuer:
+    description: App Store Connect API key issuer ID
+    required: true
+  profile:
+    description: Base64 encoded provisioning profile (optional)
+    required: false
+    default: ''
+  profile-path:
+    description: Where electron-builder expects the provisioning profile
+    required: false
+    default: build/MacAppStore.provisionprofile
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERTIFICATE: ${{ inputs.certificate }}
+        PASSWORD: ${{ inputs.password }}
+        API_KEY: ${{ inputs.api-key }}
+        API_KEY_ID: ${{ inputs.api-key-id }}
+        API_ISSUER: ${{ inputs.api-issuer }}
+        PROFILE: ${{ inputs.profile }}
+        PROFILE_PATH: ${{ inputs.profile-path }}
+      run: bash "$GITHUB_ACTION_PATH/setup.sh"
+
+    - uses: ./.github/actions/mask-certificate-holder
+      with:
+        certificate: ${{ runner.temp }}/apple-certificates.p12
+        password: ${{ inputs.password }}
+        team-id: ${{ inputs.team-id }}

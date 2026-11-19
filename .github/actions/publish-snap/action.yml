@@ -1,0 +1,23 @@
+name: Publish snap
+description: Uploads the snaps from dist/ to the Snap Store and releases them to a channel.
+
+inputs:
+  credentials:
+    description: Output of `snapcraft export-login`
+    required: true
+  channel:
+    description: Channel to release to, e.g. stable or candidate
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ inputs.credentials }}
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        for snap in dist/*.snap; do
+          echo "Releasing $(basename "$snap") to the $CHANNEL channel"
+          snapcraft upload --release "$CHANNEL" "$snap"
+        done

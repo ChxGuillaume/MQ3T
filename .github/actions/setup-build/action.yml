@@ -1,0 +1,35 @@
+name: Set up build
+description: >
+  Installs Node.js and the dependencies, sets the app version from the tag and builds the
+  app, ready for electron-builder to package.
+
+inputs:
+  store-version:
+    description: >
+      Drop the pre-release part of the version (v3.0.0-rc.1 → 3.0.0), the stores only
+      accept plain versions
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: '20'
+        cache: npm
+
+    - shell: bash
+      run: npm ci
+
+    - shell: bash
+      env:
+        STORE_VERSION: ${{ inputs.store-version }}
+      run: |
+        version=${GITHUB_REF_NAME#v}
+        [ "$STORE_VERSION" = true ] && version=${version%%-*}
+        echo "Version $version"
+        npm version "$version" --no-git-tag-version --allow-same-version
+
+    - shell: bash
+      run: npm run build
