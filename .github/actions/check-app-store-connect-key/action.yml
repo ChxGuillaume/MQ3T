@@ -1,0 +1,31 @@
+name: Check App Store Connect API key
+description: >
+  Checks that an App Store Connect API key is accepted by the API and, when a bundle ID
+  is given, that it can see that app. On macOS it also checks that notarytool accepts it,
+  which is what notarization uses.
+
+inputs:
+  key-id:
+    description: API key ID
+    required: true
+  issuer:
+    description: API key issuer ID
+    required: true
+  key:
+    description: The .p8 private key, as PEM or base64 encoded
+    required: true
+  bundle-id:
+    description: Bundle ID of an app the key must be able to see (optional)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        KEY_ID: ${{ inputs.key-id }}
+        ISSUER: ${{ inputs.issuer }}
+        KEY: ${{ inputs.key }}
+        BUNDLE_ID: ${{ inputs.bundle-id }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"

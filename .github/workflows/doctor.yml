@@ -1,0 +1,63 @@
+name: Doctor
+run-name: ${{ github.event_name == 'schedule' && 'Weekly' || 'Manual' }} check of build secrets and certificates
+
+# Checks that every secret the build workflows need is set, valid and not about to expire,
+# so a release can be built whenever it's needed. Results are in each job's summary.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS signing and App Store
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Signing certificates
+        uses: ./.github/actions/check-apple-certificate
+        with:
+          certificate: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
+          password: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
+          identities: |
+            Developer ID Application
+            Apple Distribution
+            3rd Party Mac Developer Installer
+
+      - name: Mac App Store provisioning profile
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/check-provisioning-profile
+        with:
+          label: Mac App Store profile
+          profile: ${{ secrets.APPLE_MAC_APP_STORE_PROFILE }}
+          bundle-id: dev.guillaumechx.mq3t
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
+          certificate: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
+          password: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
+
+      - name: App Store Connect API key (notarization and upload)
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/check-app-store-connect-key
+        with:
+          key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          issuer: ${{ secrets.APPLE_API_ISSUER }}
+          key: ${{ secrets.APPLE_API_KEY_BASE64 }}
+          bundle-id: dev.guillaumechx.mq3t
+
+  linux:
+    name: Snap Store
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Snapcraft credentials
+        uses: ./.github/actions/check-snapcraft-credentials
+        with:
+          credentials: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          snap: mq3t
