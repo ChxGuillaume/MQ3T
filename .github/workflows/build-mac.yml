@@ -67,6 +67,13 @@ jobs:
           echo -n "$APPLE_CERTIFICATES_BUNDLE_BASE64" | base64 --decode -o $APPLE_CERTIFICATES_BUNDLE_PATH
           echo "CSC_LINK=$APPLE_CERTIFICATES_BUNDLE_PATH" >> $GITHUB_ENV
 
+      - name: Keep the certificate holder out of the logs
+        uses: ./.github/actions/mask-certificate-holder
+        with:
+          certificate: ${{ runner.temp }}/apple_certificates_bundle.p12
+          password: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
+
       - name: Install Apple API key
         run: |
           mkdir -p ~/private_keys/
