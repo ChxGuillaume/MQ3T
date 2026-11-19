@@ -1,0 +1,26 @@
+name: Mask certificate holder
+description: >
+  Hides the certificate holder's name and team ID from the rest of the job's logs.
+  electron-builder prints the signing identity, e.g. "Developer ID Application: Jane Doe (TEAM123456)".
+
+inputs:
+  certificate:
+    description: Path to the .p12 bundle
+    required: true
+  password:
+    description: Password of the .p12 bundle
+    required: true
+  team-id:
+    description: Apple team ID (optional)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERTIFICATE: ${{ inputs.certificate }}
+        PASSWORD: ${{ inputs.password }}
+        TEAM_ID: ${{ inputs.team-id }}
+      run: bash "$GITHUB_ACTION_PATH/mask.sh"
