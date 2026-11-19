@@ -1,0 +1,29 @@
+name: Check Snapcraft credentials
+description: >
+  Installs snapcraft and checks that the exported Snap Store login works, can upload and
+  release, can reach the snap and isn't about to expire. Runs on Linux.
+
+inputs:
+  credentials:
+    description: Output of `snapcraft export-login`
+    required: true
+  snap:
+    description: Name of the snap the credentials must have access to (optional)
+    required: false
+    default: ''
+  warn-days:
+    description: Warn when the login expires within this many days
+    required: false
+    default: '30'
+
+runs:
+  using: composite
+  steps:
+    - uses: samuelmeuli/action-snapcraft@fceeb3c308e76f3487e72ef608618de625fb7fe8 # v3.0.1
+
+    - shell: bash
+      env:
+        CREDENTIALS: ${{ inputs.credentials }}
+        SNAP_NAME: ${{ inputs.snap }}
+        WARN_DAYS: ${{ inputs.warn-days }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"
