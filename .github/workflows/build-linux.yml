@@ -20,7 +20,7 @@ jobs:
           node-version: '20'
 
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
+        uses: samuelmeuli/action-snapcraft@fceeb3c308e76f3487e72ef608618de625fb7fe8 # v3.0.1
 
       - name: Install dependencies
         run: npm ci
