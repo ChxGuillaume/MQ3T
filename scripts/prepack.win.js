@@ -14,7 +14,7 @@ yamlData.buildNumber = distYamlData?.buildNumber || yamlData?.buildNumber || 0
 let newBuildNumber = yamlData.buildVersion + 1
 
 if (process.env.GITHUB_RUN_NUMBER) {
-  newBuildNumber = parseInt(process.env.GITHUB_RUN_NUMBER) + 21 // 21 being the offset of builds due to the previous build system
+  newBuildNumber = parseInt(process.env.GITHUB_RUN_NUMBER) + 60 // 60 keeps build numbers above those of the previous build workflows (last used: 55)
 
   console.log('  • Setting build number to', newBuildNumber)
 } else {

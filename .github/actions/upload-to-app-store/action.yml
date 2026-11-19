@@ -1,0 +1,29 @@
+name: Upload to App Store Connect
+description: >
+  Uploads the .pkg from dist/ to App Store Connect, where it waits for TestFlight or review.
+  Needs the API key installed by setup-apple-signing.
+
+inputs:
+  api-key-id:
+    description: App Store Connect API key ID
+    required: true
+  api-issuer:
+    description: App Store Connect API key issuer ID
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        API_KEY_ID: ${{ inputs.api-key-id }}
+        API_ISSUER: ${{ inputs.api-issuer }}
+      run: |
+        pkg=$(find dist -maxdepth 2 -name '*.pkg' -type f | head -n 1)
+        if [ -z "$pkg" ]; then
+          echo "::error::no .pkg in dist/"
+          exit 1
+        fi
+        echo "Uploading $(basename "$pkg")"
+        xcrun altool --upload-app --type macos --file "$pkg" \
+          --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER" --output-format xml

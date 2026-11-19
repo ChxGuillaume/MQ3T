@@ -1,0 +1,131 @@
+name: Release
+run-name: Release ${{ github.ref_name }}
+
+# Pushing a version tag builds every package in parallel and publishes it:
+#   v3.0.0-rc.1 → GitHub pre-release (draft), Snap candidate channel, store uploads
+#   v3.0.0      → GitHub release (draft), Snap stable channel, store uploads
+# The GitHub release stays a draft until it's published by hand.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    name: Draft GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      # Created once up front, so the builds upload to it instead of racing to create it.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ contains(github.ref_name, '-') }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists"
+            exit 0
+          fi
+          flags=(--verify-tag --draft --title "${GITHUB_REF_NAME#v}" --notes '')
+          [ "$PRERELEASE" = true ] && flags+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" "${flags[@]}"
+
+  package:
+    name: ${{ matrix.name }}
+    needs: draft
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            runner: ubuntu-latest
+            package: package:linux:publish
+
+          - name: Snap
+            runner: ubuntu-latest
+            package: package:linux:snap
+            store-version: true
+            snapcraft: true
+            publish: snap
+            keep: dist/*.snap
+
+          - name: Windows
+            runner: windows-latest
+            package: package:win:publish
+
+          - name: Microsoft Store
+            runner: windows-latest
+            package: package:win:store
+            store-version: true
+            keep: dist/*.appx
+
+          - name: macOS
+            runner: macos-latest
+            package: package:mac:publish
+            apple-signing: true
+
+          - name: Mac App Store
+            runner: macos-latest
+            package: package:mac:store
+            store-version: true
+            apple-signing: true
+            publish: app-store
+            keep: dist/**/*.pkg
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install snapcraft
+        if: matrix.snapcraft
+        uses: samuelmeuli/action-snapcraft@fceeb3c308e76f3487e72ef608618de625fb7fe8 # v3.0.1
+
+      - name: Set up build
+        uses: ./.github/actions/setup-build
+        with:
+          store-version: ${{ matrix.store-version || false }}
+
+      - name: Set up Apple signing
+        if: matrix.apple-signing
+        uses: ./.github/actions/setup-apple-signing
+        with:
+          certificate: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_BASE64 }}
+          password: ${{ secrets.APPLE_CERTIFICATES_BUNDLE_PASSWORD }}
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
+          api-key: ${{ secrets.APPLE_API_KEY_BASE64 }}
+          api-key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          api-issuer: ${{ secrets.APPLE_API_ISSUER }}
+          profile: ${{ secrets.APPLE_MAC_APP_STORE_PROFILE }}
+
+      - name: Package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run ${{ matrix.package }}
+
+      - name: Publish to the Snap Store
+        if: matrix.publish == 'snap'
+        uses: ./.github/actions/publish-snap
+        with:
+          credentials: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          channel: ${{ contains(github.ref_name, '-') && 'candidate' || 'stable' }}
+
+      - name: Upload to App Store Connect
+        if: matrix.publish == 'app-store'
+        uses: ./.github/actions/upload-to-app-store
+        with:
+          api-key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          api-issuer: ${{ secrets.APPLE_API_ISSUER }}
+
+      - name: Keep the store package
+        if: matrix.keep
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.keep }}
+          retention-days: 60
