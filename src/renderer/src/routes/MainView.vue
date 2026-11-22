@@ -17,6 +17,7 @@ import ConnectionToolbar from '../components/shell/ConnectionToolbar.vue'
 import AppTitleBar from '../components/shell/AppTitleBar.vue'
 import GraphsSection from '../components/graphs/GraphsSection.vue'
 import { useAppNavigation } from '../composables/useAppNavigation'
+import { useMqttErrorToasts } from '../composables/useMqttErrorToasts'
 import { emitMqttMessage } from '../composables/useMqttMessageBus'
 import { useActionsStore } from '../store/actions'
 import SettingsView from '../components/settings/SettingsView.vue'
@@ -25,7 +26,7 @@ import { MenuCommand } from '../../../types/electron-ipc-callbacks'
 import TabActions from '../tabs/TabActions.vue'
 import ExploreView from '../components/explore/ExploreView.vue'
 import { useExploreUiStore } from '../store/explore-ui'
-import { defineShortcuts, useToast } from '@nuxt/ui/composables'
+import { defineShortcuts } from '@nuxt/ui/composables'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const chainActionsStore = useChainActionsStore()
@@ -35,10 +36,10 @@ const settingsStore = useSettingsStore()
 const actionsStore = useActionsStore()
 const appStore = useAppStore()
 const exploreUiStore = useExploreUiStore()
-const toast = useToast()
 
 const { currentSection, openSection, openNewTab, cycleTab, toggleSettings, closeCurrentTab } =
   useAppNavigation()
+const { notifyError: notifyMqttError, resetError: resetMqttError } = useMqttErrorToasts()
 
 const isConnectionLost = computed(() => {
   const status = mqttConnectionsStore.getConnectionStatus(mqttTopicsStore.selectedConnection)
@@ -116,21 +117,13 @@ onMounted(() => {
     console.error(event, value)
 
     mqttConnectionsStore.setConnectionError(value.clientKey, value.error.message)
-
-    const connection = mqttConnectionsStore.getConnection(value.clientKey)
-
-    if (!connection) return
-
-    toast.add({
-      title: connection.name,
-      description: value.error.message,
-      color: 'error',
-      icon: 'i-lucide-circle-alert'
-    })
+    notifyMqttError(value.clientKey, value.error.message)
   })
 
   ElectronApi.handleMqttStatus((_, value) => {
     mqttConnectionsStore.setConnectionStatus(value.clientKey, value.status)
+
+    if (value.status === 'connected') resetMqttError(value.clientKey)
   })
 
   ElectronApi.handleMqttLatency((_, value) => {
