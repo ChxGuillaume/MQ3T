@@ -23,7 +23,17 @@ export default defineConfig({
           colors: {
             primary: 'plum',
             neutral: 'neutral'
-          }
+          },
+          // Nuxt UI leaves interactive components on the default cursor.
+          button: { slots: { base: 'cursor-pointer' } },
+          checkbox: { slots: { base: 'cursor-pointer', label: 'cursor-pointer' } },
+          switch: { slots: { base: 'cursor-pointer', label: 'cursor-pointer' } },
+          select: { slots: { base: 'cursor-pointer', item: 'cursor-pointer' } },
+          selectMenu: { slots: { base: 'cursor-pointer', item: 'cursor-pointer' } },
+          dropdownMenu: { slots: { item: 'cursor-pointer' } },
+          contextMenu: { slots: { item: 'cursor-pointer' } },
+          tabs: { slots: { trigger: 'cursor-pointer' } },
+          slider: { slots: { thumb: 'cursor-grab active:cursor-grabbing' } }
         },
         icon: {
           clientBundle: {

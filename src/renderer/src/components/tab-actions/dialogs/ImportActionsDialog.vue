@@ -389,7 +389,7 @@ const handleImport = () => {
               role="checkbox"
               :aria-checked="ariaChecked(group)"
               tabindex="0"
-              class="bg-muted border-default flex min-h-[38px] cursor-pointer items-center gap-2.5 px-3.5 text-[13px] font-bold"
+              class="bg-muted border-default hover:bg-accented/60 flex min-h-[38px] cursor-pointer items-center gap-2.5 px-3.5 text-[13px] font-bold transition-colors"
               :class="{ 'border-t': groupIndex > 0 }"
               @click="toggleGroup(group)"
               @keydown.space.prevent="toggleGroup(group)"
@@ -408,7 +408,7 @@ const handleImport = () => {
               role="checkbox"
               :aria-checked="selected.has(item.key)"
               tabindex="0"
-              class="border-default flex min-h-[38px] cursor-pointer items-center gap-2.5 border-t pr-3.5 pl-10 text-[13px]"
+              class="border-default hover:bg-elevated/60 flex min-h-[38px] cursor-pointer items-center gap-2.5 border-t pr-3.5 pl-10 text-[13px] transition-colors"
               @click="toggle(item.key)"
               @keydown.space.prevent="toggle(item.key)"
             >

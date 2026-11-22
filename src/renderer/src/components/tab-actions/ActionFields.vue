@@ -109,8 +109,8 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
         <span class="text-muted">
           <span class="bg-primary/10 text-primary rounded-xs px-1 font-bold">+</span> stands for one
           level. <span class="font-mono">#</span> and a
-          <span class="bg-primary/10 text-primary rounded-xs px-1 font-bold">+</span> at the end aren't
-          allowed.
+          <span class="bg-primary/10 text-primary rounded-xs px-1 font-bold">+</span> at the end
+          aren't allowed.
         </span>
       </div>
       <div v-if="matches.length" class="flex flex-wrap gap-1.5">
@@ -168,7 +168,7 @@ const hasMqtt5Values = computed(() => !!(form.value.responseTopic || form.value.
     >
       <button
         type="button"
-        class="group flex w-full items-center gap-1.5 px-3.5 py-3 text-left text-[13px] font-semibold"
+        class="group hover:bg-elevated/50 flex w-full items-center gap-1.5 rounded-[11px] px-3.5 py-3 text-left text-[13px] font-semibold transition-colors"
       >
         <UIcon
           name="i-lucide-chevron-right"

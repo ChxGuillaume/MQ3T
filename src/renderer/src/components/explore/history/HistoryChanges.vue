@@ -119,7 +119,7 @@ const time = (date: Date) =>
     >
       <button
         type="button"
-        class="flex items-center gap-2 text-left"
+        class="hover:bg-elevated/60 -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-0.5 text-left transition-colors"
         :aria-expanded="expanded.has(entry.message.uid)"
         @click="toggle(entry.message.uid)"
       >

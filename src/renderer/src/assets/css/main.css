@@ -115,6 +115,13 @@
     height: 100%;
   }
 
+  /* Tailwind resets buttons to the default cursor; plain clickable elements get a pointer. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

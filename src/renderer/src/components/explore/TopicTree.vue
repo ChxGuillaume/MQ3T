@@ -337,7 +337,7 @@ defineExpose({ scrollToTopic, collapseAll, revealSelected })
           <button
             v-else
             type="button"
-            class="flex items-center gap-1 uppercase"
+            class="hover:text-default flex items-center gap-1 uppercase"
             :class="{
               'justify-end': column.align === 'right',
               'text-primary': exploreUiStore.listSort.key === column.key

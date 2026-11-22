@@ -516,7 +516,7 @@ const testConnection = async () => {
                       type="button"
                       aria-label="No label color"
                       :aria-pressed="!form.labelColor"
-                      class="border-default text-muted flex size-7 cursor-pointer items-center justify-center rounded-sm border border-dashed"
+                      class="border-default text-muted hover:text-default flex size-7 cursor-pointer items-center justify-center rounded-sm border border-dashed transition-transform hover:scale-110"
                       :class="{ 'outline-2 outline-offset-2 outline-current': !form.labelColor }"
                       @click="form.labelColor = null"
                     >
@@ -528,7 +528,7 @@ const testConnection = async () => {
                       type="button"
                       :aria-label="color.label"
                       :aria-pressed="form.labelColor === color.value"
-                      class="size-7 cursor-pointer rounded-sm"
+                      class="size-7 cursor-pointer rounded-sm transition-transform hover:scale-110"
                       :class="{
                         'outline-2 outline-offset-2': form.labelColor === color.value
                       }"

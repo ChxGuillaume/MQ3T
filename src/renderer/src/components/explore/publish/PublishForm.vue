@@ -239,7 +239,10 @@ defineExpose({ load, openConvert })
       v-model:open="propertiesOpen"
       class="border-default rounded-lg border px-3.5"
     >
-      <button type="button" class="flex h-10 w-full items-center gap-2 text-[13px] font-semibold">
+      <button
+        type="button"
+        class="hover:bg-elevated/50 -mx-3.5 flex h-10 w-[calc(100%+1.75rem)] items-center gap-2 rounded-[11px] px-3.5 text-[13px] font-semibold transition-colors"
+      >
         MQTT 5 properties
         <span
           v-if="propertiesSet"
