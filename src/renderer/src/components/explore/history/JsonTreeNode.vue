@@ -70,15 +70,20 @@ const cellChange = (index: number, column: string) =>
     <UContextMenu :items="menuItems">
       <div
         class="flex min-h-[30px] items-center gap-2.5 rounded-md px-2.5"
-        :class="{ 'bg-primary/10': change }"
+        :class="{
+          'bg-primary/10': change,
+          'cursor-pointer select-none': container,
+          'hover:bg-elevated/60': container && !change
+        }"
+        @click="container && context.toggle(path, depth)"
       >
+        <!-- The click bubbles up to the row, which does the toggling. -->
         <button
           v-if="container"
           type="button"
           class="text-muted w-3 shrink-0"
           :aria-label="expanded ? 'Collapse' : 'Expand'"
           :aria-expanded="expanded"
-          @click="context.toggle(path, depth)"
         >
           {{ expanded ? '▾' : '▸' }}
         </button>
