@@ -10,7 +10,8 @@ import CodeDiffPreview from '../CodeDiffPreview.vue'
 import { changesLabel } from './history-helpers'
 import { usePagedList } from './usePagedList'
 import HistoryPager from './HistoryPager.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
 
 const PAGE_SIZE = 7
 
@@ -60,6 +61,17 @@ const summary = computed(() => {
   return `${changesLabel(count)} · ${formatDuration(apart)} apart`
 })
 
+// Below this height the list and the diff don't both fit, so only the panel scrolls.
+const SPLIT_MIN_HEIGHT = 576
+
+const panel = useTemplateRef<HTMLElement>('panel')
+const panelHeight = ref(0)
+
+useResizeObserver(panel, ([entry]) => (panelHeight.value = entry.contentRect.height))
+
+// With two messages picked and enough room, the list scrolls on its own so the diff stays in view.
+const splitView = computed(() => !!ordered.value && panelHeight.value >= SPLIT_MIN_HEIGHT)
+
 const time = (date: Date) =>
   formatPreciseTime(date, settingsStore.timeFormat, settingsStore.formatTime)
 
@@ -84,10 +96,11 @@ watch(
     <SiblingTopicsAside :client-key="clientKey" :topic="topic" @select="emit('select', $event)" />
 
     <section
+      ref="panel"
       :aria-label="`History of ${topic}`"
       class="flex min-w-0 flex-[999_1_640px] flex-col gap-3.5 overflow-auto px-6 py-4"
     >
-      <FullWidthHeader :client-key="clientKey" :topic="topic">
+      <FullWidthHeader :client-key="clientKey" :topic="topic" class="shrink-0">
         <span class="text-muted ml-auto text-xs">Pick two messages to compare</span>
         <UButton label="Clear history" color="neutral" variant="outline" @click="clearHistory" />
       </FullWidthHeader>
@@ -96,33 +109,36 @@ watch(
         role="listbox"
         aria-multiselectable="true"
         aria-label="Messages"
-        class="border-default shrink-0 overflow-hidden rounded-lg border"
+        class="border-default flex flex-col overflow-hidden rounded-lg border"
+        :class="{ 'shrink-0': !splitView }"
       >
-        <div
-          v-for="message in pageItems"
-          :key="message.uid"
-          role="option"
-          :aria-selected="!!mark(message.uid)"
-          tabindex="0"
-          class="border-default flex h-10 cursor-pointer items-center gap-3 border-t px-3.5 first:border-t-0"
-          :class="mark(message.uid) ? 'bg-primary/10' : 'hover:bg-muted'"
-          @click="toggle(message.uid)"
-          @keydown.enter.space.prevent="toggle(message.uid)"
-        >
-          <span
-            aria-hidden="true"
-            class="flex size-[18px] shrink-0 items-center justify-center rounded-xs text-[11px] font-bold"
-            :class="
-              mark(message.uid) ? 'bg-primary text-inverted' : 'border-default border-[1.5px]'
-            "
+        <div :class="{ 'min-h-30 overflow-y-auto': splitView }">
+          <div
+            v-for="message in pageItems"
+            :key="message.uid"
+            role="option"
+            :aria-selected="!!mark(message.uid)"
+            tabindex="0"
+            class="border-default flex h-10 cursor-pointer items-center gap-3 border-t px-3.5 first:border-t-0"
+            :class="mark(message.uid) ? 'bg-primary/10' : 'hover:bg-muted'"
+            @click="toggle(message.uid)"
+            @keydown.enter.space.prevent="toggle(message.uid)"
           >
-            {{ mark(message.uid) }}
-          </span>
-          <span class="text-muted w-[110px] shrink-0 font-mono text-xs">
-            {{ time(message.createdAt) }}
-          </span>
-          <span class="min-w-0 flex-1 truncate font-mono text-xs">{{ message.message }}</span>
-          <span class="text-muted shrink-0 text-xs">{{ meta(message) }}</span>
+            <span
+              aria-hidden="true"
+              class="flex size-[18px] shrink-0 items-center justify-center rounded-xs text-[11px] font-bold"
+              :class="
+                mark(message.uid) ? 'bg-primary text-inverted' : 'border-default border-[1.5px]'
+              "
+            >
+              {{ mark(message.uid) }}
+            </span>
+            <span class="text-muted w-[110px] shrink-0 font-mono text-xs">
+              {{ time(message.createdAt) }}
+            </span>
+            <span class="min-w-0 flex-1 truncate font-mono text-xs">{{ message.message }}</span>
+            <span class="text-muted shrink-0 text-xs">{{ meta(message) }}</span>
+          </div>
         </div>
         <div class="border-default text-muted flex items-center gap-2 border-t px-3.5 py-2 text-xs">
           <span>{{ messages.length }} kept</span>
@@ -130,7 +146,7 @@ watch(
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2.5">
+      <div class="flex shrink-0 flex-wrap items-center gap-2.5">
         <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">Compare</h2>
         <template v-if="ordered">
           <span class="font-mono text-xs">
@@ -153,13 +169,19 @@ watch(
         />
       </div>
 
-      <div v-if="ordered" class="bg-muted h-[360px] shrink-0 overflow-hidden rounded-lg">
-        <CodeDiffPreview
-          :value="ordered.a.message"
-          :modified-value="ordered.b.message"
-          :language="ordered.b.dataType"
-          :side-by-side="diffView === 'side'"
-        />
+      <div
+        v-if="ordered"
+        class="bg-muted relative overflow-hidden rounded-lg"
+        :class="splitView ? 'min-h-[max(18rem,50%)] flex-1' : 'h-[360px] shrink-0'"
+      >
+        <div class="absolute inset-0">
+          <CodeDiffPreview
+            :value="ordered.a.message"
+            :modified-value="ordered.b.message"
+            :language="ordered.b.dataType"
+            :side-by-side="diffView === 'side'"
+          />
+        </div>
       </div>
     </section>
   </div>
