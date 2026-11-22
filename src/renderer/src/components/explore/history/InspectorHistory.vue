@@ -107,23 +107,39 @@ const receivedLabel = computed(
 const time = (date: Date) =>
   formatPreciseTime(date, settingsStore.timeFormat, settingsStore.formatTime)
 
+// Checkbox items show a real checkbox on the left instead of the default check on the right.
+const checkboxItem = (
+  label: string,
+  checked: boolean,
+  update: (value: boolean) => void
+): DropdownMenuItem => ({
+  label,
+  type: 'checkbox',
+  slot: 'checkbox',
+  checked,
+  onUpdateChecked: update,
+  onSelect: (e: Event) => e.preventDefault(),
+  ui: { itemTrailingIcon: 'hidden' }
+})
+
 const menuItems = computed<DropdownMenuItem[][]>(() => [
   [{ label: 'Export', icon: 'i-lucide-file-down', children: exportItems() }],
   [
-    {
-      label: 'Pagination',
-      type: 'checkbox',
-      checked: settingsStore.messagesPagination,
-      onUpdateChecked: (value: boolean) => settingsStore.setMessagesPagination(value),
-      onSelect: (e: Event) => e.preventDefault()
-    },
-    {
-      label: 'Compare selected with latest',
-      type: 'checkbox',
-      checked: settingsStore.selectedMessageCompare,
-      onUpdateChecked: (value: boolean) => settingsStore.setSelectedMessageCompare(value),
-      onSelect: (e: Event) => e.preventDefault()
-    }
+    ...(mode.value === 'changes'
+      ? [
+          checkboxItem(
+            'Hide "no change"',
+            exploreUiStore.hideNoChange,
+            (value) => (exploreUiStore.hideNoChange = value)
+          )
+        ]
+      : []),
+    checkboxItem('Pagination', settingsStore.messagesPagination, (value) =>
+      settingsStore.setMessagesPagination(value)
+    ),
+    checkboxItem('Compare selected with latest', settingsStore.selectedMessageCompare, (value) =>
+      settingsStore.setSelectedMessageCompare(value)
+    )
   ]
 ])
 
@@ -223,14 +239,6 @@ watch(
       <span class="text-muted min-w-0 truncate text-xs" :title="receivedLabel">
         {{ receivedLabel }}
       </span>
-      <UCheckbox
-        v-if="mode === 'changes'"
-        v-model="exploreUiStore.hideNoChange"
-        label='Hide "no change"'
-        size="sm"
-        class="shrink-0"
-        :ui="{ label: 'text-xs text-muted font-normal whitespace-nowrap' }"
-      />
       <div class="ml-auto flex shrink-0 items-center gap-2">
         <UTooltip text="Compare two messages">
           <UButton
@@ -266,6 +274,14 @@ watch(
             aria-label="History options"
             class="text-muted"
           />
+          <template #checkbox-leading="{ item }">
+            <UCheckbox
+              :model-value="(item as DropdownMenuItem).checked"
+              size="sm"
+              tabindex="-1"
+              class="pointer-events-none"
+            />
+          </template>
         </UDropdownMenu>
       </div>
     </div>
