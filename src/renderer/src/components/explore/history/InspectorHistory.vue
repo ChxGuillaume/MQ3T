@@ -19,7 +19,8 @@ import CodeDiffPreview from '../CodeDiffPreview.vue'
 import HistoryChanges from './HistoryChanges.vue'
 import { usePagedList } from './usePagedList'
 import HistoryPager from './HistoryPager.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
 
 const PAGE_SIZE = 8
 
@@ -99,6 +100,10 @@ const rows = computed(() => {
   })
 })
 
+const receivedLabel = computed(
+  () => `${received.value.toLocaleString()} received · last ${settingsStore.maxMessages} kept`
+)
+
 const time = (date: Date) =>
   formatPreciseTime(date, settingsStore.timeFormat, settingsStore.formatTime)
 
@@ -122,8 +127,69 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
   ]
 ])
 
-const toggleSelected = (message: MqttMessage) => {
+const SCROLL_DURATION = 180
+
+const preview = useTemplateRef<HTMLElement>('preview')
+const list = useTemplateRef<HTMLElement>('list')
+const root = useTemplateRef<HTMLElement>('root')
+
+// Below this height the list and the preview don't both fit, so only the panel scrolls.
+const SPLIT_MIN_HEIGHT = 512
+
+const panelHeight = ref(0)
+
+useResizeObserver(
+  computed(() => root.value?.parentElement),
+  ([entry]) => (panelHeight.value = entry.contentRect.height)
+)
+
+// With a message open and enough room, the list scrolls on its own so the preview stays in view.
+const splitView = computed(
+  () => mode.value === 'list' && !!selected.value && panelHeight.value >= SPLIT_MIN_HEIGHT
+)
+
+const scrollParent = (element: HTMLElement) => {
+  for (let el = element.parentElement; el; el = el.parentElement) {
+    const { overflowY } = getComputedStyle(el)
+
+    if (/auto|scroll/.test(overflowY) && el.scrollHeight > el.clientHeight) return el
+  }
+
+  return null
+}
+
+const scrollToBottom = (element: HTMLElement) => {
+  const container = scrollParent(element)
+
+  if (!container) return
+
+  const start = container.scrollTop
+  const distance = container.scrollHeight - container.clientHeight - start
+  const startedAt = performance.now()
+
+  const step = (now: number) => {
+    const progress = Math.min((now - startedAt) / SCROLL_DURATION, 1)
+
+    container.scrollTop = start + distance * (1 - (1 - progress) ** 3)
+
+    if (progress < 1) requestAnimationFrame(step)
+  }
+
+  if (distance > 0) requestAnimationFrame(step)
+}
+
+const toggleSelected = async (message: MqttMessage) => {
   selected.value = selected.value?.uid === message.uid ? undefined : message
+
+  if (!selected.value) return
+
+  await nextTick()
+
+  list.value
+    ?.querySelector(`[data-uid="${CSS.escape(String(message.uid))}"]`)
+    ?.scrollIntoView({ block: 'nearest' })
+
+  if (preview.value) scrollToBottom(preview.value)
 }
 
 const clearHistory = () => {
@@ -145,49 +211,63 @@ watch(
     description="Received messages for this topic are kept here."
     variant="naked"
   />
-  <div v-else class="flex min-h-full flex-col gap-3">
-    <div class="flex flex-wrap items-center gap-2">
-      <SegmentedControl v-if="isJsonObject" v-model="modeModel" :items="modeItems" size="sm" />
-      <span class="text-muted text-xs">
-        {{ received.toLocaleString() }} received · last {{ settingsStore.maxMessages }} kept
+  <div v-else ref="root" class="flex flex-col gap-3" :class="splitView ? 'h-full' : 'min-h-full'">
+    <div class="@container flex items-center gap-2">
+      <SegmentedControl
+        v-if="isJsonObject"
+        v-model="modeModel"
+        :items="modeItems"
+        size="sm"
+        class="shrink-0"
+      />
+      <span class="text-muted min-w-0 truncate text-xs" :title="receivedLabel">
+        {{ receivedLabel }}
       </span>
       <UCheckbox
         v-if="mode === 'changes'"
         v-model="exploreUiStore.hideNoChange"
         label='Hide "no change"'
         size="sm"
-        :ui="{ label: 'text-xs text-muted font-normal' }"
+        class="shrink-0"
+        :ui="{ label: 'text-xs text-muted font-normal whitespace-nowrap' }"
       />
-      <UButton
-        label="Compare two…"
-        color="neutral"
-        variant="outline"
-        size="sm"
-        class="ml-auto font-semibold"
-        :disabled="messages.length < 2"
-        @click="exploreUiStore.layout = 'compare'"
-      />
-      <UTooltip text="Clear history">
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="outline"
-          size="sm"
-          aria-label="Clear history"
-          class="text-muted"
-          @click="clearHistory"
-        />
-      </UTooltip>
-      <UDropdownMenu :items="menuItems" :content="{ align: 'end' }">
-        <UButton
-          icon="i-lucide-ellipsis-vertical"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          aria-label="History options"
-          class="text-muted"
-        />
-      </UDropdownMenu>
+      <div class="ml-auto flex shrink-0 items-center gap-2">
+        <UTooltip text="Compare two messages">
+          <UButton
+            label="Compare two…"
+            icon="i-lucide-git-compare-arrows"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            aria-label="Compare two messages"
+            class="font-semibold"
+            :ui="{ label: 'hidden @lg:inline', leadingIcon: '@lg:hidden' }"
+            :disabled="messages.length < 2"
+            @click="exploreUiStore.layout = 'compare'"
+          />
+        </UTooltip>
+        <UTooltip text="Clear history">
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            aria-label="Clear history"
+            class="text-muted"
+            @click="clearHistory"
+          />
+        </UTooltip>
+        <UDropdownMenu :items="menuItems" :content="{ align: 'end' }">
+          <UButton
+            icon="i-lucide-ellipsis-vertical"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="History options"
+            class="text-muted"
+          />
+        </UDropdownMenu>
+      </div>
     </div>
 
     <HistoryChanges
@@ -198,12 +278,18 @@ watch(
     />
 
     <template v-else>
-      <div role="list" class="border-default overflow-hidden rounded-lg border">
+      <div
+        ref="list"
+        role="list"
+        class="border-default rounded-lg border"
+        :class="splitView ? 'min-h-30 overflow-y-auto' : 'overflow-hidden'"
+      >
         <button
           v-for="row in rows"
           :key="row.message.uid"
           type="button"
           role="listitem"
+          :data-uid="row.message.uid"
           class="border-default flex h-10 w-full items-center gap-3 border-t px-3 text-left first:border-t-0"
           :class="selected?.uid === row.message.uid ? 'bg-primary/10' : 'hover:bg-muted'"
           @click="toggleSelected(row.message)"
@@ -234,7 +320,11 @@ watch(
         <HistoryPager v-if="settingsStore.messagesPagination" v-model="page" :pages="pages" />
       </div>
 
-      <section v-if="selected" class="flex min-h-0 flex-1 flex-col gap-2">
+      <section
+        v-if="selected"
+        ref="preview"
+        class="flex min-h-[max(18rem,50%)] flex-1 flex-col gap-2"
+      >
         <div class="flex items-center gap-2">
           <h2 class="text-muted text-[11px] font-semibold tracking-[0.1em] uppercase">
             {{
