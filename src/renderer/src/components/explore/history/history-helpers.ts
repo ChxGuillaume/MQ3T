@@ -1,24 +1,9 @@
-import {
-  compactValue,
-  firstNumericPath,
-  numericValue,
-  parseMessage
-} from '@renderer/assets/js/payload-insight'
+import { firstNumericPath, numericValue, parseMessage } from '@renderer/assets/js/payload-insight'
 import { diffMessages, filterChanges, JsonChange } from '@renderer/assets/js/json-diff'
 import type { MqttMessage } from '@renderer/store/mqtt-topics'
 
 export const messagePreview = (message: MqttMessage) => {
-  const parsed = parseMessage(message)
-
-  if (parsed.kind === 'json' && parsed.value && !Array.isArray(parsed.value)) {
-    return Object.entries(parsed.value as Record<string, unknown>)
-      .slice(0, 6)
-      .map(([key, value]) => `${key} ${compactValue(value, 24)}`)
-      .join(' · ')
-  }
-
-  if (parsed.kind === 'text') return String(parsed.value).slice(0, 300)
-  if (parsed.kind === 'empty') return '(empty)'
+  if (parseMessage(message).kind === 'empty') return '(empty)'
 
   return message.message.slice(0, 300)
 }
