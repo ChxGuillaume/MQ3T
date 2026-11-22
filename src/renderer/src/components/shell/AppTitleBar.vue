@@ -6,8 +6,9 @@ import { useConnectionMenu } from '@renderer/composables/useConnectionMenu'
 import { AppPlatform } from '@renderer/assets/js/electron-api'
 import { useAppStore } from '@renderer/store/app-store'
 import { useTabDragReorder } from '@renderer/composables/useTabDragReorder'
+import { useTabOverflow } from '@renderer/composables/useTabOverflow'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 const mqttConnectionsStore = useMqttConnectionsStore()
 const appStore = useAppStore()
@@ -34,6 +35,17 @@ const { draggingIndex, onPointerDown: onTabPointerDown } = useTabDragReorder({
   onDragStart: (index) => openConnection(openConnections.value[index].clientKey),
   onReorder: moveTab
 })
+
+const { canScrollLeft, canScrollRight, scrollByPage, scrollIntoView, fadeMaskStyle } =
+  useTabOverflow(tabList)
+
+watch(
+  () => [appStore.view, selectedClientKey.value, openConnections.value.length],
+  async () => {
+    await nextTick()
+    scrollIntoView(tabList.value?.querySelector('[role="tab"][aria-selected="true"]'))
+  }
+)
 
 const newTabMenuItems: DropdownMenuItem[] = [
   { label: 'New tab', icon: 'i-lucide-plus', kbds: ['meta', 'T'], onSelect: () => openNewTab() },
@@ -71,92 +83,131 @@ const tabClass = (labelColor: string | null | undefined, active: boolean) => {
     class="border-default bg-chrome flex h-[46px] shrink-0 items-center gap-1 border-b [-webkit-app-region:drag]"
     :class="isMac ? 'pl-[92px]' : 'pl-3'"
   >
-    <nav
-      ref="tabList"
-      aria-label="Open connections"
-      class="flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto [-webkit-app-region:no-drag]"
-    >
-      <div
-        v-for="(connection, index) in openConnections"
-        :key="connection.clientKey"
-        data-tab-item
-        class="shrink-0 rounded-lg"
-        :class="{ 'shadow-lg [&_*]:cursor-grabbing': draggingIndex === index }"
-        @pointerdown="onTabPointerDown($event, index)"
+    <div class="relative flex min-w-0 items-center [-webkit-app-region:no-drag]">
+      <nav
+        ref="tabList"
+        aria-label="Open connections"
+        class="flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto"
+        :style="fadeMaskStyle"
       >
-        <UContextMenu :items="connectionMenuItems(connection, closeConnection)">
-          <div
-            role="tab"
-            tabindex="0"
-            :aria-selected="isActive(connection.clientKey)"
-            class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
-            :class="[
-              tabClass(connection.labelColor, isActive(connection.clientKey)),
-              {
-                'border-dashed border-[color-mix(in_oklab,var(--ui-warning)_55%,transparent)]!':
-                  connection.temporary
-              }
-            ]"
-            :style="tabColorStyle(connection.labelColor)"
-            @click="openConnection(connection.clientKey)"
-            @keydown.enter="openConnection(connection.clientKey)"
-            @auxclick.middle="closeConnection(connection.clientKey)"
-          >
-            <span
-              class="h-4 w-[3px] shrink-0 rounded-full"
-              :class="
-                connection.labelColor
-                  ? isActive(connection.clientKey)
-                    ? 'bg-(--tab-color)'
-                    : 'bg-(--tab-color) opacity-60'
-                  : 'bg-transparent'
-              "
-              aria-hidden="true"
-            />
-            <span
-              class="size-2 shrink-0 rounded-full"
-              :class="
-                statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))
-              "
-              :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
-            />
-            <UIcon
-              v-if="connection.temporary"
-              name="i-lucide-timer"
-              class="text-warning size-3.5 shrink-0"
-              aria-label="Temporary connection"
-            />
-            <span
-              class="flex-1 truncate"
-              :title="
-                connection.temporary
-                  ? `${connection.name} · Temporary connection, discarded when MQ3T closes`
-                  : connection.name
-              "
-              >{{ connection.name }}</span
+        <div
+          v-for="(connection, index) in openConnections"
+          :key="connection.clientKey"
+          data-tab-item
+          class="shrink-0 rounded-lg"
+          :class="{ 'shadow-lg [&_*]:cursor-grabbing': draggingIndex === index }"
+          @pointerdown="onTabPointerDown($event, index)"
+        >
+          <UContextMenu :items="connectionMenuItems(connection, closeConnection)">
+            <div
+              role="tab"
+              tabindex="0"
+              :aria-selected="isActive(connection.clientKey)"
+              class="group flex h-[34px] max-w-60 min-w-[170px] cursor-pointer items-center gap-2 rounded-lg border pr-1 pl-2 text-[13px] transition-colors select-none"
+              :class="[
+                tabClass(connection.labelColor, isActive(connection.clientKey)),
+                {
+                  'border-dashed border-[color-mix(in_oklab,var(--ui-warning)_55%,transparent)]!':
+                    connection.temporary
+                }
+              ]"
+              :style="tabColorStyle(connection.labelColor)"
+              @click="openConnection(connection.clientKey)"
+              @keydown.enter="openConnection(connection.clientKey)"
+              @auxclick.middle="closeConnection(connection.clientKey)"
             >
-            <UButton
-              icon="i-lucide-x"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              aria-label="Close tab"
-              class="text-muted rounded-md"
-              @click.stop="closeConnection(connection.clientKey)"
-            />
-          </div>
-        </UContextMenu>
-      </div>
+              <span
+                class="h-4 w-[3px] shrink-0 rounded-full"
+                :class="
+                  connection.labelColor
+                    ? isActive(connection.clientKey)
+                      ? 'bg-(--tab-color)'
+                      : 'bg-(--tab-color) opacity-60'
+                    : 'bg-transparent'
+                "
+                aria-hidden="true"
+              />
+              <span
+                class="size-2 shrink-0 rounded-full"
+                :class="
+                  statusDotClass(mqttConnectionsStore.getConnectionStatus(connection.clientKey))
+                "
+                :title="statusLabel(mqttConnectionsStore.getConnectionStatus(connection.clientKey))"
+              />
+              <UIcon
+                v-if="connection.temporary"
+                name="i-lucide-timer"
+                class="text-warning size-3.5 shrink-0"
+                aria-label="Temporary connection"
+              />
+              <span
+                class="flex-1 truncate"
+                :title="
+                  connection.temporary
+                    ? `${connection.name} · Temporary connection, discarded when MQ3T closes`
+                    : connection.name
+                "
+                >{{ connection.name }}</span
+              >
+              <UButton
+                icon="i-lucide-x"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                aria-label="Close tab"
+                class="text-muted rounded-md"
+                @click.stop="closeConnection(connection.clientKey)"
+              />
+            </div>
+          </UContextMenu>
+        </div>
 
-      <div
-        v-if="appStore.view === 'new-tab' && openConnections.length"
-        role="tab"
-        aria-selected="true"
-        class="border-default bg-default flex h-[34px] min-w-[170px] items-center rounded-lg border pl-3 text-[13px] font-semibold shadow-xs select-none"
+        <div
+          v-if="appStore.view === 'new-tab' && openConnections.length"
+          role="tab"
+          aria-selected="true"
+          class="border-default bg-default flex h-[34px] min-w-[170px] items-center rounded-lg border pl-3 text-[13px] font-semibold shadow-xs select-none"
+        >
+          New tab
+        </div>
+      </nav>
+
+      <Transition
+        enter-active-class="transition-opacity duration-150"
+        leave-active-class="transition-opacity duration-150"
+        enter-from-class="opacity-0"
+        leave-to-class="opacity-0"
       >
-        New tab
-      </div>
-    </nav>
+        <UButton
+          v-if="canScrollLeft"
+          icon="i-lucide-chevron-left"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          aria-label="Scroll tabs left"
+          class="bg-chrome/80 text-muted absolute left-0 z-10 rounded-full shadow-xs backdrop-blur-sm"
+          @click="scrollByPage(-1)"
+        />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-opacity duration-150"
+        leave-active-class="transition-opacity duration-150"
+        enter-from-class="opacity-0"
+        leave-to-class="opacity-0"
+      >
+        <UButton
+          v-if="canScrollRight"
+          icon="i-lucide-chevron-right"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          aria-label="Scroll tabs right"
+          class="bg-chrome/80 text-muted absolute right-0 z-10 rounded-full shadow-xs backdrop-blur-sm"
+          @click="scrollByPage(1)"
+        />
+      </Transition>
+    </div>
 
     <div class="flex shrink-0 items-center [-webkit-app-region:no-drag]">
       <UTooltip text="New tab" :kbds="['meta', 'T']">
